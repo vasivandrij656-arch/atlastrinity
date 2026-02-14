@@ -203,6 +203,7 @@ class LogAnalyzer:
             self.logs_dir / "brain.log",
             self.logs_dir / "vibe_server.log",
             self.logs_dir / "orchestrator.log",
+            self.logs_dir / "ci_failure.log",
         ]
 
         for log_file in log_files:

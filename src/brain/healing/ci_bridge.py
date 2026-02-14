@@ -161,12 +161,59 @@ class CIBridge:
                     if resp.status == 204:
                         logger.info(f"[CIBridge] Triggered workflow: {workflow_name}")
                         return True
-                    else:
-                        logger.warning(f"[CIBridge] Failed to trigger workflow: {resp.status}")
-                        return False
+                    logger.warning(f"[CIBridge] Failed to trigger workflow: {resp.status}")
+                    return False
         except Exception as e:
             logger.error(f"[CIBridge] Failed to trigger auto-fix: {e}")
             return False
+
+    def parse_event_payload(self) -> dict[str, Any] | None:
+        """Parse GitHub Actions event payload from GITHUB_EVENT_PATH."""
+        event_path = os.getenv("GITHUB_EVENT_PATH")
+        if not event_path or not os.path.exists(event_path):
+            return None
+
+        try:
+            with open(event_path, encoding="utf-8") as f:
+                return json.load(f)
+        except Exception as e:
+            logger.error(f"[CIBridge] Failed to parse event payload: {e}")
+            return None
+
+    def fetch_workflow_logs(self, run_id: int) -> str | None:
+        """Fetch workflow logs using gh CLI.
+
+        Returns:
+            Path to downloaded log file or None.
+        """
+        try:
+            # Check if gh is available
+            subprocess.run(["gh", "--version"], check=True, capture_output=True)
+
+            log_dir = Path.home() / ".config" / "atlastrinity" / "logs" / f"run_{run_id}"
+            log_dir.mkdir(parents=True, exist_ok=True)
+
+            logger.info(f"[CIBridge] Downloading logs for run {run_id}...")
+            
+            # Capture logs from gh run view
+            result = subprocess.run(
+                ["gh", "run", "view", str(run_id), "--log"],
+                cwd=str(self.project_root),
+                capture_output=True,
+                text=True,
+                check=True
+            )
+            
+            log_file = log_dir / "workflow.log"
+            log_file.write_text(result.stdout, encoding="utf-8")
+            return str(log_file)
+
+        except subprocess.CalledProcessError as e:
+            logger.error(f"[CIBridge] Failed to fetch logs: {e.stderr}")
+            return None
+        except Exception as e:
+            logger.error(f"[CIBridge] Log fetch error: {e}")
+            return None
 
     def commit_and_push(
         self,

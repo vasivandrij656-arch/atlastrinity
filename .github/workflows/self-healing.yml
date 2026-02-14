@@ -1,7 +1,15 @@
 name: Self-Healing Cycle
+
 on:
   schedule:
     - cron: '0 */6 * * *' # Every 6 hours
+  push:
+    branches: [main, develop]
+    paths:
+      - 'src/brain/**'
+  pull_request:
+    paths:
+      - 'src/brain/**'
   workflow_dispatch:
     inputs:
       mode:
@@ -17,6 +25,7 @@ on:
 permissions:
   contents: write
   actions: read
+  pull-requests: write
 
 jobs:
   self-healing:
@@ -41,16 +50,30 @@ jobs:
           python -m pip install --upgrade pip
           pip install -r requirements.txt 2>/dev/null || true
 
+      - name: Determine Mode
+        id: mode
+        run: |
+          if [[ "${{ github.event_name }}" == "pull_request" ]]; then
+            echo "mode=diagnose" >> $GITHUB_OUTPUT
+          elif [[ "${{ github.event_name }}" == "push" ]]; then
+            echo "mode=diagnose" >> $GITHUB_OUTPUT
+          else
+            echo "mode=${{ github.event.inputs.mode || 'prevent' }}" >> $GITHUB_OUTPUT
+          fi
+
       - name: Run Self-Healing Hypermodule
+        id: healing
         env:
           PYTHONPATH: ${{ github.workspace }}
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-          MODE: ${{ github.event.inputs.mode || 'prevent' }}
+          MODE: ${{ steps.mode.outputs.mode }}
+          GITHUB_EVENT_PATH: ${{ github.event_path }}
         run: |
           python -c "
           import asyncio
           import os
-          from src.brain.healing import healing_hypermodule, HealingMode
+          import json
+          from src.brain.healing import healing_hypermodule, HealingMode, DiagnosticReport
 
           async def main():
               mode_name = os.environ.get('MODE', 'prevent')
@@ -58,15 +81,57 @@ jobs:
               print(f'Running self-healing: {mode.value}')
               result = await healing_hypermodule.run(mode)
               print(f'Result: {result.message}')
+              
+              # Save result for next steps
+              with open('healing_result.json', 'w') as f:
+                  json.dump(result.to_dict(), f)
+              
               if result.details:
-                  import json
                   print(json.dumps(result.details, indent=2, default=str))
 
           asyncio.run(main())
           "
 
+      - name: Post Diagnostic Report (PR)
+        if: github.event_name == 'pull_request'
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          PR_NUMBER: ${{ github.event.pull_request.number }}
+        run: |
+          python -c "
+          import json
+          import os
+          import subprocess
+
+          try:
+              with open('healing_result.json') as f:
+                  result = json.load(f)
+              
+              mode = result.get('mode')
+              status_icon = '✅' if result.get('success') else 'XYZ'
+              message = result.get('message', 'No message')
+              
+              body = f'''### {status_icon} Self-Healing Diagnostic Report
+              **Mode:** {mode}
+              **Status:** {message}
+              
+              <details>
+              <summary>Details</summary>
+              
+              \`\`\`json
+              {json.dumps(result.get('details', {}), indent=2)}
+              \`\`\`
+              </details>
+              '''
+              
+              pr_number = os.environ.get('PR_NUMBER')
+              subprocess.run(['gh', 'pr', 'comment', pr_number, '--body', body], check=True)
+          except Exception as e:
+              print(f'Failed to post comment: {e}')
+          "
+
       - name: Commit self-healing changes
-        if: success()
+        if: github.event_name == 'schedule' || github.event_name == 'workflow_dispatch'
         run: |
           git config user.name "Atlas Self-Healing"
           git config user.email "atlas@atlastrinity.local"
@@ -80,6 +145,7 @@ jobs:
         with:
           name: self-healing-report
           path: |
+            healing_result.json
             ~/.config/atlastrinity/memory/improvement_notes.json
           retention-days: 7
           if-no-files-found: ignore

@@ -1,73 +1,92 @@
-name: Auto Fix & Format
+name: Auto-Fix Reactive Healing
 
 on:
-  push:
-    branches: [main, develop, vibe2]
-    paths:
-      - 'src/**'
-      - 'tests/**'
-      - 'scripts/**'
-      - '**.json'
-      - '**.py'
-      - '**.ts'
-      - '**.tsx'
+  workflow_run:
+    workflows: ['Test Trinity Core', 'CI Core', 'Lint & Static Analysis']
+    types:
+      - completed
+
+permissions:
+  contents: write
+  actions: read
+  pull-requests: write
 
 jobs:
-  auto-fix:
-    name: Auto Format Code
+  analyze-and-fix:
+    if: ${{ github.event.workflow_run.conclusion == 'failure' }}
     runs-on: ubuntu-latest
-    permissions:
-      contents: write
+    timeout-minutes: 20
 
     steps:
-      - name: Checkout code
+      - name: Checkout
         uses: actions/checkout@v4
         with:
-          fetch-depth: 0
           token: ${{ secrets.GITHUB_TOKEN }}
-          persist-credentials: false
+          fetch-depth: 0
 
       - name: Setup Python
         uses: actions/setup-python@v5
         with:
           python-version: '3.12'
-          cache: 'pip'
+          cache: pip
 
-      - name: Setup Node
-        uses: actions/setup-node@v4
-        with:
-          node-version: '22'
-          cache: 'npm'
-
-      - name: Install Python formatters
+      - name: Install dependencies
         run: |
-          pip install black isort
+          python -m pip install --upgrade pip
+          pip install -r requirements.txt 2>/dev/null || true
 
-      - name: Install Node formatters
+      - name: Download Failure Logs
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          RUN_ID: ${{ github.event.workflow_run.id }}
         run: |
-          npm ci
+          mkdir -p ~/.config/atlastrinity/logs
+          gh run view $RUN_ID --log > ~/.config/atlastrinity/logs/ci_failure.log || echo "Failed to download logs"
 
-      - name: Run Python Formatting
+      - name: Create Auto-Fix Branch
         run: |
-          black src tests scripts --exclude='(dist_venv|node_modules|\.venv)'
-          isort src tests scripts --skip dist_venv --skip node_modules --skip .venv
+          git config user.name "Atlas Auto-Fix"
+          git config user.email "atlas-fix@atlastrinity.local"
+          BRANCH_NAME="auto-fix/run-${{ github.event.workflow_run.id }}"
+          git checkout -b $BRANCH_NAME
+          echo "BRANCH_NAME=$BRANCH_NAME" >> $GITHUB_ENV
 
-      - name: Run Prettier
+      - name: Run Reactive Healing (IMPROVE Mode)
+        env:
+          PYTHONPATH: ${{ github.workspace }}
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          MODE: improve
         run: |
-          npm run format:write
+          python -c "
+          import asyncio
+          from src.brain.healing import healing_hypermodule, HealingMode
 
-      - name: Check for changes
-        id: git-check
+          async def main():
+              print('Running reactive healing based on CI logs...')
+              # The hypermodule will analyze ci_failure.log via LogAnalyzer
+              result = await healing_hypermodule.run(HealingMode.IMPROVE)
+              print(f'Result: {result.message}')
+              if result.details:
+                  import json
+                  print(json.dumps(result.details, indent=2, default=str))
+
+          asyncio.run(main())
+          "
+
+      - name: Push Fixes & Create PR
+        if: success()
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
-          git diff --exit-code || echo "changes=true" >> "$GITHUB_OUTPUT"
-
-      - name: Commit and Push changes
-        if: steps.git-check.outputs.changes == 'true'
-        run: |
-          git config --global user.name 'olegkizyma008-rgb'
-          git config --global user.email 'olegkizyma008-rgb@users.noreply.github.com'
-          git add .
-          git commit -m "[Auto-Fix] Apply code formatting
-
-          Co-authored-by: olegkizyma008-rgb <olegkizyma008-rgb@users.noreply.github.com>"
-          git push
+          git add -A
+          if git diff --staged --quiet; then
+            echo "No fixes applied."
+          else
+            git commit -m "[Auto-Fix] Applied fixes for run #${{ github.event.workflow_run.id }}"
+            git push origin $BRANCH_NAME
+            
+            # Create PR
+            PR_TITLE="[Auto-Fix] Fixes for workflow failure #${{ github.event.workflow_run.id }}"
+            PR_BODY="Automatically generated fixes based on log analysis of failing workflow run."
+            gh pr create --title "$PR_TITLE" --body "$PR_BODY" --base main --head $BRANCH_NAME
+          fi
