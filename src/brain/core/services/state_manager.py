@@ -40,6 +40,7 @@ class StateManager:
 
         self.prefix = prefix
         self.available = False
+        self._publish_ready = False  # Only True after Redis connection is verified
 
         if aioredis is None:
             logger.warning("[STATE] Redis not installed. Running without persistence.")
@@ -66,6 +67,21 @@ class StateManager:
 
         # Connection will be tested lazily or in initialize
         self.available = True
+
+    async def initialize(self):
+        """Test Redis connection and enable event publishing.
+
+        Called after ensure_redis() confirms Redis is running.
+        """
+        if not self.available or self.redis_client is None:
+            return
+        try:
+            await self.redis_client.ping()
+            self._publish_ready = True
+            logger.info("[STATE] Redis publish channel ready.")
+        except Exception as e:
+            logger.warning(f"[STATE] Redis ping failed during initialize: {e}")
+            self._publish_ready = False
 
     def _key(self, name: str) -> str:
         return f"{self.prefix}:{name}"
@@ -194,7 +210,7 @@ class StateManager:
 
     async def publish_event(self, channel: str, message: dict):
         """Publish a message to a Redis channel (Pub/Sub)"""
-        if not self.available or self.redis_client is None:
+        if not self._publish_ready or not self.available or self.redis_client is None:
             return
         try:
             # Check if event loop is running before awaiting

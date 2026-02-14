@@ -55,6 +55,9 @@ async def check_services_action(context: dict, timeout: int = 60):
 @register_action("internal.state_init")
 async def state_init_action(context: dict, reset: bool = False):
     """Initialize or reset system state."""
+    # Enable Redis event publishing now that services are confirmed running
+    await state_manager.initialize()
+
     orchestrator = context.get("orchestrator")
     if orchestrator:
         if reset:
