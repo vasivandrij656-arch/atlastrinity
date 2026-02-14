@@ -2099,19 +2099,20 @@ def check_database_health():
         print_success("ChromaDB (Golden Fund): Директорія знайдена")
 
 
-def main():
+def main(args=None):
 
-    # Parse arguments
-    parser = argparse.ArgumentParser(description="AtlasTrinity Dev Setup")
-    parser.add_argument("--backup", action="store_true", help="Backup databases and exit")
-    parser.add_argument("--restore", action="store_true", help="Restore databases and exit")
-    parser.add_argument(
-        "--yes", "-y", action="store_true", help="Non-interactive mode (auto-confirm)"
-    )
-    parser.add_argument(
-        "--no-auto-commit", action="store_true", help="Disable automatic commit and push of backups"
-    )
-    args = parser.parse_args()
+    if args is None:
+        # Parse arguments if not provided
+        parser = argparse.ArgumentParser(description="AtlasTrinity Dev Setup")
+        parser.add_argument("--backup", action="store_true", help="Backup databases and exit")
+        parser.add_argument("--restore", action="store_true", help="Restore databases and exit")
+        parser.add_argument(
+            "--yes", "-y", action="store_true", help="Non-interactive mode (auto-confirm)"
+        )
+        parser.add_argument(
+            "--no-auto-commit", action="store_true", help="Disable automatic commit and push of backups"
+        )
+        args = parser.parse_args()
 
     if args.yes:
         print_info("Non-interactive mode ENABLED.")
@@ -2468,6 +2469,49 @@ def setup_provider_tokens():
 
     print_info("Перевірка токенів провайдерів завершена")
 
+    # Create backup if databases were modified during setup
+    print_step("Перевірка необхідності створення бекапу...")
+    try:
+        # Check if any databases exist and were modified
+        db_files = [
+            CONFIG_ROOT / "atlastrinity.db",
+            CONFIG_ROOT / "data" / "trinity.db", 
+            CONFIG_ROOT / "data" / "monitoring.db",
+            CONFIG_ROOT / "data" / "golden_fund" / "golden.db",
+            CONFIG_ROOT / "data" / "search" / "golden_fund_index.db"
+        ]
+        
+        # Check if any database files exist and are newer than repo backups
+        backup_dir = PROJECT_ROOT / "backups" / "databases"
+        needs_backup = False
+        
+        for db_file in db_files:
+            if db_file.exists():
+                backup_file = backup_dir / db_file.name
+                if not backup_file.exists() or db_file.stat().st_mtime > backup_file.stat().st_mtime:
+                    needs_backup = True
+                    break
+        
+        if needs_backup:
+            print_info("Виявлено зміни в базах даних. Створення бекапу...")
+            backup_databases(args)
+        else:
+            print_info("Бази даних не змінювалися. Бекап не потрібен.")
+            
+    except Exception as e:
+        print_warning(f"Помилка при перевірці бекапу: {e}")
+
 
 if __name__ == "__main__":
-    main()
+    # Parse arguments and pass to main
+    parser = argparse.ArgumentParser(description="AtlasTrinity Dev Setup")
+    parser.add_argument("--backup", action="store_true", help="Backup databases and exit")
+    parser.add_argument("--restore", action="store_true", help="Restore databases and exit")
+    parser.add_argument(
+        "--yes", "-y", action="store_true", help="Non-interactive mode (auto-confirm)"
+    )
+    parser.add_argument(
+        "--no-auto-commit", action="store_true", help="Disable automatic commit and push of backups"
+    )
+    args = parser.parse_args()
+    main(args)

@@ -136,27 +136,36 @@ if ! confirm "This will DELETE ALL local configuration and environments. Continu
     echo "❌ Cancelled"
     exit 1
 fi
-# 0. Backup Prompt
+# 0. Backup Prompt - Skip if we're on a fresh clone (no local databases)
 echo "🛡️  Backup Check"
-if confirm "Create database backup before wiping?" "Y"; then
-    echo "📦 Backing up databases..."
-    # Use venv python if available (venv hasn't been deleted yet), otherwise python3.12/python3
-    if [ -x ".venv/bin/python" ]; then
-        BACKUP_PYTHON=".venv/bin/python"
-    elif command -v python3.12 &> /dev/null; then
-        BACKUP_PYTHON="python3.12"
+LOCAL_DB_EXISTS=false
+if [ -f "$HOME/.config/atlastrinity/atlastrinity.db" ] || [ -f "$HOME/.config/atlastrinity/data/trinity.db" ] || [ -d "$HOME/.config/atlastrinity/data/golden_fund" ]; then
+    LOCAL_DB_EXISTS=true
+fi
+
+if [ "$LOCAL_DB_EXISTS" = true ]; then
+    if confirm "Create database backup before wiping? (Local databases detected)" "Y"; then
+        echo "📦 Backing up local databases..."
+        # Use venv python if available (venv hasn't been deleted yet), otherwise python3.12/python3
+        if [ -x ".venv/bin/python" ]; then
+            BACKUP_PYTHON=".venv/bin/python"
+        elif command -v python3.12 &> /dev/null; then
+            BACKUP_PYTHON="python3.12"
+        else
+            BACKUP_PYTHON="python3"
+        fi
+        $BACKUP_PYTHON src/maintenance/setup_dev.py --backup
+        if [ $? -eq 0 ]; then
+            echo "✅ Backup completed successfully."
+        else
+            echo "❌ Backup failed! Aborting to prevent data loss."
+            exit 1
+        fi
     else
-        BACKUP_PYTHON="python3"
-    fi
-    $BACKUP_PYTHON src/maintenance/setup_dev.py --backup
-    if [ $? -eq 0 ]; then
-        echo "✅ Backup completed successfully."
-    else
-        echo "❌ Backup failed! Aborting to prevent data loss."
-        exit 1
+        echo "⚠️  Skipping backup. Hope you know what you are doing!"
     fi
 else
-    echo "⚠️  Skipping backup. Hope you know what you are doing!"
+    echo "ℹ️  No local databases found. Will restore from repository backups after setup."
 fi
 
 echo ""

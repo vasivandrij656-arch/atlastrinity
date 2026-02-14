@@ -11,10 +11,25 @@ cd "$PROJECT_ROOT"
 echo "🔄 Auto-commit and push database backups..."
 
 # Check if there are any changes to commit
+echo "🔍 Checking for database backup changes..."
 if ! git status --porcelain | grep -E "backups/databases/"; then
     echo "ℹ️  No database backup changes found. Skipping commit."
     exit 0
 fi
+
+# Show what will be committed
+echo "📋 Changes to be committed:"
+git status --porcelain | grep -E "backups/databases/" | while read line; do
+    status=$(echo "$line" | cut -c1-2)
+    file=$(echo "$line" | cut -c4-)
+    case $status in
+        "M ") echo "  📝 Modified: $file" ;;
+        "A ") echo "  ➕ Added: $file" ;;
+        "D ") echo "  🗑️  Deleted: $file" ;;
+        "??") echo "  ❓ Untracked: $file" ;;
+        *) echo "  🔄 Changed: $file" ;;
+    esac
+done
 
 # Load GitHub token from .env if available
 ENV_FILE="$HOME/.config/atlastrinity/.env"
