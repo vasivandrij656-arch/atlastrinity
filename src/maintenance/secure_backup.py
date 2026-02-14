@@ -246,6 +246,18 @@ class SecureBackupManager:
                 "filter_sqlite": False,  # Directory
             },
             {
+                "source": self.config_root / "data" / "golden_fund" / "blobs",
+                "dest": self.backup_dir / "golden_fund" / "blobs",
+                "encrypt": False,
+                "filter_sqlite": False,  # Directory (JSON blob files)
+            },
+            {
+                "source": self.config_root / "data" / "golden_fund" / "raw",
+                "dest": self.backup_dir / "golden_fund" / "raw",
+                "encrypt": False,
+                "filter_sqlite": False,  # Directory (raw ingested files)
+            },
+            {
                 "source": self.config_root / "memory" / "chroma",
                 "dest": self.backup_dir / "memory" / "chroma",
                 "encrypt": False,
@@ -363,6 +375,16 @@ class SecureBackupManager:
             {
                 "source": self.backup_dir / "golden_fund" / "chroma_db",
                 "dest": self.config_root / "data" / "golden_fund" / "chroma_db",
+                "encrypted": False,
+            },
+            {
+                "source": self.backup_dir / "golden_fund" / "blobs",
+                "dest": self.config_root / "data" / "golden_fund" / "blobs",
+                "encrypted": False,
+            },
+            {
+                "source": self.backup_dir / "golden_fund" / "raw",
+                "dest": self.config_root / "data" / "golden_fund" / "raw",
                 "encrypted": False,
             },
             {

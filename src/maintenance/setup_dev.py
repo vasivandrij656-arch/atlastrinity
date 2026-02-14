@@ -390,13 +390,27 @@ def ensure_database():
     backup_path = PROJECT_ROOT / "backups" / "databases" / "atlastrinity.db"
 
     # 1. Restore from backup if exists and local is missing
-    if not db_path.exists() and backup_path.exists():
-        print_info("Відновлення основної бази з бекапу репозиторію...")
-        try:
-            shutil.copy2(backup_path, db_path)
-            print_success("Базу даних відновлено")
-        except Exception as e:
-            print_warning(f"Не вдалося відновити базу: {e}")
+    encrypted_backup = PROJECT_ROOT / "backups" / "databases" / "atlastrinity.db.encrypted"
+    if not db_path.exists():
+        if backup_path.exists():
+            print_info("Відновлення основної бази з бекапу репозиторію...")
+            try:
+                shutil.copy2(backup_path, db_path)
+                print_success("Базу даних відновлено")
+            except Exception as e:
+                print_warning(f"Не вдалося відновити базу: {e}")
+        elif encrypted_backup.exists():
+            print_info("Відновлення основної бази з зашифрованого бекапу...")
+            try:
+                from src.maintenance.secure_backup import SecureBackupManager
+                backup_mgr = SecureBackupManager(PROJECT_ROOT)
+                key = backup_mgr.get_backup_key()
+                if backup_mgr.decrypt_file(encrypted_backup, db_path, key):
+                    print_success("Базу даних відновлено з зашифрованого бекапу")
+                else:
+                    print_warning("Не вдалося розшифрувати базу")
+            except Exception as e:
+                print_warning(f"Помилка відновлення з encrypted: {e}")
 
     # 2. Check if database file exists
     try:
@@ -415,18 +429,68 @@ def ensure_database():
     except Exception as e:
         print_warning(f"Помилка при налаштуванні БД: {e}")
 
-    # 4. Ensure legacy trinity.db exists for backup consistency
+    # 4. Ensure trinity.db exists (core system database)
     trinity_db_path = CONFIG_ROOT / "data" / "trinity.db"
     trinity_db_path.parent.mkdir(parents=True, exist_ok=True)
+
+    # 4a. Try to restore trinity.db from encrypted backup first
+    trinity_backup_encrypted = PROJECT_ROOT / "backups" / "databases" / "trinity.db.encrypted"
+    trinity_backup_plain = PROJECT_ROOT / "backups" / "databases" / "trinity.db"
     if not trinity_db_path.exists():
-        print_info("Створення порожньої legacy бази trinity.db...")
+        if trinity_backup_encrypted.exists():
+            print_info("Відновлення trinity.db з зашифрованого бекапу...")
+            try:
+                from src.maintenance.secure_backup import SecureBackupManager
+                backup_mgr = SecureBackupManager(PROJECT_ROOT)
+                key = backup_mgr.get_backup_key()
+                if backup_mgr.decrypt_file(trinity_backup_encrypted, trinity_db_path, key):
+                    print_success("trinity.db відновлено з зашифрованого бекапу")
+                else:
+                    print_warning("Не вдалося розшифрувати trinity.db")
+            except Exception as e:
+                print_warning(f"Помилка відновлення trinity.db з бекапу: {e}")
+        elif trinity_backup_plain.exists():
+            print_info("Відновлення trinity.db з незашифрованого бекапу...")
+            try:
+                shutil.copy2(trinity_backup_plain, trinity_db_path)
+                print_success("trinity.db відновлено з бекапу")
+            except Exception as e:
+                print_warning(f"Не вдалося відновити trinity.db: {e}")
+
+    # 4b. Create trinity.db with proper schema if still missing
+    if not trinity_db_path.exists():
+        print_info("Створення бази trinity.db з повною схемою...")
         try:
             with sqlite3.connect(trinity_db_path) as conn:
                 conn.execute("PRAGMA journal_mode=WAL;")
+                # Core system tables for trinity.db
+                conn.execute("""
+                    CREATE TABLE IF NOT EXISTS system_state (
+                        id INTEGER PRIMARY KEY AUTOINCREMENT,
+                        key TEXT UNIQUE NOT NULL,
+                        value TEXT,
+                        updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+                    )
+                """)
+                conn.execute("""
+                    CREATE TABLE IF NOT EXISTS config_snapshots (
+                        id INTEGER PRIMARY KEY AUTOINCREMENT,
+                        snapshot_name TEXT,
+                        config_data JSON,
+                        created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+                    )
+                """)
+                conn.execute("""
+                    CREATE TABLE IF NOT EXISTS migration_history (
+                        id INTEGER PRIMARY KEY AUTOINCREMENT,
+                        migration_name TEXT UNIQUE NOT NULL,
+                        applied_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+                    )
+                """)
                 conn.commit()
-            print_success("Legacy trinity.db створено")
+            print_success("trinity.db створено з повною схемою")
         except Exception as e:
-            print_warning(f"Не вдалося створити legacy trinity.db: {e}")
+            print_warning(f"Не вдалося створити trinity.db: {e}")
 
 
 def prepare_monitoring_db():
@@ -440,14 +504,28 @@ def prepare_monitoring_db():
     else:
         print_info(f"Monitoring DB буде створено при першому запуску: {monitor_db_path}")
 
-    # Backup restore logic could go here if we persist monitoring data across resets
+    # Backup restore logic - try encrypted first, then plain
     backup_path = PROJECT_ROOT / "backups" / "databases" / "monitoring.db"
-    if not monitor_db_path.exists() and backup_path.exists():
-        try:
-            shutil.copy2(backup_path, monitor_db_path)
-            print_success("Monitoring DB відновлено з бекапу")
-        except Exception as e:
-            print_warning(f"Не вдалося відновити Monitoring DB: {e}")
+    encrypted_backup = PROJECT_ROOT / "backups" / "databases" / "monitoring.db.encrypted"
+    if not monitor_db_path.exists():
+        if encrypted_backup.exists():
+            print_info("Відновлення Monitoring DB з зашифрованого бекапу...")
+            try:
+                from src.maintenance.secure_backup import SecureBackupManager
+                backup_mgr = SecureBackupManager(PROJECT_ROOT)
+                key = backup_mgr.get_backup_key()
+                if backup_mgr.decrypt_file(encrypted_backup, monitor_db_path, key):
+                    print_success("Monitoring DB відновлено з зашифрованого бекапу")
+                else:
+                    print_warning("Не вдалося розшифрувати Monitoring DB")
+            except Exception as e:
+                print_warning(f"Помилка відновлення Monitoring DB: {e}")
+        elif backup_path.exists():
+            try:
+                shutil.copy2(backup_path, monitor_db_path)
+                print_success("Monitoring DB відновлено з бекапу")
+            except Exception as e:
+                print_warning(f"Не вдалося відновити Monitoring DB: {e}")
 
     # Ensure tables exist (Schema Check)
     try:
@@ -582,20 +660,59 @@ def verify_golden_fund():
     except Exception as e:
         print_warning(f"Не вдалося перевірити структуру Golden Fund: {e}")
 
-    # 3. Ensure Search Index DB exists
+    # 3. Ensure Search Index DB exists (restore from backup first)
     search_index_path = CONFIG_ROOT / "data" / "search" / "golden_fund_index.db"
     search_index_path.parent.mkdir(parents=True, exist_ok=True)
 
     if not search_index_path.exists():
-        print_info("Створення бази індексу пошуку (FTS5)...")
+        # 3a. Try to restore from encrypted backup
+        search_encrypted = PROJECT_ROOT / "backups" / "databases" / "golden_fund_index.db.encrypted"
+        search_plain = PROJECT_ROOT / "backups" / "databases" / "golden_fund_index.db"
+        restored = False
+        if search_encrypted.exists():
+            print_info("Відновлення Search Index DB з зашифрованого бекапу...")
+            try:
+                from src.maintenance.secure_backup import SecureBackupManager
+                backup_mgr = SecureBackupManager(PROJECT_ROOT)
+                key = backup_mgr.get_backup_key()
+                if backup_mgr.decrypt_file(search_encrypted, search_index_path, key):
+                    print_success("Search Index DB відновлено з зашифрованого бекапу")
+                    restored = True
+                else:
+                    print_warning("Не вдалося розшифрувати Search Index DB")
+            except Exception as e:
+                print_warning(f"Помилка відновлення Search Index DB: {e}")
+        elif search_plain.exists():
+            try:
+                shutil.copy2(search_plain, search_index_path)
+                print_success("Search Index DB відновлено з бекапу")
+                restored = True
+            except Exception as e:
+                print_warning(f"Не вдалося відновити Search Index DB: {e}")
+
+        # 3b. Create fresh if not restored
+        if not restored:
+            print_info("Створення нової бази індексу пошуку (FTS5)...")
+            try:
+                with sqlite3.connect(search_index_path) as conn:
+                    conn.execute("PRAGMA journal_mode=WAL;")
+                    # FTS table will be created by the ingest tool, but we ensure the file exists
+                    conn.commit()
+                print_success("Search Index DB створено")
+            except Exception as e:
+                print_warning(f"Не вдалося створити Search Index DB: {e}")
+
+    # 4. Ensure Blob Storage directory exists
+    blob_dir = CONFIG_ROOT / "data" / "golden_fund" / "blobs"
+    backup_blob_dir = PROJECT_ROOT / "backups" / "databases" / "golden_fund" / "blobs"
+    if not blob_dir.exists() and backup_blob_dir.exists():
+        print_info("Відновлення Blob Storage з бекапу...")
         try:
-            with sqlite3.connect(search_index_path) as conn:
-                conn.execute("PRAGMA journal_mode=WAL;")
-                # FTS table will be created by the ingest tool, but we ensure the file exists
-                conn.commit()
-            print_success("Search Index DB створено")
+            shutil.copytree(backup_blob_dir, blob_dir)
+            print_success("Blob Storage відновлено")
         except Exception as e:
-            print_warning(f"Не вдалося створити Search Index DB: {e}")
+            print_warning(f"Не вдалося відновити Blob Storage: {e}")
+    blob_dir.mkdir(parents=True, exist_ok=True)
 
 
 def _brew_formula_installed(formula: str) -> bool:

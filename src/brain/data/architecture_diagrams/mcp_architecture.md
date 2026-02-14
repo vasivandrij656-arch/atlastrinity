@@ -1,4 +1,8 @@
 
+<!-- AUTO-UPDATED: 2026-02-14T19:39:11.324259 -->
+<!-- Modified: .agent/docs/mcp_architecture_diagram.md, .gitignore, src/brain/data/architecture_diagrams/mcp_architecture.md -->
+
+
 <!-- AUTO-UPDATED: 2026-02-14T19:38:37.064025 -->
 <!-- Modified: .agent/docs/mcp_architecture_diagram.md, .gitconfig, .gitignore -->
 
