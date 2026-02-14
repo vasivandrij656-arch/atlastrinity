@@ -14,14 +14,14 @@ from typing import TYPE_CHECKING, Any, cast
 
 if TYPE_CHECKING:
     import redis.asyncio as aioredis
+    from redis.asyncio import Redis as AsyncRedis
 else:
     try:
         import redis.asyncio as aioredis
+        from redis.asyncio import Redis as AsyncRedis
     except ImportError:
-        try:
-            import redis as aioredis
-        except ImportError:
-            aioredis = None
+        aioredis = None
+        AsyncRedis = None
 
 from src.brain.monitoring.logger import logger
 
@@ -34,6 +34,8 @@ class StateManager:
     - Checkpointing during execution
     - Session recovery after restart
     """
+
+    redis_client: AsyncRedis | None
 
     def __init__(self, host: str = "localhost", port: int = 6379, prefix: str = "atlastrinity"):
         from src.brain.config.config_loader import config
@@ -50,7 +52,7 @@ class StateManager:
         redis_url = os.getenv("REDIS_URL") or config.get("state.redis_url")
 
         if redis_url:
-            self.redis_client: aioredis.Redis = aioredis.Redis.from_url(
+            self.redis_client = aioredis.Redis.from_url(
                 redis_url,
                 decode_responses=True,
                 socket_connect_timeout=2,
@@ -73,10 +75,10 @@ class StateManager:
 
         Called after ensure_redis() confirms Redis is running.
         """
-        if not self.available or self.redis_client is None:
+        if not self.available or self.redis_client is None or AsyncRedis is None:
             return
         try:
-            await self.redis_client.ping()
+            await self.redis_client.ping()  # type: ignore [not-async]
             self._publish_ready = True
             logger.info("[STATE] Redis publish channel ready.")
         except Exception as e:
