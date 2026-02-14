@@ -238,48 +238,45 @@ jobs:
         with:
           python-version: ${{ env.PYTHON_VERSION }}
 
-      - name: Check OpenAI API
+      - name: Check Windsurf API
         run: |
           python -c "
           import os
           import requests
-          api_key = os.getenv('OPENAI_API_KEY', '')
+          api_key = os.getenv('WINDSURF_API_KEY', '')
           if api_key:
               headers = {'Authorization': f'Bearer {api_key}'}
-              response = requests.get('https://api.openai.com/v1/models', headers=headers)
+              response = requests.get('https://server.self-serve.windsurf.com/v1/models', headers=headers)
               if response.status_code == 200:
-                  print('✅ OpenAI API accessible')
+                  print('✅ Windsurf API accessible')
               else:
-                  print(f'⚠️ OpenAI API error: {response.status_code}')
+                  print(f'⚠️ Windsurf API error: {response.status_code}')
           else:
-              print('ℹ️ No OpenAI API key configured')
+              print('ℹ️ No Windsurf API key configured')
           "
         continue-on-error: true
         env:
-          OPENAI_API_KEY: "${{ secrets.OPENAI_API_KEY }}"
+          WINDSURF_API_KEY: "${{ secrets.WINDSURF_API_KEY }}"
 
-      - name: Check Anthropic API
+      - name: Check Copilot API
         run: |
           python -c "
           import os
           import requests
-          api_key = os.getenv('ANTHROPIC_API_KEY', '')
+          api_key = os.getenv('COPILOT_API_KEY', '')
           if api_key:
-              headers = {
-                  'x-api-key': api_key,
-                  'anthropic-version': '2023-06-01'
-              }
-              response = requests.get('https://api.anthropic.com/v1/models', headers=headers)
+              headers = {'Authorization': f'Bearer {api_key}'}
+              response = requests.get('https://api.githubcopilot.com/models', headers=headers)
               if response.status_code == 200:
-                  print('✅ Anthropic API accessible')
+                  print('✅ Copilot API accessible')
               else:
-                  print(f'⚠️ Anthropic API error: {response.status_code}')
+                  print(f'⚠️ Copilot API error: {response.status_code}')
           else:
-              print('ℹ️ No Anthropic API key configured')
+              print('ℹ️ No Copilot API key configured')
           "
         continue-on-error: true
         env:
-          ANTHROPIC_API_KEY: "${{ secrets.ANTHROPIC_API_KEY }}"
+          COPILOT_API_KEY: "${{ secrets.COPILOT_API_KEY }}"
 
   # ============================================
   # Status Report

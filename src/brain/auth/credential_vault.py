@@ -240,15 +240,17 @@ class CredentialVault:
         """Return list of all services (without secret data)."""
         result = []
         for name, cred in self._credentials.items():
-            result.append({
-                "service": name,
-                "type": cred.credential_type,
-                "expired": cred.is_expired,
-                "ttl": cred.ttl_seconds,
-                "auto_refresh": cred.auto_refresh,
-                "version": cred.version,
-                "created_at": cred.created_at,
-            })
+            result.append(
+                {
+                    "service": name,
+                    "type": cred.credential_type,
+                    "expired": cred.is_expired,
+                    "ttl": cred.ttl_seconds,
+                    "auto_refresh": cred.auto_refresh,
+                    "version": cred.version,
+                    "created_at": cred.created_at,
+                }
+            )
         return result
 
     def get_expiring_soon(self, threshold_seconds: float = 3600) -> list[str]:

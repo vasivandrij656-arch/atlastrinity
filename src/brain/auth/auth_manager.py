@@ -145,9 +145,7 @@ class AuthManager:
         bank_id = self._config.get("bank_id_client_id")
         bank_secret = self._config.get("bank_id_client_secret")
         if bank_id:
-            self.identity.register(
-                BankIdProvider(client_id=bank_id, client_secret=bank_secret)
-            )
+            self.identity.register(BankIdProvider(client_id=bank_id, client_secret=bank_secret))
 
         # NFC (always available as an option)
         self.identity.register(NfcIdentityProvider())
@@ -184,9 +182,7 @@ class AuthManager:
             if self.policy.can_auto_import:
                 imported = self._auto_import_discovered(all_entries)
                 if imported:
-                    logger.info(
-                        "📥 Auto-imported %d credentials to vault", imported
-                    )
+                    logger.info("📥 Auto-imported %d credentials to vault", imported)
 
             logger.info(
                 "🔓 Initial discovery complete: %d credentials found across all sources",
@@ -219,9 +215,7 @@ class AuthManager:
                 continue
 
             # Check policy
-            category, confidence = categorize_credential(
-                entry.service, entry.account
-            )
+            category, confidence = categorize_credential(entry.service, entry.account)
             if not self.policy.is_credential_allowed(entry.service, category):
                 continue
 
@@ -352,7 +346,9 @@ class AuthManager:
             discovery_url=config.get("discovery_url"),
             client_id=config.get("client_id"),
             client_secret=config.get("client_secret"),
-            flow=flow_map.get(config.get("flow", "authorization_code"), OAuthFlowType.AUTHORIZATION_CODE),
+            flow=flow_map.get(
+                config.get("flow", "authorization_code"), OAuthFlowType.AUTHORIZATION_CODE
+            ),
             scopes=config.get("scopes", []),
             redirect_uri=config.get("redirect_uri", "http://localhost:8086/auth/callback"),
             registration_url=config.get("registration_url"),
@@ -615,9 +611,7 @@ class AuthManager:
                 ),
             },
             "identity": {
-                "registered_providers": [
-                    m.value for m in self.identity.list_registered()
-                ],
+                "registered_providers": [m.value for m in self.identity.list_registered()],
             },
             "oauth": {
                 "configured_services": self.oauth.list_services(),
@@ -658,9 +652,7 @@ class AuthManager:
             return None
 
         if not self.policy.can_auto_use:
-            logger.warning(
-                "🔒 get_best_credential_for: auto_use is disabled"
-            )
+            logger.warning("🔒 get_best_credential_for: auto_use is disabled")
             return None
 
         from src.brain.auth.access_policy import categorize_credential
@@ -725,20 +717,18 @@ class AuthManager:
         result: list[dict[str, Any]] = []
 
         for entry in entries:
-            category, confidence = categorize_credential(
-                entry.service, entry.account
+            category, confidence = categorize_credential(entry.service, entry.account)
+            result.append(
+                {
+                    "service": entry.service,
+                    "account": entry.account,
+                    "source": entry.source.value,
+                    "category": category.value,
+                    "confidence": confidence,
+                    "has_secret": bool(entry.secret),
+                    "allowed": self.policy.is_credential_allowed(entry.service, category),
+                }
             )
-            result.append({
-                "service": entry.service,
-                "account": entry.account,
-                "source": entry.source.value,
-                "category": category.value,
-                "confidence": confidence,
-                "has_secret": bool(entry.secret),
-                "allowed": self.policy.is_credential_allowed(
-                    entry.service, category
-                ),
-            })
 
         return result
 
@@ -751,8 +741,12 @@ class AuthManager:
             {"imported": int, "skipped": int, "errors": int}
         """
         if not self.policy.can_auto_import:
-            return {"imported": 0, "skipped": 0, "errors": 0,
-                    "error": "auto_import is disabled by policy"}
+            return {
+                "imported": 0,
+                "skipped": 0,
+                "errors": 0,
+                "error": "auto_import is disabled by policy",
+            }
 
         entries = self.keychain.discover_all(force_refresh=True)
         imported = self._auto_import_discovered(entries)
@@ -785,20 +779,20 @@ class AuthManager:
             if cat_name not in inventory:
                 inventory[cat_name] = []
 
-            inventory[cat_name].append({
-                "service": entry.service,
-                "account": entry.account,
-                "source": entry.source.value,
-                "in_vault": entry.service in vault_services,
-                "has_secret": bool(entry.secret),
-            })
+            inventory[cat_name].append(
+                {
+                    "service": entry.service,
+                    "account": entry.account,
+                    "source": entry.source.value,
+                    "in_vault": entry.service in vault_services,
+                    "has_secret": bool(entry.secret),
+                }
+            )
 
         summary = {
             "total": len(entries),
             "in_vault": len(vault_services),
-            "categories": {
-                cat: len(items) for cat, items in inventory.items()
-            },
+            "categories": {cat: len(items) for cat, items in inventory.items()},
             "details": inventory,
         }
         return summary

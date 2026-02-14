@@ -361,7 +361,7 @@ def create_web_form_registration(
 
     # 6. Submit form
     payload = {"csrf_token": "{{csrf_token}}"}
-    for name in (fields or {"email": "Email", "password": "Password"}):
+    for name in fields or {"email": "Email", "password": "Password"}:
         payload[name] = f"{{{{{name}}}}}"
 
     steps.append(
@@ -449,9 +449,24 @@ def create_government_portal_registration(
             step_type=StepType.USER_INPUT,
             description="Registration data",
             input_fields=[
-                {"name": "app_name", "label": "Application name", "type": "text", "required": "true"},
-                {"name": "app_description", "label": "Description", "type": "text", "required": "false"},
-                {"name": "contact_email", "label": "Contact email", "type": "email", "required": "true"},
+                {
+                    "name": "app_name",
+                    "label": "Application name",
+                    "type": "text",
+                    "required": "true",
+                },
+                {
+                    "name": "app_description",
+                    "label": "Description",
+                    "type": "text",
+                    "required": "false",
+                },
+                {
+                    "name": "contact_email",
+                    "label": "Contact email",
+                    "type": "email",
+                    "required": "true",
+                },
             ],
         ),
     ]

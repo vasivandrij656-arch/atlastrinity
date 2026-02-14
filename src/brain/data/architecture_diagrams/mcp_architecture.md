@@ -1,4 +1,8 @@
 
+<!-- AUTO-UPDATED: 2026-02-14T22:38:05.281799 -->
+<!-- Modified: .agent/docs/mcp_architecture_diagram.md, config/config.yaml.template, src/brain/auth/__init__.py -->
+
+
 <!-- AUTO-UPDATED: 2026-02-14T22:36:09.400085 -->
 <!-- Modified: .agent/docs/mcp_architecture_diagram.md, config/config.yaml.template, src/brain/auth/__init__.py -->
 

@@ -215,7 +215,9 @@ class OAuthEngine:
             config.token_url = data.get("token_endpoint", config.token_url)
             config.revoke_url = data.get("revocation_endpoint", config.revoke_url)
             config.userinfo_url = data.get("userinfo_endpoint", config.userinfo_url)
-            config.device_code_url = data.get("device_authorization_endpoint", config.device_code_url)
+            config.device_code_url = data.get(
+                "device_authorization_endpoint", config.device_code_url
+            )
 
             logger.info("🔍 OIDC Discovery successful for: %s", service_id)
             return True
@@ -252,14 +254,10 @@ class OAuthEngine:
         # PKCE extension
         if config.flow == OAuthFlowType.PKCE:
             code_verifier = secrets.token_urlsafe(64)
-            code_challenge = (
-                hashlib.sha256(code_verifier.encode()).digest()
-            )
+            code_challenge = hashlib.sha256(code_verifier.encode()).digest()
             import base64
 
-            code_challenge_b64 = (
-                base64.urlsafe_b64encode(code_challenge).rstrip(b"=").decode()
-            )
+            code_challenge_b64 = base64.urlsafe_b64encode(code_challenge).rstrip(b"=").decode()
             params["code_challenge"] = code_challenge_b64
             params["code_challenge_method"] = "S256"
             state_data["code_verifier"] = code_verifier
@@ -509,13 +507,15 @@ class OAuthEngine:
             raise ValueError(f"No registration_url for {service_id}")
 
         payload = config.registration_payload or {}
-        payload.update({
-            "client_name": app_name,
-            "redirect_uris": redirect_uris or [config.redirect_uri],
-            "grant_types": ["authorization_code", "refresh_token"],
-            "response_types": ["code"],
-            "token_endpoint_auth_method": "client_secret_basic",
-        })
+        payload.update(
+            {
+                "client_name": app_name,
+                "redirect_uris": redirect_uris or [config.redirect_uri],
+                "grant_types": ["authorization_code", "refresh_token"],
+                "response_types": ["code"],
+                "token_endpoint_auth_method": "client_secret_basic",
+            }
+        )
         if app_uri:
             payload["client_uri"] = app_uri
 
@@ -534,5 +534,7 @@ class OAuthEngine:
         if "client_secret" in result:
             config.client_secret = result["client_secret"]
 
-        logger.info("✅ Client registered for %s: client_id=%s", service_id, result.get("client_id"))
+        logger.info(
+            "✅ Client registered for %s: client_id=%s", service_id, result.get("client_id")
+        )
         return result

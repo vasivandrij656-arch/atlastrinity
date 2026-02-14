@@ -91,6 +91,7 @@ class SystemAccess:
             # Try reading directly from .env file
             try:
                 from src.brain.config.config import CONFIG_ROOT
+
                 env_path = CONFIG_ROOT / ".env"
                 if env_path.exists():
                     with open(env_path, encoding="utf-8") as f:
@@ -180,9 +181,7 @@ class SystemAccess:
             if success:
                 logger.info("✅ sudo: %s (%.1fs)", cmd_summary, duration)
             else:
-                logger.warning(
-                    "❌ sudo failed: %s (rc=%d)", cmd_summary, result.returncode
-                )
+                logger.warning("❌ sudo failed: %s (rc=%d)", cmd_summary, result.returncode)
 
             return CommandResult(
                 success=success,
@@ -238,9 +237,7 @@ class SystemAccess:
             logger.warning("Cannot unlock keychain: no system password")
             return False
 
-        kc = keychain_path or str(
-            Path.home() / "Library" / "Keychains" / "login.keychain-db"
-        )
+        kc = keychain_path or str(Path.home() / "Library" / "Keychains" / "login.keychain-db")
 
         try:
             result = subprocess.run(
@@ -359,9 +356,7 @@ class SystemAccess:
             account = entry.get("account")
             ptype = entry.get("type", "generic")
 
-            secret = self.read_keychain_secret(
-                service, account, password_type=ptype
-            )
+            secret = self.read_keychain_secret(service, account, password_type=ptype)
             if secret:
                 results[service] = secret
 

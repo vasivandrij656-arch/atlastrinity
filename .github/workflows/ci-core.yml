@@ -88,12 +88,12 @@ jobs:
 
       - name: Run MCP Sandbox Test
         env:
-          MISTRAL_API_KEY: '${{ secrets.MISTRAL_API_KEY }}'
           COPILOT_API_KEY: '${{ secrets.COPILOT_API_KEY }}'
+          WINDSURF_API_KEY: '${{ secrets.WINDSURF_API_KEY }}'
           GITHUB_TOKEN: '${{ secrets.GITHUB_TOKEN }}'
         run: |
           # If no API keys, skip gracefully
-          if [[ -z "$MISTRAL_API_KEY" && -z "$COPILOT_API_KEY" ]]; then
+          if [[ -z "$COPILOT_API_KEY" && -z "$WINDSURF_API_KEY" ]]; then
             echo "⚠️ No AI API keys found. Skipping sandbox test."
             exit 0
           fi

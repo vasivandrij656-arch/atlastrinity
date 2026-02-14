@@ -299,10 +299,7 @@ class KeychainBridge:
 
         entries = self._scan_full_keychain()
         if service_filter:
-            entries = [
-                e for e in entries
-                if service_filter.lower() in (e.service or "").lower()
-            ]
+            entries = [e for e in entries if service_filter.lower() in (e.service or "").lower()]
         return entries
 
     # ── Environment & Dotenv ────────────────────────────────────────────
@@ -592,9 +589,7 @@ class KeychainBridge:
                     if current.get("svce") or current.get("srvr"):
                         service = current.get("svce") or current.get("srvr", "")
                         service = self._clean_keychain_value(service)
-                        account = self._clean_keychain_value(
-                            current.get("acct", "")
-                        )
+                        account = self._clean_keychain_value(current.get("acct", ""))
 
                         if service:  # Skip entries with empty service
                             entries.append(
@@ -644,7 +639,7 @@ class KeychainBridge:
                         current[key] = value
                     else:
                         # Format: 0x00000007 <blob>="Label Value"
-                        m2 = re.match(r'(0x[0-9a-fA-F]+)\s+<[^>]+>=(.+)', stripped)
+                        m2 = re.match(r"(0x[0-9a-fA-F]+)\s+<[^>]+>=(.+)", stripped)
                         if m2:
                             key = m2.group(1)
                             raw_value = m2.group(2).strip()
@@ -687,8 +682,15 @@ class KeychainBridge:
         KEY, TOKEN, SECRET, PASSWORD, API, AUTH, CREDENTIAL
         """
         secret_patterns = {
-            "KEY", "TOKEN", "SECRET", "PASSWORD", "API",
-            "AUTH", "CREDENTIAL", "PASS", "PWD",
+            "KEY",
+            "TOKEN",
+            "SECRET",
+            "PASSWORD",
+            "API",
+            "AUTH",
+            "CREDENTIAL",
+            "PASS",
+            "PWD",
         }
 
         entries: list[KeychainEntry] = []
@@ -697,11 +699,20 @@ class KeychainBridge:
             if any(p in key_upper for p in secret_patterns):
                 # Skip obviously non-secret system vars
                 if key_upper in {
-                    "SSH_AUTH_SOCK", "GPG_AGENT_INFO",
-                    "TERM", "PATH", "HOME", "USER", "SHELL",
-                    "LANG", "LC_ALL", "DISPLAY",
-                    "XDG_CACHE_HOME", "XDG_CONFIG_HOME",
-                    "CONFIG_ROOT", "ANONYMIZED_TELEMETRY",
+                    "SSH_AUTH_SOCK",
+                    "GPG_AGENT_INFO",
+                    "TERM",
+                    "PATH",
+                    "HOME",
+                    "USER",
+                    "SHELL",
+                    "LANG",
+                    "LC_ALL",
+                    "DISPLAY",
+                    "XDG_CACHE_HOME",
+                    "XDG_CONFIG_HOME",
+                    "CONFIG_ROOT",
+                    "ANONYMIZED_TELEMETRY",
                     "CHROMA_TELEMETRY_ENABLED",
                     "LANGCHAIN_TRACING_V2",
                 }:
@@ -760,9 +771,7 @@ class KeychainBridge:
             return ""
         value = value.strip().strip('"')
         # Handle hex-encoded values like 0x12AB...
-        if value.startswith("0x") and all(
-            c in "0123456789abcdefABCDEF" for c in value[2:]
-        ):
+        if value.startswith("0x") and all(c in "0123456789abcdefABCDEF" for c in value[2:]):
             try:
                 return bytes.fromhex(value[2:]).decode("utf-8", errors="replace")
             except (ValueError, UnicodeDecodeError):
@@ -796,12 +805,15 @@ class KeychainBridge:
         for entry in all_entries:
             # Match against service, account, label
             searchable = " ".join(
-                filter(None, [
-                    entry.service,
-                    entry.account,
-                    entry.metadata.get("label", ""),
-                    entry.metadata.get("env_key", ""),
-                ])
+                filter(
+                    None,
+                    [
+                        entry.service,
+                        entry.account,
+                        entry.metadata.get("label", ""),
+                        entry.metadata.get("env_key", ""),
+                    ],
+                )
             ).lower()
 
             if query_lower in searchable:
@@ -811,6 +823,7 @@ class KeychainBridge:
                         CredentialCategory,
                         categorize_credential,
                     )
+
                     cat, _ = categorize_credential(entry.service, entry.account)
                     try:
                         target_cat = CredentialCategory(category)
@@ -829,7 +842,8 @@ class KeychainBridge:
 
         all_entries = self.discover_all()
         return [
-            e for e in all_entries
+            e
+            for e in all_entries
             if categorize_credential(e.service, e.account)[0]
             in {CredentialCategory.API_KEY, CredentialCategory.AI_TOKEN}
         ]
@@ -840,9 +854,9 @@ class KeychainBridge:
 
         all_entries = self.discover_all()
         return [
-            e for e in all_entries
-            if categorize_credential(e.service, e.account)[0]
-            == CredentialCategory.IDE_TOKEN
+            e
+            for e in all_entries
+            if categorize_credential(e.service, e.account)[0] == CredentialCategory.IDE_TOKEN
         ]
 
     def get_all_ai_tokens(self) -> list[KeychainEntry]:
@@ -851,9 +865,9 @@ class KeychainBridge:
 
         all_entries = self.discover_all()
         return [
-            e for e in all_entries
-            if categorize_credential(e.service, e.account)[0]
-            == CredentialCategory.AI_TOKEN
+            e
+            for e in all_entries
+            if categorize_credential(e.service, e.account)[0] == CredentialCategory.AI_TOKEN
         ]
 
     def get_google_credentials(self) -> list[KeychainEntry]:
@@ -911,14 +925,17 @@ class KeychainBridge:
             source = entry.source.value
             if source not in grouped:
                 grouped[source] = []
-            grouped[source].append({
-                "service": entry.service,
-                "account": entry.account,
-                "has_secret": bool(entry.secret),
-                "metadata": {
-                    k: v for k, v in entry.metadata.items()
-                    if k != "raw"  # Exclude raw dump data
-                },
-            })
+            grouped[source].append(
+                {
+                    "service": entry.service,
+                    "account": entry.account,
+                    "has_secret": bool(entry.secret),
+                    "metadata": {
+                        k: v
+                        for k, v in entry.metadata.items()
+                        if k != "raw"  # Exclude raw dump data
+                    },
+                }
+            )
 
         return grouped

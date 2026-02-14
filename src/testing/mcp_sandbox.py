@@ -32,33 +32,36 @@ from src.brain.config.config_loader import config  # noqa: E402
 from src.providers.factory import create_llm  # noqa: E402
 
 
-class SimpleMistralLLM:
-    def __init__(self, api_key=None, model="mistral-large-latest"):
-        self.api_key = api_key or os.getenv("MISTRAL_API_KEY")
+class SimpleWindsurfLLM:
+    def __init__(self, api_key=None, model="deepseek-v3"):
+        # Priority: WINDSURF_API_KEY -> COPILOT_API_KEY -> None
+        self.api_key = api_key or os.getenv("WINDSURF_API_KEY") or os.getenv("COPILOT_API_KEY")
         self.model = model
-        if not self.api_key:
-            # Try loading from config if env var invalid
-            try:
-                config_path = Path.home() / ".config" / "atlastrinity" / "vibe_config.toml"
-                if config_path.exists():
-                    with open(config_path) as f:
-                        for line in f:
-                            if "api_key_env_var" in line and "MISTRAL_API_KEY" in line:
-                                pass  # This doesn't help get value
-            except:
-                pass
+        self.api_base = "https://server.self-serve.windsurf.com"
+
+        # If using Copilot key, switch to Copilot endpoint
+        if os.getenv("COPILOT_API_KEY") and not os.getenv("WINDSURF_API_KEY"):
+            self.api_base = "https://api.githubcopilot.com"
+            self.model = "gpt-4o"
 
     async def ainvoke(self, prompt: str) -> Any:
         import httpx
 
         if not self.api_key:
-            raise ValueError("MISTRAL_API_KEY not found in env")
+            raise ValueError("No API key found (WINDSURF_API_KEY or COPILOT_API_KEY)")
 
         headers = {
             "Authorization": f"Bearer {self.api_key}",
             "Content-Type": "application/json",
             "Accept": "application/json",
         }
+
+        # Use appropriate endpoint based on API key
+        if "windsurf" in self.api_base.lower():
+            url = f"{self.api_base}/v1/chat/completions"
+        else:
+            url = f"{self.api_base}/chat/completions"
+
         payload = {
             "model": self.model,
             "messages": [{"role": "user", "content": prompt}],
@@ -66,9 +69,7 @@ class SimpleMistralLLM:
             "response_format": {"type": "json_object"} if "JSON" in prompt else None,
         }
         async with httpx.AsyncClient(timeout=60.0) as client:
-            resp = await client.post(
-                "https://api.mistral.ai/v1/chat/completions", json=payload, headers=headers
-            )
+            resp = await client.post(url, json=payload, headers=headers)
             resp.raise_for_status()
             data = resp.json()
             content = data["choices"][0]["message"]["content"]
@@ -317,8 +318,8 @@ Generate the test scenario:"""
             llm = create_llm(model_name=config.get("models.sandbox"))
             response = await llm.ainvoke(prompt)
         except Exception:
-            # Fallback to Mistral
-            llm = SimpleMistralLLM()
+            # Fallback to Windsurf
+            llm = SimpleWindsurfLLM()
             response = await llm.ainvoke(prompt)
 
         response_text = response.content if hasattr(response, "content") else str(response)
@@ -419,8 +420,8 @@ Respond with: PASS or FAIL followed by a brief explanation (max 30 words)."""
             llm = create_llm(model_name=config.get("models.sandbox"))
             response = await llm.ainvoke(prompt)
         except Exception:
-            # Fallback to Mistral
-            llm = SimpleMistralLLM()
+            # Fallback to Windsurf
+            llm = SimpleWindsurfLLM()
             response = await llm.ainvoke(prompt)
 
         verdict = response.content if hasattr(response, "content") else str(response)

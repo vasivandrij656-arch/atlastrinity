@@ -114,9 +114,7 @@ def detect_ci_environment() -> CIEnvironment:
             runner_os=runner_os,
         )
 
-    logger.info(
-        "🔑 Auth capabilities: %s", ", ".join(env.available_features)
-    )
+    logger.info("🔑 Auth capabilities: %s", ", ".join(env.available_features))
     return env
 
 

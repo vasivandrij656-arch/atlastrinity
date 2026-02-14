@@ -344,7 +344,9 @@ class TestRegistrationEngine:
         vault = CredentialVault(vault_dir=tmp_path / "vault")
         engine = RegistrationEngine(vault=vault)
 
-        result = engine._resolve_value("Hello {{name}}, your key is {{key}}", {"name": "Atlas", "key": "abc"})
+        result = engine._resolve_value(
+            "Hello {{name}}, your key is {{key}}", {"name": "Atlas", "key": "abc"}
+        )
         assert result == "Hello Atlas, your key is abc"
 
     def test_resolve_nested(self, tmp_path):
@@ -585,14 +587,16 @@ class TestAuthManager:
         from src.brain.auth.auth_manager import AuthManager
 
         auth = AuthManager()
-        auth.configure_oauth_service({
-            "service_id": "test_oauth",
-            "display_name": "Test",
-            "authorize_url": "https://example.com/auth",
-            "token_url": "https://example.com/token",
-            "client_id": "client123",
-            "scopes": ["read"],
-        })
+        auth.configure_oauth_service(
+            {
+                "service_id": "test_oauth",
+                "display_name": "Test",
+                "authorize_url": "https://example.com/auth",
+                "token_url": "https://example.com/token",
+                "client_id": "client123",
+                "scopes": ["read"],
+            }
+        )
         assert "test_oauth" in auth.oauth.list_services()
 
 

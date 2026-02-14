@@ -226,11 +226,13 @@ class DiaEidProvider(IdentityProvider):
             return await self._sign_with_file(data)
 
         # Cloud mode: requires user interaction
-        challenge = await self.create_challenge({
-            "action": "sign_data",
-            "data_hash": data[:32].hex(),
-            **context,
-        })
+        challenge = await self.create_challenge(
+            {
+                "action": "sign_data",
+                "data_hash": data[:32].hex(),
+                **context,
+            }
+        )
         return IdentityResult(
             status=IdentityStatus.AWAITING_USER,
             method=IdentityMethod.DIA_EID,
@@ -477,7 +479,9 @@ class CertificateProvider(IdentityProvider):
                     status=IdentityStatus.VERIFIED,
                     method=IdentityMethod.CERTIFICATE,
                     signature=signature,
-                    certificate=certificate.public_bytes(serialization.Encoding.PEM) if certificate else None,
+                    certificate=certificate.public_bytes(serialization.Encoding.PEM)
+                    if certificate
+                    else None,
                 )
 
             if self._key_path and self._key_path.exists():

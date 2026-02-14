@@ -385,7 +385,9 @@ class RegistrationEngine:
     ) -> StepStatus:
         url = self._resolve_value(step.url, variables)
         payload = self._resolve_value(step.payload or {}, variables)
-        headers = self._resolve_value(step.headers or {"Content-Type": "application/json"}, variables)
+        headers = self._resolve_value(
+            step.headers or {"Content-Type": "application/json"}, variables
+        )
 
         client = await self._get_client()
         resp = await client.post(url, json=payload, headers=headers)
@@ -580,7 +582,10 @@ class RegistrationEngine:
             params = dict(request.query_params)
             received.update(params)
             event.set()
-            return {"status": "ok", "message": "Atlas received callback. You can close this window."}
+            return {
+                "status": "ok",
+                "message": "Atlas received callback. You can close this window.",
+            }
 
         config = Config(app=app, host="0.0.0.0", port=step.callback_port, log_level="warning")  # nosec B104
         server = Server(config)
@@ -609,7 +614,9 @@ class RegistrationEngine:
         """OAuth2 Dynamic Client Registration (RFC 7591)."""
         url = self._resolve_value(step.url, variables)
         payload = self._resolve_value(step.payload or {}, variables)
-        headers = self._resolve_value(step.headers or {"Content-Type": "application/json"}, variables)
+        headers = self._resolve_value(
+            step.headers or {"Content-Type": "application/json"}, variables
+        )
 
         # Default registration payload
         default_payload = {

@@ -57,6 +57,7 @@ STANZA_DIR = CONFIG_ROOT / "models" / "stanza"
 NLTK_DIR = CONFIG_ROOT / "models" / "nltk"
 VPN_DIR = CONFIG_ROOT / "models" / "vpn"  # For potentially other models
 MCP_DIR = CONFIG_ROOT / "mcp"
+AUTH_DIR = CONFIG_ROOT / "auth"
 WORKSPACE_DIR = CONFIG_ROOT / "workspace"
 VIBE_WORKSPACE = CONFIG_ROOT / "vibe_workspace"
 
@@ -82,6 +83,7 @@ def ensure_dirs():
         CONFIG_ROOT / "models" / "huggingface",
         CONFIG_ROOT / "cache",
         MCP_DIR,
+        AUTH_DIR,
     ]:
         d.mkdir(parents=True, exist_ok=True)
 

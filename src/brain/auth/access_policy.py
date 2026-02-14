@@ -68,49 +68,100 @@ class DiscoveredCredential:
 
 _CATEGORY_PATTERNS: dict[CredentialCategory, list[str]] = {
     CredentialCategory.API_KEY: [
-        "api_key", "apikey", "api-key", "_key",
-        "google_maps", "openrouter", "mistral",
-        "sendgrid", "stripe", "twilio", "aws_",
+        "api_key",
+        "apikey",
+        "api-key",
+        "_key",
+        "google_maps",
+        "openrouter",
+        "mistral",
+        "sendgrid",
+        "stripe",
+        "twilio",
+        "aws_",
     ],
     CredentialCategory.OAUTH_TOKEN: [
-        "oauth", "access_token", "refresh_token",
-        "bearer", "jwt",
+        "oauth",
+        "access_token",
+        "refresh_token",
+        "bearer",
+        "jwt",
     ],
     CredentialCategory.IDE_TOKEN: [
-        "copilot", "windsurf", "cursor", "code safe storage",
-        "fleet", "intellij", "vscode", "goose",
+        "copilot",
+        "windsurf",
+        "cursor",
+        "code safe storage",
+        "fleet",
+        "intellij",
+        "vscode",
+        "goose",
     ],
     CredentialCategory.AI_TOKEN: [
-        "openai", "chatgpt", "claude", "anthropic",
-        "gemini", "mistral", "openrouter", "perplexity",
-        "grok", "deepseek", "together", "replicate",
+        "openai",
+        "chatgpt",
+        "claude",
+        "anthropic",
+        "gemini",
+        "mistral",
+        "openrouter",
+        "perplexity",
+        "grok",
+        "deepseek",
+        "together",
+        "replicate",
     ],
     CredentialCategory.CLOUD_ACCOUNT: [
-        "google", "icloud", "apple", "microsoft",
-        "azure", "aws", "gcp", "firebase", "supabase",
+        "google",
+        "icloud",
+        "apple",
+        "microsoft",
+        "azure",
+        "aws",
+        "gcp",
+        "firebase",
+        "supabase",
     ],
     CredentialCategory.PASSWORD: [
-        "password", "passwd", "login",
+        "password",
+        "passwd",
+        "login",
     ],
     CredentialCategory.SSH_KEY: [
-        "ssh", "id_rsa", "id_ed25519",
+        "ssh",
+        "id_rsa",
+        "id_ed25519",
     ],
     CredentialCategory.GPG_KEY: [
-        "gpg", "pgp",
+        "gpg",
+        "pgp",
     ],
     CredentialCategory.CERTIFICATE: [
-        "cert", "certificate", "x509", "pkcs",
-        "ssl", "tls",
+        "cert",
+        "certificate",
+        "x509",
+        "pkcs",
+        "ssl",
+        "tls",
     ],
     CredentialCategory.WIFI_PASSWORD: [
-        "airport", "wifi", "wpa", "ssid",
+        "airport",
+        "wifi",
+        "wpa",
+        "ssid",
     ],
     CredentialCategory.BROWSER_STORAGE: [
-        "chrome safe storage", "firefox", "safari",
-        "brave", "edge", "opera",
+        "chrome safe storage",
+        "firefox",
+        "safari",
+        "brave",
+        "edge",
+        "opera",
     ],
     CredentialCategory.COOKIE: [
-        "cookie", "session", "csrf",
+        "cookie",
+        "session",
+        "csrf",
     ],
 }
 
@@ -170,12 +221,12 @@ class AccessPolicy:
     blocked_services: set[str] = field(default_factory=set)  # always block these
 
     # Operations
-    can_auto_discover: bool = False   # Automatic scanning of all stores
-    can_auto_import: bool = False     # Automatic import into vault
-    can_auto_use: bool = False        # Automatic use without prompting
-    can_store: bool = False           # Can store new credentials
-    can_delete: bool = False          # Can delete credentials
-    can_export: bool = False          # Can export credentials
+    can_auto_discover: bool = False  # Automatic scanning of all stores
+    can_auto_import: bool = False  # Automatic import into vault
+    can_auto_use: bool = False  # Automatic use without prompting
+    can_store: bool = False  # Can store new credentials
+    can_delete: bool = False  # Can delete credentials
+    can_export: bool = False  # Can export credentials
 
     def is_credential_allowed(
         self,
@@ -255,9 +306,7 @@ def load_access_policy(config: dict[str, Any] | None = None) -> AccessPolicy:
         policy.can_store = True
         policy.can_delete = True
         policy.can_export = True
-        logger.info(
-            "\ud83d\udd13 Access Policy: FULL — Atlas has full access to all credentials"
-        )
+        logger.info("\ud83d\udd13 Access Policy: FULL — Atlas has full access to all credentials")
     elif level == AccessLevel.RESTRICTED:
         # Restricted — read whitelist/blacklist from config
         policy.allowed_categories = {
