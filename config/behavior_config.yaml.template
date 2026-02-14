@@ -1872,6 +1872,59 @@ self_healing:
     track_success_rate: true
     identify_problematic_tools: true
     recommend_preventive_actions: true
+  
+  # ---------------------------------------------------------------------------
+  # HYPERMODULE (Unified Self-Healing Orchestrator)
+  # ---------------------------------------------------------------------------
+  hypermodule:
+    enabled: true
+    
+    # Background log analyzer
+    log_analyzer:
+      enabled: true
+      check_interval_seconds: 60      # How often to scan logs
+      notes_retention_days: 30         # Keep addressed notes for N days
+      watched_logs:
+        - brain.log
+        - vibe_server.log
+        - orchestrator.log
+    
+    # Preventive maintenance
+    prevention:
+      enabled: true
+      schedule_cron: "0 */6 * * *"    # Every 6 hours
+      auto_commit: true
+      tasks:
+        - log_rotation
+        - config_sync
+        - cache_cleanup
+        - ci_analysis
+        - stale_notes_cleanup
+    
+    # Proactive improvement
+    improvement:
+      enabled: true
+      max_improvements_per_cycle: 3
+      require_lint_pass: true
+      require_test_pass: true
+      commit_prefix: "[Self-Healing]"
+      focus_areas:                     # Categories to prioritize
+        - error_pattern
+        - resource_bottleneck
+        - slow_operation
+    
+    # CI/CD bridge
+    ci_bridge:
+      enabled: true
+      check_on_startup: true
+      auto_fix_formatting: true
+      repository: solagurma/atlastrinity
+    
+    # Server management
+    server_manager:
+      preserve_state_on_restart: true
+      auto_restart_on_failure: true
+      restart_cooldown_seconds: 30
 
 # =============================================================================
 # SOFTWARE DEVELOPMENT WORKFLOW

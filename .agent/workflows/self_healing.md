@@ -2,60 +2,116 @@
 description: Formal Self-Healing Workflow with Sandbox Verification and State Preservation
 ---
 
-# Self-Healing Protocol (The "Phoenix" Protocol)
+# Self-Healing Phoenix Protocol
 
-This workflow defines the standard procedure for handling **Critical Logic Errors** and **System State Corruption**. It ensures that fixes are analyzed, tested in isolation, and applied without losing task progress.
+## Overview
 
-## 1. Deep Analysis Phase (The Diagnosis)
+The self-healing system is unified in **`src/brain/healing/hypermodule.py`** — the **SelfHealingHypermodule**. It consolidates all scattered healing/maintenance scripts into a single orchestrator with 4 modes.
 
-**Trigger**: `ErrorRouter` classifies error as `LOGIC` or `STATE`.
+## Unified Entry Point
 
-1.  **Stop Execution**: Pause the current task loop.
-2.  **Sequential Thinking**: The Agent (Vibe/Atlas) MUST perform a root cause analysis using `sequential-thinking` MCP tool.
-    - _Constraint_: Do not propose a fix until the root cause is confirmed by log evidence or reproduction.
-3.  **Reproduction**: Create a minimal reproduction script (e.g., `tests/reproduce_issue_X.py`) if feasible.
+```python
+from src.brain.healing import healing_hypermodule, HealingMode
 
-## 2. Sandbox Verification Phase (The Lab)
+# Reactive healing (fix active error)
+result = await healing_hypermodule.run(HealingMode.HEAL, context={
+    "error": "...",
+    "step_id": "step_1",
+    "step_context": {...},
+})
 
-**Goal**: Verify the fix without breaking the main repository.
+# System diagnostics
+result = await healing_hypermodule.run(HealingMode.DIAGNOSE)
 
-1.  **Isolate**:
-    - Identify the target file (e.g., `src/module/broken.py`).
-    - Copy it to a sandbox location (e.g., `/tmp/sandbox/broken.py` or `tests/sandbox/`).
-2.  **Apply Fix**:
-    - Apply the proposed code changes to the **Sandboxed File**.
-3.  **Verify**:
-    - Run the reproduction script against the sandboxed file.
-    - _Condition_: If verification fails -> Return to **Analysis Phase**.
-    - _Condition_: If verification passes -> Proceed to **Integration Phase**.
+# Preventive maintenance
+result = await healing_hypermodule.run(HealingMode.PREVENT)
 
-    _Note_: Use `src.brain.tools.sandbox_runner` if available to automate this.
+# Proactive code improvements
+result = await healing_hypermodule.run(HealingMode.IMPROVE)
+```
 
-## 3. Integration Phase (The Surgery)
+## Modes
 
-1.  **Apply Patch**: Apply the verified fix to the actual repository file.
-2.  **Lint/Check**: Run quick linting/integrity checks (`npm run lint` or `bandit`).
+### 1. HEAL — Reactive Error Fixing
 
-## 4. Resilience Phase (The Phoenix Rebirth)
+**When:** An active error occurs during task execution.
+**Flow:**
 
-**Goal**: Restart the process to clear any memory corruption, while preserving task state.
+1. Save task state snapshot
+2. Try parallel healing (non-blocking via `ParallelHealingManager`)
+3. Fallback to blocking heal (via `HealingOrchestrator`)
+4. Restore state on completion
 
-1.  **Snapshot State**:
-    - Call `save_recovery_state` tool (or `Orchestrator.save_recovery_snapshot`).
-    - This saves:
-      - Current Task Step ID.
-      - Full Conversation History.
-      - Active `state_manager` (Redis) keys.
-      - Pending inputs/outputs.
-2.  **Restart**:
-    - Execute system restart (e.g., `sys.exit(0)` if managed by a supervisor, or specific restart command).
-3.  **Resume**:
-    - On boot, `Orchestrator` detects `.recovery_state.json`.
-    - Loads state.
-    - Resumes execution from the exact step where it paused.
+### 2. DIAGNOSE — System Health Check
 
-// turbo
+**When:** On startup, on demand, or when suspected degradation.
+**Flow:**
 
-## 5. Post-Recovery Verification
+1. Run `SystemFixer.run_all()` — auto-fix known issues
+2. Run `health_checks` — YAML, MCP, DB, Vibe, memory
+3. Run `mcp_health` — MCP server connectivity
+4. Check CI/CD workflow status via GitHub API
+5. Report unified diagnostic with recommendations
 
-1.  **Verify Stability**: Ensure the error does not recur within the next 2 steps.
+### 3. PREVENT — Preventive Maintenance
+
+**When:** Every 6 hours (cron) or on demand.
+**Flow:**
+
+1. Log rotation and cleanup
+2. Config sync verification (templates → active)
+3. CI/CD failure analysis → improvement notes
+4. Memory/cache cleanup
+5. Stale notes cleanup (>30 days)
+
+### 4. IMPROVE — Proactive Code Improvement
+
+**When:** Improvement notes have accumulated from log analysis.
+**Flow:**
+
+1. Read pending notes from `LogAnalyzer`
+2. Group into `Hotspot` objects by file
+3. Generate fix via Vibe for each hotspot
+4. Verify with lint/tests
+5. Auto-commit with `[Self-Healing:Improvement]` tag
+6. Mark notes as addressed
+
+## Background Services
+
+- **LogAnalyzer** — daemon thread watching `~/.config/atlastrinity/logs/brain.log`
+  - Extracts: error patterns, slow ops, repeated warnings, resource bottlenecks
+  - Persists notes to `~/.config/atlastrinity/memory/improvement_notes.json`
+
+- **ServerManager** — MCP server restart with state preservation
+  - Snapshots task state before restart
+  - Restores after reconnection for seamless resumption
+
+- **CIBridge** — GitHub Actions integration
+  - Queries workflow status via API
+  - Triggers auto-fix workflows
+  - Commits with `[Self-Healing]` tags
+
+## CI/CD Integration
+
+New workflow: `.github/workflows/self-healing.yml`
+
+- Runs every 6 hours (PREVENT mode)
+- Manual dispatch with mode selection (diagnose/prevent/improve)
+- Auto-commits changes and uploads diagnostic reports
+
+## Configuration
+
+All settings in `behavior_config.yaml` under `self_healing.hypermodule:`.
+
+## Core Files
+
+| File                                      | Purpose                               |
+| ----------------------------------------- | ------------------------------------- |
+| `src/brain/healing/hypermodule.py`        | Main orchestrator (4 modes)           |
+| `src/brain/healing/modes.py`              | Enums and dataclasses                 |
+| `src/brain/healing/log_analyzer.py`       | Background log watcher                |
+| `src/brain/healing/ci_bridge.py`          | CI/CD integration                     |
+| `src/brain/healing/server_manager.py`     | Server lifecycle management           |
+| `src/brain/healing/improvement_engine.py` | Proactive improvement engine          |
+| `src/brain/healing/system_healing.py`     | Phoenix Protocol (legacy, still used) |
+| `src/brain/healing/parallel_healing.py`   | Parallel healing (legacy, still used) |
