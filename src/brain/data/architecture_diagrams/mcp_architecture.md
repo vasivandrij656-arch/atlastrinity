@@ -1,4 +1,8 @@
 
+<!-- AUTO-UPDATED: 2026-02-14T19:22:50.308430 -->
+<!-- Modified: .agent/docs/mcp_architecture_diagram.md, .agent/docs/vibe_diagram_github_integration.md, .agent/workflows/git-setup.md -->
+
+
 <!-- AUTO-UPDATED: 2026-02-14T18:58:17.413125 -->
 <!-- Modified: .agent/docs/mcp_architecture_diagram.md, src/brain/data/architecture_diagrams/mcp_architecture.md, src/mcp_server/vibe_server.py -->
 
