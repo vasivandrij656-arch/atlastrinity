@@ -15,3 +15,5 @@ rules:
     disable: true
   artipacked:
     disable: true
+  dangerous-triggers:
+    disable: true

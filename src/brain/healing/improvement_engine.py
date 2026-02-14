@@ -5,8 +5,6 @@ and applies fixes via Vibe. All changes are auto-committed with [Self-Healing] t
 """
 
 import logging
-from pathlib import Path
-from typing import Any
 
 from src.brain.healing.modes import (
     CommitTag,

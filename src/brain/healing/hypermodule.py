@@ -24,7 +24,6 @@ Usage:
     result = await healing_hypermodule.run(HealingMode.IMPROVE)
 """
 
-import asyncio
 import logging
 import time
 from typing import Any
@@ -33,10 +32,8 @@ from src.brain.healing.ci_bridge import CIBridge, ci_bridge
 from src.brain.healing.improvement_engine import ImprovementEngine, improvement_engine
 from src.brain.healing.log_analyzer import LogAnalyzer, log_analyzer
 from src.brain.healing.modes import (
-    CommitTag,
     DiagnosticReport,
     HealingMode,
-    HealingPriority,
     HealingResult,
 )
 from src.brain.healing.server_manager import ServerManager, server_manager

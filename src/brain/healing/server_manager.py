@@ -4,7 +4,6 @@ Manages MCP server lifecycle with state preservation for seamless task resumptio
 Handles server restart, graceful shutdown, and state snapshot/restore.
 """
 
-import asyncio
 import json
 import logging
 from datetime import datetime
@@ -47,24 +46,11 @@ class ServerManager:
             # Import here to avoid circular dependency
             from src.brain.mcp.mcp_manager import mcp_manager
 
-            # Phase 1: Disconnect the server
-            logger.info(f"[ServerManager] Disconnecting {server_name}...")
-            if hasattr(mcp_manager, "disconnect_server"):
-                await mcp_manager.disconnect_server(server_name)
-            elif hasattr(mcp_manager, "servers") and server_name in mcp_manager.servers:
-                server = mcp_manager.servers[server_name]
-                if hasattr(server, "disconnect"):
-                    await server.disconnect()
-
-            # Brief pause for cleanup
-            await asyncio.sleep(1)
-
-            # Phase 2: Reconnect
-            logger.info(f"[ServerManager] Reconnecting {server_name}...")
-            if hasattr(mcp_manager, "connect_server"):
-                await mcp_manager.connect_server(server_name)
-            elif hasattr(mcp_manager, "initialize_server"):
-                await mcp_manager.initialize_server(server_name)
+            # Phase 1 & 2: Restart via MCP manager
+            success = await mcp_manager.restart_server(server_name)
+            if not success:
+                logger.warning(f"[ServerManager] MCP manager could not restart {server_name}")
+                return False
 
             logger.info(f"[ServerManager] Server '{server_name}' restarted successfully")
             return True
