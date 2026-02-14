@@ -120,7 +120,27 @@ def get_ancestor_pids() -> set[int]:
     return ancestors
 
 
+def stop_brew_services():
+    """Stop brew-managed services before killing processes to prevent auto-restart."""
+    brew_services = ["redis"]
+    for service in brew_services:
+        try:
+            result = subprocess.run(
+                ["brew", "services", "list"],
+                capture_output=True, text=True, check=False,
+            )
+            if service in result.stdout and "started" in result.stdout.split(service)[1].split("\n")[0]:
+                print(f"  • {Colors.CYAN}Stopping brew service:{Colors.ENDC} {service}")
+                subprocess.run(["brew", "services", "stop", service], capture_output=True, check=False)
+                time.sleep(0.5)
+        except Exception:
+            pass
+
+
 def main():
+
+    # Stop brew-managed services first to prevent auto-restart after kill
+    stop_brew_services()
 
     processes: list[tuple[int, str]] = get_process_list()
     terminated_pids: list[int] = []
