@@ -71,7 +71,12 @@ DerivedData/
 
 # Database Backups Strategy:
 # - Local databases in ~/.config/atlastrinity/ are never committed
-# - backups/databases/ is now IGNORED due to security scanning and size
-backups/databases/
-*.encrypted
-*.sqlite3
+# - Encrypted backups ARE allowed in backups/databases/
+# - Raw SQLite files are still ignored for security
+backups/databases/*.db
+backups/databases/*.sqlite3
+# Allow encrypted backups
+!backups/databases/*.encrypted
+!backups/databases/backup_metadata.json
+!backups/databases/golden_fund/
+!backups/databases/memory/
