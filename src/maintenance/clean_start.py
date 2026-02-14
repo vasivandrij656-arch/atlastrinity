@@ -127,11 +127,18 @@ def stop_brew_services():
         try:
             result = subprocess.run(
                 ["brew", "services", "list"],
-                capture_output=True, text=True, check=False,
+                capture_output=True,
+                text=True,
+                check=False,
             )
-            if service in result.stdout and "started" in result.stdout.split(service)[1].split("\n")[0]:
+            if (
+                service in result.stdout
+                and "started" in result.stdout.split(service)[1].split("\n")[0]
+            ):
                 print(f"  • {Colors.CYAN}Stopping brew service:{Colors.ENDC} {service}")
-                subprocess.run(["brew", "services", "stop", service], capture_output=True, check=False)
+                subprocess.run(
+                    ["brew", "services", "stop", service], capture_output=True, check=False
+                )
                 time.sleep(0.5)
         except Exception:
             pass
