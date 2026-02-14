@@ -508,3 +508,95 @@ monitoring:
       threshold: 10
       duration: 1m
       severity: critical
+
+# =============================================================================
+# AUTHENTICATION & AUTO-REGISTRATION
+# =============================================================================
+# Universal authentication system for Atlas.
+# Supports: OAuth2, API keys, Дія.ЕЦП, BankID, NFC, Certificates, Keychain
+
+auth:
+  # ── Access Policy ───────────────────────────────────────────────────
+  # Controls what Atlas can do with credentials from Keychain & other stores.
+  # Override via env var: ATLAS_KEYCHAIN_ACCESS=full|restricted|none
+  #
+  # Levels:
+  #   full:       Atlas has FULL access to ALL credentials. Can auto-discover,
+  #               auto-import, and autonomously use any secret for any action.
+  #   restricted: Only allowed categories/services. Configurable below.
+  #   none:       No access to system credential stores. (Default)
+  access_policy:
+    level: "full"  # Override: ATLAS_KEYCHAIN_ACCESS env var
+    # For 'restricted' mode:
+    # allowed_categories: [api_key, oauth_token, ide_token, ai_token]
+    # blocked_categories: [wifi_password, browser_storage]
+    # allowed_services: []       # empty = all allowed (minus blocked)
+    # blocked_services: []       # always block these
+    # can_auto_discover: true    # scan all credential stores
+    # can_auto_import: false     # auto-import to encrypted vault
+    # can_auto_use: false        # use without asking
+    # can_store: true            # store new credentials
+    # can_delete: false          # delete credentials
+    # can_export: false          # export credentials
+
+  # Credential Vault (encrypted local storage)
+  vault:
+    enabled: true
+    # vault_key: from ATLAS_VAULT_KEY env var or auto-generated
+
+  # Keychain integration (macOS Keychain, Chrome, SSH, GPG, .env)
+  keychain:
+    enabled: true
+    sources:
+      macos_keychain: true
+      chrome_passwords: false   # Enable if needed (requires permissions)
+      firefox_passwords: false
+      safari_passwords: false
+      ssh_agent: true
+      gpg_agent: true
+      environment: true
+      dotenv_file: true
+
+  # Identity providers (for signing and verification)
+  identity:
+    # Дія.ЕЦП — key file or cloud
+    dia_eid:
+      enabled: false
+      # key_file: "~/.config/atlastrinity/auth/dia_key.jks"
+      # key_password: from DIA_KEY_PASSWORD env var
+      # acquirer_token: from DIA_ACQUIRER_TOKEN env var
+
+    # BankID
+    bank_id:
+      enabled: false
+      # client_id: from BANK_ID_CLIENT_ID env var
+      # client_secret: from BANK_ID_CLIENT_SECRET env var
+
+    # NFC reader (for biometric passports / ID cards)
+    nfc:
+      enabled: false
+
+    # X.509 / PKCS#12 certificates
+    certificate:
+      enabled: false
+      # cert_path: "~/.config/atlastrinity/auth/cert.pfx"
+      # key_path: "~/.config/atlastrinity/auth/key.pem"
+      # password: from CERT_PASSWORD env var
+
+  # Token auto-refresh
+  auto_refresh:
+    enabled: true
+    check_interval: 300      # seconds
+    refresh_threshold: 600   # refresh if TTL < this
+
+  # OAuth2 services (add your services here)
+  # Each entry will be auto-registered in the OAuth engine
+  oauth_providers: {}
+    # example_service:
+    #   display_name: "Example Service"
+    #   authorize_url: "https://example.com/oauth/authorize"
+    #   token_url: "https://example.com/oauth/token"
+    #   client_id: from EXAMPLE_CLIENT_ID env var
+    #   client_secret: from EXAMPLE_CLIENT_SECRET env var
+    #   scopes: ["read", "write"]
+    #   flow: "authorization_code"  # or "pkce", "client_credentials", "device_code"

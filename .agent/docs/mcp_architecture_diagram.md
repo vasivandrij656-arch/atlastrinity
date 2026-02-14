@@ -1,4 +1,12 @@
 
+<!-- AUTO-UPDATED: 2026-02-14T22:36:09.400085 -->
+<!-- Modified: .agent/docs/mcp_architecture_diagram.md, config/config.yaml.template, src/brain/auth/__init__.py -->
+
+
+<!-- AUTO-UPDATED: 2026-02-14T22:34:24.957773 -->
+<!-- Modified: .agent/docs/mcp_architecture_diagram.md, src/brain/data/architecture_diagrams/mcp_architecture.md, src/brain/mcp/data/protocols/search_protocol.txt -->
+
+
 <!-- AUTO-UPDATED: 2026-02-14T20:48:30.703347 -->
 <!-- Modified: scripts/fresh_install.sh -->
 
