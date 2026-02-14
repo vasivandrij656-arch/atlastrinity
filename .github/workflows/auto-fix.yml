@@ -13,7 +13,9 @@ permissions:
 
 jobs:
   analyze-and-fix:
-    if: ${{ github.event.workflow_run.conclusion == 'failure' }}
+    if: >
+      github.event.workflow_run.conclusion == 'failure' &&
+      github.event.workflow_run.head_repository.full_name == github.repository
     runs-on: ubuntu-latest
     timeout-minutes: 20
 
@@ -44,6 +46,7 @@ jobs:
           gh run view "$RUN_ID" --log > ~/.config/atlastrinity/logs/ci_failure.log || echo "Failed to download logs"
 
       - name: Create Auto-Fix Branch
+        id: branch
         env:
           RUN_ID: ${{ github.event.workflow_run.id }}
         run: |
@@ -51,7 +54,7 @@ jobs:
           git config user.email "atlas-fix@atlastrinity.local"
           BRANCH_NAME="auto-fix/run-$RUN_ID"
           git checkout -b "$BRANCH_NAME"
-          echo "BRANCH_NAME=$BRANCH_NAME" >> "$GITHUB_ENV"
+          echo "name=$BRANCH_NAME" >> "$GITHUB_OUTPUT"
 
       - name: Run Reactive Healing (IMPROVE Mode)
         env:
@@ -79,16 +82,18 @@ jobs:
         if: success()
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          BRANCH_NAME: ${{ steps.branch.outputs.name }}
+          RUN_ID: ${{ github.event.workflow_run.id }}
         run: |
           git add -A
           if git diff --staged --quiet; then
             echo "No fixes applied."
           else
-            git commit -m "[Auto-Fix] Applied fixes for run #${{ github.event.workflow_run.id }}"
+            git commit -m "[Auto-Fix] Applied fixes for run #$RUN_ID"
             git push origin "$BRANCH_NAME"
             
             # Create PR
-            PR_TITLE="[Auto-Fix] Fixes for workflow failure #${{ github.event.workflow_run.id }}"
+            PR_TITLE="[Auto-Fix] Fixes for workflow failure #$RUN_ID"
             PR_BODY="Automatically generated fixes based on log analysis of failing workflow run."
             gh pr create --title "$PR_TITLE" --body "$PR_BODY" --base main --head "$BRANCH_NAME"
           fi

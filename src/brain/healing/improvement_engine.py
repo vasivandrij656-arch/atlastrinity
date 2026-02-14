@@ -116,7 +116,9 @@ class ImprovementEngine:
         Returns:
             HealingResult with success status.
         """
-        logger.info(f"[ImprovementEngine] Applying improvement to {hotspot.file_path}: {hotspot.description[:80]}")
+        logger.info(
+            f"[ImprovementEngine] Applying improvement to {hotspot.file_path}: {hotspot.description[:80]}"
+        )
 
         try:
             from src.brain.mcp.mcp_manager import mcp_manager
@@ -152,7 +154,9 @@ class ImprovementEngine:
                     True,
                 )
                 if not lint_ok:
-                    logger.warning(f"[ImprovementEngine] Lint failed after improvement: {lint_result}")
+                    logger.warning(
+                        f"[ImprovementEngine] Lint failed after improvement: {lint_result}"
+                    )
                     return HealingResult(
                         mode=HealingMode.IMPROVE,
                         success=False,
@@ -202,7 +206,9 @@ class ImprovementEngine:
             logger.info("[ImprovementEngine] No hotspots found, nothing to improve")
             return []
 
-        logger.info(f"[ImprovementEngine] Found {len(hotspots)} hotspots, applying up to {max_count}")
+        logger.info(
+            f"[ImprovementEngine] Found {len(hotspots)} hotspots, applying up to {max_count}"
+        )
 
         results: list[HealingResult] = []
         successful_files: list[str] = []

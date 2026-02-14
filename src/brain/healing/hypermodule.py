@@ -192,12 +192,14 @@ class SelfHealingHypermodule:
         logger.info(f"[Hypermodule:HEAL] Healing error in step '{step_id}': {error[:120]}")
 
         # Save state before healing attempt
-        await self.server_manager.save_task_state({
-            "mode": "heal",
-            "step_id": step_id,
-            "error": error,
-            "depth": depth,
-        })
+        await self.server_manager.save_task_state(
+            {
+                "mode": "heal",
+                "step_id": step_id,
+                "error": error,
+                "depth": depth,
+            }
+        )
 
         try:
             # Try parallel healing first (non-blocking)
@@ -219,7 +221,9 @@ class SelfHealingHypermodule:
                     details={"task_id": task_id, "method": "parallel"},
                 )
             except RuntimeError as e:
-                logger.warning(f"[Hypermodule:HEAL] Parallel healing unavailable: {e}, trying blocking")
+                logger.warning(
+                    f"[Hypermodule:HEAL] Parallel healing unavailable: {e}, trying blocking"
+                )
             except Exception as e:
                 logger.warning(f"[Hypermodule:HEAL] Parallel healing failed: {e}, trying blocking")
 
@@ -474,7 +478,9 @@ class SelfHealingHypermodule:
             if stale:
                 # Remove stale notes (they're addressed and old)
                 with self.log_analyzer._lock:
-                    self.log_analyzer._notes = [n for n in self.log_analyzer._notes if n not in stale]
+                    self.log_analyzer._notes = [
+                        n for n in self.log_analyzer._notes if n not in stale
+                    ]
                 self.log_analyzer._save_notes()
                 actions.append(f"Cleaned {len(stale)} stale notes")
         except Exception as e:
@@ -507,7 +513,9 @@ class SelfHealingHypermodule:
             focus_areas: Optional list of categories to focus on.
             max_improvements: Maximum improvements to apply per cycle.
         """
-        logger.info(f"[Hypermodule:IMPROVE] Starting improvement cycle, focus: {focus_areas or 'all'}")
+        logger.info(
+            f"[Hypermodule:IMPROVE] Starting improvement cycle, focus: {focus_areas or 'all'}"
+        )
 
         # Get pending notes
         notes = self.log_analyzer.get_pending_notes()

@@ -1,4 +1,5 @@
 """Fast verification script for self-healing modules without heavy deps."""
+
 import asyncio
 import shutil
 import sys
@@ -46,7 +47,7 @@ class TestFastHealing(unittest.TestCase):
         notes = analyzer.analyze_chunk(lines)
         # Should return 1 note (first one created), subsequent are updates (return None)
         self.assertEqual(len(notes), 1)
-        
+
         all_notes = analyzer.get_all_notes()
         self.assertEqual(len(all_notes), 1)
         self.assertEqual(all_notes[0].occurrences, 3)
@@ -57,10 +58,10 @@ class TestFastHealing(unittest.TestCase):
         analyzer = LogAnalyzer(logs_dir=self.log_dir, notes_path=self.notes_path)
         lines = ["2026-02-14 12:00:00 ERROR brain.test: TestError: something broke"]
         analyzer.analyze_chunk(lines)
-        
+
         notes = analyzer.get_pending_notes()
         self.assertEqual(len(notes), 1)
-        
+
         analyzer.mark_addressed(notes[0].id, "fixed")
         pending = analyzer.get_pending_notes()
         self.assertEqual(len(pending), 0)
@@ -70,26 +71,29 @@ class TestFastHealing(unittest.TestCase):
         print("\nTesting ServerManager state preservation...")
         manager = ServerManager(state_dir=Path(self.tmp))
         state = {"step_id": "test_step", "data": 123}
-        
+
         await manager.save_task_state(state)
         self.assertTrue(manager.has_pending_snapshot())
-        
+
         restored = await manager.restore_task_state()
         self.assertEqual(restored["step_id"], "test_step")
         self.assertEqual(restored["data"], 123)
-        
+
         manager.clear_snapshot()
         self.assertFalse(manager.has_pending_snapshot())
         print("✅ ServerManager state preservation passed")
+
 
 if __name__ == "__main__":
     suite = unittest.TestLoader().loadTestsFromTestCase(TestFastHealing)
     runner = unittest.TextTestRunner(verbosity=2)
     result = runner.run(suite)
-    
+
     # Run async test manually
     loop = asyncio.new_event_loop()
-    loop.run_until_complete(TestFastHealing("async_test_server_manager").async_test_server_manager())
-    
+    loop.run_until_complete(
+        TestFastHealing("async_test_server_manager").async_test_server_manager()
+    )
+
     if not result.wasSuccessful():
         sys.exit(1)

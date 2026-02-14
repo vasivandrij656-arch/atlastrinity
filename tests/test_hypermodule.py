@@ -64,7 +64,6 @@ class TestLogAnalyzer:
         # First line creates notes (error + warning patterns match),
         # duplicate lines update existing notes (return None from _upsert_note)
 
-
         # Verify dedup by running again - no new notes should be created
         notes2 = self.analyzer.analyze_chunk(lines)
         assert len(notes2) == 0  # All duplicates now
@@ -249,17 +248,20 @@ class TestHypermodule:
         # Mock all external check modules to avoid side effects
         with (
             patch("src.maintenance.system_fixer.SystemFixer") as mock_fixer_cls,
-            patch.dict("sys.modules", {
-                "src.maintenance.health_checks": MagicMock(
-                    check_yaml_syntax=lambda: {"status": "ok"},
-                    check_mcp_servers=lambda: {"status": "ok"},
-                    check_database=lambda: {"status": "ok"},
-                    check_python_deps=lambda: {"status": "ok"},
-                    check_vibe_server=lambda: {"status": "ok"},
-                    check_memory_usage=lambda: {"status": "ok"},
-                    check_recent_errors=lambda: {"status": "ok"},
-                ),
-            }),
+            patch.dict(
+                "sys.modules",
+                {
+                    "src.maintenance.health_checks": MagicMock(
+                        check_yaml_syntax=lambda: {"status": "ok"},
+                        check_mcp_servers=lambda: {"status": "ok"},
+                        check_database=lambda: {"status": "ok"},
+                        check_python_deps=lambda: {"status": "ok"},
+                        check_vibe_server=lambda: {"status": "ok"},
+                        check_memory_usage=lambda: {"status": "ok"},
+                        check_recent_errors=lambda: {"status": "ok"},
+                    ),
+                },
+            ),
         ):
             mock_fixer = MagicMock()
             mock_fixer_cls.return_value = mock_fixer

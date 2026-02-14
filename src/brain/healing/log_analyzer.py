@@ -254,7 +254,10 @@ class LogAnalyzer:
                 existing.occurrences += 1
                 existing.last_seen = datetime.now()
                 # Escalate priority if recurring
-                if existing.occurrences >= 10 and existing.severity.value > HealingPriority.HIGH.value:
+                if (
+                    existing.occurrences >= 10
+                    and existing.severity.value > HealingPriority.HIGH.value
+                ):
                     existing.severity = HealingPriority.HIGH
                 elif (
                     existing.occurrences >= 50
@@ -309,9 +312,7 @@ class LogAnalyzer:
                 with open(self.notes_path, encoding="utf-8") as f:
                     data = json.load(f)
                 self._notes = [ImprovementNote.from_dict(d) for d in data]
-                self._note_index = {
-                    f"{n.category}:{n.description[:100]}": n for n in self._notes
-                }
+                self._note_index = {f"{n.category}:{n.description[:100]}": n for n in self._notes}
                 logger.info(f"[LogAnalyzer] Loaded {len(self._notes)} notes from disk")
         except Exception as e:
             logger.debug(f"[LogAnalyzer] Could not load notes: {e}")

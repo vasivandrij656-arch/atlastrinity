@@ -71,13 +71,14 @@ class CIBridge:
             }
             url = f"https://api.github.com/repos/{self._repo}/actions/runs?per_page=20"
 
-            async with aiohttp.ClientSession() as session, session.get(
-                url, headers=headers, timeout=aiohttp.ClientTimeout(total=30)
-            ) as resp:
-                    if resp.status != 200:
-                        logger.warning(f"[CIBridge] GitHub API returned {resp.status}")
-                        return results
-                    data = await resp.json()
+            async with (
+                aiohttp.ClientSession() as session,
+                session.get(url, headers=headers, timeout=aiohttp.ClientTimeout(total=30)) as resp,
+            ):
+                if resp.status != 200:
+                    logger.warning(f"[CIBridge] GitHub API returned {resp.status}")
+                    return results
+                data = await resp.json()
 
             # Group by workflow name, keep latest
             latest_by_name: dict[str, dict] = {}
@@ -120,9 +121,9 @@ class CIBridge:
             if result.conclusion != "failure":
                 continue
 
-            failed_info = ", ".join(
-                j.get("name", "unknown") for j in result.failed_jobs
-            ) or "unknown jobs"
+            failed_info = (
+                ", ".join(j.get("name", "unknown") for j in result.failed_jobs) or "unknown jobs"
+            )
 
             note = ImprovementNote(
                 id=f"ci_{result.run_id}",
@@ -157,14 +158,17 @@ class CIBridge:
             url = f"https://api.github.com/repos/{self._repo}/actions/workflows/{workflow_name}/dispatches"
             payload = {"ref": "main"}
 
-            async with aiohttp.ClientSession() as session, session.post(
-                url, headers=headers, json=payload, timeout=aiohttp.ClientTimeout(total=15)
-            ) as resp:
-                    if resp.status == 204:
-                        logger.info(f"[CIBridge] Triggered workflow: {workflow_name}")
-                        return True
-                    logger.warning(f"[CIBridge] Failed to trigger workflow: {resp.status}")
-                    return False
+            async with (
+                aiohttp.ClientSession() as session,
+                session.post(
+                    url, headers=headers, json=payload, timeout=aiohttp.ClientTimeout(total=15)
+                ) as resp,
+            ):
+                if resp.status == 204:
+                    logger.info(f"[CIBridge] Triggered workflow: {workflow_name}")
+                    return True
+                logger.warning(f"[CIBridge] Failed to trigger workflow: {resp.status}")
+                return False
         except Exception as e:
             logger.error(f"[CIBridge] Failed to trigger auto-fix: {e}")
             return False
@@ -196,16 +200,16 @@ class CIBridge:
             log_dir.mkdir(parents=True, exist_ok=True)
 
             logger.info(f"[CIBridge] Downloading logs for run {run_id}...")
-            
+
             # Capture logs from gh run view
             result = subprocess.run(
                 ["gh", "run", "view", str(run_id), "--log"],
                 cwd=str(self.project_root),
                 capture_output=True,
                 text=True,
-                check=True
+                check=True,
             )
-            
+
             log_file = log_dir / "workflow.log"
             log_file.write_text(result.stdout, encoding="utf-8")
             return str(log_file)
@@ -295,20 +299,19 @@ class CIBridge:
 
     # --- Private methods ---
 
-    async def _get_failed_jobs(
-        self, run_id: int, headers: dict[str, str]
-    ) -> list[dict[str, Any]]:
+    async def _get_failed_jobs(self, run_id: int, headers: dict[str, str]) -> list[dict[str, Any]]:
         """Get failed jobs for a workflow run."""
         try:
             import aiohttp
 
             url = f"https://api.github.com/repos/{self._repo}/actions/runs/{run_id}/jobs"
-            async with aiohttp.ClientSession() as session, session.get(
-                url, headers=headers, timeout=aiohttp.ClientTimeout(total=15)
-            ) as resp:
-                    if resp.status != 200:
-                        return []
-                    data = await resp.json()
+            async with (
+                aiohttp.ClientSession() as session,
+                session.get(url, headers=headers, timeout=aiohttp.ClientTimeout(total=15)) as resp,
+            ):
+                if resp.status != 200:
+                    return []
+                data = await resp.json()
 
             return [
                 {"name": job["name"], "conclusion": job.get("conclusion")}
