@@ -313,6 +313,15 @@ if confirm "Бажаєте запустити налаштування (setup_de
     else
         echo "⚠️ scripts/sync_secrets.sh не знайдено, пропускаємо синхронізацію."
     fi
+
+    # Auto-commit and push database backups
+    echo ""
+    echo "🔄 Автоматичний коміт та пуш бекапів баз даних..."
+    if [ -f "scripts/auto_commit_backups.sh" ]; then
+        bash "scripts/auto_commit_backups.sh"
+    else
+        echo "⚠️ scripts/auto_commit_backups.sh не знайдено, пропускаємо коміт бекапів."
+    fi
 else
     echo "👋 Ви можете запустити налаштування пізніше."
 fi

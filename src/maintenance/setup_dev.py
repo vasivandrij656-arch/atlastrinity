@@ -1647,7 +1647,7 @@ def _pip_install_safe(package: str):
         )
 
 
-def backup_databases():
+def backup_databases(args=None):
     """Архівує всі бази даних з шифруванням та фільтрацією секретів"""
     print_step("Створення безпечних резервних копій баз даних...")
 
@@ -1670,18 +1670,40 @@ def backup_databases():
         if success:
             print_success("Безпечний бекап завершено успішно.")
             print_info(f"Резервні копії збережено в: {PROJECT_ROOT / 'backups' / 'databases'}")
+
+            # Auto-commit and push backups to GitHub (unless disabled)
+            if not (args and hasattr(args, "no_auto_commit") and args.no_auto_commit):
+                print_info("Автоматичний коміт та пуш бекапів до GitHub...")
+                try:
+                    import subprocess
+
+                    result = subprocess.run(
+                        ["bash", "scripts/auto_commit_backups.sh"],
+                        cwd=PROJECT_ROOT,
+                        capture_output=True,
+                        text=True,
+                        timeout=60,
+                    )
+                    if result.returncode == 0:
+                        print_success("Бекапи успішно запушені до GitHub")
+                    else:
+                        print_warning(f"Не вдалося запушити бекапи: {result.stderr}")
+                except Exception as e:
+                    print_warning(f"Помилка при автоматичному пуші бекапів: {e}")
+            else:
+                print_info("Автоматичний коміт вимкнено (--no-auto-commit)")
         else:
             print_error("Помилка при створенні безпечного бекапу")
 
     except ImportError as e:
         print_warning(f"Модуль безпечного бекапу недоступний: {e}")
         print_info("Використання legacy методу бекапу (без шифрування)...")
-        _legacy_backup_databases()
+        _legacy_backup_databases(args)
     except Exception as e:
         print_error(f"Помилка при створенні бекапу: {e}")
 
 
-def _legacy_backup_databases():
+def _legacy_backup_databases(args=None):
     """Застарілий метод бекапу (без шифрування)"""
     print_warning("Використання застарілого методу бекапу без шифрування...")
 
@@ -1723,6 +1745,28 @@ def _legacy_backup_databases():
 
     print_success("Бекап завершено успішно.")
     print_info(f"Резервні копії збережено в: {backup_dir}")
+
+    # Auto-commit and push backups to GitHub (unless disabled)
+    if not (args and hasattr(args, "no_auto_commit") and args.no_auto_commit):
+        print_info("Автоматичний коміт та пуш бекапів до GitHub...")
+        try:
+            import subprocess
+
+            result = subprocess.run(
+                ["bash", "scripts/auto_commit_backups.sh"],
+                cwd=PROJECT_ROOT,
+                capture_output=True,
+                text=True,
+                timeout=60,
+            )
+            if result.returncode == 0:
+                print_success("Бекапи успішно запушені до GitHub")
+            else:
+                print_warning(f"Не вдалося запушити бекапи: {result.stderr}")
+        except Exception as e:
+            print_warning(f"Помилка при автоматичному пуші бекапів: {e}")
+    else:
+        print_info("Автоматичний коміт вимкнено (--no-auto-commit)")
 
 
 def restore_databases():
@@ -2064,6 +2108,9 @@ def main():
     parser.add_argument(
         "--yes", "-y", action="store_true", help="Non-interactive mode (auto-confirm)"
     )
+    parser.add_argument(
+        "--no-auto-commit", action="store_true", help="Disable automatic commit and push of backups"
+    )
     args = parser.parse_args()
 
     if args.yes:
@@ -2071,7 +2118,7 @@ def main():
         os.environ["ATLAS_SETUP_NON_INTERACTIVE"] = "1"
 
     if args.backup:
-        backup_databases()
+        backup_databases(args)
         return
 
     if args.restore:
