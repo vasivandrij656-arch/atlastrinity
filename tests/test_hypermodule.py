@@ -60,7 +60,7 @@ class TestLogAnalyzer:
             "2026-02-14 12:00:01 ERROR brain.mcp: ConnectionError: Connection refused",
             "2026-02-14 12:00:02 ERROR brain.mcp: ConnectionError: Connection refused",
         ]
-        notes = self.analyzer.analyze_chunk(lines)
+        self.analyzer.analyze_chunk(lines)
         # First line creates notes (error + warning patterns match),
         # duplicate lines update existing notes (return None from _upsert_note)
 

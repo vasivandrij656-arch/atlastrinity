@@ -44,10 +44,12 @@ jobs:
           gh run view "$RUN_ID" --log > ~/.config/atlastrinity/logs/ci_failure.log || echo "Failed to download logs"
 
       - name: Create Auto-Fix Branch
+        env:
+          RUN_ID: ${{ github.event.workflow_run.id }}
         run: |
           git config user.name "Atlas Auto-Fix"
           git config user.email "atlas-fix@atlastrinity.local"
-          BRANCH_NAME="auto-fix/run-${{ github.event.workflow_run.id }}"
+          BRANCH_NAME="auto-fix/run-$RUN_ID"
           git checkout -b "$BRANCH_NAME"
           echo "BRANCH_NAME=$BRANCH_NAME" >> "$GITHUB_ENV"
 
