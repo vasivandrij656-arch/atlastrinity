@@ -403,6 +403,7 @@ def ensure_database():
             print_info("Відновлення основної бази з зашифрованого бекапу...")
             try:
                 from src.maintenance.secure_backup import SecureBackupManager
+
                 backup_mgr = SecureBackupManager(PROJECT_ROOT)
                 key = backup_mgr.get_backup_key()
                 if backup_mgr.decrypt_file(encrypted_backup, db_path, key):
@@ -441,6 +442,7 @@ def ensure_database():
             print_info("Відновлення trinity.db з зашифрованого бекапу...")
             try:
                 from src.maintenance.secure_backup import SecureBackupManager
+
                 backup_mgr = SecureBackupManager(PROJECT_ROOT)
                 key = backup_mgr.get_backup_key()
                 if backup_mgr.decrypt_file(trinity_backup_encrypted, trinity_db_path, key):
@@ -512,6 +514,7 @@ def prepare_monitoring_db():
             print_info("Відновлення Monitoring DB з зашифрованого бекапу...")
             try:
                 from src.maintenance.secure_backup import SecureBackupManager
+
                 backup_mgr = SecureBackupManager(PROJECT_ROOT)
                 key = backup_mgr.get_backup_key()
                 if backup_mgr.decrypt_file(encrypted_backup, monitor_db_path, key):
@@ -673,6 +676,7 @@ def verify_golden_fund():
             print_info("Відновлення Search Index DB з зашифрованого бекапу...")
             try:
                 from src.maintenance.secure_backup import SecureBackupManager
+
                 backup_mgr = SecureBackupManager(PROJECT_ROOT)
                 key = backup_mgr.get_backup_key()
                 if backup_mgr.decrypt_file(search_encrypted, search_index_path, key):

@@ -1,4 +1,8 @@
 
+<!-- AUTO-UPDATED: 2026-02-14T19:44:19.622267 -->
+<!-- Modified: .agent/docs/mcp_architecture_diagram.md, src/brain/data/architecture_diagrams/mcp_architecture.md, vulture_whitelist.py -->
+
+
 <!-- AUTO-UPDATED: 2026-02-14T19:41:48.433682 -->
 <!-- Modified: .agent/docs/mcp_architecture_diagram.md, backups/databases/atlastrinity.db.encrypted, backups/databases/backup_metadata.json -->
 
