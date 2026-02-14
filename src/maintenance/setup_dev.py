@@ -2110,7 +2110,9 @@ def main(args=None):
             "--yes", "-y", action="store_true", help="Non-interactive mode (auto-confirm)"
         )
         parser.add_argument(
-            "--no-auto-commit", action="store_true", help="Disable automatic commit and push of backups"
+            "--no-auto-commit",
+            action="store_true",
+            help="Disable automatic commit and push of backups",
         )
         args = parser.parse_args()
 
@@ -2475,29 +2477,32 @@ def setup_provider_tokens():
         # Check if any databases exist and were modified
         db_files = [
             CONFIG_ROOT / "atlastrinity.db",
-            CONFIG_ROOT / "data" / "trinity.db", 
+            CONFIG_ROOT / "data" / "trinity.db",
             CONFIG_ROOT / "data" / "monitoring.db",
             CONFIG_ROOT / "data" / "golden_fund" / "golden.db",
-            CONFIG_ROOT / "data" / "search" / "golden_fund_index.db"
+            CONFIG_ROOT / "data" / "search" / "golden_fund_index.db",
         ]
-        
+
         # Check if any database files exist and are newer than repo backups
         backup_dir = PROJECT_ROOT / "backups" / "databases"
         needs_backup = False
-        
+
         for db_file in db_files:
             if db_file.exists():
                 backup_file = backup_dir / db_file.name
-                if not backup_file.exists() or db_file.stat().st_mtime > backup_file.stat().st_mtime:
+                if (
+                    not backup_file.exists()
+                    or db_file.stat().st_mtime > backup_file.stat().st_mtime
+                ):
                     needs_backup = True
                     break
-        
+
         if needs_backup:
             print_info("Виявлено зміни в базах даних. Створення бекапу...")
             backup_databases(args)
         else:
             print_info("Бази даних не змінювалися. Бекап не потрібен.")
-            
+
     except Exception as e:
         print_warning(f"Помилка при перевірці бекапу: {e}")
 
