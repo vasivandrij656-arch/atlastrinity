@@ -2574,7 +2574,7 @@ async def vibe_check_db(
     action: str | None = None,
     expected_files: list[str] | None = None,
     verify_integrity: bool = False,
-    _log_output: bool = False,
+    log_output: bool = False,
     timeout_s: float | None = None,
     cwd: str | None = None,
 ) -> dict[str, Any]:
