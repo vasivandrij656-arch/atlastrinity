@@ -292,13 +292,13 @@ class SelfHealingHypermodule:
         # 2. Health checks (individual functions returning status dicts)
         try:
             from src.maintenance.health_checks import (
-                check_yaml_syntax,
-                check_mcp_servers,
                 check_database,
-                check_python_deps,
-                check_vibe_server,
+                check_mcp_servers,
                 check_memory_usage,
+                check_python_deps,
                 check_recent_errors,
+                check_vibe_server,
+                check_yaml_syntax,
             )
 
             check_funcs = {
@@ -419,7 +419,12 @@ class SelfHealingHypermodule:
 
         # 2. Config sync verification
         try:
-            from src.maintenance.watch_config import process_template, CONFIG_SRC, CONFIG_DST_ROOT, MAPPINGS
+            from src.maintenance.watch_config import (
+                CONFIG_DST_ROOT,
+                CONFIG_SRC,
+                MAPPINGS,
+                process_template,
+            )
 
             synced = 0
             for tpl, dst in MAPPINGS.items():

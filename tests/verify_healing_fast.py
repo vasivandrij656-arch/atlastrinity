@@ -1,11 +1,11 @@
 """Fast verification script for self-healing modules without heavy deps."""
-import sys
-import unittest
-from unittest.mock import MagicMock, AsyncMock, patch
-from pathlib import Path
-import tempfile
-import shutil
 import asyncio
+import shutil
+import sys
+import tempfile
+import unittest
+from pathlib import Path
+from unittest.mock import AsyncMock, MagicMock, patch
 
 # Add project root to path
 PROJECT_ROOT = Path(__file__).resolve().parent.parent
@@ -20,10 +20,11 @@ sys.modules["src.brain.healing.parallel_healing"] = MagicMock()
 sys.modules["src.brain.memory.state_manager"] = MagicMock()
 
 # Now import our target modules
-from src.brain.healing.log_analyzer import LogAnalyzer
-from src.brain.healing.server_manager import ServerManager
-from src.brain.healing.modes import HealingMode, ImprovementNote
 from src.brain.healing.hypermodule import SelfHealingHypermodule
+from src.brain.healing.log_analyzer import LogAnalyzer
+from src.brain.healing.modes import HealingMode, ImprovementNote
+from src.brain.healing.server_manager import ServerManager
+
 
 class TestFastHealing(unittest.TestCase):
     def setUp(self):

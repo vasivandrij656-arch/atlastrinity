@@ -10,10 +10,10 @@ from typing import Any
 
 from src.brain.healing.modes import (
     CommitTag,
-    HealingPriority,
-    Hotspot,
-    HealingResult,
     HealingMode,
+    HealingPriority,
+    HealingResult,
+    Hotspot,
     ImprovementNote,
 )
 

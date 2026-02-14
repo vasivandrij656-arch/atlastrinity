@@ -1,4 +1,8 @@
 
+<!-- AUTO-UPDATED: 2026-02-14T23:59:10.207084 -->
+<!-- Modified: .agent/docs/mcp_architecture_diagram.md, src/brain/core/services/state_manager.py, src/brain/data/architecture_diagrams/mcp_architecture.md -->
+
+
 <!-- AUTO-UPDATED: 2026-02-14T23:15:01.177885 -->
 <!-- Modified: .agent/docs/mcp_architecture_diagram.md, docs/redis_management.md, package.json -->
 

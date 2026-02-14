@@ -24,15 +24,15 @@ from src.brain.healing.modes import (
 )
 
 __all__ = [
-    "SelfHealingHypermodule",
-    "healing_hypermodule",
-    "LogAnalyzer",
-    "log_analyzer",
+    "CommitTag",
+    "DiagnosticReport",
     "HealingMode",
     "HealingPriority",
     "HealingResult",
-    "DiagnosticReport",
-    "ImprovementNote",
     "Hotspot",
-    "CommitTag",
+    "ImprovementNote",
+    "LogAnalyzer",
+    "SelfHealingHypermodule",
+    "healing_hypermodule",
+    "log_analyzer",
 ]
