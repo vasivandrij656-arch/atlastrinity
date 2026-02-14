@@ -71,7 +71,7 @@ vendor/mcp-server-macos-use/
 
 ### 1. Клонування репозиторію
 ```bash
-git clone https://github.com/Nimda-cloud/atlastrinity.git
+git clone https://github.com/solagurma/atlastrinity.git
 cd atlastrinity
 ```
 

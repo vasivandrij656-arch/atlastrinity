@@ -169,12 +169,12 @@ def ensure_github_remote_setup():
             return
 
         # 3. Check if token is already in URL
-        # Format: https://TOKEN@github.com/Nimda-cloud/atlastrinity.git
+        # Format: https://TOKEN@github.com/solagurma/atlastrinity.git
         if token in current_url:
             return
 
         # 4. Update remote URL
-        new_url = f"https://{token}@github.com/Nimda-cloud/atlastrinity.git"
+        new_url = f"https://{token}@github.com/solagurma/atlastrinity.git"
         subprocess.run(
             ["git", "remote", "set-url", "origin", new_url], cwd=str(PROJECT_ROOT), check=True
         )

@@ -8,7 +8,7 @@ To ensure you can commit changes in this repository, run the appropriate setup c
 // turbo
 ```zsh
 export GITHUB_TOKEN=$(grep GITHUB_TOKEN .env | cut -d'=' -f2) && \
-git remote set-url origin https://$GITHUB_TOKEN@github.com/Nimda-cloud/atlastrinity.git && \
+git remote set-url origin https://$GITHUB_TOKEN@github.com/solagurma/atlastrinity.git && \
 echo "✅ Git remote configured with token from .env"
 ```
 
@@ -42,6 +42,6 @@ git remote -v
 ### 6. Manual Setup (If automation fails)
 If Git still asks for login, run:
 ```zsh
-git remote set-url origin https://<TOKEN>@github.com/Nimda-cloud/atlastrinity
+git remote set-url origin https://<TOKEN>@github.com/solagurma/atlastrinity
 ```
 *(Замініть `<TOKEN>` на значенння з вашого `.env`)*

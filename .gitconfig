@@ -1,6 +1,6 @@
 [user]
-    name = Nimda-cloud
-    email = nimda-cloud@users.noreply.github.com
+    name = solagurma
+    email = solagurma@users.noreply.github.com
 
 [credential]
     helper = !echo 'url=https://x-access-token:'$(cat .env | grep GITHUB_TOKEN | cut -d'=' -f2)'@github.com' && git credential-store --file=/dev/stdin <<< 'protocol=https\nhost=github.com\nusername=x-access-token\npassword='$(cat .env | grep GITHUB_TOKEN | cut -d'=' -f2)'\n'

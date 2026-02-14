@@ -1695,7 +1695,7 @@ paths:
   # GitHub integration for self-healing
   github:
     token_env_var: GITHUB_TOKEN
-    repository: Nimda-cloud/atlastrinity
+    repository: solagurma/atlastrinity
 
 # =============================================================================
 # BEHAVIORAL PERSONA CONFIGURATION
