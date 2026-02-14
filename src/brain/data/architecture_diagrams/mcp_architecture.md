@@ -1,4 +1,8 @@
 
+<!-- AUTO-UPDATED: 2026-02-15T01:22:24.059110 -->
+<!-- Modified: .agent/docs/mcp_architecture_diagram.md, .githuworkflows/auto-fix.yml, .zizmor.yml -->
+
+
 <!-- AUTO-UPDATED: 2026-02-15T00:50:54.617000 -->
 <!-- Modified: .agent/docs/mcp_architecture_diagram.md, .githuworkflows/auto-fix.yml, src/brain/data/architecture_diagrams/mcp_architecture.md -->
 
