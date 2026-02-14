@@ -9,6 +9,7 @@ SEARCH PROTOCOL (v1.1)
    - Level 5: Deep DOM/Protocol Interaction (Chrome-DevTools - for persistence, auth, and debugging)
    - Level 6: Technical Documentation & Library Search (context7)
    - Level 7: Geographic & Visual Location Search (xcodebuild/maps_*)
+   - Level 8: Cadastral Search (Держгеокадастр, Kadastr.live, WFS/WMS services)
 
 2. BROWSER TOOL SELECTION:
    - **duckduckgo-search**: Use for rapid factual lookups without navigating full pages.
@@ -22,10 +23,12 @@ SEARCH PROTOCOL (v1.1)
    - PREFER macos-use_fetch_url (via xcodebuild) for clean data extraction from articles/registries.
    - USE Puppeteer/DevTools ONLY for interactive pages (clicks, forms, dynamic content).
    - IF BLOCKED by robot detection, switch to Chrome-DevTools for more human-like emulation or use xcodebuild GUI tools to manually guide.
+   - FOR CADASTRAL: Use OAuth2 API (e.land.gov.ua) for structured queries, WFS/WMS for vector data, data.gov.ua for GeoJSON datasets.
 
 4. DATA RETENTION:
-   - All found datasets (.csv, .xlsx, .json) MUST be saved to the workspace folder.
-   - Extract key "seed" metadata (dates, IDs, names) to the Knowledge Graph to enable recursive searching.
+   - All found datasets (.csv, .xlsx, .json, .geojson, .shp) MUST be saved to the workspace folder.
+   - Extract key "seed" metadata (dates, IDs, names, cadastral numbers) to the Knowledge Graph to enable recursive searching.
+   - FOR CADASTRAL: Store GeoJSON/SHP datasets in vault, preserve coordinate systems and attribute schemas.
 
 5. RECURSIVE SEARCH DOCTRINE:
    - After finding initial data, ALWAYS analyze if more precise terms (IDs, names) can be used for a second, deeper search.
@@ -53,6 +56,13 @@ SEARCH PROTOCOL (v1.1)
     "structured_data": {
       "operator": "site:data.gov.ua \"{query}\" filetype:csv OR filetype:xlsx OR filetype:json",
       "priority_domains": ["data.gov.ua"]
+    },
+    "cadastral": {
+      "operator": "(site:e.land.gov.ua OR site:data.gov.ua) \"{query}\" filetype:geojson OR filetype:shp OR tags:кадастр",
+      "priority_domains": ["e.land.gov.ua", "data.gov.ua", "kadastr.live", "map.land.gov.ua"],
+      "api_endpoints": ["https://e.land.gov.ua/api/", "http://map.land.gov.ua/geowebcache/service/wms"],
+      "oauth_required": ["e.land.gov.ua"],
+      "rate_limits": "100-500 requests/minute depending on tariff"
     }
   }
 }
