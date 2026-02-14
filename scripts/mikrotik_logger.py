@@ -1,8 +1,8 @@
 #!/usr/bin/env python3
-import subprocess
 import os
-import sys
 import re
+import subprocess
+import sys
 
 # Configuration
 LOG_DIR = "/Users/dev/.config/atlastrinity/logs/mikrotik"
@@ -13,7 +13,7 @@ SSH_CMD = ["ssh", "-p", "666", "-o", "StrictHostKeyChecking=no", "admin@192.168.
 def get_last_id():
     if os.path.exists(STATE_FILE):
         try:
-            with open(STATE_FILE, "r") as f:
+            with open(STATE_FILE) as f:
                 return f.read().strip()
         except:
             return None
@@ -104,8 +104,7 @@ def main():
         target_file = get_active_log_file()
         
         with open(target_file, "a") as f:
-            for log in new_logs:
-                f.write("\n".join(log["content"]) + "\n\n") # Double newline for readability
+            f.writelines("\n".join(log["content"]) + "\n\n" for log in new_logs) # Double newline for readability
         
         set_last_id(new_logs[-1]["id"])
         print(f"Success: Saved {len(new_logs)} new entries to {target_file}")
