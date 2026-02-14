@@ -52,13 +52,18 @@ jobs:
 
       - name: Determine Mode
         id: mode
+        env:
+          INPUT_MODE: ${{ github.event.inputs.mode }}
+          EVENT_NAME: ${{ github.event_name }}
         run: |
-          if [[ "${{ github.event_name }}" == "pull_request" ]]; then
-            echo "mode=diagnose" >> $GITHUB_OUTPUT
-          elif [[ "${{ github.event_name }}" == "push" ]]; then
-            echo "mode=diagnose" >> $GITHUB_OUTPUT
+          if [[ "$EVENT_NAME" == "pull_request" ]]; then
+            echo "mode=diagnose" >> "$GITHUB_OUTPUT"
+          elif [[ "$EVENT_NAME" == "push" ]]; then
+            echo "mode=diagnose" >> "$GITHUB_OUTPUT"
           else
-            echo "mode=${{ github.event.inputs.mode || 'prevent' }}" >> $GITHUB_OUTPUT
+            # Default to prevent if input is empty or missing
+            FINAL_MODE="${INPUT_MODE:-prevent}"
+            echo "mode=$FINAL_MODE" >> "$GITHUB_OUTPUT"
           fi
 
       - name: Run Self-Healing Hypermodule

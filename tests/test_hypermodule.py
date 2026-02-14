@@ -63,7 +63,7 @@ class TestLogAnalyzer:
         notes = self.analyzer.analyze_chunk(lines)
         # First line creates notes (error + warning patterns match),
         # duplicate lines update existing notes (return None from _upsert_note)
-        initial_count = len(notes)
+
 
         # Verify dedup by running again - no new notes should be created
         notes2 = self.analyzer.analyze_chunk(lines)

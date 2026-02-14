@@ -1,4 +1,8 @@
 
+<!-- AUTO-UPDATED: 2026-02-15T00:28:56.153407 -->
+<!-- Modified: .agent/docs/mcp_architecture_diagram.md, src/brain/data/architecture_diagrams/mcp_architecture.md, src/brain/healing/__init__.py -->
+
+
 <!-- AUTO-UPDATED: 2026-02-14T23:59:10.207084 -->
 <!-- Modified: .agent/docs/mcp_architecture_diagram.md, src/brain/core/services/state_manager.py, src/brain/data/architecture_diagrams/mcp_architecture.md -->
 

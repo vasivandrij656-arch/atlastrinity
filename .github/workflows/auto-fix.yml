@@ -41,15 +41,15 @@ jobs:
           RUN_ID: ${{ github.event.workflow_run.id }}
         run: |
           mkdir -p ~/.config/atlastrinity/logs
-          gh run view $RUN_ID --log > ~/.config/atlastrinity/logs/ci_failure.log || echo "Failed to download logs"
+          gh run view "$RUN_ID" --log > ~/.config/atlastrinity/logs/ci_failure.log || echo "Failed to download logs"
 
       - name: Create Auto-Fix Branch
         run: |
           git config user.name "Atlas Auto-Fix"
           git config user.email "atlas-fix@atlastrinity.local"
           BRANCH_NAME="auto-fix/run-${{ github.event.workflow_run.id }}"
-          git checkout -b $BRANCH_NAME
-          echo "BRANCH_NAME=$BRANCH_NAME" >> $GITHUB_ENV
+          git checkout -b "$BRANCH_NAME"
+          echo "BRANCH_NAME=$BRANCH_NAME" >> "$GITHUB_ENV"
 
       - name: Run Reactive Healing (IMPROVE Mode)
         env:
@@ -83,10 +83,10 @@ jobs:
             echo "No fixes applied."
           else
             git commit -m "[Auto-Fix] Applied fixes for run #${{ github.event.workflow_run.id }}"
-            git push origin $BRANCH_NAME
+            git push origin "$BRANCH_NAME"
             
             # Create PR
             PR_TITLE="[Auto-Fix] Fixes for workflow failure #${{ github.event.workflow_run.id }}"
             PR_BODY="Automatically generated fixes based on log analysis of failing workflow run."
-            gh pr create --title "$PR_TITLE" --body "$PR_BODY" --base main --head $BRANCH_NAME
+            gh pr create --title "$PR_TITLE" --body "$PR_BODY" --base main --head "$BRANCH_NAME"
           fi

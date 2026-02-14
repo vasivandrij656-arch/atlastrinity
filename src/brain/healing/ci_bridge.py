@@ -71,8 +71,9 @@ class CIBridge:
             }
             url = f"https://api.github.com/repos/{self._repo}/actions/runs?per_page=20"
 
-            async with aiohttp.ClientSession() as session:
-                async with session.get(url, headers=headers, timeout=aiohttp.ClientTimeout(total=30)) as resp:
+            async with aiohttp.ClientSession() as session, session.get(
+                url, headers=headers, timeout=aiohttp.ClientTimeout(total=30)
+            ) as resp:
                     if resp.status != 200:
                         logger.warning(f"[CIBridge] GitHub API returned {resp.status}")
                         return results
@@ -156,8 +157,9 @@ class CIBridge:
             url = f"https://api.github.com/repos/{self._repo}/actions/workflows/{workflow_name}/dispatches"
             payload = {"ref": "main"}
 
-            async with aiohttp.ClientSession() as session:
-                async with session.post(url, headers=headers, json=payload, timeout=aiohttp.ClientTimeout(total=15)) as resp:
+            async with aiohttp.ClientSession() as session, session.post(
+                url, headers=headers, json=payload, timeout=aiohttp.ClientTimeout(total=15)
+            ) as resp:
                     if resp.status == 204:
                         logger.info(f"[CIBridge] Triggered workflow: {workflow_name}")
                         return True
@@ -301,8 +303,9 @@ class CIBridge:
             import aiohttp
 
             url = f"https://api.github.com/repos/{self._repo}/actions/runs/{run_id}/jobs"
-            async with aiohttp.ClientSession() as session:
-                async with session.get(url, headers=headers, timeout=aiohttp.ClientTimeout(total=15)) as resp:
+            async with aiohttp.ClientSession() as session, session.get(
+                url, headers=headers, timeout=aiohttp.ClientTimeout(total=15)
+            ) as resp:
                     if resp.status != 200:
                         return []
                     data = await resp.json()
