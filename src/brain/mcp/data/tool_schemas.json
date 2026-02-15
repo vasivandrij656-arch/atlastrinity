@@ -1,13 +1,8 @@
 {
   "vibe_prompt": {
     "server": "vibe",
-    "required": [
-      "prompt"
-    ],
-    "optional": [
-      "cwd",
-      "timeout_s"
-    ],
+    "required": ["prompt"],
+    "optional": ["cwd", "timeout_s"],
     "types": {
       "prompt": "str",
       "cwd": "str",
@@ -17,12 +12,8 @@
   },
   "search_golden_fund": {
     "server": "golden-fund",
-    "required": [
-      "query"
-    ],
-    "optional": [
-      "mode"
-    ],
+    "required": ["query"],
+    "optional": ["mode"],
     "types": {
       "query": "str",
       "mode": "str"
@@ -31,13 +22,8 @@
   },
   "ingest_dataset": {
     "server": "golden-fund",
-    "required": [
-      "url",
-      "type"
-    ],
-    "optional": [
-      "process_pipeline"
-    ],
+    "required": ["url", "type"],
+    "optional": ["process_pipeline"],
     "types": {
       "url": "str",
       "type": "str",
@@ -47,12 +33,8 @@
   },
   "probe_entity": {
     "server": "golden-fund",
-    "required": [
-      "entity_id"
-    ],
-    "optional": [
-      "depth"
-    ],
+    "required": ["entity_id"],
+    "optional": ["depth"],
     "types": {
       "entity_id": "str",
       "depth": "int"
@@ -61,13 +43,8 @@
   },
   "analyze_and_store": {
     "server": "golden-fund",
-    "required": [
-      "file_path",
-      "dataset_name"
-    ],
-    "optional": [
-      "analysis_type"
-    ],
+    "required": ["file_path", "dataset_name"],
+    "optional": ["analysis_type"],
     "types": {
       "file_path": "str",
       "dataset_name": "str",
@@ -77,9 +54,7 @@
   },
   "get_dataset_insights": {
     "server": "golden-fund",
-    "required": [
-      "dataset_name"
-    ],
+    "required": ["dataset_name"],
     "optional": [],
     "types": {
       "dataset_name": "str"
@@ -88,13 +63,8 @@
   },
   "add_knowledge_node": {
     "server": "golden-fund",
-    "required": [
-      "content",
-      "metadata"
-    ],
-    "optional": [
-      "links"
-    ],
+    "required": ["content", "metadata"],
+    "optional": ["links"],
     "types": {
       "content": "str",
       "metadata": "dict",
@@ -104,12 +74,8 @@
   },
   "store_blob": {
     "server": "golden-fund",
-    "required": [
-      "content"
-    ],
-    "optional": [
-      "filename"
-    ],
+    "required": ["content"],
+    "optional": ["filename"],
     "types": {
       "content": "str",
       "filename": "str"
@@ -118,9 +84,7 @@
   },
   "retrieve_blob": {
     "server": "golden-fund",
-    "required": [
-      "filename"
-    ],
+    "required": ["filename"],
     "optional": [],
     "types": {
       "filename": "str"
@@ -129,9 +93,7 @@
   },
   "c7_search": {
     "server": "context7",
-    "required": [
-      "term"
-    ],
+    "required": ["term"],
     "optional": [],
     "types": {
       "term": "str"
@@ -140,15 +102,8 @@
   },
   "c7_query": {
     "server": "context7",
-    "required": [
-      "projectIdentifier",
-      "query"
-    ],
-    "optional": [
-      "topic",
-      "mode",
-      "page"
-    ],
+    "required": ["projectIdentifier", "query"],
+    "optional": ["topic", "mode", "page"],
     "types": {
       "projectIdentifier": "str",
       "query": "str",
@@ -183,16 +138,8 @@
   },
   "vibe_analyze_error": {
     "server": "vibe",
-    "required": [
-      "error_message"
-    ],
-    "optional": [
-      "cwd",
-      "timeout_s",
-      "auto_fix",
-      "log_context",
-      "recovery_history"
-    ],
+    "required": ["error_message"],
+    "optional": ["cwd", "timeout_s", "auto_fix", "log_context", "recovery_history"],
     "types": {
       "error_message": "str",
       "cwd": "str",
@@ -205,14 +152,8 @@
   },
   "vibe_implement_feature": {
     "server": "vibe",
-    "required": [
-      "goal"
-    ],
-    "optional": [
-      "constraints",
-      "cwd",
-      "timeout_s"
-    ],
+    "required": ["goal"],
+    "optional": ["constraints", "cwd", "timeout_s"],
     "types": {
       "goal": "str",
       "constraints": "str",
@@ -223,13 +164,8 @@
   },
   "vibe_code_review": {
     "server": "vibe",
-    "required": [
-      "file_path"
-    ],
-    "optional": [
-      "cwd",
-      "timeout_s"
-    ],
+    "required": ["file_path"],
+    "optional": ["cwd", "timeout_s"],
     "types": {
       "file_path": "str",
       "cwd": "str",
@@ -239,13 +175,8 @@
   },
   "vibe_smart_plan": {
     "server": "vibe",
-    "required": [
-      "objective"
-    ],
-    "optional": [
-      "cwd",
-      "timeout_s"
-    ],
+    "required": ["objective"],
+    "optional": ["cwd", "timeout_s"],
     "types": {
       "objective": "str",
       "cwd": "str",
@@ -255,13 +186,8 @@
   },
   "vibe_ask": {
     "server": "vibe",
-    "required": [
-      "question"
-    ],
-    "optional": [
-      "cwd",
-      "timeout_s"
-    ],
+    "required": ["question"],
+    "optional": ["cwd", "timeout_s"],
     "types": {
       "question": "str",
       "cwd": "str",
@@ -271,13 +197,8 @@
   },
   "vibe_execute_subcommand": {
     "server": "vibe",
-    "required": [
-      "subcommand"
-    ],
-    "optional": [
-      "args",
-      "cwd"
-    ],
+    "required": ["subcommand"],
+    "optional": ["args", "cwd"],
     "types": {
       "subcommand": "str",
       "args": "list",
@@ -288,9 +209,7 @@
   "vibe_list_sessions": {
     "server": "vibe",
     "required": [],
-    "optional": [
-      "limit"
-    ],
+    "optional": ["limit"],
     "types": {
       "limit": "int"
     },
@@ -304,9 +223,7 @@
   },
   "vibe_check_db": {
     "server": "vibe",
-    "required": [
-      "query"
-    ],
+    "required": ["query"],
     "optional": [],
     "types": {
       "query": "str"
@@ -321,17 +238,8 @@
   },
   "macos-use_run_applescript": {
     "server": "xcodebuild",
-    "required": [
-      "script"
-    ],
-    "optional": [
-      "template",
-      "aiGenerate",
-      "description",
-      "debug",
-      "timeout",
-      "validate"
-    ],
+    "required": ["script"],
+    "optional": ["template", "aiGenerate", "description", "debug", "timeout", "validate"],
     "types": {
       "script": "str",
       "template": "str",
@@ -345,9 +253,7 @@
   },
   "macos-use_open_application_and_traverse": {
     "server": "xcodebuild",
-    "required": [
-      "identifier"
-    ],
+    "required": ["identifier"],
     "optional": [
       "traverseBefore",
       "traverseAfter",
@@ -371,15 +277,8 @@
   },
   "macos-use_click_and_traverse": {
     "server": "xcodebuild",
-    "required": [
-      "x",
-      "y"
-    ],
-    "optional": [
-      "pid",
-      "showAnimation",
-      "animationDuration"
-    ],
+    "required": ["x", "y"],
+    "optional": ["pid", "showAnimation", "animationDuration"],
     "types": {
       "x": "float",
       "y": "float",
@@ -391,12 +290,8 @@
   },
   "macos-use_type_and_traverse": {
     "server": "xcodebuild",
-    "required": [
-      "text"
-    ],
-    "optional": [
-      "pid"
-    ],
+    "required": ["text"],
+    "optional": ["pid"],
     "types": {
       "text": "str",
       "pid": "int"
@@ -406,9 +301,7 @@
   "macos-use_refresh_traversal": {
     "server": "xcodebuild",
     "required": [],
-    "optional": [
-      "pid"
-    ],
+    "optional": ["pid"],
     "types": {
       "pid": "int"
     },
@@ -417,14 +310,7 @@
   "macos-use_take_screenshot": {
     "server": "xcodebuild",
     "required": [],
-    "optional": [
-      "path",
-      "region",
-      "monitor",
-      "quality",
-      "format",
-      "ocr"
-    ],
+    "optional": ["path", "region", "monitor", "quality", "format", "ocr"],
     "types": {
       "path": "str",
       "region": "dict",
@@ -438,12 +324,7 @@
   "macos-use_analyze_screen": {
     "server": "xcodebuild",
     "required": [],
-    "optional": [
-      "region",
-      "language",
-      "confidence",
-      "format"
-    ],
+    "optional": ["region", "language", "confidence", "format"],
     "types": {
       "region": "dict",
       "language": "str",
@@ -454,13 +335,8 @@
   },
   "macos-use_press_key_and_traverse": {
     "server": "xcodebuild",
-    "required": [
-      "keyName"
-    ],
-    "optional": [
-      "pid",
-      "modifierFlags"
-    ],
+    "required": ["keyName"],
+    "optional": ["pid", "modifierFlags"],
     "types": {
       "keyName": "str",
       "pid": "int",
@@ -470,13 +346,8 @@
   },
   "macos-use_scroll_and_traverse": {
     "server": "xcodebuild",
-    "required": [
-      "direction"
-    ],
-    "optional": [
-      "pid",
-      "amount"
-    ],
+    "required": ["direction"],
+    "optional": ["pid", "amount"],
     "types": {
       "direction": "str",
       "pid": "int",
@@ -486,13 +357,8 @@
   },
   "macos-use_right_click_and_traverse": {
     "server": "xcodebuild",
-    "required": [
-      "x",
-      "y"
-    ],
-    "optional": [
-      "pid"
-    ],
+    "required": ["x", "y"],
+    "optional": ["pid"],
     "types": {
       "x": "float",
       "y": "float",
@@ -502,13 +368,8 @@
   },
   "macos-use_double_click_and_traverse": {
     "server": "xcodebuild",
-    "required": [
-      "x",
-      "y"
-    ],
-    "optional": [
-      "pid"
-    ],
+    "required": ["x", "y"],
+    "optional": ["pid"],
     "types": {
       "x": "float",
       "y": "float",
@@ -518,15 +379,8 @@
   },
   "macos-use_drag_and_drop_and_traverse": {
     "server": "xcodebuild",
-    "required": [
-      "startX",
-      "startY",
-      "endX",
-      "endY"
-    ],
-    "optional": [
-      "pid"
-    ],
+    "required": ["startX", "startY", "endX", "endY"],
+    "optional": ["pid"],
     "types": {
       "startX": "float",
       "startY": "float",
@@ -538,18 +392,8 @@
   },
   "macos-use_window_management": {
     "server": "xcodebuild",
-    "required": [
-      "action"
-    ],
-    "optional": [
-      "pid",
-      "x",
-      "y",
-      "width",
-      "height",
-      "groupId",
-      "snapshotPath"
-    ],
+    "required": ["action"],
+    "optional": ["pid", "x", "y", "width", "height", "groupId", "snapshotPath"],
     "types": {
       "action": "str",
       "pid": "int",
@@ -564,16 +408,8 @@
   },
   "macos-use_set_clipboard": {
     "server": "xcodebuild",
-    "required": [
-      "text"
-    ],
-    "optional": [
-      "html",
-      "image",
-      "addToHistory",
-      "showAnimation",
-      "animationDuration"
-    ],
+    "required": ["text"],
+    "optional": ["html", "image", "addToHistory", "showAnimation", "animationDuration"],
     "types": {
       "text": "str",
       "html": "str",
@@ -587,11 +423,7 @@
   "macos-use_get_clipboard": {
     "server": "xcodebuild",
     "required": [],
-    "optional": [
-      "format",
-      "history",
-      "limit"
-    ],
+    "optional": ["format", "history", "limit"],
     "types": {
       "format": "str",
       "history": "bool",
@@ -602,10 +434,7 @@
   "macos-use_clipboard_history": {
     "server": "xcodebuild",
     "required": [],
-    "optional": [
-      "clear",
-      "limit"
-    ],
+    "optional": ["clear", "limit"],
     "types": {
       "clear": "bool",
       "limit": "int"
@@ -614,13 +443,8 @@
   },
   "macos-use_voice_control": {
     "server": "xcodebuild",
-    "required": [
-      "command"
-    ],
-    "optional": [
-      "language",
-      "confidence"
-    ],
+    "required": ["command"],
+    "optional": ["language", "confidence"],
     "types": {
       "command": "str",
       "language": "str",
@@ -630,15 +454,8 @@
   },
   "macos-use_process_management": {
     "server": "xcodebuild",
-    "required": [
-      "action"
-    ],
-    "optional": [
-      "pid",
-      "name",
-      "priority",
-      "duration"
-    ],
+    "required": ["action"],
+    "optional": ["pid", "name", "priority", "duration"],
     "types": {
       "action": "str",
       "pid": "int",
@@ -650,15 +467,8 @@
   },
   "macos-use_system_monitoring": {
     "server": "xcodebuild",
-    "required": [
-      "metric"
-    ],
-    "optional": [
-      "duration",
-      "interval",
-      "alert",
-      "threshold"
-    ],
+    "required": ["metric"],
+    "optional": ["duration", "interval", "alert", "threshold"],
     "types": {
       "metric": "str",
       "duration": "int",
@@ -670,12 +480,8 @@
   },
   "macos-use_system_control": {
     "server": "xcodebuild",
-    "required": [
-      "action"
-    ],
-    "optional": [
-      "value"
-    ],
+    "required": ["action"],
+    "optional": ["value"],
     "types": {
       "action": "str",
       "value": "float"
@@ -684,9 +490,7 @@
   },
   "macos-use_fetch_url": {
     "server": "xcodebuild",
-    "required": [
-      "url"
-    ],
+    "required": ["url"],
     "optional": [],
     "types": {
       "url": "str"
@@ -696,12 +500,7 @@
   "macos-use_get_time": {
     "server": "xcodebuild",
     "required": [],
-    "optional": [
-      "timezone",
-      "format",
-      "customFormat",
-      "convertTo"
-    ],
+    "optional": ["timezone", "format", "customFormat", "convertTo"],
     "types": {
       "timezone": "str",
       "format": "str",
@@ -712,13 +511,8 @@
   },
   "macos-use_countdown_timer": {
     "server": "xcodebuild",
-    "required": [
-      "seconds"
-    ],
-    "optional": [
-      "message",
-      "notification"
-    ],
+    "required": ["seconds"],
+    "optional": ["message", "notification"],
     "types": {
       "seconds": "int",
       "message": "str",
@@ -729,13 +523,7 @@
   "macos-use_applescript_templates": {
     "server": "xcodebuild",
     "required": [],
-    "optional": [
-      "list",
-      "create",
-      "name",
-      "script",
-      "description"
-    ],
+    "optional": ["list", "create", "name", "script", "description"],
     "types": {
       "list": "bool",
       "create": "str",
@@ -747,10 +535,7 @@
   },
   "macos-use_calendar_events": {
     "server": "xcodebuild",
-    "required": [
-      "start",
-      "end"
-    ],
+    "required": ["start", "end"],
     "optional": [],
     "types": {
       "start": "str",
@@ -760,18 +545,8 @@
   },
   "macos-use_create_event": {
     "server": "xcodebuild",
-    "required": [
-      "title",
-      "date"
-    ],
-    "optional": [
-      "endDate",
-      "location",
-      "notes",
-      "attendees",
-      "recurring",
-      "reminder"
-    ],
+    "required": ["title", "date"],
+    "optional": ["endDate", "location", "notes", "attendees", "recurring", "reminder"],
     "types": {
       "title": "str",
       "date": "str",
@@ -787,9 +562,7 @@
   "macos-use_reminders": {
     "server": "xcodebuild",
     "required": [],
-    "optional": [
-      "list"
-    ],
+    "optional": ["list"],
     "types": {
       "list": "str"
     },
@@ -797,9 +570,7 @@
   },
   "macos-use_create_reminder": {
     "server": "xcodebuild",
-    "required": [
-      "title"
-    ],
+    "required": ["title"],
     "optional": [],
     "types": {
       "title": "str"
@@ -808,9 +579,7 @@
   },
   "macos-use_spotlight_search": {
     "server": "xcodebuild",
-    "required": [
-      "query"
-    ],
+    "required": ["query"],
     "optional": [],
     "types": {
       "query": "str"
@@ -819,16 +588,8 @@
   },
   "macos-use_send_notification": {
     "server": "xcodebuild",
-    "required": [
-      "title",
-      "message"
-    ],
-    "optional": [
-      "schedule",
-      "sound",
-      "persistent",
-      "template"
-    ],
+    "required": ["title", "message"],
+    "optional": ["schedule", "sound", "persistent", "template"],
     "types": {
       "title": "str",
       "message": "str",
@@ -842,10 +603,7 @@
   "macos-use_notification_schedule": {
     "server": "xcodebuild",
     "required": [],
-    "optional": [
-      "clear",
-      "list"
-    ],
+    "optional": ["clear", "list"],
     "types": {
       "clear": "bool",
       "list": "bool"
@@ -861,12 +619,8 @@
   },
   "macos-use_notes_create_note": {
     "server": "xcodebuild",
-    "required": [
-      "body"
-    ],
-    "optional": [
-      "folder"
-    ],
+    "required": ["body"],
+    "optional": ["folder"],
     "types": {
       "body": "str",
       "folder": "str"
@@ -875,9 +629,7 @@
   },
   "macos-use_notes_get_content": {
     "server": "xcodebuild",
-    "required": [
-      "name"
-    ],
+    "required": ["name"],
     "optional": [],
     "types": {
       "name": "str"
@@ -886,18 +638,8 @@
   },
   "macos-use_mail_send": {
     "server": "xcodebuild",
-    "required": [
-      "to",
-      "subject",
-      "body"
-    ],
-    "optional": [
-      "cc",
-      "bcc",
-      "html",
-      "attachments",
-      "draft"
-    ],
+    "required": ["to", "subject", "body"],
+    "optional": ["cc", "bcc", "html", "attachments", "draft"],
     "types": {
       "to": "str",
       "subject": "str",
@@ -913,9 +655,7 @@
   "macos-use_mail_read_inbox": {
     "server": "xcodebuild",
     "required": [],
-    "optional": [
-      "limit"
-    ],
+    "optional": ["limit"],
     "types": {
       "limit": "int"
     },
@@ -924,14 +664,7 @@
   "macos-use_finder_list_files": {
     "server": "xcodebuild",
     "required": [],
-    "optional": [
-      "path",
-      "filter",
-      "sort",
-      "order",
-      "limit",
-      "metadata"
-    ],
+    "optional": ["path", "filter", "sort", "order", "limit", "metadata"],
     "types": {
       "path": "str",
       "filter": "str",
@@ -945,9 +678,7 @@
   "macos-use_finder_get_selection": {
     "server": "xcodebuild",
     "required": [],
-    "optional": [
-      "metadata"
-    ],
+    "optional": ["metadata"],
     "types": {
       "metadata": "bool"
     },
@@ -955,9 +686,7 @@
   },
   "macos-use_finder_open_path": {
     "server": "xcodebuild",
-    "required": [
-      "path"
-    ],
+    "required": ["path"],
     "optional": [],
     "types": {
       "path": "str"
@@ -966,9 +695,7 @@
   },
   "macos-use_finder_move_to_trash": {
     "server": "xcodebuild",
-    "required": [
-      "path"
-    ],
+    "required": ["path"],
     "optional": [],
     "types": {
       "path": "str"
@@ -985,9 +712,7 @@
   "macos-use_list_browser_tabs": {
     "server": "xcodebuild",
     "required": [],
-    "optional": [
-      "browser"
-    ],
+    "optional": ["browser"],
     "types": {
       "browser": "str"
     },
@@ -1003,9 +728,7 @@
   "macos-use_list_tools_dynamic": {
     "server": "xcodebuild",
     "required": [],
-    "optional": [
-      "toolName"
-    ],
+    "optional": ["toolName"],
     "types": {
       "toolName": "str"
     },
@@ -1013,13 +736,8 @@
   },
   "execute_command": {
     "server": "xcodebuild",
-    "required": [
-      "command"
-    ],
-    "optional": [
-      "cwd",
-      "timeout"
-    ],
+    "required": ["command"],
+    "optional": ["cwd", "timeout"],
     "types": {
       "command": "str",
       "cwd": "str",
@@ -1044,9 +762,7 @@
   "macos-use_close_window": {
     "server": "xcodebuild",
     "required": [],
-    "optional": [
-      "windowName"
-    ],
+    "optional": ["windowName"],
     "types": {
       "windowName": "str"
     },
@@ -1054,13 +770,8 @@
   },
   "macos-use_move_window": {
     "server": "xcodebuild",
-    "required": [
-      "x",
-      "y"
-    ],
-    "optional": [
-      "windowName"
-    ],
+    "required": ["x", "y"],
+    "optional": ["windowName"],
     "types": {
       "x": "float",
       "y": "float",
@@ -1070,13 +781,8 @@
   },
   "macos-use_resize_window": {
     "server": "xcodebuild",
-    "required": [
-      "width",
-      "height"
-    ],
-    "optional": [
-      "windowName"
-    ],
+    "required": ["width", "height"],
+    "optional": ["windowName"],
     "types": {
       "width": "float",
       "height": "float",
@@ -1100,9 +806,7 @@
   },
   "macos-use_set_system_volume": {
     "server": "xcodebuild",
-    "required": [
-      "level"
-    ],
+    "required": ["level"],
     "optional": [],
     "types": {
       "level": "int"
@@ -1111,9 +815,7 @@
   },
   "macos-use_set_screen_brightness": {
     "server": "xcodebuild",
-    "required": [
-      "level"
-    ],
+    "required": ["level"],
     "optional": [],
     "types": {
       "level": "float"
@@ -1150,15 +852,8 @@
   },
   "macos-use_file_encryption": {
     "server": "xcodebuild",
-    "required": [
-      "action",
-      "path",
-      "password"
-    ],
-    "optional": [
-      "algorithm",
-      "output"
-    ],
+    "required": ["action", "path", "password"],
+    "optional": ["algorithm", "output"],
     "types": {
       "action": "str",
       "path": "str",
@@ -1170,9 +865,7 @@
   },
   "create_entities": {
     "server": "memory",
-    "required": [
-      "entities"
-    ],
+    "required": ["entities"],
     "optional": [],
     "types": {
       "entities": "list"
@@ -1181,10 +874,7 @@
   },
   "add_observations": {
     "server": "memory",
-    "required": [
-      "name",
-      "observations"
-    ],
+    "required": ["name", "observations"],
     "optional": [],
     "types": {
       "name": "str",
@@ -1194,9 +884,7 @@
   },
   "get_entity": {
     "server": "memory",
-    "required": [
-      "name"
-    ],
+    "required": ["name"],
     "optional": [],
     "types": {
       "name": "str"
@@ -1211,12 +899,8 @@
   },
   "search": {
     "server": "memory",
-    "required": [
-      "query"
-    ],
-    "optional": [
-      "limit"
-    ],
+    "required": ["query"],
+    "optional": ["limit"],
     "types": {
       "query": "str",
       "limit": "int"
@@ -1225,11 +909,7 @@
   },
   "create_relation": {
     "server": "memory",
-    "required": [
-      "source",
-      "target",
-      "relation"
-    ],
+    "required": ["source", "target", "relation"],
     "optional": [],
     "types": {
       "source": "str",
@@ -1240,9 +920,7 @@
   },
   "delete_entity": {
     "server": "memory",
-    "required": [
-      "name"
-    ],
+    "required": ["name"],
     "optional": [],
     "types": {
       "name": "str"
@@ -1251,14 +929,8 @@
   },
   "ingest_verified_dataset": {
     "server": "memory",
-    "required": [
-      "file_path",
-      "dataset_name"
-    ],
-    "optional": [
-      "namespace",
-      "task_id"
-    ],
+    "required": ["file_path", "dataset_name"],
+    "optional": ["namespace", "task_id"],
     "types": {
       "file_path": "str",
       "dataset_name": "str",
@@ -1269,9 +941,7 @@
   },
   "query_db": {
     "server": "memory",
-    "required": [
-      "query"
-    ],
+    "required": ["query"],
     "optional": [],
     "types": {
       "query": "str"
@@ -1287,12 +957,8 @@
   },
   "batch_add_nodes": {
     "server": "memory",
-    "required": [
-      "nodes"
-    ],
-    "optional": [
-      "namespace"
-    ],
+    "required": ["nodes"],
+    "optional": ["namespace"],
     "types": {
       "nodes": "list",
       "namespace": "str"
@@ -1301,14 +967,8 @@
   },
   "bulk_ingest_table": {
     "server": "memory",
-    "required": [
-      "file_path",
-      "table_name"
-    ],
-    "optional": [
-      "namespace",
-      "task_id"
-    ],
+    "required": ["file_path", "table_name"],
+    "optional": ["namespace", "task_id"],
     "types": {
       "file_path": "str",
       "table_name": "str",
@@ -1319,14 +979,8 @@
   },
   "trace_data_chain": {
     "server": "memory",
-    "required": [
-      "start_value",
-      "start_dataset_id"
-    ],
-    "optional": [
-      "namespace",
-      "max_depth"
-    ],
+    "required": ["start_value", "start_dataset_id"],
+    "optional": ["namespace", "max_depth"],
     "types": {
       "start_value": "any",
       "start_dataset_id": "str",
@@ -1344,9 +998,7 @@
   "generate_mermaid": {
     "server": "graph",
     "required": [],
-    "optional": [
-      "node_type"
-    ],
+    "optional": ["node_type"],
     "types": {
       "node_type": "str"
     },
@@ -1354,9 +1006,7 @@
   },
   "get_node_details": {
     "server": "graph",
-    "required": [
-      "node_id"
-    ],
+    "required": ["node_id"],
     "optional": [],
     "types": {
       "node_id": "str"
@@ -1365,9 +1015,7 @@
   },
   "get_related_nodes": {
     "server": "graph",
-    "required": [
-      "node_id"
-    ],
+    "required": ["node_id"],
     "optional": [],
     "types": {
       "node_id": "str"
@@ -1376,9 +1024,7 @@
   },
   "read_file": {
     "server": "filesystem",
-    "required": [
-      "path"
-    ],
+    "required": ["path"],
     "optional": [],
     "types": {
       "path": "str"
@@ -1387,10 +1033,7 @@
   },
   "write_file": {
     "server": "filesystem",
-    "required": [
-      "path",
-      "content"
-    ],
+    "required": ["path", "content"],
     "optional": [],
     "types": {
       "path": "str",
@@ -1400,9 +1043,7 @@
   },
   "list_directory": {
     "server": "filesystem",
-    "required": [
-      "path"
-    ],
+    "required": ["path"],
     "optional": [],
     "types": {
       "path": "str"
@@ -1411,10 +1052,7 @@
   },
   "search_files": {
     "server": "filesystem",
-    "required": [
-      "path",
-      "pattern"
-    ],
+    "required": ["path", "pattern"],
     "optional": [],
     "types": {
       "path": "str",
@@ -1424,9 +1062,7 @@
   },
   "get_file_info": {
     "server": "filesystem",
-    "required": [
-      "path"
-    ],
+    "required": ["path"],
     "optional": [],
     "types": {
       "path": "str"
@@ -1435,9 +1071,7 @@
   },
   "puppeteer_navigate": {
     "server": "puppeteer",
-    "required": [
-      "url"
-    ],
+    "required": ["url"],
     "optional": [],
     "types": {
       "url": "str"
@@ -1446,15 +1080,8 @@
   },
   "puppeteer_screenshot": {
     "server": "puppeteer",
-    "required": [
-      "name"
-    ],
-    "optional": [
-      "selector",
-      "width",
-      "height",
-      "encoded"
-    ],
+    "required": ["name"],
+    "optional": ["selector", "width", "height", "encoded"],
     "types": {
       "name": "str",
       "selector": "str",
@@ -1466,9 +1093,7 @@
   },
   "puppeteer_click": {
     "server": "puppeteer",
-    "required": [
-      "selector"
-    ],
+    "required": ["selector"],
     "optional": [],
     "types": {
       "selector": "str"
@@ -1477,10 +1102,7 @@
   },
   "puppeteer_fill": {
     "server": "puppeteer",
-    "required": [
-      "selector",
-      "value"
-    ],
+    "required": ["selector", "value"],
     "optional": [],
     "types": {
       "selector": "str",
@@ -1491,10 +1113,7 @@
   "take_screenshot": {
     "server": "chrome-devtools",
     "required": [],
-    "optional": [
-      "format",
-      "quality"
-    ],
+    "optional": ["format", "quality"],
     "types": {
       "format": "str",
       "quality": "int"
@@ -1527,12 +1146,7 @@
   },
   "sequentialthinking": {
     "server": "sequential-thinking",
-    "required": [
-      "thought",
-      "thoughtNumber",
-      "totalThoughts",
-      "nextThoughtNeeded"
-    ],
+    "required": ["thought", "thoughtNumber", "totalThoughts", "nextThoughtNeeded"],
     "optional": [],
     "types": {
       "thought": "str",
@@ -1544,17 +1158,8 @@
   },
   "create_or_update_file": {
     "server": "github",
-    "required": [
-      "owner",
-      "repo",
-      "path",
-      "content",
-      "message",
-      "branch"
-    ],
-    "optional": [
-      "sha"
-    ],
+    "required": ["owner", "repo", "path", "content", "message", "branch"],
+    "optional": ["sha"],
     "types": {
       "owner": "str",
       "repo": "str",
@@ -1568,13 +1173,8 @@
   },
   "search_code": {
     "server": "github",
-    "required": [
-      "q"
-    ],
-    "optional": [
-      "page",
-      "per_page"
-    ],
+    "required": ["q"],
+    "optional": ["page", "per_page"],
     "types": {
       "q": "str",
       "page": "int",
@@ -1584,13 +1184,8 @@
   },
   "list_issues": {
     "server": "github",
-    "required": [
-      "owner",
-      "repo"
-    ],
-    "optional": [
-      "state"
-    ],
+    "required": ["owner", "repo"],
+    "optional": ["state"],
     "types": {
       "owner": "str",
       "repo": "str",
@@ -1600,15 +1195,8 @@
   },
   "create_issue": {
     "server": "github",
-    "required": [
-      "owner",
-      "repo",
-      "title"
-    ],
-    "optional": [
-      "body",
-      "assignees"
-    ],
+    "required": ["owner", "repo", "title"],
+    "optional": ["body", "assignees"],
     "types": {
       "owner": "str",
       "repo": "str",
@@ -1620,16 +1208,8 @@
   },
   "create_pull_request": {
     "server": "github",
-    "required": [
-      "owner",
-      "repo",
-      "title",
-      "head",
-      "base"
-    ],
-    "optional": [
-      "body"
-    ],
+    "required": ["owner", "repo", "title", "head", "base"],
+    "optional": ["body"],
     "types": {
       "owner": "str",
       "repo": "str",
@@ -1642,13 +1222,8 @@
   },
   "search_repositories": {
     "server": "github",
-    "required": [
-      "query"
-    ],
-    "optional": [
-      "page",
-      "perPage"
-    ],
+    "required": ["query"],
+    "optional": ["page", "perPage"],
     "types": {
       "query": "str",
       "page": "int",
@@ -1658,13 +1233,8 @@
   },
   "list_pull_requests": {
     "server": "github",
-    "required": [
-      "owner",
-      "repo"
-    ],
-    "optional": [
-      "state"
-    ],
+    "required": ["owner", "repo"],
+    "optional": ["state"],
     "types": {
       "owner": "str",
       "repo": "str",
@@ -1674,15 +1244,8 @@
   },
   "merge_pull_request": {
     "server": "github",
-    "required": [
-      "owner",
-      "repo",
-      "pull_number"
-    ],
-    "optional": [
-      "commit_title",
-      "merge_method"
-    ],
+    "required": ["owner", "repo", "pull_number"],
+    "optional": ["commit_title", "merge_method"],
     "types": {
       "owner": "str",
       "repo": "str",
@@ -1714,13 +1277,8 @@
   },
   "duckduckgo_search": {
     "server": "duckduckgo-search",
-    "required": [
-      "query"
-    ],
-    "optional": [
-      "max_results",
-      "timeout_s"
-    ],
+    "required": ["query"],
+    "optional": ["max_results", "timeout_s"],
     "types": {
       "query": "str",
       "max_results": "int",
@@ -1730,12 +1288,8 @@
   },
   "business_registry_search": {
     "server": "duckduckgo-search",
-    "required": [
-      "company_name"
-    ],
-    "optional": [
-      "step_id"
-    ],
+    "required": ["company_name"],
+    "optional": ["step_id"],
     "types": {
       "company_name": "str",
       "step_id": "str"
@@ -1744,12 +1298,8 @@
   },
   "open_data_search": {
     "server": "duckduckgo-search",
-    "required": [
-      "query"
-    ],
-    "optional": [
-      "step_id"
-    ],
+    "required": ["query"],
+    "optional": ["step_id"],
     "types": {
       "query": "str",
       "step_id": "str"
@@ -1758,12 +1308,8 @@
   },
   "structured_data_search": {
     "server": "duckduckgo-search",
-    "required": [
-      "query"
-    ],
-    "optional": [
-      "step_id"
-    ],
+    "required": ["query"],
+    "optional": ["step_id"],
     "types": {
       "query": "str",
       "step_id": "str"
@@ -1773,9 +1319,7 @@
   "github_whoami": {
     "server": "github",
     "required": [],
-    "optional": [
-      "timeout_s"
-    ],
+    "optional": ["timeout_s"],
     "types": {
       "timeout_s": "float"
     },
@@ -1783,14 +1327,8 @@
   },
   "get_file_contents": {
     "server": "github",
-    "required": [
-      "owner",
-      "repo",
-      "path"
-    ],
-    "optional": [
-      "branch"
-    ],
+    "required": ["owner", "repo", "path"],
+    "optional": ["branch"],
     "types": {
       "owner": "str",
       "repo": "str",
@@ -1801,12 +1339,7 @@
   },
   "create_branch": {
     "server": "github",
-    "required": [
-      "owner",
-      "repo",
-      "branch",
-      "from_branch"
-    ],
+    "required": ["owner", "repo", "branch", "from_branch"],
     "optional": [],
     "types": {
       "owner": "str",
@@ -1818,12 +1351,8 @@
   },
   "transcribe_audio": {
     "server": "whisper-stt",
-    "required": [
-      "audio_path"
-    ],
-    "optional": [
-      "language"
-    ],
+    "required": ["audio_path"],
+    "optional": ["language"],
     "types": {
       "audio_path": "str",
       "language": "str"
@@ -1833,10 +1362,7 @@
   "record_and_transcribe": {
     "server": "whisper-stt",
     "required": [],
-    "optional": [
-      "duration",
-      "language"
-    ],
+    "optional": ["duration", "language"],
     "types": {
       "duration": "float",
       "language": "str"
@@ -1845,9 +1371,7 @@
   },
   "restart_application": {
     "server": "system",
-    "required": [
-      "reason"
-    ],
+    "required": ["reason"],
     "optional": [],
     "types": {
       "reason": "str"
@@ -1856,12 +1380,8 @@
   },
   "restart_mcp_server": {
     "server": "system",
-    "required": [
-      "server_name"
-    ],
-    "optional": [
-      "reason"
-    ],
+    "required": ["server_name"],
+    "optional": ["reason"],
     "types": {
       "server_name": "str",
       "reason": "str"
@@ -1870,9 +1390,7 @@
   },
   "redis_get": {
     "server": "redis",
-    "required": [
-      "key"
-    ],
+    "required": ["key"],
     "optional": [],
     "types": {
       "key": "str"
@@ -1881,13 +1399,8 @@
   },
   "redis_set": {
     "server": "redis",
-    "required": [
-      "key",
-      "value"
-    ],
-    "optional": [
-      "ex_seconds"
-    ],
+    "required": ["key", "value"],
+    "optional": ["ex_seconds"],
     "types": {
       "key": "str",
       "value": "any",
@@ -1897,9 +1410,7 @@
   },
   "redis_keys": {
     "server": "redis",
-    "required": [
-      "pattern"
-    ],
+    "required": ["pattern"],
     "optional": [],
     "types": {
       "pattern": "str"
@@ -1908,9 +1419,7 @@
   },
   "redis_delete": {
     "server": "redis",
-    "required": [
-      "key"
-    ],
+    "required": ["key"],
     "optional": [],
     "types": {
       "key": "str"
@@ -1926,9 +1435,7 @@
   },
   "redis_ttl": {
     "server": "redis",
-    "required": [
-      "key"
-    ],
+    "required": ["key"],
     "optional": [],
     "types": {
       "key": "str"
@@ -1937,9 +1444,7 @@
   },
   "redis_hgetall": {
     "server": "redis",
-    "required": [
-      "key"
-    ],
+    "required": ["key"],
     "optional": [],
     "types": {
       "key": "str"
@@ -1948,10 +1453,7 @@
   },
   "redis_hset": {
     "server": "redis",
-    "required": [
-      "key",
-      "mapping"
-    ],
+    "required": ["key", "mapping"],
     "optional": [],
     "types": {
       "key": "str",
@@ -1968,12 +1470,8 @@
   },
   "vibe_configure_model": {
     "server": "vibe",
-    "required": [
-      "model_alias"
-    ],
-    "optional": [
-      "persist"
-    ],
+    "required": ["model_alias"],
+    "optional": ["persist"],
     "types": {
       "model_alias": "str",
       "persist": "bool"
@@ -1982,9 +1480,7 @@
   },
   "vibe_set_mode": {
     "server": "vibe",
-    "required": [
-      "mode"
-    ],
+    "required": ["mode"],
     "optional": [],
     "types": {
       "mode": "str"
@@ -1993,15 +1489,8 @@
   },
   "vibe_configure_provider": {
     "server": "vibe",
-    "required": [
-      "name",
-      "api_base",
-      "api_key_env_var"
-    ],
-    "optional": [
-      "api_style",
-      "backend"
-    ],
+    "required": ["name", "api_base", "api_key_env_var"],
+    "optional": ["api_style", "backend"],
     "types": {
       "name": "str",
       "api_base": "str",
@@ -2013,14 +1502,8 @@
   },
   "vibe_session_resume": {
     "server": "vibe",
-    "required": [
-      "session_id"
-    ],
-    "optional": [
-      "prompt",
-      "cwd",
-      "timeout_s"
-    ],
+    "required": ["session_id"],
+    "optional": ["prompt", "cwd", "timeout_s"],
     "types": {
       "session_id": "str",
       "prompt": "str",
@@ -2031,9 +1514,7 @@
   },
   "vibe_session_details": {
     "server": "vibe",
-    "required": [
-      "session_id_or_file"
-    ],
+    "required": ["session_id_or_file"],
     "optional": [],
     "types": {
       "session_id_or_file": "str"
@@ -2049,15 +1530,8 @@
   },
   "vibe_test_in_sandbox": {
     "server": "vibe",
-    "required": [
-      "test_script",
-      "target_files",
-      "command"
-    ],
-    "optional": [
-      "dependencies",
-      "timeout_s"
-    ],
+    "required": ["test_script", "target_files", "command"],
+    "optional": ["dependencies", "timeout_s"],
     "types": {
       "test_script": "str",
       "target_files": "dict",
@@ -2076,9 +1550,7 @@
   },
   "devtools_restart_mcp_server": {
     "server": "devtools",
-    "required": [
-      "server_name"
-    ],
+    "required": ["server_name"],
     "optional": [],
     "types": {
       "server_name": "str"
@@ -2087,12 +1559,8 @@
   },
   "devtools_kill_process": {
     "server": "devtools",
-    "required": [
-      "pid"
-    ],
-    "optional": [
-      "hard"
-    ],
+    "required": ["pid"],
+    "optional": ["hard"],
     "types": {
       "pid": "int",
       "hard": "bool"
@@ -2121,9 +1589,7 @@
   },
   "devtools_launch_inspector": {
     "server": "devtools",
-    "required": [
-      "server_name"
-    ],
+    "required": ["server_name"],
     "optional": [],
     "types": {
       "server_name": "str"
@@ -2139,9 +1605,7 @@
   "devtools_lint_python": {
     "server": "devtools",
     "required": [],
-    "optional": [
-      "file_path"
-    ],
+    "optional": ["file_path"],
     "types": {
       "file_path": "str"
     },
@@ -2156,9 +1620,7 @@
   "devtools_lint_js": {
     "server": "devtools",
     "required": [],
-    "optional": [
-      "file_path"
-    ],
+    "optional": ["file_path"],
     "types": {
       "file_path": "str"
     },
@@ -2167,9 +1629,7 @@
   "devtools_find_dead_code": {
     "server": "devtools",
     "required": [],
-    "optional": [
-      "target_path"
-    ],
+    "optional": ["target_path"],
     "types": {
       "target_path": "str"
     },
@@ -2178,9 +1638,7 @@
   "devtools_check_integrity": {
     "server": "devtools",
     "required": [],
-    "optional": [
-      "path"
-    ],
+    "optional": ["path"],
     "types": {
       "path": "str"
     },
@@ -2188,12 +1646,8 @@
   },
   "read_metadata": {
     "server": "data-analysis",
-    "required": [
-      "file_path"
-    ],
-    "optional": [
-      "sheet_name"
-    ],
+    "required": ["file_path"],
+    "optional": ["sheet_name"],
     "types": {
       "file_path": "str",
       "sheet_name": "str"
@@ -2202,14 +1656,8 @@
   },
   "analyze_dataset": {
     "server": "data-analysis",
-    "required": [
-      "data_source"
-    ],
-    "optional": [
-      "analysis_type",
-      "output_format",
-      "target_path"
-    ],
+    "required": ["data_source"],
+    "optional": ["analysis_type", "output_format", "target_path"],
     "types": {
       "data_source": "str",
       "analysis_type": "str",
@@ -2220,14 +1668,8 @@
   },
   "generate_statistics": {
     "server": "data-analysis",
-    "required": [
-      "data_source"
-    ],
-    "optional": [
-      "statistics_type",
-      "output_format",
-      "group_by"
-    ],
+    "required": ["data_source"],
+    "optional": ["statistics_type", "output_format", "group_by"],
     "types": {
       "data_source": "str",
       "statistics_type": "str",
@@ -2238,16 +1680,8 @@
   },
   "create_visualization": {
     "server": "data-analysis",
-    "required": [
-      "data_source",
-      "visualization_type"
-    ],
-    "optional": [
-      "output_format",
-      "title",
-      "x_axis",
-      "y_axis"
-    ],
+    "required": ["data_source", "visualization_type"],
+    "optional": ["output_format", "title", "x_axis", "y_axis"],
     "types": {
       "data_source": "str",
       "visualization_type": "str",
@@ -2260,13 +1694,8 @@
   },
   "data_cleaning": {
     "server": "data-analysis",
-    "required": [
-      "data_source"
-    ],
-    "optional": [
-      "cleaning_methods",
-      "handle_missing"
-    ],
+    "required": ["data_source"],
+    "optional": ["cleaning_methods", "handle_missing"],
     "types": {
       "data_source": "str",
       "cleaning_methods": "list",
@@ -2276,14 +1705,8 @@
   },
   "data_aggregation": {
     "server": "data-analysis",
-    "required": [
-      "data_source",
-      "group_by"
-    ],
-    "optional": [
-      "aggregation_methods",
-      "output_format"
-    ],
+    "required": ["data_source", "group_by"],
+    "optional": ["aggregation_methods", "output_format"],
     "types": {
       "data_source": "str",
       "group_by": "str",
@@ -2294,13 +1717,8 @@
   },
   "interpret_column_data": {
     "server": "data-analysis",
-    "required": [
-      "file_path",
-      "column_names"
-    ],
-    "optional": [
-      "sheet_name"
-    ],
+    "required": ["file_path", "column_names"],
+    "optional": ["sheet_name"],
     "types": {
       "file_path": "str",
       "column_names": "list",
@@ -2310,13 +1728,8 @@
   },
   "run_pandas_code": {
     "server": "data-analysis",
-    "required": [
-      "code"
-    ],
-    "optional": [
-      "data_source",
-      "timeout_seconds"
-    ],
+    "required": ["code"],
+    "optional": ["data_source", "timeout_seconds"],
     "types": {
       "code": "str",
       "data_source": "str",
@@ -2326,9 +1739,7 @@
   },
   "postgres_query": {
     "server": "postgres",
-    "required": [
-      "query"
-    ],
+    "required": ["query"],
     "optional": [],
     "types": {
       "query": "str"
@@ -2338,9 +1749,7 @@
   "postgres_list_tables": {
     "server": "postgres",
     "required": [],
-    "optional": [
-      "schema"
-    ],
+    "optional": ["schema"],
     "types": {
       "schema": "str"
     },
@@ -2348,12 +1757,8 @@
   },
   "postgres_describe_table": {
     "server": "postgres",
-    "required": [
-      "table_name"
-    ],
-    "optional": [
-      "schema"
-    ],
+    "required": ["table_name"],
+    "optional": ["schema"],
     "types": {
       "table_name": "str",
       "schema": "str"
@@ -2362,9 +1767,7 @@
   },
   "postgres_execute": {
     "server": "postgres",
-    "required": [
-      "query"
-    ],
+    "required": ["query"],
     "optional": [],
     "types": {
       "query": "str"
@@ -2373,9 +1776,7 @@
   },
   "postgres_schema_alter": {
     "server": "postgres",
-    "required": [
-      "query"
-    ],
+    "required": ["query"],
     "optional": [],
     "types": {
       "query": "str"
@@ -2415,9 +1816,7 @@
   "build_sim": {
     "server": "xcodebuild",
     "required": [],
-    "optional": [
-      "extraArgs"
-    ],
+    "optional": ["extraArgs"],
     "types": {
       "extraArgs": "list"
     },
@@ -2430,10 +1829,7 @@
   "test_sim": {
     "server": "xcodebuild",
     "required": [],
-    "optional": [
-      "extraArgs",
-      "testRunnerEnv"
-    ],
+    "optional": ["extraArgs", "testRunnerEnv"],
     "types": {
       "extraArgs": "list",
       "testRunnerEnv": "dict"
@@ -2447,9 +1843,7 @@
   "list_sims": {
     "server": "xcodebuild",
     "required": [],
-    "optional": [
-      "enabled"
-    ],
+    "optional": ["enabled"],
     "types": {
       "enabled": "bool"
     },
@@ -2472,9 +1866,7 @@
   },
   "install_app_sim": {
     "server": "xcodebuild",
-    "required": [
-      "appPath"
-    ],
+    "required": ["appPath"],
     "optional": [],
     "types": {
       "appPath": "str"
@@ -2488,9 +1880,7 @@
   "launch_app_sim": {
     "server": "xcodebuild",
     "required": [],
-    "optional": [
-      "args"
-    ],
+    "optional": ["args"],
     "types": {
       "args": "list"
     },
@@ -2503,9 +1893,7 @@
   "launch_app_logs_sim": {
     "server": "xcodebuild",
     "required": [],
-    "optional": [
-      "args"
-    ],
+    "optional": ["args"],
     "types": {
       "args": "list"
     },
@@ -2518,10 +1906,7 @@
   "clean": {
     "server": "xcodebuild",
     "required": [],
-    "optional": [
-      "extraArgs",
-      "platform"
-    ],
+    "optional": ["extraArgs", "platform"],
     "types": {
       "extraArgs": "list",
       "platform": "str"
@@ -2534,13 +1919,8 @@
   },
   "discover_projs": {
     "server": "xcodebuild",
-    "required": [
-      "workspaceRoot"
-    ],
-    "optional": [
-      "scanPath",
-      "maxDepth"
-    ],
+    "required": ["workspaceRoot"],
+    "optional": ["scanPath", "maxDepth"],
     "types": {
       "workspaceRoot": "str",
       "scanPath": "str",
@@ -2551,9 +1931,7 @@
   "xcodebuild_get_coverage": {
     "server": "xcodebuild",
     "required": [],
-    "optional": [
-      "extraArgs"
-    ],
+    "optional": ["extraArgs"],
     "types": {
       "extraArgs": "str"
     },
@@ -2562,10 +1940,7 @@
   "xcodebuild_archive_project": {
     "server": "xcodebuild",
     "required": [],
-    "optional": [
-      "extraArgs",
-      "scheme"
-    ],
+    "optional": ["extraArgs", "scheme"],
     "types": {
       "extraArgs": "str",
       "scheme": "str"
@@ -2574,12 +1949,8 @@
   },
   "react_get_introspection_script": {
     "server": "react-devtools",
-    "required": [
-      "query_type"
-    ],
-    "optional": [
-      "target_component"
-    ],
+    "required": ["query_type"],
+    "optional": ["target_component"],
     "types": {
       "query_type": "str",
       "target_component": "str"
@@ -2589,9 +1960,7 @@
   "devtools_check_security": {
     "server": "devtools",
     "required": [],
-    "optional": [
-      "path"
-    ],
+    "optional": ["path"],
     "types": {
       "path": "str"
     },
@@ -2600,9 +1969,7 @@
   "devtools_check_complexity": {
     "server": "devtools",
     "required": [],
-    "optional": [
-      "path"
-    ],
+    "optional": ["path"],
     "types": {
       "path": "str"
     },
@@ -2611,9 +1978,7 @@
   "devtools_check_types_python": {
     "server": "devtools",
     "required": [],
-    "optional": [
-      "path"
-    ],
+    "optional": ["path"],
     "types": {
       "path": "str"
     },
@@ -2627,9 +1992,7 @@
   },
   "mcp_inspector_list_tools": {
     "server": "devtools",
-    "required": [
-      "server_name"
-    ],
+    "required": ["server_name"],
     "optional": [],
     "types": {
       "server_name": "str"
@@ -2638,13 +2001,8 @@
   },
   "mcp_inspector_call_tool": {
     "server": "devtools",
-    "required": [
-      "server_name",
-      "tool_name"
-    ],
-    "optional": [
-      "args"
-    ],
+    "required": ["server_name", "tool_name"],
+    "optional": ["args"],
     "types": {
       "server_name": "str",
       "tool_name": "str",
@@ -2654,9 +2012,7 @@
   },
   "mcp_inspector_list_resources": {
     "server": "devtools",
-    "required": [
-      "server_name"
-    ],
+    "required": ["server_name"],
     "optional": [],
     "types": {
       "server_name": "str"
@@ -2665,10 +2021,7 @@
   },
   "mcp_inspector_read_resource": {
     "server": "devtools",
-    "required": [
-      "server_name",
-      "uri"
-    ],
+    "required": ["server_name", "uri"],
     "optional": [],
     "types": {
       "server_name": "str",
@@ -2678,9 +2031,7 @@
   },
   "mcp_inspector_list_prompts": {
     "server": "devtools",
-    "required": [
-      "server_name"
-    ],
+    "required": ["server_name"],
     "optional": [],
     "types": {
       "server_name": "str"
@@ -2689,13 +2040,8 @@
   },
   "mcp_inspector_get_prompt": {
     "server": "devtools",
-    "required": [
-      "server_name",
-      "prompt_name"
-    ],
-    "optional": [
-      "args"
-    ],
+    "required": ["server_name", "prompt_name"],
+    "optional": ["args"],
     "types": {
       "server_name": "str",
       "prompt_name": "str",
@@ -2705,10 +2051,7 @@
   },
   "mcp_inspector_get_schema": {
     "server": "devtools",
-    "required": [
-      "server_name",
-      "tool_name"
-    ],
+    "required": ["server_name", "tool_name"],
     "optional": [],
     "types": {
       "server_name": "str",
@@ -2719,12 +2062,7 @@
   "devtools_run_mcp_sandbox": {
     "server": "devtools",
     "required": [],
-    "optional": [
-      "server_name",
-      "all_servers",
-      "chain_length",
-      "autofix"
-    ],
+    "optional": ["server_name", "all_servers", "chain_length", "autofix"],
     "types": {
       "server_name": "str",
       "all_servers": "bool",
@@ -2735,9 +2073,7 @@
   },
   "devtools_run_context_check": {
     "server": "devtools",
-    "required": [
-      "test_file"
-    ],
+    "required": ["test_file"],
     "optional": [],
     "types": {
       "test_file": "str"
@@ -2746,9 +2082,7 @@
   },
   "devtools_analyze_trace": {
     "server": "devtools",
-    "required": [
-      "log_path"
-    ],
+    "required": ["log_path"],
     "optional": [],
     "types": {
       "log_path": "str"
@@ -2757,9 +2091,7 @@
   },
   "maps_geocode": {
     "server": "xcodebuild",
-    "required": [
-      "address"
-    ],
+    "required": ["address"],
     "optional": [],
     "types": {
       "address": "str"
@@ -2768,10 +2100,7 @@
   },
   "maps_reverse_geocode": {
     "server": "xcodebuild",
-    "required": [
-      "lat",
-      "lng"
-    ],
+    "required": ["lat", "lng"],
     "optional": [],
     "types": {
       "lat": "float",
@@ -2781,18 +2110,8 @@
   },
   "maps_search_places": {
     "server": "xcodebuild",
-    "required": [
-      "query"
-    ],
-    "optional": [
-      "location",
-      "radius",
-      "type",
-      "min_price",
-      "max_price",
-      "open_now",
-      "rankby"
-    ],
+    "required": ["query"],
+    "optional": ["location", "radius", "type", "min_price", "max_price", "open_now", "rankby"],
     "types": {
       "query": "str",
       "location": "str",
@@ -2807,13 +2126,8 @@
   },
   "maps_place_details": {
     "server": "xcodebuild",
-    "required": [
-      "place_id"
-    ],
-    "optional": [
-      "fields",
-      "language"
-    ],
+    "required": ["place_id"],
+    "optional": ["fields", "language"],
     "types": {
       "place_id": "str",
       "fields": "str",
@@ -2823,18 +2137,8 @@
   },
   "maps_directions": {
     "server": "xcodebuild",
-    "required": [
-      "origin",
-      "destination"
-    ],
-    "optional": [
-      "mode",
-      "waypoints",
-      "alternatives",
-      "avoid",
-      "departure_time",
-      "arrival_time"
-    ],
+    "required": ["origin", "destination"],
+    "optional": ["mode", "waypoints", "alternatives", "avoid", "departure_time", "arrival_time"],
     "types": {
       "origin": "str",
       "destination": "str",
@@ -2849,10 +2153,7 @@
   },
   "maps_distance_matrix": {
     "server": "xcodebuild",
-    "required": [
-      "origins",
-      "destinations"
-    ],
+    "required": ["origins", "destinations"],
     "optional": [],
     "types": {
       "origins": "str",
@@ -2862,15 +2163,8 @@
   },
   "maps_street_view": {
     "server": "xcodebuild",
-    "required": [
-      "location"
-    ],
-    "optional": [
-      "heading",
-      "pitch",
-      "fov",
-      "cyberpunk"
-    ],
+    "required": ["location"],
+    "optional": ["heading", "pitch", "fov", "cyberpunk"],
     "types": {
       "location": "str",
       "heading": "int",
@@ -2882,15 +2176,8 @@
   },
   "maps_static_map": {
     "server": "xcodebuild",
-    "required": [
-      "center"
-    ],
-    "optional": [
-      "zoom",
-      "size",
-      "maptype",
-      "cyberpunk"
-    ],
+    "required": ["center"],
+    "optional": ["zoom", "size", "maptype", "cyberpunk"],
     "types": {
       "center": "str",
       "zoom": "int",
@@ -2902,9 +2189,7 @@
   },
   "maps_elevation": {
     "server": "xcodebuild",
-    "required": [
-      "locations"
-    ],
+    "required": ["locations"],
     "optional": [],
     "types": {
       "locations": "str"
@@ -2914,9 +2199,7 @@
   "maps_open_interactive_search": {
     "server": "xcodebuild",
     "required": [],
-    "optional": [
-      "initial_query"
-    ],
+    "optional": ["initial_query"],
     "types": {
       "initial_query": "str"
     },
@@ -2924,13 +2207,8 @@
   },
   "maps_generate_link": {
     "server": "xcodebuild",
-    "required": [
-      "location"
-    ],
-    "optional": [
-      "zoom",
-      "map_type"
-    ],
+    "required": ["location"],
+    "optional": ["zoom", "map_type"],
     "types": {
       "location": "str",
       "zoom": "int",
@@ -2940,9 +2218,7 @@
   },
   "maps_start_tour": {
     "server": "local",
-    "required": [
-      "polyline"
-    ],
+    "required": ["polyline"],
     "optional": [],
     "types": {
       "polyline": "str"
@@ -2951,12 +2227,8 @@
   },
   "maps_tour_control": {
     "server": "local",
-    "required": [
-      "action"
-    ],
-    "optional": [
-      "value"
-    ],
+    "required": ["action"],
+    "optional": ["value"],
     "types": {
       "action": "str",
       "value": "float"
@@ -2965,9 +2237,7 @@
   },
   "tour_start": {
     "server": "tour-guide",
-    "required": [
-      "polyline"
-    ],
+    "required": ["polyline"],
     "optional": [],
     "types": {
       "polyline": "str"
@@ -2994,9 +2264,7 @@
   },
   "tour_look": {
     "server": "tour-guide",
-    "required": [
-      "angle"
-    ],
+    "required": ["angle"],
     "optional": [],
     "types": {
       "angle": "int"
@@ -3005,13 +2273,30 @@
   },
   "tour_set_speed": {
     "server": "tour-guide",
-    "required": [
-      "speed"
-    ],
+    "required": ["speed"],
     "optional": [],
     "types": {
       "speed": "float"
     },
     "description": "Adjust the tour movement speed (0.5 to 3.0)"
+  },
+  "devtools_list_github_workflows": {
+    "server": "devtools",
+    "required": [],
+    "optional": ["limit"],
+    "types": {
+      "limit": "int"
+    },
+    "description": "List recent GitHub Action workflow runs for the current project."
+  },
+  "devtools_get_github_job_logs": {
+    "server": "devtools",
+    "required": [],
+    "optional": ["run_id", "job_id"],
+    "types": {
+      "run_id": "str",
+      "job_id": "str"
+    },
+    "description": "Get logs for a specific GitHub Action job. Provide run_id to list jobs, or job_id to get logs."
   }
 }

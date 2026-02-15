@@ -183,7 +183,14 @@ class ToolDispatcher:
         "oxlint",
         "knip",
         "pyrefly",
+        "pyrefly",
         "devtools_run_global_lint",
+        "ci",
+        "cicd",
+        "github_actions",
+        "workflow",
+        "job",
+        "logs",
     ]
 
     CONTEXT7_SYNONYMS = [

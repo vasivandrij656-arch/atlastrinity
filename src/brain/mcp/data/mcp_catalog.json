@@ -259,7 +259,8 @@
       "Log analysis (TraceAnalyzer)",
       "Global system linting (devtools_run_global_lint)",
       "Full system map retrieval (all paths, DBs, logs, configs)",
-      "Native MCP server smoke testing (all servers via JSON-RPC)"
+      "Native MCP server smoke testing (all servers via JSON-RPC)",
+      "GitHub Actions CI/CD monitoring (workflows and job logs)"
     ],
     "key_tools": [
       "devtools_lint_python",
@@ -289,7 +290,9 @@
       "devtools_test_all_mcp_native",
       "devtools_list_processes",
       "devtools_restart_mcp_server",
-      "devtools_kill_process"
+      "devtools_kill_process",
+      "devtools_list_github_workflows",
+      "devtools_get_github_job_logs"
     ],
     "when_to_use": "Validating code quality, project health, auto-updating diagrams, deep MCP server inspection/testing, and finding ANY system path (logs, DBs, configs). Critical for agent-led system maintenance.",
     "priority_note": "FIRST call 'devtools_get_system_map' when you need to locate logs, databases, configs, or any system path. Use 'devtools_test_all_mcp_native' for quick smoke test of all servers. Use 'mcp_inspector_*' for discovery and 'devtools_run_mcp_sandbox' for full operational verification."

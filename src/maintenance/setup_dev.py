@@ -1229,6 +1229,22 @@ def install_deps():
             check=True,
         )
 
+        # Install dev dependencies if exists
+        dev_req = PROJECT_ROOT / "requirements-dev.txt"
+        if dev_req.exists():
+            print_info("Installing development dependencies from requirements-dev.txt...")
+            run_venv_cmd(
+                [
+                    "-m",
+                    "pip",
+                    "install",
+                    "--prefer-binary",
+                    "-r",
+                    str(dev_req),
+                ],
+                check=True,
+            )
+
         # Step 2: Install Voice stack (espnet/ukrainian-tts) without dependencies.
         # Metadata of these packages contains outdated constraints (e.g. importlib-metadata < 5.0)
         # By installing them last with --no-deps, we prevent them from breaking the broader environment.

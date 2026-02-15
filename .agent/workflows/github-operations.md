@@ -13,6 +13,7 @@ description: GitHub repository operations using GITHUB_TOKEN from .env
 ### 1. Налаштування Git Remote з токеном (обов'язково перед роботою)
 
 // turbo
+
 ```zsh
 export GITHUB_TOKEN=$(grep GITHUB_TOKEN .env | cut -d'=' -f2 | tr -d '\r\n') && \
 git remote set-url origin https://$GITHUB_TOKEN@github.com/solagurma/atlastrinity.git && \
@@ -28,6 +29,7 @@ git remote -v
 ```
 
 **Очікуваний результат**: URL має містити токен у форматі:
+
 ```
 origin  https://ghp_xxxxxxxxxxxxx@github.com/solagurma/atlastrinity.git
 ```
@@ -35,6 +37,7 @@ origin  https://ghp_xxxxxxxxxxxxx@github.com/solagurma/atlastrinity.git
 ### 3. Стандартний Git Workflow
 
 #### Перед початком роботи:
+
 ```zsh
 # 1. Переконатись що remote налаштовано
 git remote -v
@@ -44,6 +47,7 @@ git pull origin main
 ```
 
 #### Під час роботи:
+
 ```zsh
 # 1. Перевірити статус
 git status
@@ -78,6 +82,7 @@ git push origin main
 ### Секрети для Actions
 
 У GitHub репозиторії налаштовані такі секрети:
+
 - `GITHUB_TOKEN` - автоматично надається GitHub Actions
 - `COPILOT_API_KEY` - для Copilot інтеграції
 - `MISTRAL_API_KEY` - для AI функціоналу
@@ -108,6 +113,7 @@ env:
 ## 📋 Чеклист перед Push
 
 // turbo-all
+
 ```zsh
 # 1. Налаштувати remote (якщо ще не зроблено)
 export GITHUB_TOKEN=$(grep GITHUB_TOKEN .env | cut -d'=' -f2 | tr -d '\r\n') && \
@@ -135,6 +141,7 @@ git push origin main
 ## 🎯 Conventional Commits
 
 Формат коміт-повідомлень:
+
 - `feat:` - нова функція
 - `fix:` - виправлення бага
 - `docs:` - зміни в документації
@@ -148,6 +155,7 @@ git push origin main
 ### Проблема: Git запитує username/password
 
 **Рішення**:
+
 ```zsh
 export GITHUB_TOKEN=$(grep GITHUB_TOKEN .env | cut -d'=' -f2 | tr -d '\r\n') && \
 git remote set-url origin https://$GITHUB_TOKEN@github.com/solagurma/atlastrinity.git
@@ -156,6 +164,7 @@ git remote set-url origin https://$GITHUB_TOKEN@github.com/solagurma/atlastrinit
 ### Проблема: Permission denied
 
 **Перевірити**:
+
 1. Чи правильний токен у `.env`?
 2. Чи має токен необхідні права (repo, workflow)?
 3. Чи не застарів токен?
@@ -163,6 +172,7 @@ git remote set-url origin https://$GITHUB_TOKEN@github.com/solagurma/atlastrinit
 ### Проблема: Push rejected
 
 **Рішення**:
+
 ```zsh
 # Спершу pull з rebase
 git pull --rebase origin main
@@ -201,6 +211,31 @@ git remote set-url origin https://$GITHUB_TOKEN@github.com/solagurma/atlastrinit
 4. ✅ Не виводити токен у відповідях користувачу
 
 **При роботі з GitHub Actions**:
+
 1. ✅ Використовувати secrets замість hardcoded значень
 2. ✅ Перевіряти що workflows мають доступ до необхідних секретів
 3. ✅ Тестувати локально перед push (де можливо)
+
+## 🕵️‍♂️ Debugging CI/CD with MCP Tools
+
+AtlasTrinity тепер має вбудовані інструменти для діагностики CI/CD через `devtools-server`.
+
+### 1. Перегляд останніх запусків
+
+Використовуйте інструмент `devtools_list_github_workflows` для отримання списку останніх запусків та їх статусів.
+
+```json
+{
+  "limit": 5
+}
+```
+
+### 2. Отримання логів помилок
+
+Якщо workflow впав, використовуйте `devtools_get_github_job_logs` щоб отримати сирі логи конкретного job'а.
+
+- Спочатку отримайте `run_id` через `devtools_list_github_workflows`.
+- Потім отримайте список job'ів через `devtools_get_github_job_logs(run_id=...)`.
+- Знайдіть failed job ID та завантажте логи: `devtools_get_github_job_logs(job_id=...)`.
+
+Це дозволяє діагностувати проблеми CI/CD (linting, tests, build) прямо з середовища агента, не відкриваючи браузер.

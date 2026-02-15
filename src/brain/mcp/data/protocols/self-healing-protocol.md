@@ -179,6 +179,11 @@ recent_commits = await manager.call_tool("github", "list_commits", {
     "path": error_context["file"],
     "limit": 5
 })
+
+# NEW: Retrieve job logs for deep failure analysis
+job_logs = await manager.call_tool("devtools", "devtools_get_github_job_logs", {
+    "job_id": "123456789"
+})
 ```
 
 **Config:**
@@ -281,8 +286,12 @@ if "test_changes" in result:
 test_result = await manager.call_tool("devtools", "devtools_run_global_lint", {})
 
 if not test_result["success"]:
-    # Retry fix generation
+    # Retry fix generation after analyzing logs if available
     return to_phase_3()
+
+### 5.1.1 CI/CD Verification (GitHub Jobs)
+# If fix is related to CI failure, verify workflow status
+ci_status = await manager.call_tool("devtools", "devtools_list_github_workflows", {"limit": 1})
 ```
 
 ### 5.2 Lint Checks

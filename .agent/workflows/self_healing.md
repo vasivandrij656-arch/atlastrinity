@@ -50,7 +50,7 @@ result = await healing_hypermodule.run(HealingMode.IMPROVE)
 1. Run `SystemFixer.run_all()` — auto-fix known issues
 2. Run `health_checks` — YAML, MCP, DB, Vibe, memory
 3. Run `mcp_health` — MCP server connectivity
-4. Check CI/CD workflow status via GitHub API
+4. Check CI/CD workflow status via `devtools_list_github_workflows` and `devtools_get_github_job_logs`
 5. Report unified diagnostic with recommendations
 
 ### 3. PREVENT — Preventive Maintenance
