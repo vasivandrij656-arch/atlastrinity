@@ -57,7 +57,7 @@ models:
   # Format: "provider:model_name" to override global provider
   # STRICTLY choose from the allowed lists above.
   default: "copilot:gpt-4.1"         # Default LLM for agents
-  vision: "copilot:gpt-4.1"           # Best for Vision/multimodal tasks
+  vision: "copilot:gpt-4o"           # Best for Vision/multimodal tasks
   reasoning: "copilot:gpt-4.1"        # Reliable logic for multi-turn
   code_analysis: "copilot:gpt-4.1"     # General coding tasks
   consolidation: "copilot:gpt-4.1"     # Efficient state management
@@ -81,7 +81,7 @@ agents:
   tetyana:
     # model: inherited from models.default
     reasoning_model: "copilot:gpt-4.1"  # Precision routing and tool selection
-    vision_model: "copilot:gpt-4.1"      # UI state analysis
+    vision_model: "copilot:gpt-4o"      # UI state analysis
     temperature: 0.5
     max_tokens: 2000
 
@@ -94,7 +94,7 @@ agents:
     # model: inherited from models.default
     
     # Phase 3: Result analysis & verdict
-    vision_model: "copilot:gpt-4.1"      # UI/Visual verification
+    vision_model: "copilot:gpt-4o"      # UI/Visual verification
     verdict_model: "copilot:gpt-4.1"    # Rigorous final verdict reasoning
     
     # General settings

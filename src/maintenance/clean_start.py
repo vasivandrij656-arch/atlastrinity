@@ -51,7 +51,6 @@ TARGET_PORTS = [
     8086,
     8088,
     8090,  # Vibe, Proxies, Internal
-    6379,  # Redis
     9222,  # Chrome Debugging
 ]
 

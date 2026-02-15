@@ -207,27 +207,19 @@ class VibeWindsurfProxyHandler(http.server.BaseHTTPRequestHandler):
             response = None
 
             try:
-                # Use timeout to prevent hanging
-                import signal
-
-                def timeout_handler(signum, frame):
-                    raise TimeoutError("Windsurf API call timed out")
-
-                # Set 30 second timeout
-                signal.signal(signal.SIGALRM, timeout_handler)
-                signal.alarm(30)
-
-                try:
-                    response = llm.invoke(windsurf_messages)
-                except TimeoutError as e:
-                    error(f"Windsurf API timeout: {e}")
-                    self.send_error_response("Windsurf API timeout after 30 seconds", 504)
-                finally:
-                    signal.alarm(0)  # Cancel timeout
-                return
+                # Use ThreadPoolExecutor with timeout instead of signal
+                with concurrent.futures.ThreadPoolExecutor(max_workers=1) as executor:
+                    future = executor.submit(llm.invoke, windsurf_messages)
+                    try:
+                        response = future.result(timeout=30)  # 30 second timeout
+                    except concurrent.futures.TimeoutError:
+                        error(f"Windsurf API timeout after 30 seconds")
+                        self.send_error_response("Windsurf API timeout after 30 seconds", 504)
+                        return
             except Exception as e:
                 error(f"Windsurf API error: {e}")
                 self.send_error_response(f"Windsurf API error: {e!s}", 502)
+                return
             elapsed = time.time() - start_time
 
             # Extract content
