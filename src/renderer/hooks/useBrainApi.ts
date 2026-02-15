@@ -105,7 +105,7 @@ export const useBrainApi = () => {
             });
           }
 
-          if (data.logs) {
+          if (data.logs && !window.electron) {
             setLogs(
               data.logs.map((l: { timestamp: string | number }) => ({
                 ...l,

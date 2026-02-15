@@ -484,7 +484,7 @@ ipcMain.on('start-log-stream', (_event) => {
 
       console.log('[ELECTRON] Starting log stream watcher...');
 
-      // Use fs.watch for real-time updates
+      let logBuffer = '';
       logWatcher = fs.watch(LOG_PATH, (eventType) => {
         void (async () => {
           if (eventType === 'change') {
@@ -502,7 +502,12 @@ ipcMain.on('start-log-stream', (_event) => {
                 await handle.close();
 
                 const newContent = buffer.toString('utf-8');
-                const lines = newContent.split('\n').filter(Boolean);
+                const rawLines = (logBuffer + newContent).split('\n');
+
+                // Keep the last part (potentially incomplete line) in the buffer
+                logBuffer = rawLines.pop() || '';
+
+                const lines = rawLines.filter(Boolean);
 
                 if (lines.length > 0 && mainWindow) {
                   mainWindow.webContents.send('log-update', lines);
@@ -512,6 +517,7 @@ ipcMain.on('start-log-stream', (_event) => {
               } else if (newSize < lastLogSize) {
                 // File truncated / rotated
                 lastLogSize = newSize;
+                logBuffer = '';
               }
             } catch (err) {
               console.error('[ELECTRON] Error reading log update:', err);
