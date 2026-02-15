@@ -3,6 +3,7 @@
 
 active_model = "gpt-4.1"
 system_prompt_id = "cli"
+confirmation_timeout_s = 20
 
 # File tools — auto-approved for applying edits
 [tools.read_file]
@@ -20,9 +21,10 @@ permission = "always"
 [tools.ls]
 permission = "always"
 
-# Shell execution — requires confirmation (may have side effects)
+# Shell execution — auto-approved per user request (high speed, "all-in")
 [tools.bash]
-permission = "ask"
+permission = "always"
+
 
 # MCP Tools — lint after edits
 [tools.devtools_devtools_lint_python]

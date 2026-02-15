@@ -3,12 +3,13 @@
 
 active_model = "gpt-4.1"
 system_prompt_id = "cli"
+confirmation_timeout_s = 5
 
 [tools.bash]
-permission = "always"
+permission = "ask"
 
 [tools.write_file]
-permission = "always"
+permission = "ask"
 
 [tools.read_file]
 permission = "always"
@@ -17,7 +18,7 @@ permission = "always"
 permission = "always"
 
 [tools.search_replace]
-permission = "always"
+permission = "ask"
 
 [tools.ls]
 permission = "always"

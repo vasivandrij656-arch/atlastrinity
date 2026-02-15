@@ -1,4 +1,8 @@
 
+<!-- AUTO-UPDATED: 2026-02-16T01:16:14.461443 -->
+<!-- Modified: .agent/docs/mcp_architecture_diagram.md, src/brain/data/architecture_diagrams/mcp_architecture.md, src/mcp_server/devtools_server.py -->
+
+
 <!-- AUTO-UPDATED: 2026-02-16T01:16:04.105263 -->
 <!-- Modified: .agent/docs/mcp_architecture_diagram.md, src/brain/data/architecture_diagrams/mcp_architecture.md, src/mcp_server/golden_fund/lientity_extractor.py -->
 

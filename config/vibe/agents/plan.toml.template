@@ -3,6 +3,7 @@
 
 active_model = "gpt-4.1"
 system_prompt_id = "cli"
+confirmation_timeout_s = 20
 
 # Read-only tools — safe for exploration
 [tools.read_file]
@@ -29,4 +30,10 @@ permission = "ask"
 permission = "always"
 
 [tools.devtools_devtools_run_global_lint]
+permission = "always"
+
+[tools.devtools_devtools_list_github_workflows]
+permission = "always"
+
+[tools.devtools_devtools_get_github_job_logs]
 permission = "always"

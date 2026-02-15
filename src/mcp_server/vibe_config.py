@@ -199,6 +199,9 @@ class AgentProfileConfig(BaseModel):
     name: str = Field(..., description="Agent profile name")
     active_model: str | None = Field(None, description="Override active model")
     system_prompt_id: str | None = Field(None, description="Custom system prompt")
+    confirmation_timeout_s: float | None = Field(
+        None, description="Timeout for auto-approving 'ask' permissions"
+    )
     enabled_tools: list[str] = Field(default_factory=list)
     disabled_tools: list[str] = Field(default_factory=list)
     tools: dict[str, ToolConfig] = Field(default_factory=dict)
@@ -270,6 +273,9 @@ class VibeConfig(BaseModel):
     max_turns: int = Field(10, ge=1, le=1000, description="Default max turns")
     max_price: float | None = Field(None, ge=0.0, description="Max cost per conversation (USD)")
     timeout_s: float = Field(600.0, ge=10.0, description="Default timeout in seconds")
+    confirmation_timeout_s: float = Field(
+        20.0, ge=0.0, description="Default timeout for auto-approving 'ask' permissions"
+    )
 
     # Paths (resolved at runtime)
     workspace: str = Field(default_factory=lambda: str(Path.cwd()), description="Working directory")
@@ -425,6 +431,7 @@ class VibeConfig(BaseModel):
             active_model="",
             system_prompt_id="default",
             default_mode=AgentMode.AUTO_APPROVE,
+            confirmation_timeout_s=20.0,
             disable_welcome_banner_animation=True,
             vim_keybindings=False,
             textual_theme=None,
