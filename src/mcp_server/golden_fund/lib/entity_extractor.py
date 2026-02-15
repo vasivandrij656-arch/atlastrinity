@@ -83,7 +83,7 @@ Text:
                 ]
             )
 
-            content = cast(str, response.content).strip()
+            content = cast("str", response.content).strip()
             # Cleanup markdown code blocks if present
             content = content.removeprefix("```json")
             content = content.removeprefix("```")

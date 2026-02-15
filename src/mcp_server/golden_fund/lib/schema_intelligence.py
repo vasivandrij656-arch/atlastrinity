@@ -68,7 +68,7 @@ class SchemaIntelligence:
                 ]
             )
 
-            sql = cast(str, response.content).strip()
+            sql = cast("str", response.content).strip()
             # Cleanup markdown code blocks if present
             sql = sql.removeprefix("```sql")
             sql = sql.removeprefix("```")
@@ -115,7 +115,7 @@ class SchemaIntelligence:
                 ]
             )
 
-            result = cast(str, response.content).strip()
+            result = cast("str", response.content).strip()
             if "COMPATIBLE" in result.upper():
                 return None
 
