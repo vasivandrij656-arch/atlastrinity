@@ -146,20 +146,20 @@ class VectorStorage:
             logger.error(msg)
             return StorageResult(False, "vector", error=msg)
 
-    def search(self, query: str, limit: int = 5, where: dict[str, Any] | None = None) -> StorageResult:
+    def search(
+        self, query: str, limit: int = 5, where: dict[str, Any] | None = None
+    ) -> StorageResult:
         """Search for similar records with optional metadata filtering."""
         if not self.enabled:
             return StorageResult(False, "vector", error="VectorStorage is disabled")
 
         try:
-            logger.info(f"Searching ChromaDB '{self.collection_name}' for query: {query}, where: {where}")
+            logger.info(
+                f"Searching ChromaDB '{self.collection_name}' for query: {query}, where: {where}"
+            )
 
             if self.collection:
-                results = self.collection.query(
-                    query_texts=[query], 
-                    n_results=limit,
-                    where=where
-                )
+                results = self.collection.query(query_texts=[query], n_results=limit, where=where)
             else:
                 return StorageResult(False, "vector", error="Chroma collection not initialized")
 

@@ -44,22 +44,26 @@ class CSVParser:
 
         # Check for delimiter sniffing
         sep = kwargs.get("sep", ",")
-        
+
         for encoding in encodings:
             try:
                 # Basic read
-                df = pd.read_csv(file_path, encoding=encoding, on_bad_lines='skip', sep=sep, **kwargs)
-                
+                df = pd.read_csv(
+                    file_path, encoding=encoding, on_bad_lines="skip", sep=sep, **kwargs
+                )
+
                 # If only 1 column, maybe wrong separator?
                 if len(df.columns) == 1 and sep == ",":
-                     # Try semicolon
-                     try:
-                         df_semi = pd.read_csv(file_path, encoding=encoding, on_bad_lines='skip', sep=";")
-                         if len(df_semi.columns) > 1:
-                             df = df_semi
-                     except:
-                         pass
-                         
+                    # Try semicolon
+                    try:
+                        df_semi = pd.read_csv(
+                            file_path, encoding=encoding, on_bad_lines="skip", sep=";"
+                        )
+                        if len(df_semi.columns) > 1:
+                            df = df_semi
+                    except:
+                        pass
+
                 return ParseResult(True, data=df)
             except UnicodeDecodeError:
                 continue

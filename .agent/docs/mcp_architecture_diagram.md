@@ -1,4 +1,8 @@
 
+<!-- AUTO-UPDATED: 2026-02-15T23:55:13.954887 -->
+<!-- Modified: .agent/docs/mcp_architecture_diagram.md, src/brain/core/orchestration/orchestrator.py, src/brain/data/architecture_diagrams/mcp_architecture.md -->
+
+
 <!-- AUTO-UPDATED: 2026-02-15T23:54:55.501986 -->
 <!-- Modified: .agent/docs/mcp_architecture_diagram.md, .secrets.baseline, config/vibe_config.toml.template -->
 

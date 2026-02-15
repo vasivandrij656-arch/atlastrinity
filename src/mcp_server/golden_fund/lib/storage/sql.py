@@ -61,6 +61,7 @@ class SQLStorage:
 
         try:
             from ..schema_intelligence import SchemaIntelligence
+
             schema_intel = SchemaIntelligence()
         except ImportError:
             schema_intel = None
@@ -78,9 +79,7 @@ class SQLStorage:
                 if existing_schema and if_exists == "append":
                     # Smart Evolution
                     if schema_intel:
-                        alter_stmts = schema_intel.evolve_schema(
-                            df, table_name, existing_schema[0]
-                        )
+                        alter_stmts = schema_intel.evolve_schema(df, table_name, existing_schema[0])
                         if alter_stmts:
                             logger.info(f"Evolving schema for {table_name}: {alter_stmts}")
                             # Execute ALTER statements (splitting by ; if multiple)
@@ -106,10 +105,10 @@ class SQLStorage:
                                 conn.execute(f"DROP TABLE IF EXISTS {table_name}")
                             conn.execute(create_stmt)
                             created_smart = True
-                            
+
                             # Append data to the smart table
                             df.to_sql(table_name, conn, if_exists="append", index=False)
-                            
+
                             # Save schema to file
                             self._persist_schema_to_file(table_name, conn)
 
@@ -148,16 +147,16 @@ class SQLStorage:
             res = cursor.fetchone()
             if res and res[0]:
                 schema_sql = res[0] + ";\n"
-                
+
                 # Save to schema file in the same directory as the DB
                 schema_file = self.db_dir / "golden_fund_schemas.sql"
-                
+
                 # Read existing to avoid dupes? Or just append?
                 # For simplicity, appending. A smart system might parse/dedupe.
                 with open(schema_file, "a", encoding="utf-8") as f:
                     f.write(f"\n-- Schema for {table_name} (Updated: {pd.Timestamp.now()})\n")
                     f.write(schema_sql)
-                    
+
                 logger.info(f"Persisted schema for {table_name} to {schema_file}")
         except Exception as e:
             logger.warning(f"Failed to persist schema to file: {e}")

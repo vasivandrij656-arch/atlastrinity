@@ -22,13 +22,14 @@ class StorageResult:
     def __str__(self) -> str:
         if not self.success:
             return f"Error ({self.target}): {self.error}"
-        
+
         if not self.data:
             return f"Success ({self.target}): No data"
-            
+
         results = self.data.get("results", [])
         if isinstance(results, list) and results:
             import json
+
             return json.dumps(results, indent=2, default=str)
-            
+
         return f"Success ({self.target}): {self.data}"
