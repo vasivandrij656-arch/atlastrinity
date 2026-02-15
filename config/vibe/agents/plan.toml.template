@@ -1,7 +1,7 @@
 # Plan agent configuration for Vibe
 # Conservative mode: read-only exploration, write/execute require confirmation
 
-active_model = "gpt-4o"
+active_model = "gpt-4.1"
 system_prompt_id = "cli"
 
 # Read-only tools — safe for exploration

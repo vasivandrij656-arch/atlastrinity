@@ -202,9 +202,27 @@ class VibeWindsurfProxyHandler(http.server.BaseHTTPRequestHandler):
             # This allows it to use the Fallback Chain (Cascade -> Local -> Direct) safely.
             llm = WindsurfLLM(model_name=model, proxy_url="")
 
-            # Make the API call
+            # Make the API call with timeout
             start_time = time.time()
-            response = llm.invoke(windsurf_messages)
+            try:
+                # Use timeout to prevent hanging
+                import signal
+                
+                def timeout_handler(signum, frame):
+                    raise TimeoutError("Windsurf API call timed out")
+                
+                # Set 30 second timeout
+                signal.signal(signal.SIGALRM, timeout_handler)
+                signal.alarm(30)
+                
+                response = llm.invoke(windsurf_messages)
+                signal.alarm(0)  # Cancel timeout
+                
+            except TimeoutError as e:
+                signal.alarm(0)  # Cancel timeout
+                error(f"Windsurf API timeout: {e}")
+                self.send_error_response("Windsurf API timeout after 30 seconds", 504)
+                return
             elapsed = time.time() - start_time
 
             # Extract content

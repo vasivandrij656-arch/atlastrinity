@@ -32,23 +32,18 @@ from src.brain.config.config_loader import config  # noqa: E402
 from src.providers.factory import create_llm  # noqa: E402
 
 
-class SimpleWindsurfLLM:
-    def __init__(self, api_key=None, model="deepseek-v3"):
-        # Priority: WINDSURF_API_KEY -> COPILOT_API_KEY -> None
-        self.api_key = api_key or os.getenv("WINDSURF_API_KEY") or os.getenv("COPILOT_API_KEY")
+class SimpleCopilotLLM:
+    def __init__(self, api_key=None, model="gpt-4.1"):
+        # Priority: COPILOT_API_KEY -> None
+        self.api_key = api_key or os.getenv("COPILOT_API_KEY")
         self.model = model
-        self.api_base = "https://server.self-serve.windsurf.com"
-
-        # If using Copilot key, switch to Copilot endpoint
-        if os.getenv("COPILOT_API_KEY") and not os.getenv("WINDSURF_API_KEY"):
-            self.api_base = "https://api.githubcopilot.com"
-            self.model = "gpt-4o"
+        self.api_base = "https://api.githubcopilot.com"
 
     async def ainvoke(self, prompt: str) -> Any:
         import httpx
 
         if not self.api_key:
-            raise ValueError("No API key found (WINDSURF_API_KEY or COPILOT_API_KEY)")
+            raise ValueError("No API key found (COPILOT_API_KEY)")
 
         headers = {
             "Authorization": f"Bearer {self.api_key}",
@@ -56,11 +51,7 @@ class SimpleWindsurfLLM:
             "Accept": "application/json",
         }
 
-        # Use appropriate endpoint based on API key
-        if "windsurf" in self.api_base.lower():
-            url = f"{self.api_base}/v1/chat/completions"
-        else:
-            url = f"{self.api_base}/chat/completions"
+        url = f"{self.api_base}/chat/completions"
 
         payload = {
             "model": self.model,
@@ -314,12 +305,12 @@ Generate the test scenario:"""
         # Force load if not already done (singleton handles it, but good to be sure)
 
         try:
-            # Get model from config, fallback to gpt-4o if not set
+            # Get model from config, fallback to gpt-4.1 if not set
             llm = create_llm(model_name=config.get("models.sandbox"))
             response = await llm.ainvoke(prompt)
         except Exception:
-            # Fallback to Windsurf
-            llm = SimpleWindsurfLLM()
+            # Fallback to Copilot
+            llm = SimpleCopilotLLM()
             response = await llm.ainvoke(prompt)
 
         response_text = response.content if hasattr(response, "content") else str(response)
@@ -416,12 +407,12 @@ Respond with: PASS or FAIL followed by a brief explanation (max 30 words)."""
 
     try:
         try:
-            # Get model from config, fallback to gpt-4o if not set
+            # Get model from config, fallback to gpt-4.1 if not set
             llm = create_llm(model_name=config.get("models.sandbox"))
             response = await llm.ainvoke(prompt)
         except Exception:
-            # Fallback to Windsurf
-            llm = SimpleWindsurfLLM()
+            # Fallback to Copilot
+            llm = SimpleCopilotLLM()
             response = await llm.ainvoke(prompt)
 
         verdict = response.content if hasattr(response, "content") else str(response)

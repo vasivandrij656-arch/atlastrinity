@@ -1,7 +1,7 @@
 # Auto-approve agent configuration for Vibe
 # Full automation: ALL tools auto-approved without confirmation
 
-active_model = "gpt-4o"
+active_model = "gpt-4.1"
 system_prompt_id = "cli"
 
 [tools.bash]

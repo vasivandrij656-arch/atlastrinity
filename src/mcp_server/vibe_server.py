@@ -1184,7 +1184,7 @@ async def _handle_vibe_rate_limit(
     chain = config.fallback_chain
     if not chain:
         # Emergency default if config is empty
-        chain = ["gpt-4o", "gpt-4.1", "deepseek-v3", "windsurf-fast"]
+        chain = ["gpt-4.1", "gpt-4o", "oswe-vscode-secondary", "grok-code-fast-1"]
 
     try:
         current_idx = (

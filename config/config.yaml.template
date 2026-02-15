@@ -56,24 +56,24 @@ models:
   # Default models for different purposes (HYBRID CONFIGURATION)
   # Format: "provider:model_name" to override global provider
   # STRICTLY choose from the allowed lists above.
-  default: "copilot:gpt-4o"           # Default LLM for agents
-  vision: "copilot:gpt-4o"              # Best for Vision/multimodal tasks
-  reasoning: "copilot:gpt-4o"          # Reliable logic for multi-turn
-  code_analysis: "copilot:gpt-4o"       # General coding tasks
-  consolidation: "copilot:gpt-4o"       # Efficient state management
+  default: "copilot:gpt-4.1"         # Default LLM for agents
+  vision: "copilot:gpt-4.1"           # Best for Vision/multimodal tasks
+  reasoning: "copilot:gpt-4.1"        # Reliable logic for multi-turn
+  code_analysis: "copilot:gpt-4.1"     # General coding tasks
+  consolidation: "copilot:gpt-4.1"     # Efficient state management
   
   # Fallbacks (used when primary unavailable)
-  fallback: "copilot:gpt-4o"            # Stable fallback
+  fallback: "copilot:gpt-4.1"          # Stable fallback
   
   # Sandbox model (used by mcp_sandbox.py)
-  sandbox: "copilot:gpt-4o"
+  sandbox: "copilot:gpt-4.1"
 
   # Agents inherit from models.default unless overridden
 
 agents:
   atlas:
     # model: inherited from models.default 
-    deep_model: "gpt-4o"  # Stable alternative to Raptor
+    deep_model: "gpt-4.1"  # Latest GPT-4 model
     temperature: 0.7
     max_tokens: 2000                 # Standard chat/task mode
     max_tokens_deep: 12000           # Deep persona mode (increased from 8000)
@@ -81,7 +81,7 @@ agents:
   tetyana:
     # model: inherited from models.default
     reasoning_model: "copilot:gpt-4.1"  # Precision routing and tool selection
-    vision_model: "copilot:gpt-4o"      # UI state analysis
+    vision_model: "copilot:gpt-4.1"      # UI state analysis
     temperature: 0.5
     max_tokens: 2000
 
@@ -94,14 +94,14 @@ agents:
     # model: inherited from models.default
     
     # Phase 3: Result analysis & verdict
-    vision_model: "copilot:gpt-4o"      # UI/Visual verification
+    vision_model: "copilot:gpt-4.1"      # UI/Visual verification
     verdict_model: "copilot:gpt-4.1"    # Rigorous final verdict reasoning
     
     # General settings
     temperature: 0.3
     max_tokens: 1500
     
-    verification_reasoning_model: "gpt-4o" # Stable alternative to Raptor
+    verification_reasoning_model: "gpt-4.1" # Latest GPT-4 model
     verification_temperature: 0.2          # Low temp for precise reasoning
     verification_max_tokens: 4000          # Sufficient for deep analysis
 
@@ -123,7 +123,7 @@ mcp:
   filesystem:          { enabled: true }
   sequential_thinking:
     enabled: true
-    model: "gpt-4o"   # Critical for complex reasoning
+    model: "gpt-4.1"   # Critical for complex reasoning
 
   # === TIER 2: HIGH PRIORITY (Рекомендовані) ===
   vibe:                { enabled: true }  # Config → vibe_config.toml
@@ -180,7 +180,7 @@ segmentation:
     # provider: "copilot"  # copilot | windsurf (inherited from models.provider)
     
     # Override model for segmentation (optional)
-    model: "gpt-4o"           # Stable model for semantic analysis
+    model: "gpt-4.1"           # Latest GPT-4 model for semantic analysis
     
     # LLM parameters for segmentation
     temperature: 0.1            # Low temperature for consistent segmentation

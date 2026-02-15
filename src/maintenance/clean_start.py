@@ -39,8 +39,6 @@ TARGET_SIGNATURES = [
     "postgres_server",  # Postgres DB Server (Python)
     "react_devtools_mcp.js",  # React DevTools MCP (Node)
     "uvicorn",  # FastAPI/Uvicorn hosts
-    "redis-server",  # Local Redis process
-    "redis-cli",  # Lingering CLI connections
 ]
 
 # Ports to check and free
