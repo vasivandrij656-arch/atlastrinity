@@ -1,19 +1,18 @@
 # zizmor configuration
-# Suppressing unpinned-uses as pinning to hashes is out of scope for this lint cleanup
-# and requires thorough verification of each hash.
-
 rules:
   unpinned-uses:
-    disable: true
+    disable: false
   excessive-permissions:
-    disable: true
+    disable: false
   template-injection:
     disable: false
   cache-poisoning:
     disable: true
   archived-uses:
-    disable: true
+    disable: false
   artipacked:
-    disable: true
+    disable: false
   dangerous-triggers:
-    disable: true
+    disable: false
+    ignore:
+      - '.github/workflows/auto-fix.yml'
