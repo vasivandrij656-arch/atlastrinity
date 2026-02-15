@@ -14,6 +14,7 @@ from ..lib.parser import DataParser
 from ..lib.scraper import DataScraper
 from ..lib.storage import SearchStorage, SQLStorage, VectorStorage
 from ..lib.validation import DataValidator
+from ..lib.entity_extractor import EntityExtractor
 
 logger = logging.getLogger("golden_fund.tools.ingest")
 
@@ -62,10 +63,14 @@ async def ingest_dataset(
     validator = DataValidator()
     sql_storage = SQLStorage()
     vector_storage = VectorStorage()
+    validator = DataValidator()
+    sql_storage = SQLStorage()
+    vector_storage = VectorStorage()
     search_storage = SearchStorage()
+    entity_extractor = EntityExtractor()
 
     if process_pipeline is None:
-        process_pipeline = ["parse", "store_sql", "keyword_index", "vectorize"]
+        process_pipeline = ["parse", "store_sql", "keyword_index", "vectorize", "extract_entities"]
 
     run_id = datetime.now().strftime("%Y%m%d_%H%M%S") + "_" + uuid.uuid4().hex[:6]
     logger.info(f"Starting ingestion run {run_id} for {url} ({type})")
@@ -79,8 +84,28 @@ async def ingest_dataset(
     if not result.data:
         return "No data retrieved"
 
+    
+    # Fix: Handle BeautifulSoup object from scrape_web_page
+    data_to_save = result.data
+    text_content_for_extraction = ""
+    
+    if type == "web_page" and hasattr(data_to_save, "get_text"):
+         text_content_for_extraction = data_to_save.get_text(separator="\n", strip=True)
+         title_obj = getattr(data_to_save, "title", None)
+         title_str = title_obj.string if title_obj else ""
+         
+         data_to_save = {
+             "title": title_str,
+             "text": text_content_for_extraction,
+             "html": str(data_to_save)
+         }
+    elif isinstance(data_to_save, str):
+        text_content_for_extraction = data_to_save
+    elif isinstance(data_to_save, dict):
+        text_content_for_extraction = str(data_to_save)
+
     raw_file = RAW_DIR / f"{run_id}_raw{ext}"
-    save_res = scraper.save_data(result.data, raw_file)
+    save_res = scraper.save_data(data_to_save, raw_file)
     if not save_res.success:
         return f"Failed to save raw data: {save_res.error}"
 
@@ -106,6 +131,10 @@ async def ingest_dataset(
     if "validate" in process_pipeline and parsed_df is not None:
         val_msg = _perform_validation(parsed_df, run_id, validator)
         summary_parts.append(val_msg)
+
+    if "extract_entities" in process_pipeline and text_content_for_extraction:
+        ent_msg = _perform_entity_storage(text_content_for_extraction, url, run_id, entity_extractor, vector_storage)
+        summary_parts.append(ent_msg)
 
     return " ".join(summary_parts)
 
@@ -191,3 +220,45 @@ def _perform_keyword_storage(df: pd.DataFrame, run_id: str, search_storage: Sear
     if res.success:
         return f"Indexed {len(records)} records for keyword search."
     return f"Keyword indexing failed: {res.error}"
+
+
+def _perform_entity_storage(
+    text: str, 
+    source_url: str, 
+    run_id: str, 
+    extractor: EntityExtractor, 
+    vector_storage: VectorStorage
+) -> str:
+    """Helper to extract and store entities and relationships."""
+    logger.info(f"Extracting entities from {len(text)} chars...")
+    extraction = extractor.extract(text, source_url)
+    entities = extraction.get("entities", [])
+    relationships = extraction.get("relationships", [])
+
+    count_ent = 0
+    for ent in entities:
+        vector_storage.store({
+            "name": ent.get("name"),
+            "type": "entity",
+            "entity_type": ent.get("type"),
+            "content": ent.get("description", ""),
+            "source_url": source_url,
+            "run_id": run_id
+        })
+        count_ent += 1
+    
+    count_rel = 0
+    for rel in relationships:
+         vector_storage.store({
+            "name": f"{rel.get('source')} -> {rel.get('target')}",
+            "type": "relationship",
+            "relation": rel.get("relation"),
+            "source_entity": rel.get("source"),
+            "target_entity": rel.get("target"),
+            "content": f"{rel.get('source')} {rel.get('relation')} {rel.get('target')}",
+            "source_url": source_url,
+            "run_id": run_id
+         })
+         count_rel += 1
+
+    return f"Extracted {count_ent} entities and {count_rel} relationships."

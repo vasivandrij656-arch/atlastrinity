@@ -113,10 +113,15 @@ class SearchStorage:
             with sqlite3.connect(self.db_path) as conn:
                 conn.row_factory = sqlite3.Row
 
-                safe_query = query.replace('"', '""')
+                # Basic FTS5 sanitization: remove or escape special chars
+                # For simplicity, we'll strip most punct that FTS5 interprets specially
+                import re
+                sanitized_query = re.sub(r'[^a-zA-Z0-9\sа-яА-ЯіІєЄїЇґҐ]', ' ', query)
+                sanitized_query = " ".join(sanitized_query.split()) # normalize spaces
+                
                 cursor = conn.execute(
                     f"SELECT id, source_json, rank FROM {self.index_name} WHERE {self.index_name} MATCH ? ORDER BY rank LIMIT ?",
-                    (safe_query, limit),
+                    (sanitized_query, limit),
                 )
 
                 rows = cursor.fetchall()

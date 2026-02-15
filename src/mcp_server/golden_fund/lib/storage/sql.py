@@ -55,20 +55,67 @@ class SQLStorage:
         if_exists: Literal["fail", "replace", "append"] = "append",
     ) -> StorageResult:
         """
-        Store a DataFrame as a table in SQLite.
-
-        Args:
-            df: The DataFrame to store
-            dataset_name: Name of the dataset (used for metadata)
-            source_url: Where the data came from
-            if_exists: 'fail', 'replace', or 'append'
+        Store a DataFrame as a table in SQLite with intelligent schema handling.
         """
         table_name = self._sanitize_table_name(dataset_name)
 
         try:
+            from ..schema_intelligence import SchemaIntelligence
+            schema_intel = SchemaIntelligence()
+        except ImportError:
+            schema_intel = None
+            logger.warning("SchemaIntelligence not available")
+
+        try:
             with sqlite3.connect(self.db_path) as conn:
-                # Store actual data
-                df.to_sql(table_name, conn, if_exists=if_exists, index=False)
+                # Check if table exists
+                cursor = conn.cursor()
+                cursor.execute(
+                    "SELECT sql FROM sqlite_master WHERE type='table' AND name=?", (table_name,)
+                )
+                existing_schema = cursor.fetchone()
+
+                if existing_schema and if_exists == "append":
+                    # Smart Evolution
+                    if schema_intel:
+                        alter_stmts = schema_intel.evolve_schema(
+                            df, table_name, existing_schema[0]
+                        )
+                        if alter_stmts:
+                            logger.info(f"Evolving schema for {table_name}: {alter_stmts}")
+                            # Execute ALTER statements (splitting by ; if multiple)
+                            for stmt in alter_stmts.split(";"):
+                                if stmt.strip():
+                                    conn.execute(stmt)
+                            # Save updated schema (persistence to file)
+                            self._persist_schema_to_file(table_name, conn)
+
+                    # Append
+                    df.to_sql(table_name, conn, if_exists="append", index=False)
+
+                elif not existing_schema or if_exists == "replace":
+                    # Smart Creation
+                    created_smart = False
+                    if schema_intel:
+                        create_stmt = schema_intel.generate_schema(
+                            df, table_name, context=f"Dataset: {dataset_name}"
+                        )
+                        if create_stmt:
+                            logger.info(f"Creating smart schema for {table_name}: {create_stmt}")
+                            if if_exists == "replace":
+                                conn.execute(f"DROP TABLE IF EXISTS {table_name}")
+                            conn.execute(create_stmt)
+                            created_smart = True
+                            
+                            # Append data to the smart table
+                            df.to_sql(table_name, conn, if_exists="append", index=False)
+                            
+                            # Save schema to file
+                            self._persist_schema_to_file(table_name, conn)
+
+                    if not created_smart:
+                        # Fallback to pandas default
+                        df.to_sql(table_name, conn, if_exists=if_exists, index=False)
 
                 # Update metadata
                 conn.execute(
@@ -90,6 +137,30 @@ class SQLStorage:
         except Exception as e:
             logger.error(f"Failed to store dataset {dataset_name}: {e}")
             return StorageResult(success=False, target=table_name, error=str(e))
+
+    def _persist_schema_to_file(self, table_name: str, conn: sqlite3.Connection):
+        """Save the CREATE TABLE statement to a shared SQL file for reproducibility."""
+        try:
+            cursor = conn.cursor()
+            cursor.execute(
+                "SELECT sql FROM sqlite_master WHERE type='table' AND name=?", (table_name,)
+            )
+            res = cursor.fetchone()
+            if res and res[0]:
+                schema_sql = res[0] + ";\n"
+                
+                # Save to schema file in the same directory as the DB
+                schema_file = self.db_dir / "golden_fund_schemas.sql"
+                
+                # Read existing to avoid dupes? Or just append?
+                # For simplicity, appending. A smart system might parse/dedupe.
+                with open(schema_file, "a", encoding="utf-8") as f:
+                    f.write(f"\n-- Schema for {table_name} (Updated: {pd.Timestamp.now()})\n")
+                    f.write(schema_sql)
+                    
+                logger.info(f"Persisted schema for {table_name} to {schema_file}")
+        except Exception as e:
+            logger.warning(f"Failed to persist schema to file: {e}")
 
     def query(self, query: str, params: tuple = ()) -> StorageResult:
         """Execute a raw SQL query."""

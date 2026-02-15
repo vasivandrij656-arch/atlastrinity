@@ -18,6 +18,7 @@ from langchain_core.messages import (  # type: ignore
     AIMessage,
     BaseMessage,
     HumanMessage,
+    SystemMessage,
 )
 from langgraph.graph import END, StateGraph
 from sqlalchemy import select, update
@@ -141,7 +142,6 @@ class Trinity(TourMixin, VoiceOrchestrationMixin):
                 "[ORCHESTRATOR] Startup workflow failed or partial. Proceeding with caution.",
             )
 
-        # Legacy fallback if workflow didn't fully initialize context (safety net)
         if not self.state:
             self.state = {
                 "messages": [],
@@ -152,8 +152,46 @@ class Trinity(TourMixin, VoiceOrchestrationMixin):
                 "logs": [],
             }
 
+        # [MEMORY RECALL] Check Golden Fund for relevant context on startup
+        try:
+            # We initialize the connection here
+            pass
+        except Exception as e:
+            logger.warning(f"[ORCHESTRATOR] Memory recall check failed: {e}")
+
         # Check for pending restart state
         await self._resume_after_restart()
+
+    async def recall_memories(self, query: str) -> str:
+        """Search Golden Fund for relevant context."""
+        try:
+            from src.brain.mcp.mcp_manager import mcp_manager
+            
+            # Use the mcp_manager to call the tool directly
+            # This avoids needing a separate client initialization
+            if not mcp_manager:
+                return ""
+                
+            # Search in hybrid mode for best results
+            results = await mcp_manager.call_tool(
+                "golden_fund", 
+                "search_golden_fund", 
+                {"query": query, "mode": "hybrid"}
+            )
+            
+            # Results from MCP can be a string or an object with content
+            res_str = str(results)
+            # Only treat as error if it explicitly starts with Error prefix
+            is_explicit_error = res_str.startswith("Error (")
+            
+            if results and not is_explicit_error:
+                logger.info(f"[ORCHESTRATOR] Recalled memories for '{query}'")
+                return f"\n[RECALLED CONTEXT from Golden Fund]:\n{results}\n"
+            return ""
+            
+        except Exception as e:
+            logger.warning(f"[ORCHESTRATOR] Memory recall failed: {e}")
+            return ""
 
         # If resumption is pending, trigger the run() in background after a short delay
         if getattr(self, "_resumption_pending", False):
@@ -1237,6 +1275,16 @@ class Trinity(TourMixin, VoiceOrchestrationMixin):
 
             # Complex task planning
             self.state["system_state"] = SystemState.PLANNING.value
+
+            # [MEMORY RECALL] Enrich analysis with Golden Fund context
+            if intent not in ["chat", "deep_chat"]:
+                 recalled_context = await self.recall_memories(user_request)
+                 if recalled_context:
+                     analysis["memory_context"] = recalled_context
+                     # Also append to history for the planner to see clearly
+                     if not history:
+                         history = []
+                     history.append(SystemMessage(content=f"System Memory Context:\n{recalled_context}"))
 
             shared_context.available_mcp_catalog = await mcp_manager.get_mcp_catalog()
             await self._speak("atlas", analysis.get("voice_response") or "Аналізую запит...")

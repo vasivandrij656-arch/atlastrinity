@@ -18,3 +18,17 @@ class StorageResult:
         if self.success:
             return f"StorageResult(success=True, target={self.target})"
         return f"StorageResult(success=False, target={self.target}, error={self.error})"
+
+    def __str__(self) -> str:
+        if not self.success:
+            return f"Error ({self.target}): {self.error}"
+        
+        if not self.data:
+            return f"Success ({self.target}): No data"
+            
+        results = self.data.get("results", [])
+        if isinstance(results, list) and results:
+            import json
+            return json.dumps(results, indent=2, default=str)
+            
+        return f"Success ({self.target}): {self.data}"

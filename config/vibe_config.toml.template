@@ -203,3 +203,11 @@ env = { PYTHONPATH = "${PROJECT_ROOT}" }
 description = "Developer Tools (Linter, Analysis, MCP Inspector CLI & Sandbox)"
 
 # NOTE: Minimal MCP list by default to maximize TPM (Anti-Rate Limit).
+
+[[mcp_servers]]
+name = "golden_fund"
+transport = "stdio"
+command = "${PROJECT_ROOT}/.venv/bin/python"
+args = ["-m", "src.mcp_server.golden_fund.server"]
+env = { PYTHONPATH = "${PROJECT_ROOT}" }
+description = "Golden Fund (Knowledge Base & Persistent Memory)"

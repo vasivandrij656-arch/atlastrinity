@@ -1322,6 +1322,11 @@ If plan is sound, state: "SELF_REVIEW_ISSUES: None" and set CONFIDENCE: 0.9+
                     f"[ATLAS] Recalled {len(behavioral_lessons)} behavioral lessons for planning.",
                 )
 
+        # [NEW] Inject Pre-Recalled Golden Fund Context (from Orchestrator)
+        if enriched_request.get("memory_context"):
+            memory_context += f"\n\n[GOLDEN FUND RECALL]:\n{enriched_request['memory_context']}\n"
+            logger.info("[ATLAS] Injected Golden Fund context into strategy analysis.")
+
         # Feedback
         grisha_feedback = enriched_request.get("simulation_result", "")
         failed_plan_obj = enriched_request.get("failed_plan")

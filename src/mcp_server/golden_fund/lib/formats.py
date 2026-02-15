@@ -42,15 +42,31 @@ class CSVParser:
         encodings = ["utf-8", "latin1", "cp1252", "iso-8859-1"]
         last_error = ""
 
+        # Check for delimiter sniffing
+        sep = kwargs.get("sep", ",")
+        
         for encoding in encodings:
             try:
-                df = pd.read_csv(file_path, encoding=encoding, **kwargs)
+                # Basic read
+                df = pd.read_csv(file_path, encoding=encoding, on_bad_lines='skip', sep=sep, **kwargs)
+                
+                # If only 1 column, maybe wrong separator?
+                if len(df.columns) == 1 and sep == ",":
+                     # Try semicolon
+                     try:
+                         df_semi = pd.read_csv(file_path, encoding=encoding, on_bad_lines='skip', sep=";")
+                         if len(df_semi.columns) > 1:
+                             df = df_semi
+                     except:
+                         pass
+                         
                 return ParseResult(True, data=df)
             except UnicodeDecodeError:
                 continue
             except Exception as e:
                 last_error = str(e)
-                break
+                # Don't break immediately, try other encodings might help (unlikely for CSV structure errors but possible)
+                continue
 
         return ParseResult(False, error=f"CSV parse error: {last_error or 'Unknown encoding'}")
 
