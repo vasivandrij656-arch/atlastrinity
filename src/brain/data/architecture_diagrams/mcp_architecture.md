@@ -1,4 +1,8 @@
 
+<!-- AUTO-UPDATED: 2026-02-15T13:57:30.438094 -->
+<!-- Modified: .agent/docs/mcp_architecture_diagram.md, config/mcp_servers.json.template, src/brain/core/orchestration/tool_dispatcher.py -->
+
+
 <!-- AUTO-UPDATED: 2026-02-15T13:53:09.858570 -->
 <!-- Modified: .agent/docs/mcp_architecture_diagram.md, config/mcp_servers.json.template, scripts/test_dispatcher_routing.py -->
 

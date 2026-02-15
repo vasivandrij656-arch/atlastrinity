@@ -453,6 +453,20 @@ class ToolDispatcher:
         "permissions": "macos-use_request_permissions",
         "setup_permissions": "macos-use_request_permissions",
         "fix_permissions": "macos-use_request_permissions",
+        # Google Maps (Bridged)
+        "geocode": "maps_geocode",
+        "reverse_geocode": "maps_reverse_geocode",
+        "search_places": "maps_search_places",
+        "place_details": "maps_place_details",
+        "directions": "maps_directions",
+        "distance_matrix": "maps_distance_matrix",
+        "street_view": "maps_street_view",
+        "static_map": "maps_static_map",
+        "elevation": "maps_elevation",
+        "open_interactive_search": "maps_open_interactive_search",
+        "generate_link": "maps_generate_link",
+        "start_tour": "maps_start_tour",
+        "tour_control": "maps_tour_control",
     }
 
     MACOS_USE_PRIORITY = {
@@ -1126,7 +1140,7 @@ class ToolDispatcher:
         if (
             tool_name.startswith(("xcodebuild", "macos_use_", "notes_", "note_"))
             or tool_name in self.MACOS_MAP
-            or explicit_server in ("notes", "macos-use", "googlemaps", "google-maps")
+            or explicit_server in ("notes", "macos-use")
         ):
             return self._handle_macos_use(tool_name, args)
 
