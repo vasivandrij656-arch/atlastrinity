@@ -88,9 +88,14 @@ class ProcessWatchdog:
                                     "cpu_history": [],
                                     "status": child.status(),
                                 }
-                                logger.info(
-                                    f"[WATCHDOG] New process tracked: {proc_type} (PID: {pid}, Name: {proc_name})"
-                                )
+                                if proc_type in ["unknown", "mcp_external"]:
+                                    logger.debug(
+                                        f"[WATCHDOG] New process tracked: {proc_type} (PID: {pid}, Name: {proc_name})"
+                                    )
+                                else:
+                                    logger.info(
+                                        f"[WATCHDOG] New process tracked: {proc_type} (PID: {pid}, Name: {proc_name})"
+                                    )
                             except (psutil.NoSuchProcess, psutil.AccessDenied):
                                 continue
                         else:
