@@ -1,6 +1,9 @@
 id: project-discovery
 title: Project Discovery
 description: Discover and examine Xcode projects, workspaces, and Swift packages. Analyze project structure, schemes, build settings, and bundle information.
+selection:
+  mcp:
+    defaultEnabled: true
 tools:
   - discover_projs
   - list_schemes

@@ -88,7 +88,7 @@ atlastrinity/
 │   │   └── mcp-server-macos-use  # Swift binary (accessed through xcodebuild bridge)
 │   ├── mcp-server-googlemaps/    # Google Maps MCP (11 tools) [bridged via XcodeBuildMCP]
 │   │   └── .build/release/mcp-server-googlemaps  # Swift binary (accessed through xcodebuild bridge)
-│   └── XcodeBuildMCP/            # Unified MCP Hub (168+ tools: 94 native + 63 macOS + 11 Maps)
+│   └── XcodeBuildMCP/            # Unified MCP Hub (144+ tools: 70 native + 63 macOS + 11 Maps)
 │
 ├── scripts/                      # Utility Scripts (115+)
 │   ├── check_mcp_health.py       # MCP health check (CLI: --json --tools --all)
@@ -224,7 +224,7 @@ VIBE_WORKSPACE = CONFIG_ROOT / "vibe_workspace"
 ### Tier 1 — Core (Always loaded)
 | Server | Transport | Command | Source | Tools |
 |--------|-----------|---------|--------|-------|
-| `xcodebuild` | stdio | `node vendor/XcodeBuildMCP/dist/index.js mcp` | Local Node.js | 168+ (94 native + 63 macOS bridge + 11 Maps bridge) |
+| `xcodebuild` | stdio | `node vendor/XcodeBuildMCP/dist/index.js mcp` | Local Node.js | 144+ (70 native + 63 macOS bridge + 11 Maps bridge) |
 | `filesystem` | stdio | `npx @modelcontextprotocol/server-filesystem` | npm | ~10 |
 | `sequential-thinking` | stdio | `bunx @modelcontextprotocol/server-sequential-thinking` | npm | 1 |
 

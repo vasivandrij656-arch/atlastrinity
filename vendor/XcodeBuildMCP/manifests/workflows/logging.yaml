@@ -1,6 +1,9 @@
 id: logging
 title: Log Capture
 description: Capture and retrieve logs from simulator and device apps.
+selection:
+  mcp:
+    defaultEnabled: true
 tools:
   - start_sim_log_cap
   - stop_sim_log_cap

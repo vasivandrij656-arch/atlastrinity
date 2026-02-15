@@ -1,6 +1,9 @@
 id: device
 title: iOS Device Development
 description: Complete iOS development workflow for physical devices (iPhone, iPad, Apple Watch, Apple TV, Apple Vision Pro).
+selection:
+  mcp:
+    defaultEnabled: true
 tools:
   - build_device
   - test_device

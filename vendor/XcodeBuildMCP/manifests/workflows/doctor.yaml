@@ -3,6 +3,7 @@ title: MCP Doctor
 description: Diagnostic tool providing comprehensive information about the MCP server environment, dependencies, and configuration.
 selection:
   mcp:
+    defaultEnabled: true
     autoInclude: true
 predicates:
   - debugEnabled

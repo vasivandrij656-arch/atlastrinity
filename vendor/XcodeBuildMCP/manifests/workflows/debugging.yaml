@@ -1,6 +1,9 @@
 id: debugging
 title: LLDB Debugging
 description: Attach LLDB debugger to simulator apps, set breakpoints, inspect variables and call stacks.
+selection:
+  mcp:
+    defaultEnabled: true
 tools:
   - debug_attach_sim
   - debug_breakpoint_add

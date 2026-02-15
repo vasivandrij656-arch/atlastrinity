@@ -1,6 +1,9 @@
 id: project-scaffolding
 title: Project Scaffolding
 description: Scaffold new iOS and macOS projects from templates.
+selection:
+  mcp:
+    defaultEnabled: true
 tools:
   - scaffold_ios_project
   - scaffold_macos_project

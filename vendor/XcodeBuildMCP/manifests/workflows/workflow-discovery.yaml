@@ -5,6 +5,7 @@ availability:
   cli: false
 selection:
   mcp:
+    defaultEnabled: true
     autoInclude: true
 predicates:
   - experimentalWorkflowDiscoveryEnabled
