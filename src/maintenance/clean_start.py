@@ -120,7 +120,7 @@ def get_ancestor_pids() -> set[int]:
 
 def stop_brew_services():
     """Stop brew-managed services before killing processes to prevent auto-restart."""
-    brew_services = ["redis"]
+    brew_services = []  # Redis should remain running for development
     for service in brew_services:
         try:
             result = subprocess.run(
