@@ -1,0 +1,127 @@
+INFO:brain.parallel_healing:[PARALLEL_HEALING] Redis persistence enabled
+Downloading https://raw.githubusercontent.com/stanfordnlp/stanza-resources/main/resources_1.11.0.json:   0%|          | 0.00/54.0k [00:00<?, ?B/s]Downloading https://raw.githubusercontent.com/stanfordnlp/stanza-resources/main/resources_1.11.0.json: 438kB [00:00, 149MB/s]                     
+INFO:stanza:Downloaded file to /Users/dev/.config/atlastrinity/models/stanza/resources.json
+INFO:stanza:Downloading default packages for language: uk (Ukrainian) ...
+INFO:stanza:File exists: /Users/dev/.config/atlastrinity/models/stanza/uk/default.zip
+INFO:stanza:Finished downloading models and saved to /Users/dev/.config/atlastrinity/models/stanza
+/Users/dev/.pyenv/versions/3.12.12/lib/python3.12/site-packages/pyworld/__init__.py:13: UserWarning: pkg_resources is deprecated as an API. See https://setuptools.pypa.io/en/latest/pkg_resources.html. The pkg_resources package is slated for removal as early as 2025-11-30. Refrain from using this package or pin to Setuptools<81.
+  import pkg_resources
+<torch_package_0>.word_tokenizer.py:12: SyntaxWarning: invalid escape sequence '\w'
+  |[\w""" + ACCENT + """](?:[\w'’`-""" + ACCENT + """]?[\w""" + ACCENT + """]+)*
+<torch_package_0>.word_tokenizer.py:12: SyntaxWarning: invalid escape sequence '\w'
+  |[\w""" + ACCENT + """](?:[\w'’`-""" + ACCENT + """]?[\w""" + ACCENT + """]+)*
+<torch_package_0>.word_tokenizer.py:12: SyntaxWarning: invalid escape sequence '\w'
+  |[\w""" + ACCENT + """](?:[\w'’`-""" + ACCENT + """]?[\w""" + ACCENT + """]+)*
+<torch_package_0>.word_tokenizer.py:13: SyntaxWarning: invalid escape sequence '\w'
+  |[\w""" + ACCENT + """].(?:\[\w""" + ACCENT + """].)+[\w""" + ACCENT + """]?
+<torch_package_0>.word_tokenizer.py:13: SyntaxWarning: invalid escape sequence '\['
+  |[\w""" + ACCENT + """].(?:\[\w""" + ACCENT + """].)+[\w""" + ACCENT + """]?
+<torch_package_0>.word_tokenizer.py:13: SyntaxWarning: invalid escape sequence '\w'
+  |[\w""" + ACCENT + """].(?:\[\w""" + ACCENT + """].)+[\w""" + ACCENT + """]?
+<torch_package_0>.word_tokenizer.py:14: SyntaxWarning: invalid escape sequence '\['
+  |["#$%&*+,/:;<=>@^`~…\\(\\)⟨⟩{}\[\|\]‒–—―«»“”‘’'№]
+/Users/dev/.pyenv/versions/3.12.12/lib/python3.12/site-packages/torch/package/package_importer.py:257: UserWarning: TypedStorage is deprecated. It will be removed in the future and UntypedStorage will be the only storage class. This should only matter to you if you are using storages directly.  To access UntypedStorage directly, use tensor.untyped_storage() instead of tensor.storage()
+  dtype = storage_type.dtype
+INFO:stanza:Loading these models for language: uk (Ukrainian):
+=========================
+| Processor | Package   |
+-------------------------
+| tokenize  | iu        |
+| mwt       | iu        |
+| pos       | iu_charlm |
+=========================
+
+INFO:stanza:Using device: cpu
+INFO:stanza:Loading: tokenize
+INFO:stanza:Loading: mwt
+INFO:stanza:Loading: pos
+INFO:stanza:Done loading processors!
+
+==================================================
+🚀 STARTING E2E SYSTEM INTEGRITY TEST
+==================================================
+
+Step 1: Ingesting unique fact into Golden Fund...
+INFO:golden_fund.scraper:DataScraper initialized
+INFO:golden_fund.validation:DataValidator initialized
+INFO:golden_fund.storage.sql:Initialized SQL storage at /Users/dev/.config/atlastrinity/data/golden_fund/golden.db
+INFO:golden_fund.storage.vector:VectorStorage (ChromaDB) initialized at /Users/dev/.config/atlastrinity/data/golden_fund/chroma_db
+INFO:golden_fund.validation:DataValidator initialized
+INFO:golden_fund.storage.sql:Initialized SQL storage at /Users/dev/.config/atlastrinity/data/golden_fund/golden.db
+INFO:golden_fund.storage.vector:VectorStorage (ChromaDB) initialized at /Users/dev/.config/atlastrinity/data/golden_fund/chroma_db
+INFO:golden_fund.storage.search:SearchStorage (SQLite/FTS5) initialized: /Users/dev/.config/atlastrinity/data/search/golden_fund_index.db
+INFO:golden_fund.entity_extractor:EntityExtractor initialized with CopilotLLM
+INFO:golden_fund.tools.ingest:Starting ingestion run 20260215_233936_59c1ad for file:///Users/dev/Documents/GitHub/atlastrinity/temp_test_data.json (file)
+INFO:golden_fund.scraper:Downloading file: file:///Users/dev/Documents/GitHub/atlastrinity/temp_test_data.json
+INFO:golden_fund.schema_intelligence:SchemaIntelligence initialized with CopilotLLM
+INFO:golden_fund.storage.sql:Creating smart schema for dataset_20260215_233936_59c1ad: CREATE TABLE dataset_20260215_233936_59c1ad (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    content TEXT NOT NULL,
+    title TEXT NOT NULL,
+    project TEXT NOT NULL,
+    type TEXT NOT NULL
+);
+INFO:golden_fund.storage.sql:Persisted schema for dataset_20260215_233936_59c1ad to /Users/dev/.config/atlastrinity/data/golden_fund/golden_fund_schemas.sql
+INFO:golden_fund.storage.vector:Persisted 1 records to ChromaDB collection 'golden_fund_vectors'
+INFO:golden_fund.storage.search:Indexed 1 docs into 'golden_fund_index' (SQLite)
+   Done: Ingestion 20260215_233936_59c1ad successful. Raw data: 20260215_233936_59c1ad_raw.json. Parsed 1 records. Stored in SQL table 'dataset_20260215_233936_59c1ad'. Indexed for semantic search. Indexed 1 records for keyword search.
+
+Step 2: Testing Trinity Memory Recall...
+/Users/dev/Documents/GitHub/atlastrinity/src/brain/core/orchestration/orchestrator.py:127: RuntimeWarning: coroutine 'AsyncMockMixin._execute_mock_call' was never awaited
+  mcp_manager.register_log_callback(self._mcp_log_voice_callback)
+RuntimeWarning: Enable tracemalloc to get the object allocation traceback
+   Triggering _get_run_plan for request: 'Project Phoenix activation code'
+   [MOCK CALL] golden_fund.search_golden_fund({'query': 'Project Phoenix activation code', 'mode': 'hybrid'})
+INFO:golden_fund.connectors.ckan:CKAN Connector initialized for https://data.gov.ua/api/3
+INFO:golden_fund.storage.vector:VectorStorage (ChromaDB) initialized at /Users/dev/.config/atlastrinity/data/golden_fund/chroma_db
+INFO:golden_fund.storage.vector:VectorStorage (ChromaDB) initialized at /Users/dev/.config/atlastrinity/data/golden_fund/chroma_db
+INFO:golden_fund.storage.search:SearchStorage (SQLite/FTS5) initialized: /Users/dev/.config/atlastrinity/data/search/golden_fund_index.db
+INFO:golden_fund.storage.sql:Initialized SQL storage at /Users/dev/.config/atlastrinity/data/golden_fund/golden.db
+INFO:golden_fund.validation:DataValidator initialized
+INFO:golden_fund.transformer:DataTransformer initialized
+INFO:golden_fund.storage.blob:BlobStorage initialized at /Users/dev/.config/atlastrinity/data/golden_fund/blobs/default
+INFO:golden_fund:Searching Golden Fund: Project Phoenix activation code (mode=hybrid)
+INFO:golden_fund.storage.vector:Searching ChromaDB 'golden_fund_vectors' for query: Project Phoenix activation code, where: None
+INFO:golden_fund.storage.search:Searching 'golden_fund_index' for: Project Phoenix activation code
+   [MOCK RESULT] len=7523
+   DEBUG: Recalled Context: 
+[RECALLED CONTEXT from Golden Fund]:
+Hybrid Results:
+Vector: [
+  {
+    "id": "b347c81b-c7b8-413e-9a6f-ea330375113e",
+    "score": -0.7853147983551025,
+    "content": "{\"name\": \"Vibe\", \"type\": \...
+   ✅ SUCCESS: Trinity recalled the fact in analysis['memory_context']
+   ✅ SUCCESS: Trinity injected the fact into planner history
+
+Step 3: Testing Atlas Planning with Recalled Context...
+   Triggering Atlas.create_plan...
+INFO:httpx:HTTP Request: POST https://api.individual.githubcopilot.com/chat/completions "HTTP/1.1 200 OK"
+INFO:httpx:HTTP Request: POST https://api.individual.githubcopilot.com/chat/completions "HTTP/1.1 200 OK"
+INFO:httpx:HTTP Request: POST https://api.individual.githubcopilot.com/chat/completions "HTTP/1.1 200 OK"
+Traceback (most recent call last):
+  File "/Users/dev/Documents/GitHub/atlastrinity/tests/test_e2e_total_integrity.py", line 172, in <module>
+    asyncio.run(test_e2e_flow())
+  File "/Users/dev/.pyenv/versions/3.12.12/lib/python3.12/asyncio/runners.py", line 195, in run
+    return runner.run(main)
+           ^^^^^^^^^^^^^^^^
+  File "/Users/dev/.pyenv/versions/3.12.12/lib/python3.12/asyncio/runners.py", line 118, in run
+    return self._loop.run_until_complete(task)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/Users/dev/.pyenv/versions/3.12.12/lib/python3.12/asyncio/base_events.py", line 691, in run_until_complete
+    return future.result()
+           ^^^^^^^^^^^^^^^
+  File "/Users/dev/Documents/GitHub/atlastrinity/tests/test_e2e_total_integrity.py", line 154, in test_e2e_flow
+    plan = await atlas.create_plan(enriched_request)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/Users/dev/Documents/GitHub/atlastrinity/src/brain/agents/atlas.py", line 1568, in create_plan
+    messages, dynamic_sys_prompt = await self._construct_plan_prompt(
+                                   ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/Users/dev/Documents/GitHub/atlastrinity/src/brain/agents/atlas.py", line 1400, in _construct_plan_prompt
+    mcp_context = await self._get_mcp_capabilities_context()
+                  ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/Users/dev/Documents/GitHub/atlastrinity/src/brain/agents/atlas.py", line 137, in _get_mcp_capabilities_context
+    for server_name, cfg in mcp_config.items():
+                            ^^^^^^^^^^^^^^^^
+AttributeError: 'coroutine' object has no attribute 'items'
