@@ -11,8 +11,8 @@ sys.path.insert(0, str(Path(__file__).parent.parent.parent))
 
 # Import vibe server functions directly
 from src.mcp_server.vibe_server import (
-    INSTRUCTIONS_DIR,
-    VIBE_WORKSPACE,
+    get_instructions_dir,
+    get_vibe_workspace,
     handle_long_prompt,
     vibe_analyze_error,
     vibe_prompt,
@@ -47,7 +47,7 @@ async def test_vibe_which():
 async def test_prepare_prompt_small():
     """Test that small prompts don't create files."""
     small_prompt = "Create a hello world Python script."
-    _, file_path = handle_long_prompt(small_prompt)
+    _, file_path = handle_long_prompt(small_prompt, cwd=get_vibe_workspace())
 
     return file_path is None
 
@@ -55,9 +55,9 @@ async def test_prepare_prompt_small():
 async def test_prepare_prompt_large():
     """Test that large prompts create files in INSTRUCTIONS_DIR."""
     large_prompt = "A" * 3000
-    _, file_path = handle_long_prompt(large_prompt)
+    _, file_path = handle_long_prompt(large_prompt, cwd=get_vibe_workspace())
 
-    if file_path is not None and INSTRUCTIONS_DIR in file_path:
+    if file_path is not None and get_instructions_dir() in file_path:
         # Cleanup test file
         Path(file_path).unlink(missing_ok=True)
         return True
@@ -85,7 +85,7 @@ async def test_vibe_prompt_small_task():
         return False
 
     # Check if file was created in workspace
-    test_file = Path(VIBE_WORKSPACE) / "hello_vibe_test.py"
+    test_file = Path(get_vibe_workspace()) / "hello_vibe_test.py"
     if test_file.exists():
         # Cleanup
         test_file.unlink()

@@ -42,6 +42,9 @@ enable_auto_update = true
 # Execution limits
 max_turns = 100
 
+# Working directory (centralized for workspace boundary alignment)
+workspace = "${CONFIG_ROOT}/workspace"
+
 # =============================================================================
 # Tool Availability Patterns
 # =============================================================================

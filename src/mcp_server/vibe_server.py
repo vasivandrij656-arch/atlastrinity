@@ -159,7 +159,21 @@ except Exception:
 # Derived paths
 SYSTEM_ROOT = str(PROJECT_ROOT)
 LOG_DIR = str(CONFIG_ROOT / "logs")
-INSTRUCTIONS_DIR = str(Path(VIBE_WORKSPACE) / "instructions")
+
+
+def get_vibe_workspace() -> str:
+    """Get the effective workspace path."""
+    config = get_vibe_config()
+    return config.workspace or VIBE_WORKSPACE
+
+
+def get_instructions_dir(cwd: str | None = None) -> str:
+    """Get the instructions directory relative to the working directory."""
+    if cwd and os.path.exists(cwd):
+        return str(Path(cwd) / ".vibe" / "instructions")
+    return str(Path(get_vibe_workspace()) / "instructions")
+
+
 VIBE_SESSION_DIR = Path.home() / ".vibe" / "logs" / "session"
 DATABASE_URL = get_config_value(
     "database",
@@ -353,7 +367,7 @@ server = FastMCP("vibe")
 logger.info(
     f"[VIBE] Server initialized | "
     f"Binary: {VIBE_BINARY} | "
-    f"Workspace: {VIBE_WORKSPACE} | "
+    f"Workspace: {get_vibe_workspace()} | "
     f"Timeout: {DEFAULT_TIMEOUT_S}s",
 )
 
@@ -658,19 +672,21 @@ def _prepare_temp_vibe_home(model_alias: str) -> str:
         return ""
 
 
-def prepare_workspace_and_instructions() -> None:
+def prepare_workspace_and_instructions(cwd: str | None = None) -> None:
     """Ensure necessary directories exist."""
     try:
-        Path(VIBE_WORKSPACE).mkdir(parents=True, exist_ok=True)
-        Path(INSTRUCTIONS_DIR).mkdir(parents=True, exist_ok=True)
-        logger.debug(f"Workspace ready: {VIBE_WORKSPACE}")
+        workspace = get_vibe_workspace()
+        instr_dir = get_instructions_dir(cwd)
+        Path(workspace).mkdir(parents=True, exist_ok=True)
+        Path(instr_dir).mkdir(parents=True, exist_ok=True)
+        logger.debug(f"Workspace/Instructions ready: {workspace} / {instr_dir}")
     except Exception as e:
         logger.error(f"Failed to create workspace: {e}")
 
 
 def cleanup_old_instructions(max_age_hours: int = 24) -> int:
     """Remove instruction files older than max_age_hours."""
-    instructions_path = Path(INSTRUCTIONS_DIR)
+    instructions_path = Path(get_instructions_dir())
     if not instructions_path.exists():
         return 0
 
@@ -693,7 +709,7 @@ def cleanup_old_instructions(max_age_hours: int = 24) -> int:
     return cleaned
 
 
-def handle_long_prompt(prompt: str, cwd: str | None = None) -> tuple[str, str | None]:
+def handle_long_prompt(prompt: str, cwd: str) -> tuple[str, str | None]:
     """Handle long prompts by offloading to a file.
     Returns (final_prompt_arg, file_path_to_cleanup)
     """
@@ -701,12 +717,13 @@ def handle_long_prompt(prompt: str, cwd: str | None = None) -> tuple[str, str | 
         return prompt, None
 
     try:
-        os.makedirs(INSTRUCTIONS_DIR, exist_ok=True)
+        instr_dir = get_instructions_dir(cwd)
+        os.makedirs(instr_dir, exist_ok=True)
 
         timestamp = int(datetime.now().timestamp())
         unique_id = uuid.uuid4().hex[:6]
         filename = f"vibe_instructions_{timestamp}_{unique_id}.md"
-        filepath = os.path.join(INSTRUCTIONS_DIR, filename)
+        filepath = os.path.join(instr_dir, filename)
 
         with open(filepath, "w", encoding="utf-8") as f:
             f.write("# VIBE INSTRUCTIONS\n\n")
@@ -1010,7 +1027,7 @@ async def _execute_vibe_with_retries(
             # Execute subprocess with DEVNULL for stdin to avoid TUI hangs
             process = await asyncio.create_subprocess_exec(
                 *argv,
-                cwd=cwd or VIBE_WORKSPACE,
+                cwd=cwd or get_vibe_workspace(),
                 env=process_env,
                 stdout=asyncio.subprocess.PIPE,
                 stderr=asyncio.subprocess.PIPE,
@@ -1348,7 +1365,9 @@ async def vibe_which(ctx: Context) -> dict[str, Any]:
 
     return {
         "success": True,
-        "binary": vibe_path,
+        "status": "online",
+        "binary_path": vibe_path,
+        "project_root": get_vibe_workspace(),
         "version": version,
         "active_model": _current_model or config.active_model,
         "mode": _current_mode.value,
@@ -1396,25 +1415,21 @@ async def vibe_prompt(
         Dict with 'success', 'stdout', 'stderr', 'returncode', 'parsed_response'
 
     """
-    prepare_workspace_and_instructions()
-
-    vibe_path = resolve_vibe_binary()
-    if not vibe_path:
-        return {
-            "success": False,
-            "error": "Vibe CLI not found on PATH",
-        }
-
     config = get_vibe_config()
     eff_timeout = timeout_s if timeout_s is not None else config.timeout_s
     # Default to PROJECT_ROOT for project operations, fall back to workspace
     eff_cwd = cwd or str(PROJECT_ROOT)
     if not os.path.exists(eff_cwd):
-        eff_cwd = VIBE_WORKSPACE
+        eff_cwd = get_vibe_workspace()
+
+    prepare_workspace_and_instructions(eff_cwd)
+
+    vibe_path = resolve_vibe_binary()
 
     # Ensure workspace exists (for instructions/logs)
-    os.makedirs(VIBE_WORKSPACE, exist_ok=True)
-    if eff_cwd != VIBE_WORKSPACE:
+    workspace = get_vibe_workspace()
+    os.makedirs(workspace, exist_ok=True)
+    if eff_cwd != workspace:
         os.makedirs(eff_cwd, exist_ok=True)
 
     # Check network before proceeding if it's an AI prompt
@@ -1459,7 +1474,7 @@ async def vibe_prompt(
             vibe_home_override = _prepare_temp_vibe_home(target_model)
 
         # Build command using config (Model switching is handled via VIBE_HOME override)
-        argv = [
+        raw_argv = [
             vibe_path,
             *config.to_cli_args(
                 prompt=final_prompt,
@@ -1473,6 +1488,8 @@ async def vibe_prompt(
                 output_format=output_format,
             ),
         ]
+        # Filter out any None values to satisfy type checker
+        argv = [arg for arg in raw_argv if arg is not None]
 
         logger.info(f"[VIBE] Executing prompt: {prompt[:50]}... (timeout={eff_timeout}s)")
 
@@ -1551,7 +1568,7 @@ async def vibe_analyze_error(
         Analysis with root cause, suggested or applied fixes, and verification
 
     """
-    prepare_workspace_and_instructions()
+    prepare_workspace_and_instructions(cwd)
 
     # Build structured problem report
     prompt_parts = [
@@ -1593,7 +1610,7 @@ async def vibe_analyze_error(
             "2. CONTEXT (Environment & History)",
             "=" * 40,
             f"System Root: {SYSTEM_ROOT}",
-            f"Project Directory: {cwd or VIBE_WORKSPACE}",
+            f"Project Directory: {cwd or get_vibe_workspace()}",
             "",
             "DATABASE SCHEMA (for reference):",
             "- sessions: id, started_at, ended_at",
@@ -1800,7 +1817,7 @@ async def vibe_implement_feature(
         Implementation report with changed files, verification results, and quality metrics
 
     """
-    prepare_workspace_and_instructions()
+    prepare_workspace_and_instructions(cwd)
 
     # Gather file contents
     file_contents = []
@@ -1882,7 +1899,7 @@ CONSTRAINTS & GUIDELINES
 ENVIRONMENT
 ============================================================
 System Root: {SYSTEM_ROOT}
-Project Directory: {cwd or VIBE_WORKSPACE}
+Project Directory: {cwd or get_vibe_workspace()}
 
 ============================================================
 IMPLEMENTATION WORKFLOW
@@ -2756,7 +2773,7 @@ async def vibe_get_system_context(ctx: Context) -> dict[str, Any]:
 
 if __name__ == "__main__":
     logger.info("[VIBE] MCP Server starting (v3.0 Hyper-Refactored)...")
-    prepare_workspace_and_instructions()
+    prepare_workspace_and_instructions(None)
     cleanup_old_instructions()
 
     # Pre-load configuration
