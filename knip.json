@@ -1,16 +1,8 @@
 {
   "$schema": "https://unpkg.com/knip@latest/schema.json",
-  "entry": [
-    "src/main/main.ts",
-    "src/renderer/main.tsx"
-  ],
-  "project": [
-    "src/**/*.{ts,tsx}"
-  ],
-  "ignore": [
-    "dist/**",
-    "node_modules/**"
-  ],
+  "entry": ["src/main/main.ts", "src/main/preload.ts", "src/renderer/main.tsx"],
+  "project": ["src/**/*.{ts,tsx}"],
+  "ignore": ["dist/**", "node_modules/**"],
   "ignoreDependencies": [
     "@modelcontextprotocol/*",
     "chrome-devtools-mcp",
@@ -18,13 +10,5 @@
     "stripe",
     "tailwindcss"
   ],
-  "ignoreBinaries": [
-    "python",
-    "python3",
-    "pytest",
-    "unset",
-    "open",
-    "sleep",
-    "jq"
-  ]
+  "ignoreBinaries": ["python", "python3", "pytest", "unset", "open", "sleep", "jq"]
 }

@@ -448,26 +448,26 @@ ipcMain.handle('request-accessibility', async () => {
 
 // Log Reading Handler
 ipcMain.handle('read-brain-log', async () => {
-    try {
-        if (!fs.existsSync(LOG_PATH)) return [];
+  try {
+    if (!fs.existsSync(LOG_PATH)) return [];
 
-        // Read last 100KB
-        const stats = await fs.promises.stat(LOG_PATH);
-        const size = stats.size;
-        const bufferSize = Math.min(100 * 1024, size);
-        const buffer = Buffer.alloc(bufferSize);
+    // Read last 100KB
+    const stats = await fs.promises.stat(LOG_PATH);
+    const size = stats.size;
+    const bufferSize = Math.min(100 * 1024, size);
+    const buffer = Buffer.alloc(bufferSize);
 
-        const handle = await fs.promises.open(LOG_PATH, 'r');
-        await handle.read(buffer, 0, bufferSize, size - bufferSize);
-        await handle.close();
+    const handle = await fs.promises.open(LOG_PATH, 'r');
+    await handle.read(buffer, 0, bufferSize, size - bufferSize);
+    await handle.close();
 
-        const content = buffer.toString('utf-8');
-        // Split by lines, filtering empty
-        return content.split('\n').filter(Boolean);
-    } catch (error) {
-        console.error('Failed to read log:', error);
-        return [];
-    }
+    const content = buffer.toString('utf-8');
+    // Split by lines, filtering empty
+    return content.split('\n').filter(Boolean);
+  } catch (error) {
+    console.error('Failed to read log:', error);
+    return [];
+  }
 });
 
 // App lifecycle
