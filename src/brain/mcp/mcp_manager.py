@@ -88,16 +88,23 @@ class MCPManager:
         self._lock = asyncio.Lock()
         self._log_callbacks: list[Callable[[str, str, str], Any]] = []
 
-        # Unified tool dispatching
-        from src.brain.core.orchestration.tool_dispatcher import ToolDispatcher
-
-        self.dispatcher = ToolDispatcher(self)
+        # Unified tool dispatching (lazy-loaded to break circular imports)
+        self._dispatcher = None
 
         # Controls for restart concurrency and retry/backoff
         # Limit number of concurrent restarts to avoid forking storms
         self._restart_semaphore = asyncio.Semaphore(4)
         self._max_restart_attempts = int(mon_config.get("max_retries", 5))
         self._restart_backoff_base = float(mon_config.get("backoff_base", 0.5))  # seconds
+
+    @property
+    def dispatcher(self):
+        """Lazy-loaded ToolDispatcher to prevent circular import issues."""
+        if self._dispatcher is None:
+            from src.brain.core.orchestration.tool_dispatcher import ToolDispatcher
+
+            self._dispatcher = ToolDispatcher(self)
+        return self._dispatcher
 
     def _load_config(self) -> dict[str, Any]:
         """Load MCP config from the global user config folder."""
