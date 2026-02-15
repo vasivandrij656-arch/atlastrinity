@@ -1502,13 +1502,13 @@ async def vibe_prompt(
         return result
 
     finally:
-        # Cleanup temporary file
-        if prompt_file_to_clean and os.path.exists(prompt_file_to_clean):
-            try:
-                os.remove(prompt_file_to_clean)
-                logger.debug(f"Cleaned up prompt file: {prompt_file_to_clean}")
-            except Exception as e:
-                logger.warning(f"Failed to cleanup prompt file: {e}")
+        # NOTE: Do NOT cleanup prompt_file_to_clean here.
+        # The Vibe subprocess (which runs in an isolated VIBE_HOME) may still
+        # be reading or referencing this file. Premature deletion causes
+        # "file not present in workspace" errors and silent task failures.
+        # Stale instruction files are cleaned by cleanup_old_instructions()
+        # which runs periodically with a 24h age threshold.
+        pass
 
 
 @server.tool()

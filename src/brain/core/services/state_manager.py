@@ -43,6 +43,7 @@ class StateManager:
         self.prefix = prefix
         self.available = False
         self._publish_ready = False  # Only True after Redis connection is verified
+        self._publish_fail_count = 0  # Track consecutive publish failures
 
         if aioredis is None:
             logger.warning("[STATE] Redis not installed. Running without persistence.")
@@ -226,10 +227,14 @@ class StateManager:
 
             full_channel = self._key(f"events:{channel}")
             await self.redis_client.publish(full_channel, json.dumps(message, default=str))  # type: ignore
+            self._publish_fail_count = 0  # Reset on success
         except Exception as e:
             # Avoid logging if it's just a loop closure error
             if "Event loop is closed" not in str(e):
-                logger.error(f"[STATE] Failed to publish event: {e}")
+                self._publish_fail_count += 1
+                if self._publish_fail_count <= 1:
+                    logger.warning(f"[STATE] Redis publish failed, disabling pub/sub: {e}")
+                self._publish_ready = False
 
     async def get_key(self, key: str) -> Any | None:
         """Get a raw key value with prefix"""
