@@ -205,7 +205,7 @@ class VibeWindsurfProxyHandler(http.server.BaseHTTPRequestHandler):
             # Make the API call with timeout
             start_time = time.time()
             response = None
-            
+
             try:
                 # Use timeout to prevent hanging
                 import signal
