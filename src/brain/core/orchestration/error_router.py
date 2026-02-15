@@ -129,11 +129,20 @@ class SmartErrorRouter:
         r"check_run\s+failure",
         r"script\s+not\s+found\s+in\s+ci",
     ]
+    LOOP_THRESHOLDS = {
+        ErrorCategory.VERIFICATION: 6,
+        ErrorCategory.INFRASTRUCTURE: 5,
+        ErrorCategory.TRANSIENT: 5,
+        ErrorCategory.LOGIC: 3,
+        ErrorCategory.STATE: 3,
+        ErrorCategory.CI_FAILURE: 3,
+    }
+    DEFAULT_LOOP_THRESHOLD = 4
 
     def __init__(self):
         self._cache = {}
         self._category_history: list[ErrorCategory] = []
-        self._max_history = 5
+        self._max_history = 10
 
     def classify(self, error: str) -> ErrorCategory:
         """Classifies an error string into a category"""
@@ -230,13 +239,14 @@ class SmartErrorRouter:
         if len(self._category_history) > self._max_history:
             self._category_history.pop(0)
 
-        # Detect Loop: Same category repeated > 3 times recently
-        if len(self._category_history) >= 4 and all(
-            c == category for c in self._category_history[-4:]
+        # Detect Loop: Same category repeated > threshold times recently
+        threshold = self.LOOP_THRESHOLDS.get(category, self.DEFAULT_LOOP_THRESHOLD)
+        if len(self._category_history) >= threshold and all(
+            c == category for c in self._category_history[-threshold:]
         ):
             if category not in [ErrorCategory.USER_INPUT, ErrorCategory.PERMISSION]:
                 logger.warning(
-                    f"[ROUTER] 🔁 Loop detected for category {category.value}. Forcing RESTART strategy."
+                    f"[ROUTER] 🔁 Loop detected for category {category.value} (Threshold: {threshold}). Forcing RESTART strategy."
                 )
                 return RecoveryStrategy(
                     action="RESTART",

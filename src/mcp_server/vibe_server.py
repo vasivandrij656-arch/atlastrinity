@@ -1434,7 +1434,7 @@ async def vibe_prompt(
         )
         output_format = "streaming"
 
-    final_prompt, _prompt_file_to_clean = handle_long_prompt(prompt, eff_cwd)
+    final_prompt, _ = handle_long_prompt(prompt, eff_cwd)
 
     # Automatic Session Persistence (if not provided)
     eff_session_id = session_id or _generate_task_session_id(prompt)
