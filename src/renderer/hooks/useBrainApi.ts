@@ -211,28 +211,35 @@ export const useBrainApi = () => {
 
       if (newLogs.length > 0) {
         setLogs((current) => {
-          const lastLog = current[current.length - 1];
-          const filteredNewLogs = newLogs.filter((newLog) => {
-            // Deduplicate consecutive identical messages from same agent
-            if (
-              lastLog &&
-              lastLog.message === newLog.message &&
-              lastLog.agent === newLog.agent &&
-              newLog.timestamp.getTime() - lastLog.timestamp.getTime() < 1000
-            ) {
-              return false;
-            }
-            return true;
+          // 1. Internal deduplication (within the incoming batch)
+          const uniqueInBatch: LogEntry[] = [];
+          for (const newLog of newLogs) {
+            const isDuplicateInBatch = uniqueInBatch.some(
+              (l) =>
+                l.message === newLog.message &&
+                l.agent === newLog.agent &&
+                Math.abs(l.timestamp.getTime() - newLog.timestamp.getTime()) < 500,
+            );
+            if (!isDuplicateInBatch) uniqueInBatch.push(newLog);
+          }
+
+          // 2. Cross-batch deduplication (against the last N logs in history)
+          const filteredNewLogs = uniqueInBatch.filter((newLog) => {
+            // Check against last 10 entries instead of just the last one
+            const recentLogs = current.slice(-10);
+            return !recentLogs.some(
+              (lastLog) =>
+                lastLog.message === newLog.message &&
+                lastLog.agent === newLog.agent &&
+                Math.abs(lastLog.timestamp.getTime() - newLog.timestamp.getTime()) < 1000,
+            );
           });
 
           if (filteredNewLogs.length === 0) return current;
 
           const combined = [...current, ...filteredNewLogs];
           // Keep buffer reasonable size (e.g. 500) to prevent memory issues
-          if (combined.length > 500) {
-            return combined.slice(combined.length - 500);
-          }
-          return combined;
+          return combined.length > 500 ? combined.slice(combined.length - 500) : combined;
         });
       }
     });

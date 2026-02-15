@@ -485,9 +485,11 @@ ipcMain.on('start-log-stream', (_event) => {
       console.log('[ELECTRON] Starting log stream watcher...');
 
       let logBuffer = '';
+      let isProcessingLog = false;
       logWatcher = fs.watch(LOG_PATH, (eventType) => {
         void (async () => {
-          if (eventType === 'change') {
+          if (eventType === 'change' && !isProcessingLog) {
+            isProcessingLog = true;
             try {
               const newStats = await fs.promises.stat(LOG_PATH);
               const newSize = newStats.size;
@@ -521,6 +523,8 @@ ipcMain.on('start-log-stream', (_event) => {
               }
             } catch (err) {
               console.error('[ELECTRON] Error reading log update:', err);
+            } finally {
+              isProcessingLog = false;
             }
           }
         })();
