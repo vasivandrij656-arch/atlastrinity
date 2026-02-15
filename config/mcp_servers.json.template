@@ -5,7 +5,7 @@
       "transport": "stdio",
       "command": "${PROJECT_ROOT}/vendor/mcp-server-macos-use/mcp-server-macos-use",
       "connect_timeout": 3600,
-      "description": "DEPRECATED: Now bridged through xcodebuild. macOS control (63 tools).",
+      "description": "DEPRECATED: Now bridged through xcodebuild. DO NOT USE DIRECTLY. All 63 macOS tools accessible via xcodebuild server.",
       "permissions": {
         "accessibility": true,
         "screen_recording": true

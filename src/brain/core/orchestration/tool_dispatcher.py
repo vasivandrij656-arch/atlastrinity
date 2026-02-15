@@ -1100,6 +1100,7 @@ class ToolDispatcher:
         """Handle strict server priority routing."""
         handlers = {
             "xcodebuild": self._handle_xcodebuild_unified,
+            "macos-use": self._handle_macos_use,
             "filesystem": self._handle_filesystem,
             "terminal": self._handle_terminal,
             "vibe": self._handle_vibe,
@@ -1123,7 +1124,7 @@ class ToolDispatcher:
         if (
             tool_name.startswith(("xcodebuild", "macos_use_", "notes_", "note_"))
             or tool_name in self.MACOS_MAP
-            or explicit_server == "notes"
+            or explicit_server in ("notes", "macos-use")
         ):
             return self._handle_macos_use(tool_name, args)
 

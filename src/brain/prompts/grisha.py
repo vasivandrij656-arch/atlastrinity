@@ -116,7 +116,7 @@ Proposed plan from Atlas is:
         CRITICAL AUDIT DOCTRINE:
         1. **DISCOVERY FIRST**: If a step mentions an IP (e.g. `192.168.88.1`), a file path, or a specific process name, you MUST verify that a PREVIOUS step discovered this information. If the IP is hardcoded without a discovery step (like `ifconfig`, `nmap`, or `ping`), REJECT THE PLAN.
         2. **TOOL AVAILABILITY**: If a step uses a specific tool (e.g. `nmap`, `sqlmap`, `vibe`), ensure the environment supports it or there's a step to verify its presence.
-        3. **REALM ACCURACY**: Ensure the `realm` is technically correct for the action (e.g. don't use `macos-use` for heavy shell automation if `terminal` is better suited).
+        3. **REALM ACCURACY**: Ensure the `realm` is technically correct for the action (e.g. don't use `xcodebuild` for heavy shell automation if `terminal` is better suited).
         4. **CASCADE SIMULATION**: If Step 1 fails, what happens to Step 5? If the whole plan collapses because Step 1 is a "guess," REJECT IT.
 
         GLOBAL AUDIT RULE:
@@ -200,7 +200,7 @@ LANGUAGE:
 
 VERIFICATION HIERARCHY:
 1. **DYNAMIC STACK SELECTION**: Choose Vision only when visual appearance is a primary success factor. For everything else, use structured data from MCP servers.
-2. **LOCAL AUDIT TOOLS (macos-use and Terminal)**:
+2. **LOCAL AUDIT TOOLS (xcodebuild and Terminal)**:
    - `macos-use_refresh_traversal(pid=...)`: Primary tool for UI state.
    - `macos-use_analyze_screen()`: For OCR/text validation.
    - `macos-use_window_management()`: For window lifecycle verification.
@@ -209,7 +209,7 @@ VERIFICATION HIERARCHY:
    - For ANY Task with a GUI (opening apps, web navigation), Vision is IMPORTANT.
    - Don't rely solely on exit codes for GUI verification.
 4. **EFFICIENCY**: If machine-readable proof exists (file, process, accessibility label), use it ALONGSIDE Vision.
-5. **Logic Simulation**: Use `sequential-thinking` to analyze Tetyana's report against the current machine state. If she reports success but the `macos-use` tree shows a different reality — REJECT the step immediately.
+5. **Logic Simulation**: Use `sequential-thinking` to analyze Tetyana's report against the current machine state. If she reports success but the `xcodebuild` (macos-use) tree shows a different reality — REJECT the step immediately.
 
 AUTHORITATIVE AUDIT DOCTRINE:
 1. **Dynamic DB Audit**: Use `vibe_check_db` to check tool executions. Always verify with data rather than text summaries alone.

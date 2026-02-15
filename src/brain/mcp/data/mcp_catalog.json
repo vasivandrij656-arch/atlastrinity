@@ -3,7 +3,7 @@
     "name": "macos-use",
     "tier": 1,
     "category": "core",
-    "description": "DEPRECATED: Now bridged through xcodebuild. All 63 macOS tools accessible via xcodebuild server.",
+    "description": "DEPRECATED: Now bridged through xcodebuild. DO NOT USE DIRECTLY. All 63 macOS tools accessible via xcodebuild server.",
     "status": "bridged",
     "bridged_through": "xcodebuild",
     "capabilities": [],
@@ -22,12 +22,7 @@
       "Search files by name/content",
       "Get file metadata"
     ],
-    "key_tools": [
-      "read_file",
-      "write_file",
-      "list_directory",
-      "search_files"
-    ],
+    "key_tools": ["read_file", "write_file", "list_directory", "search_files"],
     "when_to_use": "File operations within allowed paths (~ and /tmp). For other paths, use macos-use.execute_command"
   },
   "sequential-thinking": {
@@ -41,9 +36,7 @@
       "Multi-step problem decomposition",
       "Consequence simulation"
     ],
-    "key_tools": [
-      "sequentialthinking"
-    ],
+    "key_tools": ["sequentialthinking"],
     "when_to_use": "Complex decisions, dangerous operations, multi-step logic, hypothesis testing"
   },
   "system": {
@@ -56,10 +49,7 @@
       "Restarting the main AtlasTrinity application (Self-Healing)",
       "System status management"
     ],
-    "key_tools": [
-      "restart_mcp_server",
-      "restart_application"
-    ],
+    "key_tools": ["restart_mcp_server", "restart_application"],
     "when_to_use": "Use when an MCP server is unresponsive or needs a restart."
   },
   "vibe": {
@@ -149,12 +139,7 @@
       "Mermaid.js flowchart generation with filtering",
       "Deep node inspection and relationship traversal"
     ],
-    "key_tools": [
-      "generate_mermaid",
-      "get_node_details",
-      "get_related_nodes",
-      "get_graph_json"
-    ],
+    "key_tools": ["generate_mermaid", "get_node_details", "get_related_nodes", "get_graph_json"],
     "when_to_use": "Visualizing or traversing the knowledge graph state to understand complex system or data relationships."
   },
   "puppeteer": {
@@ -168,11 +153,7 @@
       "Interacting with elements (click, type, fill)",
       "Capturing page screenshots"
     ],
-    "key_tools": [
-      "puppeteer_navigate",
-      "puppeteer_screenshot",
-      "puppeteer_click"
-    ],
+    "key_tools": ["puppeteer_navigate", "puppeteer_screenshot", "puppeteer_click"],
     "when_to_use": "Web searching, checking weather, scraping data, website interaction."
   },
   "chrome-devtools": {
@@ -180,16 +161,8 @@
     "tier": 4,
     "category": "browser",
     "description": "Chrome DevTools Protocol for advanced browser automation",
-    "capabilities": [
-      "Low-level browser control",
-      "Network monitoring",
-      "Console log access"
-    ],
-    "key_tools": [
-      "take_screenshot",
-      "list_console_messages",
-      "list_network_requests"
-    ],
+    "capabilities": ["Low-level browser control", "Network monitoring", "Console log access"],
+    "key_tools": ["take_screenshot", "list_console_messages", "list_network_requests"],
     "when_to_use": "Advanced browser debugging or when puppeteer is insufficient."
   },
   "duckduckgo-search": {
@@ -245,10 +218,7 @@
       "Record and transcribe from microphone",
       "Multi-language support (default: uk)"
     ],
-    "key_tools": [
-      "transcribe_audio",
-      "record_and_transcribe"
-    ],
+    "key_tools": ["transcribe_audio", "record_and_transcribe"],
     "when_to_use": "Processing voice commands, transcribing recordings."
   },
   "redis": {
@@ -262,13 +232,7 @@
       "Inspect system state and session metadata",
       "Redis server health and statistics"
     ],
-    "key_tools": [
-      "redis_get",
-      "redis_keys",
-      "redis_info",
-      "redis_ttl",
-      "redis_hgetall"
-    ],
+    "key_tools": ["redis_get", "redis_keys", "redis_info", "redis_ttl", "redis_hgetall"],
     "when_to_use": "Inspecting session state, verifying restart_pending flags, debugging persistence issues, or managing temporary cross-agent flags."
   },
   "devtools": {
@@ -368,11 +332,7 @@
       "Get version-specific API references",
       "Resolve library names to Context7-compatible IDs"
     ],
-    "key_tools": [
-      "c7_search",
-      "c7_query",
-      "c7_info"
-    ],
+    "key_tools": ["c7_search", "c7_query", "c7_info"],
     "when_to_use": "When you need to look up documentation, API references, or examples for external libraries."
   },
   "data-analysis": {
@@ -512,9 +472,7 @@
       "Trace React renderers and versions",
       "Identify stale or unmounted components"
     ],
-    "key_tools": [
-      "react_get_introspection_script"
-    ],
+    "key_tools": ["react_get_introspection_script"],
     "when_to_use": "Autonomous React development, debugging UI state, analyzing component hierarchy, and fixing React-specific bugs.",
     "priority_note": "Works in conjunction with chrome-devtools-mcp. Use for DEEP React introspection that standard DOM tools cannot provide."
   },
