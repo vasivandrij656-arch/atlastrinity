@@ -76,15 +76,15 @@ requires_proxy = true
 proxy_command = "python3 ${PROJECT_ROOT}/src/providers/proxy/copilot_vibe_proxy.py"
 requires_token_exchange = true
 
-[[providers]]
-name = "windsurf"
-api_base = "http://127.0.0.1:8085"
-api_key_env_var = "WINDSURF_API_KEY"
-api_style = "openai"
-backend = "generic"
-requires_proxy = true
-proxy_command = "python3 ${PROJECT_ROOT}/src/providers/proxy/vibe_windsurf_proxy.py"
-requires_token_exchange = false
+# [[providers]]
+# name = "windsurf"
+# api_base = "http://127.0.0.1:8085"
+# api_key_env_var = "WINDSURF_API_KEY"
+# api_style = "openai"
+# backend = "generic"
+# requires_proxy = true
+# proxy_command = "python3 ${PROJECT_ROOT}/src/providers/proxy/vibe_windsurf_proxy.py"
+# requires_token_exchange = false
 
 # =============================================================================
 # Model Presets
@@ -129,38 +129,38 @@ temperature = 0.1
 input_price = 0.0
 output_price = 0.0
 
-# Windsurf models (FREE tier)
-[[models]]
-name = "deepseek-v3"
-provider = "windsurf"
-alias = "deepseek-v3"
-temperature = 0.1
-input_price = 0.0
-output_price = 0.0
+# Windsurf models (DISABLED — resource_exhausted)
+# [[models]]
+# name = "deepseek-v3"
+# provider = "windsurf"
+# alias = "deepseek-v3"
+# temperature = 0.1
+# input_price = 0.0
+# output_price = 0.0
 
-[[models]]
-name = "deepseek-r1"
-provider = "windsurf"
-alias = "deepseek-r1"
-temperature = 0.1
-input_price = 0.0
-output_price = 0.0
+# [[models]]
+# name = "deepseek-r1"
+# provider = "windsurf"
+# alias = "deepseek-r1"
+# temperature = 0.1
+# input_price = 0.0
+# output_price = 0.0
 
-[[models]]
-name = "swe-1.5"
-provider = "windsurf"
-alias = "swe-1.5"
-temperature = 0.1
-input_price = 0.0
-output_price = 0.0
+# [[models]]
+# name = "swe-1.5"
+# provider = "windsurf"
+# alias = "swe-1.5"
+# temperature = 0.1
+# input_price = 0.0
+# output_price = 0.0
 
-[[models]]
-name = "kimi-k2.5"
-provider = "windsurf"
-alias = "kimi-k2.5"
-temperature = 0.1
-input_price = 0.0
-output_price = 0.0
+# [[models]]
+# name = "kimi-k2.5"
+# provider = "windsurf"
+# alias = "kimi-k2.5"
+# temperature = 0.1
+# input_price = 0.0
+# output_price = 0.0
 
 # =============================================================================
 # Built-in Tool Permissions

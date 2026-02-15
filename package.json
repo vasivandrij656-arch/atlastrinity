@@ -27,7 +27,7 @@
     "watch:config": ".venv/bin/python src/maintenance/watch_config.py",
     "redis:check": "./scripts/check_redis.sh",
     "redis:stop": "./scripts/stop_redis.sh",
-    "dev": "npm run clean && python3 src/maintenance/clean_start.py && .venv/bin/python src/maintenance/watch_config.py --sync-only && concurrently \"npm run dev:proxy:copilot\" \"npm run dev:proxy:windsurf\" \"npm run dev:brain\" \"npm run dev:electron\" \"npm run dev:renderer\" \"npm run watch:config\" --kill-others",
+    "dev": "npm run clean && python3 src/maintenance/clean_start.py && .venv/bin/python src/maintenance/watch_config.py --sync-only && concurrently \"npm run dev:proxy:copilot\" \"npm run dev:brain\" \"npm run dev:electron\" \"npm run dev:renderer\" \"npm run watch:config\" --kill-others",
     "dev:electron": "sleep 5 && tsc -p tsconfig.main.json && NODE_ENV=development electron . --disable-gpu --disable-hardware-acceleration",
     "dev:renderer": "vite",
     "dev:brain": "export PYTHONPATH=$PYTHONPATH:.:./src && .venv/bin/python -W ignore -m brain.server",
