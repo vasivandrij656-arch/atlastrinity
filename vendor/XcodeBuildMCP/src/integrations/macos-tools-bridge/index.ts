@@ -86,8 +86,15 @@ export async function registerBridgedTools(
     backends
       .filter((b) => !enabledSet || enabledSet.has(b.id))
       .map(async (config) => {
-        const ok = await reg.addBackend(config);
-        return { id: config.id, connected: ok };
+        log('info', `[bridge] Attempting to connect to backend: ${config.id} (${config.serverParams.command})`);
+        try {
+          const ok = await reg.addBackend(config);
+          log('info', `[bridge] Backend ${config.id}: ${ok ? 'CONNECTED' : 'FAILED'}`);
+          return { id: config.id, connected: ok };
+        } catch (error) {
+          log('error', `[bridge] Backend ${config.id} failed with error: ${error instanceof Error ? error.message : String(error)}`);
+          return { id: config.id, connected: false };
+        }
       }),
   );
 
@@ -102,9 +109,11 @@ export async function registerBridgedTools(
 
   // --- Filter tools ---
   let tools: BridgedToolDefinition[] = ALL_BRIDGED_TOOLS;
+  log('info', `[bridge] Total tools in catalog: ${tools.length}`);
 
   // Filter by connected backends
   tools = tools.filter((t) => connectedIds.has(t.backendId));
+  log('info', `[bridge] Tools after backend filter: ${tools.length} (backends: ${Array.from(connectedIds).join(', ')})`);
 
   // Category filter
   if (options.categories && options.categories.length > 0) {
