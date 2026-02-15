@@ -24,6 +24,9 @@ import * as path from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { checkPermissions, requestPermissions } from './permissions.js';
 
+// Define Log Path
+const LOG_PATH = path.join(os.homedir(), '.config/atlastrinity/logs/brain.log');
+
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 
@@ -194,6 +197,7 @@ async function createWindow(): Promise<void> {
       nodeIntegration: false,
       contextIsolation: true,
       sandbox: false, // Required for extension compatibility
+      preload: path.join(__dirname, 'preload.js'),
     },
   });
 
@@ -440,6 +444,30 @@ ipcMain.handle('check-accessibility', async () => {
 
 ipcMain.handle('request-accessibility', async () => {
   return systemPreferences.isTrustedAccessibilityClient(true);
+});
+
+// Log Reading Handler
+ipcMain.handle('read-brain-log', async () => {
+    try {
+        if (!fs.existsSync(LOG_PATH)) return [];
+
+        // Read last 100KB
+        const stats = await fs.promises.stat(LOG_PATH);
+        const size = stats.size;
+        const bufferSize = Math.min(100 * 1024, size);
+        const buffer = Buffer.alloc(bufferSize);
+
+        const handle = await fs.promises.open(LOG_PATH, 'r');
+        await handle.read(buffer, 0, bufferSize, size - bufferSize);
+        await handle.close();
+
+        const content = buffer.toString('utf-8');
+        // Split by lines, filtering empty
+        return content.split('\n').filter(Boolean);
+    } catch (error) {
+        console.error('Failed to read log:', error);
+        return [];
+    }
 });
 
 // App lifecycle

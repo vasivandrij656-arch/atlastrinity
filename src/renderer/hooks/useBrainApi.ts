@@ -1,4 +1,4 @@
-import { useCallback, useState } from 'react';
+import { useCallback, useEffect, useState } from 'react';
 import type {
   AgentName,
   ChatMessage,
@@ -128,6 +128,89 @@ export const useBrainApi = () => {
     } catch {
       setIsConnected(false);
     }
+  }, []);
+
+  // Parse raw log line into LogEntry
+  const parseLogLine = (line: string): LogEntry | null => {
+      // Expected format: YYYY-MM-DD HH:MM:SS,mmm - logger - LEVEL - MESSAGE
+      // Regex to capture timestamp, level, and message
+      // 2026-02-15 05:12:47,872 - brain - INFO - Message
+      const regex = /^(\d{4}-\d{2}-\d{2}\s\d{2}:\d{2}:\d{2}),\d+\s-\s(\w+)\s-\s(\w+)\s-\s(.+)$/;
+      const match = line.match(regex);
+
+      if (!match) return null;
+
+      const [_, timestampStr, agentRaw, levelRaw, message] = match;
+
+      // Map Level to Type
+      let type: LogEntry['type'] = 'info';
+      const level = levelRaw.toLowerCase();
+      if (level === 'error' || level === 'critical') type = 'error';
+      if (level === 'warning') type = 'warning';
+
+      // Map Logger to Agent
+      let agent: AgentName = 'SYSTEM';
+      const agentLower = agentRaw.toLowerCase();
+      if (agentLower === 'atlas') agent = 'ATLAS';
+      if (agentLower === 'tetyana') agent = 'TETYANA';
+      if (agentLower === 'grisha') agent = 'GRISHA';
+      if (agentLower === 'user') agent = 'USER';
+
+      // Special handling for [AGENT] prefixes in message
+      if (message.startsWith('[ATLAS]')) agent = 'ATLAS';
+      if (message.startsWith('[TETYANA]')) agent = 'TETYANA';
+      if (message.startsWith('[GRISHA]')) agent = 'GRISHA';
+
+      return {
+          id: `file-${timestampStr}-${message.substring(0, 10)}`, // Simple ID
+          timestamp: new Date(timestampStr),
+          agent,
+          message: message.replace(/^\[.*?\]\s*/, ''), // Remove prefix if present
+          type
+      };
+  };
+
+
+  // Poll logs from Electron (Direct File Read)
+  useEffect(() => {
+      if (!window.electron) return;
+
+      const fetchFileLogs = async () => {
+          try {
+              const rawLines = await window.electron.readBrainLog();
+              const parsedLogs = rawLines
+                  .map(parseLogLine)
+                  .filter((l): l is LogEntry => l !== null);
+
+              if (parsedLogs.length > 0) {
+                  setLogs((current) => {
+                      // Merge strategy:
+                      // Create a map of existing logs by ID or unique content
+                      // Prefer file logs as source of truth for history
+                      // Ensure we don't duplicate
+                      const knownIds = new Set(current.map(l => l.id));
+                      const newEntries = parsedLogs.filter(l => !knownIds.has(l.id));
+
+                      // If we have new entries from file, append them
+                      // Also, if current is empty (fresh load), just use file logs
+                      if (current.length === 0) return parsedLogs.slice(-100);
+
+                      // Combine and sort
+                      const combined = [...current, ...newEntries];
+                      combined.sort((a, b) => a.timestamp.getTime() - b.timestamp.getTime());
+
+                      return combined.slice(-200); // Keep last 200
+                  });
+              }
+          } catch (e) {
+              console.error("Failed to read electron logs", e);
+          }
+      };
+
+      const interval = setInterval(fetchFileLogs, 2000); // Poll every 2s
+      fetchFileLogs(); // Initial fetch
+
+      return () => clearInterval(interval);
   }, []);
 
   const handleCommand = useCallback(

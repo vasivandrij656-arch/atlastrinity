@@ -6,15 +6,7 @@
 import type * as React from 'react';
 import { useCallback, useEffect, useLayoutEffect, useRef, useState } from 'react';
 
-type AgentName = 'ATLAS' | 'TETYANA' | 'GRISHA' | 'SYSTEM' | 'USER';
-
-interface LogEntry {
-  id: string;
-  timestamp: Date;
-  agent: AgentName;
-  message: string;
-  type: 'info' | 'action' | 'success' | 'error' | 'voice';
-}
+import type { LogEntry } from '../types';
 
 interface ExecutionLogProps {
   logs: LogEntry[];

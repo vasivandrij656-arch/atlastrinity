@@ -6,7 +6,7 @@ export interface LogEntry {
   timestamp: Date;
   agent: AgentName;
   message: string;
-  type: 'info' | 'action' | 'success' | 'error' | 'voice';
+  type: 'info' | 'action' | 'success' | 'warning' | 'error' | 'voice';
 }
 
 export interface ChatMessage {
