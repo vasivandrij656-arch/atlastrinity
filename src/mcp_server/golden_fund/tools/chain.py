@@ -52,7 +52,7 @@ class RecursiveEnricher:
                 target_resource = resources[0]  # Take first valid resource
                 url = self.ckan.get_resource_url(target_resource)
                 res_format = target_resource.get("format", "").lower()
-                
+
                 # Determine ingestion type
                 ingest_type = "api"
                 if "csv" in res_format:
@@ -65,7 +65,9 @@ class RecursiveEnricher:
                 # Ingest
                 logger.info(f"Enriching with: {pkg.get('title')} ({url}) as {ingest_type}")
                 ingest_result = await ingest_dataset(
-                    url, type=ingest_type, process_pipeline=["parse", "store_sql", "vectorize", "keyword_index"]
+                    url,
+                    type=ingest_type,
+                    process_pipeline=["parse", "store_sql", "vectorize", "keyword_index"],
                 )  # Assume API/Direct link
                 enrichment_summary.append(f"Ingested '{pkg.get('title')}': {ingest_result}")
 
