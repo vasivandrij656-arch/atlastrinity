@@ -102,7 +102,14 @@ access_patterns:
   allowed_sources:
     - "192.168.88.10"  # Main workstation
     - "192.168.88.20"  # Secondary admin
+    - "192.168.88.22"  # Current workstation (MAC: 9c:76:0e:48:90:fc)
     - "192.168.88.100" # Kali Linux VM
+  
+workstation_details:
+  current_ip: "192.168.88.22"
+  mac_address: "9c:76:0e:48:90:fc"
+  interface: "en0"
+  subnet_mask: "255.255.255.0"
   
 forbidden_actions:
   - "Disable firewall rules"
@@ -117,10 +124,15 @@ forbidden_actions:
 ```yaml
 network_discovery:
   prerequisites:
-    - Verify own IP with `ifconfig`
+    - Verify own IP with `ifconfig` (current: 192.168.88.22)
     - Confirm gateway accessibility
     - Check SSH key availability
     
+current_workstation:
+  ip_address: "192.168.88.22"
+  mac_address: "9c:76:0e:48:90:fc"
+  interface: "en0"
+  
 commands:
   interface_check: "ifconfig | grep 192.168.88"
   gateway_ping: "ping -c 3 192.168.88.1"
