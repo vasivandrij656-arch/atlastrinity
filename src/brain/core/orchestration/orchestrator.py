@@ -2224,14 +2224,113 @@ class Trinity(TourMixin, VoiceOrchestrationMixin):
     async def _handle_strategy_ask_user(
         self, strategy: Any, step_id: str
     ) -> tuple[bool, StepResult | None]:
-        """Handle ASK_USER strategy."""
-        await self._log(f"Permission/Input required: {strategy.reason}", "orchestrator")
-        return False, StepResult(
-            step_id=step_id,
-            success=False,
-            error="need_user_input",
-            result=f"ASK_USER: {strategy.reason}",
+        """Handle ASK_USER strategy with auto-approve timeout and interruption support."""
+        reason = getattr(strategy, "reason", "Action requires permission")
+
+        # Get timeout and permissiveness settings
+        try:
+            from src.mcp_server.vibe_server import get_vibe_config
+
+            vibe_cfg = get_vibe_config()
+            timeout = getattr(vibe_cfg, "confirmation_timeout_s", 20.0)
+        except Exception:
+            timeout = 20.0
+
+        if timeout <= 5:
+            msg = f"⚡ Виконую: {reason}. У вас {int(timeout)} секунд на скасування."
+            voice = f"Буде виконано {reason}. У вас є {int(timeout)} секунд, щоб відмінити."
+        else:
+            msg = f"⚠️ ПЕРЕВІРКА: {reason}. Очікую {int(timeout)}с..."
+            voice = f"Мені потрібне ваше підтвердження: {reason}. Чекаю {int(timeout)} секунд, або я прийму рішення сам."
+
+        await self._log(msg, "system", type="warning" if timeout > 5 else "critical")
+        await self._speak("atlas", voice)
+
+        start_wait = time.time()
+        while time.time() - start_wait < timeout:
+            # 1. Check for explicit approval/denial
+            messages = await message_bus.receive("orchestrator", MessageType.APPROVAL)
+            if messages:
+                payload = messages[0].payload
+                if payload.get("approved"):
+                    await self._log("✅ Користувач підтвердив дію.", "system")
+                    return True, None
+                await self._log("❌ Користувач відхилив дію.", "system")
+                return False, StepResult(
+                    step_id=step_id,
+                    success=False,
+                    error="denied_by_user",
+                    result="User explicitly denied permission.",
+                )
+
+            # 2. INTERRUPT: Any human message pauses the system
+            chat_messages = await message_bus.receive("orchestrator", MessageType.CHAT)
+            if chat_messages:
+                human_msg = chat_messages[0].payload.get("content", "")
+                await self._log(
+                    f"⏸️ Система призупинена користувачем: '{human_msg[:30]}...'",
+                    "system",
+                    type="warning",
+                )
+                await self._speak("atlas", "Зупиняюсь для обговорення. Я в режимі очікування.")
+                self.pause()
+                # Stay in "Discussion Bubble" (loop) until we hear "continue" or "go"
+                return await self._enter_discussion_bubble(step_id, reason)
+
+            await asyncio.sleep(0.5)
+
+        # Timeout reached - Take responsibility
+        await self._log(
+            f"🦅 Час вичерпано ({int(timeout)}с). Атлас бере відповідальність на себе. Виконую.",
+            "orchestrator",
+            type="critical",
         )
+        await self._speak("atlas", "Час вичерпано. Беру відповідальність на себе.")
+
+        return True, None
+
+    async def _enter_discussion_bubble(
+        self, step_id: str, reason: str
+    ) -> tuple[bool, StepResult | None]:
+        """Stay in a loop waiting for instructions to resume or change course."""
+        while True:
+            # Wait for any new human message or a command to resume
+            messages = await message_bus.receive("orchestrator", MessageType.CHAT)
+            if messages:
+                content = messages[0].payload.get("content", "").lower()
+                # Resume keywords
+                if any(
+                    kw in content
+                    for kw in ["продовжуй", "далі", "go", "continue", "виконуй", "так", "yes"]
+                ):
+                    await self._log("▶️ Продовжую за вказівкою користувача.", "system")
+                    return True, None
+                # Change/Abort keywords
+                if any(
+                    kw in content for kw in ["зупини", "відміни", "stop", "abort", "cancel", "ні"]
+                ):
+                    await self._log("🛑 Виконання скасовано користувачем.", "system")
+                    return False, StepResult(
+                        step_id=step_id,
+                        success=False,
+                        error="aborted_by_user",
+                        result="User aborted execution during discussion.",
+                    )
+                # For any other message, Atlas can respond in chat mode if needed, but we keep the bubble
+                await self._log("🗨️ Обговорення триває... (Очікую 'далі' або 'відміна')", "system")
+
+            await asyncio.sleep(1)
+
+    async def _check_for_interruption(self) -> bool:
+        """Check if user has sent any message that should pause current execution."""
+        messages = await message_bus.receive("orchestrator", MessageType.CHAT)
+        if messages:
+            for m in messages:
+                # We check for sender directly if available, or payload sender
+                sender = getattr(m, "sender", None) or m.payload.get("sender")
+                if sender == "human":
+                    return True
+        return False
 
     async def _handle_strategy_vibe_heal(
         self, strategy: Any, step: dict, step_id: str, error: str, result: Any, depth: int
@@ -2374,6 +2473,17 @@ class Trinity(TourMixin, VoiceOrchestrationMixin):
         goal_pushed = await self._push_recursive_goal(parent_prefix, depth, steps)
 
         for i, step in enumerate(steps):
+            # NEW: Check for human interruption before starting each step
+            if await self._check_for_interruption():
+                await self._log(
+                    "⏸️ Виконання призупинено для обговорення.", "system", type="warning"
+                )
+                # Enter discussion bubble and return success/fail based on outcome
+                resumed, _ = await self._enter_discussion_bubble(
+                    f"discussion_{depth}", "User interrupt"
+                )
+                if not resumed:
+                    return False
             step_id = f"{parent_prefix}.{i + 1}" if parent_prefix else str(i + 1)
             step["id"] = step_id
 

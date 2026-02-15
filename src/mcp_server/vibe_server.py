@@ -916,7 +916,12 @@ async def _emit_vibe_log(ctx: Context | None, level: str, message: str) -> None:
         logger.debug(f"[VIBE] Failed to send log to client: {e}")
 
 
-async def _handle_vibe_line(line: str, stream_name: str, ctx: Context | None) -> None:
+async def _handle_vibe_line(
+    line: str,
+    stream_name: str,
+    ctx: Context | None,
+    process: asyncio.subprocess.Process | None = None,
+) -> None:
     """Process and log a single line of output from Vibe."""
     line = mask_sensitive_data(_clean_vibe_line(line))
     if not line:
@@ -928,6 +933,10 @@ async def _handle_vibe_line(line: str, stream_name: str, ctx: Context | None) ->
 
     # Fallback to standard streaming log
     await _format_and_emit_vibe_log(line, stream_name, ctx)
+
+    # NEW: Detect interactive prompts from Vibe (Iteration 4)
+    if "Approve? [Y/n]" in line or "Confirm [Y/n]" in line or "Execute? [Y/n]" in line:
+        await _auto_confirm_vibe_action(line, ctx, process)
 
 
 def _clean_vibe_line(line: str) -> str:
@@ -980,12 +989,41 @@ async def _format_and_emit_vibe_log(line: str, stream_name: str, ctx: Context | 
     await _emit_vibe_log(ctx, level, formatted)
 
 
+async def _auto_confirm_vibe_action(
+    line: str, ctx: Context | None, process: asyncio.subprocess.Process | None
+) -> None:
+    """Handle interactive tool confirmation with a countdown."""
+    if not process or not process.stdin:
+        return
+
+    config = get_vibe_config()
+    timeout = config.confirmation_timeout_s or 5.0
+
+    # Narrate the intent
+    msg = f"⚡ Vibe: Запит на дію. Виконаю через {int(timeout)}с, якщо не відміните."
+    await _emit_vibe_log(ctx, "warning", msg)
+    logger.info(f"[VIBE-INTERACTIVE] Confirmation requested: {line}. Timeout: {timeout}s")
+
+    try:
+        # We wait for the timeout
+        # During this time, the orchestrator might kill the whole Vibe process if the user types something
+        await asyncio.sleep(timeout)
+
+        if process.returncode is None:  # Still running
+            process.stdin.write(b"y\n")
+            await process.stdin.drain()
+            logger.info("[VIBE-INTERACTIVE] Auto-approved action sent to stdin.")
+    except Exception as e:
+        logger.error(f"[VIBE-INTERACTIVE] Error during auto-confirm: {e}")
+
+
 async def _read_vibe_stream(
     stream: asyncio.StreamReader,
     chunks: list[bytes],
     stream_name: str,
     timeout_s: float,
     ctx: Context | None,
+    process: asyncio.subprocess.Process | None = None,
 ) -> None:
     """Read stream in chunks to handle TUI artifacts and provide real-time logging."""
     try:
@@ -1002,7 +1040,7 @@ async def _read_vibe_stream(
             text = data.decode(errors="replace")
             for line in text.split("\n"):
                 if line.strip():
-                    await _handle_vibe_line(line, stream_name, ctx)
+                    await _handle_vibe_line(line, stream_name, ctx, process=process)
     except TimeoutError:
         logger.warning(f"[VIBE] Read timeout on {stream_name} after {timeout_s}s")
     except Exception as e:
@@ -1024,14 +1062,14 @@ async def _execute_vibe_with_retries(
     for attempt in range(MAX_RETRIES):
         logger.info(f"[VIBE] Starting attempt {attempt + 1}/{MAX_RETRIES}...")
         try:
-            # Execute subprocess with DEVNULL for stdin to avoid TUI hangs
+            # Execute subprocess with PIPE for stdin to support interactive confirmations
             process = await asyncio.create_subprocess_exec(
                 *argv,
                 cwd=cwd or get_vibe_workspace(),
                 env=process_env,
                 stdout=asyncio.subprocess.PIPE,
                 stderr=asyncio.subprocess.PIPE,
-                stdin=asyncio.subprocess.DEVNULL,
+                stdin=asyncio.subprocess.PIPE,
             )
 
             stdout_chunks: list[bytes] = []
@@ -1041,11 +1079,15 @@ async def _execute_vibe_with_retries(
                 streams_to_read = []
                 if process.stdout:
                     streams_to_read.append(
-                        _read_vibe_stream(process.stdout, stdout_chunks, "OUT", timeout_s, ctx)
+                        _read_vibe_stream(
+                            process.stdout, stdout_chunks, "OUT", timeout_s, ctx, process=process
+                        )
                     )
                 if process.stderr:
                     streams_to_read.append(
-                        _read_vibe_stream(process.stderr, stderr_chunks, "ERR", timeout_s, ctx)
+                        _read_vibe_stream(
+                            process.stderr, stderr_chunks, "ERR", timeout_s, ctx, process=process
+                        )
                     )
 
                 if streams_to_read:
