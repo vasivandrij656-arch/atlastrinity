@@ -204,6 +204,8 @@ class VibeWindsurfProxyHandler(http.server.BaseHTTPRequestHandler):
 
             # Make the API call with timeout
             start_time = time.time()
+            response = None
+            
             try:
                 # Use timeout to prevent hanging
                 import signal
@@ -229,10 +231,10 @@ class VibeWindsurfProxyHandler(http.server.BaseHTTPRequestHandler):
             elapsed = time.time() - start_time
 
             # Extract content
-            if 'response' in locals() and hasattr(response, "content"):
+            if response and hasattr(response, "content"):
                 content = str(response.content)
             else:
-                content = str(response) if 'response' in locals() else "Error: No response generated"
+                content = str(response) if response else "Error: No response generated"
 
             # Create OpenAI-compatible response
             openai_response = {
