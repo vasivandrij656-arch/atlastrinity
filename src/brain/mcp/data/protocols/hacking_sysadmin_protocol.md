@@ -22,6 +22,7 @@
    - При роботі з MikroTik використовуй SSH-ключі. Якщо ключ не вказано, шукай його в `~/.ssh/` або в конфігах проекту.
    - Якщо MikroTik використовується для моніторингу, пам'ятай про TZSP-стрімінг пакетів на IP-адресу Kali Linux для аналізу через Wireshark/Tcpdump.
    - Перевіряй модель MikroTik (`/system resource print`) для розуміння апаратних обмежень (Wi-Fi sniffing, pcap export).
+   - **REFERENCE**: See `mikrotik_network_protocol.md` for complete connection details and logging configuration.
 
 4. **KALI LINUX & VIRTUALBOX**:
    - Враховуй, що Kali у VirtualBox зазвичай працює через NAT або Bridged адаптер. Це обмежує прямий доступ до Wi-Fi заліза хоста.

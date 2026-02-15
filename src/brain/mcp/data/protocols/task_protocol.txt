@@ -14,6 +14,7 @@ When the user requests regular TASKS (system control, research, file management,
 9. VERIFICATION FIRST: Always verify system state before and after actions using monitoring tools.
 10. AUTONOMOUS RECOVERY: Use `system.restart_mcp_server` or `restart_application` if blockers arise.
 11. LANGUAGE PROTOCOL: Internal reasoning is English. Communications are 100% UKRAINIAN.
+12. NETWORK OPERATIONS: For network-dependent tasks, auto-import `mikrotik_network_protocol.md` for router access and logging.
 
 SYSTEM MONITORING INTEGRATION
 =============================

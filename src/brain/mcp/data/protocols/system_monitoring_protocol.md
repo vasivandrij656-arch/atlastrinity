@@ -256,6 +256,22 @@ future_capabilities:
   - Predictive system state analysis
   - Cross-platform monitoring support
   - Integration with system logs
+  - Network monitoring via MikroTik integration
+```
+
+### Network Integration
+```yaml
+mikrotik_integration:
+  protocol: "mikrotik_network_protocol.md"
+  capabilities:
+    - Router status monitoring
+    - Network traffic analysis
+    - Firewall rule verification
+    - DHCP lease tracking
+  auto_import_triggers:
+    - network_task_required
+    - router_monitoring_needed
+    - firewall_analysis_request
 ```
 
 ---
