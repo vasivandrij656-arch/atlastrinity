@@ -162,37 +162,6 @@ class Trinity(TourMixin, VoiceOrchestrationMixin):
         # Check for pending restart state
         await self._resume_after_restart()
 
-    async def recall_memories(self, query: str) -> str:
-        """Search Golden Fund for relevant context."""
-        try:
-            from src.brain.mcp.mcp_manager import mcp_manager
-            
-            # Use the mcp_manager to call the tool directly
-            # This avoids needing a separate client initialization
-            if not mcp_manager:
-                return ""
-                
-            # Search in hybrid mode for best results
-            results = await mcp_manager.call_tool(
-                "golden_fund", 
-                "search_golden_fund", 
-                {"query": query, "mode": "hybrid"}
-            )
-            
-            # Results from MCP can be a string or an object with content
-            res_str = str(results)
-            # Only treat as error if it explicitly starts with Error prefix
-            is_explicit_error = res_str.startswith("Error (")
-            
-            if results and not is_explicit_error:
-                logger.info(f"[ORCHESTRATOR] Recalled memories for '{query}'")
-                return f"\n[RECALLED CONTEXT from Golden Fund]:\n{results}\n"
-            return ""
-            
-        except Exception as e:
-            logger.warning(f"[ORCHESTRATOR] Memory recall failed: {e}")
-            return ""
-
         # If resumption is pending, trigger the run() in background after a short delay
         if getattr(self, "_resumption_pending", False):
 
@@ -226,6 +195,35 @@ class Trinity(TourMixin, VoiceOrchestrationMixin):
         await self._log_visibility_report()
 
         logger.info(f"[GRISHA] Auditor ready. Vision: {self.grisha.llm.model_name}")
+
+    async def recall_memories(self, query: str) -> str:
+        """Search Golden Fund for relevant context."""
+        try:
+            from src.brain.mcp.mcp_manager import mcp_manager
+
+            # Use the mcp_manager to call the tool directly
+            # This avoids needing a separate client initialization
+            if not mcp_manager:
+                return ""
+
+            # Search in hybrid mode for best results
+            results = await mcp_manager.call_tool(
+                "golden_fund", "search_golden_fund", {"query": query, "mode": "hybrid"}
+            )
+
+            # Results from MCP can be a string or an object with content
+            res_str = str(results)
+            # Only treat as error if it explicitly starts with Error prefix
+            is_explicit_error = res_str.startswith("Error (")
+
+            if results and not is_explicit_error:
+                logger.info(f"[ORCHESTRATOR] Recalled memories for '{query}'")
+                return f"\n[RECALLED CONTEXT from Golden Fund]:\n{results}\n"
+            return ""
+
+        except Exception as e:
+            logger.warning(f"[ORCHESTRATOR] Memory recall failed: {e}")
+            return ""
 
     async def warmup(self, async_warmup: bool = True):
         """Warm up memory, voice types, and engine models."""
@@ -1278,13 +1276,15 @@ class Trinity(TourMixin, VoiceOrchestrationMixin):
 
             # [MEMORY RECALL] Enrich analysis with Golden Fund context
             if intent not in ["chat", "deep_chat"]:
-                 recalled_context = await self.recall_memories(user_request)
-                 if recalled_context:
-                     analysis["memory_context"] = recalled_context
-                     # Also append to history for the planner to see clearly
-                     if not history:
-                         history = []
-                     history.append(SystemMessage(content=f"System Memory Context:\n{recalled_context}"))
+                recalled_context = await self.recall_memories(user_request)
+                if recalled_context:
+                    analysis["memory_context"] = recalled_context
+                    # Also append to history for the planner to see clearly
+                    if not history:
+                        history = []
+                    history.append(
+                        SystemMessage(content=f"System Memory Context:\n{recalled_context}")
+                    )
 
             shared_context.available_mcp_catalog = await mcp_manager.get_mcp_catalog()
             await self._speak("atlas", analysis.get("voice_response") or "Аналізую запит...")
