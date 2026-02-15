@@ -1434,7 +1434,7 @@ async def vibe_prompt(
         )
         output_format = "streaming"
 
-    final_prompt, prompt_file_to_clean = handle_long_prompt(prompt, eff_cwd)
+    final_prompt, _prompt_file_to_clean = handle_long_prompt(prompt, eff_cwd)
 
     # Automatic Session Persistence (if not provided)
     eff_session_id = session_id or _generate_task_session_id(prompt)
@@ -1502,7 +1502,7 @@ async def vibe_prompt(
         return result
 
     finally:
-        # NOTE: Do NOT cleanup prompt_file_to_clean here.
+        # NOTE: Do NOT cleanup _prompt_file_to_clean here.
         # The Vibe subprocess (which runs in an isolated VIBE_HOME) may still
         # be reading or referencing this file. Premature deletion causes
         # "file not present in workspace" errors and silent task failures.
