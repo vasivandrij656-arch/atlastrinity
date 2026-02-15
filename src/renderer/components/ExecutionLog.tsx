@@ -83,8 +83,10 @@ const ExecutionLog: React.FC<ExecutionLogProps> = ({ logs }) => {
       const timer = setTimeout(() => {
         const container = scrollContainerRef.current;
         if (container) {
-          // Use scrollTop directly for more reliable scrolling in Electron
-          container.scrollTop = container.scrollHeight;
+          container.scrollTo({
+            top: container.scrollHeight,
+            behavior: 'smooth',
+          });
         }
       }, 50);
       return () => clearTimeout(timer);

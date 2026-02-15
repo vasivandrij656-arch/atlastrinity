@@ -10,6 +10,11 @@ import type {
 
 const API_BASE = 'http://127.0.0.1:8000';
 
+// Regex to capture timestamp, level, and message
+// 2026-02-15 05:12:47,872 - brain - INFO - Message
+const LOG_LINE_REGEX = /^(\d{4}-\d{2}-\d{2}\s\d{2}:\d{2}:\d{2}),\d+\s-\s(\w+)\s-\s(\w+)\s-\s(.+)$/;
+const AGENT_PREFIX_REGEX = /^\[.*?\]\s*/;
+
 export const useBrainApi = () => {
   const [systemState, setSystemState] = useState<SystemState>('IDLE');
   const [activeAgent, setActiveAgent] = useState<AgentName>('ATLAS');
@@ -132,15 +137,21 @@ export const useBrainApi = () => {
 
   // Parse raw log line into LogEntry
   const parseLogLine = useCallback((line: string): LogEntry | null => {
-    // Expected format: YYYY-MM-DD HH:MM:SS,mmm - logger - LEVEL - MESSAGE
-    // Regex to capture timestamp, level, and message
-    // 2026-02-15 05:12:47,872 - brain - INFO - Message
-    const regex = /^(\d{4}-\d{2}-\d{2}\s\d{2}:\d{2}:\d{2}),\d+\s-\s(\w+)\s-\s(\w+)\s-\s(.+)$/;
-    const match = line.match(regex);
+    const match = line.match(LOG_LINE_REGEX);
 
     if (!match) return null;
 
     const [, timestampStr, agentRaw, levelRaw, message] = match;
+
+    // Filter out noisy/repetitive logs
+    if (
+      message.includes('STT model loaded successfully') ||
+      message.includes('Health check') ||
+      message.includes('Connected to') ||
+      message.includes('GET /api/state')
+    ) {
+      return null;
+    }
 
     // Map Level to Type
     let type: LogEntry['type'] = 'info';
@@ -162,54 +173,77 @@ export const useBrainApi = () => {
     if (message.startsWith('[GRISHA]')) agent = 'GRISHA';
 
     return {
-      id: `file-${timestampStr}-${message.substring(0, 10)}`, // Simple ID
+      // Robust ID: Timestamp + Hash of message + Random suffix to ensure uniqueness
+      id: `file-${timestampStr}-${Math.abs(
+        message.split('').reduce((a, b) => {
+          a = (a << 5) - a + b.charCodeAt(0);
+          return a & a;
+        }, 0),
+      )}-${Math.random().toString(36).substr(2, 5)}`,
       timestamp: new Date(timestampStr),
       agent,
-      message: message.replace(/^\[.*?\]\s*/, ''), // Remove prefix if present
+      message: message.replace(AGENT_PREFIX_REGEX, ''), // Remove prefix if present
+
       type,
     };
   }, []);
 
-  // Poll logs from Electron (Direct File Read)
+  // Real-time Log Streaming via Electron IPC
   useEffect(() => {
     if (!window.electron) return;
 
-    const fetchFileLogs = async () => {
-      try {
-        const rawLines = await window.electron.readBrainLog();
-        const parsedLogs = rawLines.map(parseLogLine).filter((l): l is LogEntry => l !== null);
+    // 1. Load initial history
+    void window.electron.readBrainLog().then((rawLines) => {
+      const historicLogs = rawLines.map(parseLogLine).filter((l): l is LogEntry => l !== null);
 
-        if (parsedLogs.length > 0) {
-          setLogs((current) => {
-            // Merge strategy:
-            // Create a map of existing logs by ID or unique content
-            // Prefer file logs as source of truth for history
-            // Ensure we don't duplicate
-            const knownIds = new Set(current.map((l) => l.id));
-            const newEntries = parsedLogs.filter((l) => !knownIds.has(l.id));
-
-            // If we have new entries from file, append them
-            // Also, if current is empty (fresh load), just use file logs
-            if (current.length === 0) return parsedLogs.slice(-100);
-
-            // Combine and sort
-            const combined = [...current, ...newEntries];
-            combined.sort((a, b) => a.timestamp.getTime() - b.timestamp.getTime());
-
-            return combined.slice(-200); // Keep last 200
-          });
-        }
-      } catch (e) {
-        console.error('Failed to read electron logs', e);
+      if (historicLogs.length > 0) {
+        // Simple deduplication for initial load
+        const uniqueLogs = Array.from(
+          new Map(historicLogs.map((item) => [item.id, item])).values(),
+        );
+        setLogs(uniqueLogs.slice(-200));
       }
+    });
+
+    // 2. Subscribe to real-time updates
+    const unsubscribe = window.electron.onLogUpdate((lines) => {
+      const newLogs = lines.map(parseLogLine).filter((l): l is LogEntry => l !== null);
+
+      if (newLogs.length > 0) {
+        setLogs((current) => {
+          const lastLog = current[current.length - 1];
+          const filteredNewLogs = newLogs.filter((newLog) => {
+            // Deduplicate consecutive identical messages from same agent
+            if (
+              lastLog &&
+              lastLog.message === newLog.message &&
+              lastLog.agent === newLog.agent &&
+              newLog.timestamp.getTime() - lastLog.timestamp.getTime() < 1000
+            ) {
+              return false;
+            }
+            return true;
+          });
+
+          if (filteredNewLogs.length === 0) return current;
+
+          const combined = [...current, ...filteredNewLogs];
+          // Keep buffer reasonable size (e.g. 500) to prevent memory issues
+          if (combined.length > 500) {
+            return combined.slice(combined.length - 500);
+          }
+          return combined;
+        });
+      }
+    });
+
+    // 3. Start watching
+    window.electron.startLogStream();
+
+    return () => {
+      unsubscribe();
+      window.electron.stopLogStream();
     };
-
-    const interval = setInterval(() => {
-      void fetchFileLogs();
-    }, 2000); // Poll every 2s
-    void fetchFileLogs(); // Initial fetch
-
-    return () => clearInterval(interval);
   }, [parseLogLine]);
 
   const handleCommand = useCallback(

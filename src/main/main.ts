@@ -446,15 +446,14 @@ ipcMain.handle('request-accessibility', async () => {
   return systemPreferences.isTrustedAccessibilityClient(true);
 });
 
-// Log Reading Handler
 ipcMain.handle('read-brain-log', async () => {
   try {
     if (!fs.existsSync(LOG_PATH)) return [];
 
-    // Read last 100KB
+    // Read last 50KB for initial load
     const stats = await fs.promises.stat(LOG_PATH);
     const size = stats.size;
-    const bufferSize = Math.min(100 * 1024, size);
+    const bufferSize = Math.min(50 * 1024, size);
     const buffer = Buffer.alloc(bufferSize);
 
     const handle = await fs.promises.open(LOG_PATH, 'r');
@@ -462,11 +461,75 @@ ipcMain.handle('read-brain-log', async () => {
     await handle.close();
 
     const content = buffer.toString('utf-8');
-    // Split by lines, filtering empty
     return content.split('\n').filter(Boolean);
   } catch (error) {
     console.error('Failed to read log:', error);
     return [];
+  }
+});
+
+// Log Streaming (Push Model)
+let logWatcher: fs.FSWatcher | null = null;
+let lastLogSize = 0;
+
+ipcMain.on('start-log-stream', (_event) => {
+  if (logWatcher) return; // Already watching
+
+  void (async () => {
+    try {
+      if (!fs.existsSync(LOG_PATH)) return;
+
+      const stats = await fs.promises.stat(LOG_PATH);
+      lastLogSize = stats.size;
+
+      console.log('[ELECTRON] Starting log stream watcher...');
+
+      // Use fs.watch for real-time updates
+      logWatcher = fs.watch(LOG_PATH, (eventType) => {
+        void (async () => {
+          if (eventType === 'change') {
+            try {
+              const newStats = await fs.promises.stat(LOG_PATH);
+              const newSize = newStats.size;
+
+              if (newSize > lastLogSize) {
+                // Read only the new part
+                const bufferSize = newSize - lastLogSize;
+                const buffer = Buffer.alloc(bufferSize);
+
+                const handle = await fs.promises.open(LOG_PATH, 'r');
+                await handle.read(buffer, 0, bufferSize, lastLogSize);
+                await handle.close();
+
+                const newContent = buffer.toString('utf-8');
+                const lines = newContent.split('\n').filter(Boolean);
+
+                if (lines.length > 0 && mainWindow) {
+                  mainWindow.webContents.send('log-update', lines);
+                }
+
+                lastLogSize = newSize;
+              } else if (newSize < lastLogSize) {
+                // File truncated / rotated
+                lastLogSize = newSize;
+              }
+            } catch (err) {
+              console.error('[ELECTRON] Error reading log update:', err);
+            }
+          }
+        })();
+      });
+    } catch (error) {
+      console.error('[ELECTRON] Failed to start log stream:', error);
+    }
+  })();
+});
+
+ipcMain.on('stop-log-stream', () => {
+  if (logWatcher) {
+    logWatcher.close();
+    logWatcher = null;
+    console.log('[ELECTRON] Log stream stopped.');
   }
 });
 
