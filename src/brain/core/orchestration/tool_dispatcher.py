@@ -1111,6 +1111,8 @@ class ToolDispatcher:
             "golden-fund": self._handle_golden_fund,
             "golden_fund": self._handle_golden_fund,
             "tour-guide": self._handle_tour,
+            "googlemaps": self._handle_xcodebuild_unified,
+            "google-maps": self._handle_xcodebuild_unified,
         }
         if explicit_server and explicit_server in handlers:
             return handlers[explicit_server](tool_name, args)
@@ -1124,9 +1126,13 @@ class ToolDispatcher:
         if (
             tool_name.startswith(("xcodebuild", "macos_use_", "notes_", "note_"))
             or tool_name in self.MACOS_MAP
-            or explicit_server in ("notes", "macos-use")
+            or explicit_server in ("notes", "macos-use", "googlemaps", "google-maps")
         ):
             return self._handle_macos_use(tool_name, args)
+
+        # Google Maps & Navigation
+        if tool_name.startswith("maps_") or explicit_server in ("googlemaps", "google-maps"):
+            return "xcodebuild", tool_name, args
 
         # Basic Synonyms
         if tool_name in self.TERMINAL_SYNONYMS:

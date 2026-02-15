@@ -57,7 +57,7 @@
       "transport": "stdio",
       "command": "${PROJECT_ROOT}/vendor/mcp-server-googlemaps/.build/release/mcp-server-googlemaps",
       "connect_timeout": 60,
-      "description": "DEPRECATED: Now bridged through xcodebuild. Google Maps (11 tools).",
+      "description": "DEPRECATED: Now bridged through xcodebuild. DO NOT USE DIRECTLY. Google Maps (11 tools).",
       "env": {
         "GOOGLE_MAPS_API_KEY": "${GOOGLE_MAPS_API_KEY}"
       },

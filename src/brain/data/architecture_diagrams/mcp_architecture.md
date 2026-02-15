@@ -1,4 +1,8 @@
 
+<!-- AUTO-UPDATED: 2026-02-15T13:53:09.858570 -->
+<!-- Modified: .agent/docs/mcp_architecture_diagram.md, config/mcp_servers.json.template, scripts/test_dispatcher_routing.py -->
+
+
 <!-- AUTO-UPDATED: 2026-02-15T13:51:26.038781 -->
 <!-- Modified: .agent/docs/mcp_architecture_diagram.md, .secrets.baseline, src/brain/data/architecture_diagrams/mcp_architecture.md -->
 

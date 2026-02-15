@@ -480,7 +480,7 @@
     "name": "googlemaps",
     "tier": 2,
     "category": "location",
-    "description": "DEPRECATED: Now bridged through xcodebuild. All 11 Google Maps tools accessible via xcodebuild server.",
+    "description": "DEPRECATED: Now bridged through xcodebuild. DO NOT USE DIRECTLY. All 11 Google Maps tools accessible via xcodebuild server.",
     "status": "bridged",
     "bridged_through": "xcodebuild",
     "capabilities": [],
