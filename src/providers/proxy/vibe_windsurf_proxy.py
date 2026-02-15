@@ -213,7 +213,7 @@ class VibeWindsurfProxyHandler(http.server.BaseHTTPRequestHandler):
                     try:
                         response = future.result(timeout=30)  # 30 second timeout
                     except concurrent.futures.TimeoutError:
-                        error(f"Windsurf API timeout after 30 seconds")
+                        error("Windsurf API timeout after 30 seconds")
                         self.send_error_response("Windsurf API timeout after 30 seconds", 504)
                         return
             except Exception as e:

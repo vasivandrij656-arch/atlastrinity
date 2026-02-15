@@ -1,4 +1,8 @@
 
+<!-- AUTO-UPDATED: 2026-02-15T05:01:53.446106 -->
+<!-- Modified: .agent/docs/mcp_architecture_diagram.md, config/config.yaml.template, src/brain/data/architecture_diagrams/mcp_architecture.md -->
+
+
 <!-- AUTO-UPDATED: 2026-02-15T05:00:57.528233 -->
 <!-- Modified: .agent/docs/mcp_architecture_diagram.md, src/brain/data/architecture_diagrams/mcp_architecture.md, src/maintenance/clean_start.py -->
 
