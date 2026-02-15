@@ -1,4 +1,8 @@
 
+<!-- AUTO-UPDATED: 2026-02-15T04:44:40.960968 -->
+<!-- Modified: .agent/docs/mcp_architecture_diagram.md, src/brain/data/architecture_diagrams/mcp_architecture.md, src/providers/proxy/vibe_windsurf_proxy.py -->
+
+
 <!-- AUTO-UPDATED: 2026-02-15T04:44:01.381998 -->
 <!-- Modified: .agent/docs/mcp_architecture_diagram.md, .secrets.baseline, config/config.yaml.template -->
 

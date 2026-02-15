@@ -225,14 +225,14 @@ class VibeWindsurfProxyHandler(http.server.BaseHTTPRequestHandler):
                 return
             except Exception as e:
                 error(f"Windsurf API error: {e}")
-                self.send_error_response(f"Windsurf API error: {str(e)}", 502)
+                self.send_error_response(f"Windsurf API error: {e!s}", 502)
             elapsed = time.time() - start_time
 
             # Extract content
-            if hasattr(response, "content"):
+            if 'response' in locals() and hasattr(response, "content"):
                 content = str(response.content)
             else:
-                content = str(response)
+                content = str(response) if 'response' in locals() else "Error: No response generated"
 
             # Create OpenAI-compatible response
             openai_response = {
