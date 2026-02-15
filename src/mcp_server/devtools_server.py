@@ -13,7 +13,14 @@ from mcp.server import FastMCP
 
 from .context_check import run_test_suite
 from .diagram_generator import generate_architecture_diagram
-from .git_manager import ensure_git_repository, get_git_changes, setup_github_remote
+from .git_manager import (
+    download_github_job_logs,
+    ensure_git_repository,
+    fetch_github_workflow_jobs,
+    fetch_github_workflow_runs,
+    get_git_changes,
+    setup_github_remote,
+)
 from .project_analyzer import analyze_project_structure, detect_changed_components
 from .trace_analyzer import analyze_log_file
 
@@ -1667,3 +1674,34 @@ def devtools_test_all_mcp_native() -> dict[str, Any]:
 
 if __name__ == "__main__":
     server.run()
+
+
+@server.tool()
+def devtools_list_github_workflows(limit: int = 5) -> dict[str, Any]:
+    """List recent GitHub Action workflow runs for the current project.
+
+    Args:
+        limit: Number of runs to return (default: 5)
+    """
+    return fetch_github_workflow_runs(PROJECT_ROOT, limit=limit)
+
+
+@server.tool()
+def devtools_get_github_job_logs(
+    run_id: str | None = None, job_id: str | None = None
+) -> dict[str, Any]:
+    """Get logs for a specific GitHub Action job.
+
+    If run_id is provided, it first lists jobs in that run.
+    If job_id is provided, it downloads the logs for that job.
+
+    Args:
+        run_id: Workflow run ID (optional, to list jobs)
+        job_id: Job ID (optional, to download logs)
+    """
+    if job_id:
+        return download_github_job_logs(PROJECT_ROOT, job_id)
+    if run_id:
+        return fetch_github_workflow_jobs(PROJECT_ROOT, run_id)
+
+    return {"error": "Must provide either run_id or job_id"}

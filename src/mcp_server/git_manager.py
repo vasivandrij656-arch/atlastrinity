@@ -9,6 +9,8 @@ import subprocess
 from pathlib import Path
 from typing import Any
 
+import requests
+
 
 def ensure_git_repository(project_path: Path) -> dict[str, Any]:
     """Ensure project has git initialized.
@@ -313,3 +315,113 @@ def get_git_changes(project_path: Path, commits_back: int = 1) -> dict[str, Any]
 
     except Exception as e:
         return {"error": str(e), "success": False}
+
+
+def fetch_github_workflow_runs(project_path: Path, limit: int = 5) -> dict[str, Any]:
+    """Fetch recent GitHub Action workflow runs.
+
+    Args:
+        project_path: Path to project to find repo/token
+        limit: Number of runs to return
+
+    Returns:
+        Dict with runs list or error
+    """
+    token = _get_github_token_from_env(project_path)
+    if not token:
+        return {"error": "GITHUB_TOKEN not found"}
+
+    remote = _get_existing_remote(project_path) or ""
+    repo = _extract_repo_name(remote)
+    if not repo:
+        return {"error": "Could not determine repository name from git remote"}
+
+    url = f"https://api.github.com/repos/{repo}/actions/runs"
+    headers = {
+        "Authorization": f"Bearer {token}",
+        "Accept": "application/vnd.github.v3+json",
+    }
+    params = {"per_page": limit}
+
+    try:
+        resp = requests.get(url, headers=headers, params=params, timeout=10)
+        if resp.status_code != 200:
+            return {"error": f"GitHub API error {resp.status_code}: {resp.text}"}
+
+        data = resp.json()
+        return {"success": True, "runs": data.get("workflow_runs", []), "repo": repo}
+    except Exception as e:
+        return {"error": str(e)}
+
+
+def fetch_github_workflow_jobs(project_path: Path, run_id: str) -> dict[str, Any]:
+    """Fetch jobs for a specific workflow run.
+
+    Args:
+        project_path: Path to project
+        run_id: Workflow run ID
+
+    Returns:
+        Dict with jobs list
+    """
+    token = _get_github_token_from_env(project_path)
+    if not token:
+        return {"error": "GITHUB_TOKEN not found"}
+
+    remote = _get_existing_remote(project_path) or ""
+    repo = _extract_repo_name(remote)
+    if not repo:
+        return {"error": "Could not determine repository name"}
+
+    url = f"https://api.github.com/repos/{repo}/actions/runs/{run_id}/jobs"
+    headers = {
+        "Authorization": f"Bearer {token}",
+        "Accept": "application/vnd.github.v3+json",
+    }
+
+    try:
+        resp = requests.get(url, headers=headers, timeout=10)
+        if resp.status_code != 200:
+            return {"error": f"GitHub API error {resp.status_code}: {resp.text}"}
+
+        data = resp.json()
+        return {"success": True, "jobs": data.get("jobs", []), "repo": repo}
+    except Exception as e:
+        return {"error": str(e)}
+
+
+def download_github_job_logs(project_path: Path, job_id: str) -> dict[str, Any]:
+    """Download raw logs for a specific job.
+
+    Args:
+        project_path: Path to project
+        job_id: Job ID
+
+    Returns:
+        Dict with log content
+    """
+    token = _get_github_token_from_env(project_path)
+    if not token:
+        return {"error": "GITHUB_TOKEN not found"}
+
+    remote = _get_existing_remote(project_path) or ""
+    repo = _extract_repo_name(remote)
+    if not repo:
+        return {"error": "Could not determine repository name"}
+
+    url = f"https://api.github.com/repos/{repo}/actions/jobs/{job_id}/logs"
+    headers = {
+        "Authorization": f"Bearer {token}",
+        "Accept": "application/vnd.github.v3+json",
+    }
+
+    try:
+        # Follow redirects automatically (requests does this by default)
+        resp = requests.get(url, headers=headers, timeout=30, allow_redirects=True)
+        if resp.status_code != 200:
+            return {"error": f"GitHub API error {resp.status_code}: {resp.text}"}
+
+        # The content IS the log
+        return {"success": True, "logs": resp.text, "repo": repo, "job_id": job_id}
+    except Exception as e:
+        return {"error": str(e)}
