@@ -52,7 +52,8 @@ let LS_HEARTBEAT = "/exa.language_server_pb.LanguageServerService/Heartbeat"
 let LS_START_CASCADE = "/exa.language_server_pb.LanguageServerService/StartCascade"
 let LS_STREAM_CASCADE = "/exa.language_server_pb.LanguageServerService/StreamCascadeReactiveUpdates"
 let LS_QUEUE_CASCADE = "/exa.language_server_pb.LanguageServerService/QueueCascadeMessage"
-let LS_INTERRUPT_CASCADE =
+let LS_INTERRUPT_CASCADE = "/exa.language_server_pb.LanguageServerService/InterruptCascade"
+let LS_INTERRUPT_WITH_MESSAGE =
     "/exa.language_server_pb.LanguageServerService/InterruptWithQueuedMessage"
 
 /// Configuration constants
@@ -317,9 +318,7 @@ func protoFindStrings(_ data: Data, minLen: Int = 4) -> [String] {
             let payload = data.subdata(in: offset..<offset + length)
             offset += length
 
-            if let text = String(data: payload, encoding: .utf8), text.count >= minLen,
-                text.allSatisfy({ $0.isASCII })
-            {
+            if let text = String(data: payload, encoding: .utf8), text.count >= minLen {
                 results.append(text)
             }
             // Recurse
@@ -1091,6 +1090,9 @@ func handleCascade(message: String, model: String?) async -> String {
         let startResp = try await sendProto(LS_START_CASCADE, startPayload)
 
         guard let cascadeId = protoExtractString(startResp, 1), !cascadeId.isEmpty else {
+            fputs(
+                "log: [windsurf] Failed to start Cascade. Raw Resp (\(startResp.count) bytes): \(startResp.map { String(format: "%02x", $0) }.joined())\n",
+                stderr)
             return "❌ Failed to start Cascade (No ID returned)"
         }
         fputs("log: [windsurf] Cascade started: \(cascadeId)\n", stderr)
@@ -1142,27 +1144,68 @@ func handleCascade(message: String, model: String?) async -> String {
         try await Task.sleep(nanoseconds: 300_000_000)
 
         // Step 3: QueueCascadeMessage
-        // Items (Field 3) -> Intent (Field 1) -> Generic (Field 1) -> Text (Field 1)
+        // Items is a repeated field of TextOrScopeItem (Field 3)
+        // TextOrScopeItem: oneof chunk { f1: text, f2: scope }
         var itemsProto = Data()
-        let intentP = protoMsg(1, protoMsg(1, protoStr(1, message)))
-        itemsProto.append(protoMsg(3, intentP))
 
-        let plannerProto = protoStr(34, modelUid) + protoStr(35, modelUid)
+        // 1. User Message Item
+        var textItem = Data()
+        textItem.append(protoStr(1, message))  // Text
+        // Optional: intent (Field 2) inside text item?
+        // Or is it field 2 of TextOrScopeItem?
+        // Let's keep it consistent with the existing working pattern but add Scope.
+        let intentInner = protoStr(1, message)
+        let intentProto = protoMsg(1, intentInner)
+        textItem.append(protoMsg(2, intentProto))  // intent
+        textItem.append(protoInt(4, 1))  // submitted
+        textItem.append(protoStr(15, UUID().uuidString))
+
+        itemsProto.append(protoMsg(3, textItem))
+
+        // 2. Scope Item (to provide workspace context)
+        // Scope message: f1: path, f2: uri, f3: repoName, f4: repoUrl
+        let currentPath = "/Users/dev/Documents/GitHub/atlastrinity"
+        let currentUri = "file://" + currentPath
+
+        var scopeMsg = Data()
+        scopeMsg.append(protoStr(1, currentPath))
+        scopeMsg.append(protoStr(2, currentUri))
+        scopeMsg.append(protoStr(3, "solagurma/atlastrinity"))
+        // repo_url might be used for git context
+        scopeMsg.append(protoStr(4, "https://github.com/solagurma/atlastrinity.git"))
+
+        var scopeItem = Data()
+        scopeItem.append(protoMsg(2, scopeMsg))  // TextOrScopeItem.scope
+
+        itemsProto.append(protoMsg(3, scopeItem))
+
+        // Step 4: Cascade Config (Field 5)
+        // PlannerConfig (Field 1): f34: plan_model, f35: requested_model
+        // Adding potential ability/action triggers (Field numbers are experimental)
+        var plannerProto = Data()
+        plannerProto.append(protoStr(34, modelUid))
+        plannerProto.append(protoStr(35, modelUid))
+
+        // High-entropy guess: Field 11 or 12 might enable tool use/abilities
+        plannerProto.append(protoInt(11, 1))
+        plannerProto.append(protoInt(12, 1))
+
         let configProto = protoMsg(5, protoMsg(1, plannerProto))
 
-        let queuePayload = protoMsg(1, meta) + protoStr(2, cascadeId) + itemsProto + configProto
-        fputs("log: [windsurf] Queuing message with refined intent nesting...\n", stderr)
-        let _ = try await sendProto(LS_QUEUE_CASCADE, queuePayload)
+        let queuePayload =
+            protoMsg(1, meta) + protoStr(2, cascadeId) + itemsProto + configProto
+            + protoInt(11, 1)  // Request submitted: true
 
-        // Step 4: Interrupt
-        let interruptPayload = protoMsg(1, meta) + protoStr(2, cascadeId)
-        let _ = try await sendProto(LS_INTERRUPT_CASCADE, interruptPayload)
+        fputs(
+            "log: [windsurf] Sending InterruptWithQueuedMessage (consolidated trigger)...\n", stderr
+        )
+        let _ = try await sendProto(LS_INTERRUPT_WITH_MESSAGE, queuePayload)
 
         // Step 5: Wait for response stability
         var lastCount = 0
         var stableTicks = 0
-        // Wait up to 120s max
-        for _ in 0..<120 {
+        // Wait up to 180s max
+        for _ in 0..<180 {
             try await Task.sleep(nanoseconds: 1_000_000_000)
             let currentCount = await accumulator.totalCount()
             if currentCount > 0 && currentCount == lastCount {
@@ -1177,6 +1220,7 @@ func handleCascade(message: String, model: String?) async -> String {
 
         streamTask.cancel()
         let streamData = await accumulator.getData()
+        fputs("log: [windsurf] Stream stable at \(streamData.count) bytes\n", stderr)
 
         // Parse gRPC Envelopes first
         var strings: [String] = []
@@ -1192,15 +1236,21 @@ func handleCascade(message: String, model: String?) async -> String {
             }
 
             let payload = streamData.subdata(in: offset + 5..<offset + 5 + len)
-            strings.append(contentsOf: protoFindStrings(payload, minLen: 5))
+            let foundStrings = protoFindStrings(payload, minLen: 5)
+            for s in foundStrings {
+                fputs(
+                    "log: [windsurf] Stream string (\(s.count) chars): \(s.prefix(100).replacingOccurrences(of: "\n", with: " "))\n",
+                    stderr)
+            }
+            strings.append(contentsOf: foundStrings)
 
             offset += 5 + len
         }
 
         // Filter heuristic: remove system prompts and metadata
         let filtered = strings.filter {
-            !$0.contains(cascadeId) && !$0.contains(modelUid) && !$0.contains(message)
-                && !$0.contains(apiKey) && !$0.contains("windsurf") && !$0.contains("swe-1.5")
+            !$0.contains(cascadeId) && !$0.contains(modelUid)  // && !$0.contains(message)
+                && !$0.contains(apiKey) && !$0.contains("windsurf")  // && !$0.contains("swe-1.5")
                 && !$0.contains("CRITICAL:") && !$0.contains("IMPORTANT:")
                 && !$0.contains("JSON FORMAT") && !$0.contains("WARNING:")
                 && !$0.contains("jsonrpc") && !$0.contains("markdown_formatting")

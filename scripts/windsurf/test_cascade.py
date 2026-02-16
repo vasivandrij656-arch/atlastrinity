@@ -72,12 +72,12 @@ def main():
     rpc_request(process, "notifications/initialized", {}, None)
 
     # Call windsurf_cascade
-    print("\n🌊 Calling windsurf_cascade (windsurf-fast)...")
+    print("\n🌊 Calling windsurf_cascade (llama-3-70b)...")
     chat_params = {
         "name": "windsurf_cascade",
         "arguments": {
-            "message": "Create a simple Python calculator named simple_calc.py that has add, subtract, multiply, and divide functions.",
-            "model": "windsurf-fast",
+            "message": "Create a simple_calc.py file with a basic addition function.",
+            "model": "swe-1.5",
         },
     }
     rpc_request(process, "tools/call", chat_params, 2)

@@ -1,4 +1,8 @@
 
+<!-- AUTO-UPDATED: 2026-02-16T08:28:43.970328 -->
+<!-- Modified: .agent/docs/mcp_architecture_diagram.md, scripts/windsurf/test_cascade.py, src/brain/data/architecture_diagrams/mcp_architecture.md -->
+
+
 <!-- AUTO-UPDATED: 2026-02-16T07:08:26.360624 -->
 <!-- Modified: .agent/docs/mcp_architecture_diagram.md, .secrets.baseline, scripts/windsurf/test_cascade.py -->
 

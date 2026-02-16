@@ -37,13 +37,19 @@ This report documents the testing, analysis, and evaluation of the newly integra
 - **Execution vs Connectivity**:
   - **Connectivity**: ✅ **SUCCESS**. The bridge successfully connects to the LS and routes requests.
   - **Stability**: ✅ **FIXED**. Resolved a critical pipe deadlock in the Swift implementation that caused the server to hang or crash on startup.
-  - **Execution (AI Response)**: 🟢 **VERIFIED**. The server now correctly handles requests, validates environment variables (e.g., `WINDSURF_API_KEY`), and bridges responses from the local Language Server.
+  - **Execution (AI Response)**: 🟢 **VERIFIED**. The server correctly handles requests, validates environment variables (e.g., `WINDSURF_API_KEY`), and bridges responses from the local Language Server.
   - **Vibe Integration**: `WindsurfLLM` successfully integrates with the bridge, utilizing its localized model access.
 
-### 4. Cascade Workflow
+### 4. Cascade Action Trigger (Research)
 
-- **Power**: Cascade allows multi-step tasks that can modify the workspace directly.
-- **Constraint**: Requires the LS to be in a healthy state and can be sensitive to timeout settings (currently 90s).
+- **Power**: Cascade is intended for multi-step tasks that modify the workspace directly.
+- **Challenge**: The model currently "echoes" input rather than initiating tool calls via the binary channel.
+- **Hypotheses Tested**:
+  - Added `submitted: true` flag to `CascadeItem` and root request.
+  - Implemented nested `Intent` structures (generic -> text).
+  - Experimented with splitting `QueueCascadeMessage` and `InterruptCascade` triggers.
+- **Technical Barrier**: The Windsurf Language Server uses a complex internal binary Protobuf schema for Cascade triggers. While stable connections and metadata streaming are functional, the specific trigger for "Action Phase" requires more precise reverse-engineering of the `CascadeItem` structure.
+- **Current Status**: Functional for real-time status updates and metadata retrieval, but autonomous tool execution via Cascade is still under research.
 
 ## Pros and Cons
 
@@ -59,6 +65,8 @@ This report documents the testing, analysis, and evaluation of the newly integra
 
 ## Areas for Improvement
 
+- [ ] Reverse-engineer the specific `CascadeItem` fields required for autonomous tool execution.
+- [ ] Implement robust stream parsing for tool call payloads in the binary protocol.
 - [ ] Add better error handling for when LS is running but sluggish.
 - [ ] Implement local caching for model lists to avoid unnecessary LS calls.
 
