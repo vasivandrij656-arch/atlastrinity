@@ -53,7 +53,7 @@ def extract_tools_from_python(filepath: Path) -> list[str]:
 
     tools = []
     for node in ast.walk(tree):
-        if isinstance(node, (ast.FunctionDef, ast.AsyncFunctionDef)):
+        if isinstance(node, ast.FunctionDef | ast.AsyncFunctionDef):
             for dec in node.decorator_list:
                 # Match @server.tool() or @mcp.tool()
                 if isinstance(dec, ast.Call) and isinstance(dec.func, ast.Attribute):

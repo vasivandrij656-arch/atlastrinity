@@ -3,10 +3,15 @@ import json
 import re
 import sys
 
-sys.path.insert(0, "src")
-from brain.agents.grisha import Grisha
-from brain.agents.tetyana import Tetyana
-from brain.mcp_manager import mcp_manager
+import os
+import sys
+PROJECT_ROOT = os.path.abspath(os.path.join(os.path.dirname(__file__), "..", ".."))
+if PROJECT_ROOT not in sys.path:
+    sys.path.insert(0, PROJECT_ROOT)
+
+from src.brain.agents.grisha import Grisha
+from src.brain.agents.tetyana import Tetyana
+from src.brain.mcp_manager import mcp_manager
 
 
 async def run():

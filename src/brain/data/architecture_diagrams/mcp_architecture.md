@@ -1,4 +1,8 @@
 
+<!-- AUTO-UPDATED: 2026-02-16T15:11:38.427342 -->
+<!-- Modified: .agent/docs/mcp_architecture_diagram.md, requirements.txt, src/brain/data/architecture_diagrams/mcp_architecture.md -->
+
+
 <!-- AUTO-UPDATED: 2026-02-16T15:11:06.467894 -->
 <!-- Modified: .agent/docs/mcp_architecture_diagram.md, src/brain/data/architecture_diagrams/mcp_architecture.md, vendor/mcp-server-windsurf/Sources/CascadeStreamer.swift -->
 

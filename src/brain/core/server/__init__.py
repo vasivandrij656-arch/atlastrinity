@@ -1,3 +1,1 @@
-from .server import trinity
-
-__all__ = ["trinity"]
+# Package for the brain core server

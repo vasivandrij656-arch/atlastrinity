@@ -6,8 +6,8 @@ import sys
 # Add project src to path
 sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), "..")))
 
-from brain.mcp_manager import mcp_manager  # noqa: E402
-from brain.message_bus import AgentMsg, MessageType, message_bus  # noqa: E402
+from src.brain.mcp_manager import mcp_manager  # noqa: E402
+from src.brain.message_bus import AgentMsg, MessageType, message_bus  # noqa: E402
 
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger("test_vibe")

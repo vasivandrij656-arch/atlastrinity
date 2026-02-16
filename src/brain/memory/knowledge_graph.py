@@ -114,7 +114,7 @@ class KnowledgeGraph:
                         "last_updated": datetime.now().isoformat(),
                     }
                     for k, v in attributes.items():
-                        if isinstance(v, (list, dict)):
+                        if isinstance(v, list | dict):
                             sanitized_metadata[k] = json.dumps(v, ensure_ascii=False)
                         else:
                             sanitized_metadata[k] = v

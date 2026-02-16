@@ -9,14 +9,15 @@ from pathlib import Path
 
 # Add project root to path
 PROJECT_ROOT = Path(__file__).resolve().parent.parent.parent
-sys.path.insert(0, str(PROJECT_ROOT / "src"))
+if str(PROJECT_ROOT) not in sys.path:
+    sys.path.insert(0, str(PROJECT_ROOT))
 
-from brain.mcp_manager import MCPManager
+from src.brain.mcp_manager import mcp_manager
 
 
 async def main():
     """Call devtools MCP to update architecture diagrams."""
-    manager = MCPManager()
+    manager = mcp_manager
 
     try:
         # Call the tool

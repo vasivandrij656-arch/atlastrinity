@@ -245,7 +245,7 @@ class HealingOrchestrator:
         """
         logger.critical(f"[HEALING] 🦅 INITIATING PHOENIX PROTOCOL for task {task.task_id}")
 
-        from src.brain.core.server import trinity  # pyre-ignore
+        from src.brain.core.server.server import trinity  # pyre-ignore
         from src.brain.tools.recovery import recovery_manager  # pyre-ignore
 
         # 1. Pause

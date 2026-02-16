@@ -19,9 +19,7 @@ async def test_tool(mcp_manager, tool_name, arguments):
         success = False
         if (
             (isinstance(result, dict) and result.get("success"))
-            or (
-                not isinstance(result, (dict, list)) and getattr(result, "is_error", False) is False
-            )
+            or (not isinstance(result, dict | list) and getattr(result, "is_error", False) is False)
             or (isinstance(result, list) and len(result) > 0)
         ):
             success = True

@@ -6,7 +6,7 @@ import time
 
 import requests
 
-os.chdir("/Users/hawk/Documents/GitHub/atlastrinity")
+# os.chdir(os.getcwd())
 
 
 def test_alias(alias, prompt):

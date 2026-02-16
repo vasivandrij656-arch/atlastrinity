@@ -5,7 +5,7 @@ import sys
 PROJECT_ROOT = os.path.abspath(os.path.join(os.getcwd(), "src"))
 sys.path.insert(0, PROJECT_ROOT)
 
-from brain.mcp_manager import mcp_manager
+from src.brain.mcp_manager import mcp_manager  # pyre-ignore
 
 
 async def get_schemas():

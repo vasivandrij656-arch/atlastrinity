@@ -481,7 +481,7 @@ class LongTermMemory:
             # Flatten simple factors into metadata for filtering
             if decision_factors:
                 for k, v in decision_factors.items():
-                    if isinstance(v, (str, bool, int, float)):
+                    if isinstance(v, str | bool | int | float):
                         metadata[f"factor_{k}"] = cast("Any", v)
 
             metadata = sanitize_metadata(metadata)

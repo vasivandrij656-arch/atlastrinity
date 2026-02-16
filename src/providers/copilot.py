@@ -428,12 +428,10 @@ class CopilotLLM(BaseChatModel):
             else:
                 is_transient = isinstance(
                     exception,
-                    (
-                        httpx.ConnectError,
-                        httpx.TimeoutException,
-                        httpx.NetworkError,
-                        httpx.RemoteProtocolError,
-                    ),
+                    httpx.ConnectError
+                    | httpx.TimeoutException
+                    | httpx.NetworkError
+                    | httpx.RemoteProtocolError,
                 )
             if is_transient:
                 error_body = (
@@ -642,7 +640,7 @@ class CopilotLLM(BaseChatModel):
                             f"[COPILOT] Sync transient error: {exception}. Body: {error_body[:500]}"
                         )
                     return is_trans
-                return isinstance(exception, (requests.Timeout, requests.ConnectionError))
+                return isinstance(exception, requests.Timeout | requests.ConnectionError)
 
             @retry(
                 stop=stop_after_attempt(5),

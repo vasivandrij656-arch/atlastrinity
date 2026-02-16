@@ -4,7 +4,8 @@ import os
 import subprocess
 import time
 
-os.chdir("/Users/hawk/Documents/GitHub/atlastrinity")
+# os.chdir(os.getcwd())  # Assuming running from project root
+# Or simply rely on the test runner setting the CWD
 
 # Start proxy
 print("🚀 Starting Copilot proxy...")

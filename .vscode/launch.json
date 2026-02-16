@@ -1,22 +1,22 @@
 {
-    "configurations": [
-        {
-            "type": "lldb",
-            "request": "launch",
-            "args": [],
-            "cwd": "${workspaceFolder:atlastrinity}/vendor/mcp-server-windsurf",
-            "name": "Debug mcp-server-windsurf (vendor/mcp-server-windsurf)",
-            "program": "${workspaceFolder:atlastrinity}/vendor/mcp-server-windsurf/.build/debug/mcp-server-windsurf",
-            "preLaunchTask": "swift: Build Debug mcp-server-windsurf (vendor/mcp-server-windsurf)"
-        },
-        {
-            "type": "lldb",
-            "request": "launch",
-            "args": [],
-            "cwd": "${workspaceFolder:atlastrinity}/vendor/mcp-server-windsurf",
-            "name": "Release mcp-server-windsurf (vendor/mcp-server-windsurf)",
-            "program": "${workspaceFolder:atlastrinity}/vendor/mcp-server-windsurf/.build/release/mcp-server-windsurf",
-            "preLaunchTask": "swift: Build Release mcp-server-windsurf (vendor/mcp-server-windsurf)"
-        }
-    ]
+  "configurations": [
+    {
+      "type": "lldb",
+      "request": "launch",
+      "args": [],
+      "cwd": "${workspaceFolder:atlastrinity}/vendor/mcp-server-windsurf",
+      "name": "Debug mcp-server-windsurf (vendor/mcp-server-windsurf)",
+      "program": "${workspaceFolder:atlastrinity}/vendor/mcp-server-windsurf/.build/debug/mcp-server-windsurf",
+      "preLaunchTask": "swift: Build Debug mcp-server-windsurf (vendor/mcp-server-windsurf)"
+    },
+    {
+      "type": "lldb",
+      "request": "launch",
+      "args": [],
+      "cwd": "${workspaceFolder:atlastrinity}/vendor/mcp-server-windsurf",
+      "name": "Release mcp-server-windsurf (vendor/mcp-server-windsurf)",
+      "program": "${workspaceFolder:atlastrinity}/vendor/mcp-server-windsurf/.build/release/mcp-server-windsurf",
+      "preLaunchTask": "swift: Build Release mcp-server-windsurf (vendor/mcp-server-windsurf)"
+    }
+  ]
 }
