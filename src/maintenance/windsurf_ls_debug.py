@@ -1,7 +1,6 @@
-
-import subprocess
 import re
-import os
+import subprocess
+
 
 def debug_detect():
     print("--- DEBUG: _detect_language_server ---")
@@ -10,15 +9,15 @@ def debug_detect():
         for line in result.stdout.splitlines():
             if "language_server_macos_arm" not in line or "grep" in line:
                 continue
-            
+
             print(f"FOUND LS PROCESS: {line}")
-            
+
             csrf_token = ""
             m = re.search(r"--csrf_token\s+(\S+)", line)
             if m:
                 csrf_token = m.group(1)
             print(f"CSRF TOKEN: {csrf_token}")
-            
+
             parts = line.split()
             if len(parts) >= 2:
                 pid = parts[1]
@@ -26,9 +25,10 @@ def debug_detect():
                 try:
                     # Check if lsof exists
                     import shutil
+
                     lsof_path = shutil.which("lsof")
                     print(f"LSOF PATH: {lsof_path}")
-                    
+
                     cmd = ["lsof", "-nP", "-iTCP", "-sTCP:LISTEN", "-a", "-p", pid]
                     print(f"RUNNING: {' '.join(cmd)}")
                     lsof = subprocess.run(
@@ -39,7 +39,7 @@ def debug_detect():
                     )
                     print(f"LSOF OUTPUT:\n{lsof.stdout}")
                     print(f"LSOF ERR:\n{lsof.stderr}")
-                    
+
                     port = 0
                     for ll in lsof.stdout.splitlines():
                         if "LISTEN" in ll:
@@ -49,14 +49,18 @@ def debug_detect():
                                 if port == 0 or candidate < port:
                                     port = candidate
                     print(f"DETECTED PORT: {port}")
-                    
+
                     if port and csrf_token:
                         print("--- TESTING HEARTBEAT ---")
                         import requests
+
                         try:
                             r = requests.post(
                                 f"http://127.0.0.1:{port}/exa.language_server_pb.LanguageServerService/Heartbeat",
-                                headers={"Content-Type": "application/json", "x-codeium-csrf-token": csrf_token},
+                                headers={
+                                    "Content-Type": "application/json",
+                                    "x-codeium-csrf-token": csrf_token,
+                                },
                                 json={},
                                 timeout=3,
                             )
@@ -65,11 +69,10 @@ def debug_detect():
                             if r.status_code == 200:
                                 print("✅ HEARTBEAT SUCCESSFUL")
                                 return True
-                            else:
-                                print("❌ HEARTBEAT FAILED (Non-200)")
+                            print("❌ HEARTBEAT FAILED (Non-200)")
                         except Exception as e:
                             print(f"❌ HEARTBEAT FAILED (Error): {e}")
-                        
+
                         return False
                 except Exception as e:
                     print(f"❌ LSOF FAILED: {e}")
@@ -77,6 +80,7 @@ def debug_detect():
     except Exception as e:
         print(f"❌ PS FAILED: {e}")
     return False
+
 
 if __name__ == "__main__":
     debug_detect()
