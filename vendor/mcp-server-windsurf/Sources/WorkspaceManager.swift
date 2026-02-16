@@ -22,7 +22,9 @@ class WorkspaceManager {
     // MARK: - Workspace Management
 
     func createWorkspace(path: String, name: String? = nil) -> WorkspaceContext {
-        let workspaceId = UUID().uuidString.prefix(8).lowercased()
+        let cleanPath = path.hasPrefix("/") ? String(path.dropFirst()) : path
+        let pathPart = cleanPath.replacingOccurrences(of: "/", with: "_")
+        let workspaceId = "file_" + pathPart
         let workspaceName = name ?? URL(fileURLWithPath: path).lastPathComponent
 
         let context = WorkspaceContext(
@@ -112,6 +114,7 @@ class WorkspaceManager {
         scopeMsg.append(protoStr(1, workspace.path))  // path
         scopeMsg.append(protoStr(2, "file://" + workspace.path))  // uri
         scopeMsg.append(protoStr(3, workspace.name))  // repoName
+        scopeMsg.append(protoStr(12, workspace.id))  // workspaceId (Windsurf specific field)
 
         // Enhanced git information
         if let gitInfo = workspace.gitInfo {

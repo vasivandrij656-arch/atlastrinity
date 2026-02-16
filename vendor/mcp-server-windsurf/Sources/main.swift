@@ -310,11 +310,23 @@ func protoFindStrings(_ data: Data, minLen: Int = 4) -> [String] {
             let payload = data.subdata(in: offset..<offset + length)
             offset += length
 
+            // Check if payload looks like a valid text string (printable + whitespace)
+            var isText = false
             if let text = String(data: payload, encoding: .utf8), text.count >= minLen {
-                results.append(text)
+                // Check for control characters that would indicate binary data
+                // Allow \t (9), \n (10), \r (13)
+                isText = !payload.contains { $0 < 32 && $0 != 9 && $0 != 10 && $0 != 13 }
+
+                if isText {
+                    results.append(text)
+                }
             }
-            // Recurse
-            results.append(contentsOf: protoFindStrings(payload, minLen: minLen))
+
+            // Only recurse if we didn't identify it as a text string
+            // This prevents duplicating content (finding a string, then finding parts of it again)
+            if !isText {
+                results.append(contentsOf: protoFindStrings(payload, minLen: minLen))
+            }
 
         } else if wireType == 1 {  // 64-bit
             offset += 8
@@ -516,32 +528,43 @@ func parseStreamingFrames(_ data: Data) -> (String, String?) {
         let frameData = data[offset + 5..<min(offset + 5 + frameLen, data.count)]
         offset += 5 + frameLen
 
-        guard let json = try? JSONSerialization.jsonObject(with: frameData) as? [String: Any] else {
-            continue
-        }
-
-        if flags == 0x02 {  // Trailer
-            if let err = json["error"] as? [String: Any] {
-                let code = err["code"] as? String ?? "unknown"
-                let message = err["message"] as? String ?? ""
-                errorMsg = "\(code): \(message)"
+        if let json = try? JSONSerialization.jsonObject(with: frameData) as? [String: Any] {
+            if flags == 0x02 {  // Trailer
+                if let err = json["error"] as? [String: Any] {
+                    let code = err["code"] as? String ?? "unknown"
+                    let message = err["message"] as? String ?? ""
+                    errorMsg = "\(code): \(message)"
+                }
+                continue
             }
-            continue
-        }
 
-        // Data frame
-        if let dm = json["deltaMessage"] as? [String: Any] {
-            if let isError = dm["isError"] as? Bool, isError {
-                errorMsg = dm["text"] as? String ?? "unknown error"
+            // Data frame
+            if let dm = json["deltaMessage"] as? [String: Any] {
+                if let isError = dm["isError"] as? Bool, isError {
+                    errorMsg = dm["text"] as? String ?? "unknown error"
+                } else {
+                    resultText += dm["text"] as? String ?? ""
+                }
+            } else if let text = json["text"] as? String {
+                resultText += text
+            } else if let content = json["content"] as? String {
+                resultText += content
+            } else if let chatMsg = json["chatMessage"] as? [String: Any] {
+                resultText += chatMsg["content"] as? String ?? ""
+            }
+        } else {
+            // Try Protobuf extraction as fallback
+            if let protoText = protoExtractString(frameData, 1) ?? protoExtractString(frameData, 2)
+                ?? protoExtractString(frameData, 3)
+            {
+                resultText += protoText
             } else {
-                resultText += dm["text"] as? String ?? ""
+                // Last resort: find any strings
+                let found = protoFindStrings(frameData, minLen: 5)
+                // Filter out non-textual strings (UUIDs, URLs) if we have enough content
+                let filtered = found.filter { !$0.contains("://") && $0.count > 10 }
+                resultText += (filtered.isEmpty ? found : filtered).joined(separator: " ")
             }
-        } else if let text = json["text"] as? String {
-            resultText += text
-        } else if let content = json["content"] as? String {
-            resultText += content
-        } else if let chatMsg = json["chatMessage"] as? [String: Any] {
-            resultText += chatMsg["content"] as? String ?? ""
         }
     }
 
@@ -590,17 +613,31 @@ func sendChat(connection: LSConnection, message: String, model: String, apiKey: 
         "chatModelName": modelProtobufId,
     ]
 
-    let envelope = makeEnvelope(payload)
+    let jsonData = try JSONSerialization.data(withJSONObject: payload)
+    let jsonString = String(data: jsonData, encoding: .utf8) ?? ""
+    let protoPayload = protoStr(1, jsonString)
 
     let url = URL(string: "http://127.0.0.1:\(connection.port)\(LS_RAW_CHAT)")!
     var request = URLRequest(url: url, timeoutInterval: 300)
     request.httpMethod = "POST"
-    request.setValue("application/connect+json", forHTTPHeaderField: "Content-Type")
-    request.setValue("1", forHTTPHeaderField: "Connect-Protocol-Version")
+    request.setValue("application/grpc", forHTTPHeaderField: "Content-Type")
     request.setValue(connection.csrfToken, forHTTPHeaderField: "x-codeium-csrf-token")
-    request.httpBody = envelope
+
+    // Wrap in gRPC envelope
+    var env = Data()
+    env.append(0)
+    var len = UInt32(protoPayload.count).bigEndian
+    env.append(Data(bytes: &len, count: 4))
+    env.append(protoPayload)
+    request.httpBody = env
+
+    WindsurfLogger.shared.logProtobufRequest(
+        endpoint: "RawGetChatMessage", payload: env, cascadeId: nil)
 
     let (data, response) = try await URLSession.shared.data(for: request)
+
+    WindsurfLogger.shared.logProtobufResponse(
+        endpoint: "RawGetChatMessage", response: data, cascadeId: nil)
 
     guard let httpResponse = response as? HTTPURLResponse else {
         throw MCPError.internalError("Invalid response from Windsurf LS")
@@ -986,6 +1023,34 @@ func handleChat(message: String, model: String?, systemPrompt: String?, stream: 
             apiKey: apiKey
         )
 
+        // Try to extract and write files from the chat response if code blocks are present
+        // Determine workspace path for file writing
+        let workspacePath: String
+        if let activeWs = WorkspaceManager.shared.getActiveWorkspace() {
+            workspacePath = activeWs.path
+        } else {
+            workspacePath = FileManager.default.currentDirectoryPath
+        }
+
+        let extractedFiles = extractFilesFromResponse(response)
+        var writtenFiles: [String] = []
+
+        if !extractedFiles.isEmpty {
+            fputs(
+                "log: [windsurf] Chat Mode: found \(extractedFiles.count) file(s) to write. Workspace: \(workspacePath)\n",
+                stderr)
+            writtenFiles = writeExtractedFiles(extractedFiles, workspacePath: workspacePath)
+        }
+
+        // Append file creation report to response
+        var finalResponse = response
+        if !writtenFiles.isEmpty {
+            finalResponse += "\n\n📁 Action: Created/Modified the following files:\n"
+            for file in writtenFiles {
+                finalResponse += "- \(file)\n"
+            }
+        }
+
         let latency = Date().timeIntervalSince(startTime)
         Task {
             await GlobalState.healthMonitor.recordRequest(
@@ -1201,7 +1266,12 @@ func handleCascade(message: String, model: String?) async -> String {
         env.append(payload)
         req.httpBody = env
 
+        WindsurfLogger.shared.logProtobufRequest(endpoint: endpoint, payload: env, cascadeId: nil)
+
         let (data, resp) = try await URLSession.shared.data(for: req)
+
+        WindsurfLogger.shared.logProtobufResponse(
+            endpoint: endpoint, response: data, cascadeId: nil)
         guard let httpResp = resp as? HTTPURLResponse, httpResp.statusCode == 200 else {
             throw MCPError.internalError("HTTP Error for \(endpoint)")
         }
@@ -1284,23 +1354,14 @@ func handleCascade(message: String, model: String?) async -> String {
         // 1. User Message Item
         var textItem = Data()
         textItem.append(protoStr(1, message))  // Text
-        // Optional: intent (Field 2) inside text item?
-        // Or is it field 2 of TextOrScopeItem?
-        // Let's keep it consistent with the existing working pattern but add Scope.
-        let intentInner = protoStr(1, message)
-        let intentProto = protoMsg(1, intentInner)
-        textItem.append(protoMsg(2, intentProto))  // intent
         textItem.append(protoInt(4, 1))  // submitted
         textItem.append(protoStr(15, UUID().uuidString))
-
         itemsProto.append(protoMsg(3, textItem))
 
         // 2. Scope Item (enhanced with workspace context from WorkspaceManager)
         let scopeMsg = WorkspaceManager.shared.enhanceScopeForCurrentWorkspace()
-
         var scopeItem = Data()
         scopeItem.append(protoMsg(2, scopeMsg))  // TextOrScopeItem.scope
-
         itemsProto.append(protoMsg(3, scopeItem))
 
         // Step 4: Enhanced Cascade Config for Action Phase
@@ -1309,22 +1370,21 @@ func handleCascade(message: String, model: String?) async -> String {
         plannerProto.append(protoStr(34, modelUid))  // plan_model
         plannerProto.append(protoStr(35, modelUid))  // requested_model
 
-        // Action Phase enabling flags (experimental field numbers)
+        // Action Phase enabling flags
         plannerProto.append(protoInt(11, 1))  // enable_cortex_reasoning
         plannerProto.append(protoInt(12, 1))  // enable_action_phase
         plannerProto.append(protoInt(13, 1))  // enable_tool_execution
         plannerProto.append(protoInt(14, 1))  // enable_file_operations
         plannerProto.append(protoInt(15, 1))  // enable_autonomous_execution
 
-        // Additional Cortex configuration
+        // Additional Cortex configuration (Field 20)
         var cortexConfig = Data()
         cortexConfig.append(protoInt(1, 1))  // enable_autonomous_tools
         cortexConfig.append(protoInt(2, 1))  // enable_file_creation
         cortexConfig.append(protoInt(3, 1))  // enable_file_modification
         cortexConfig.append(protoInt(4, 1))  // enable_workspace_scoped_actions
         cortexConfig.append(protoInt(5, 180))  // action_timeout_seconds
-
-        plannerProto.append(protoMsg(20, cortexConfig))  // cortex_config (field 20)
+        plannerProto.append(protoMsg(20, cortexConfig))
 
         let configProto = protoMsg(5, protoMsg(1, plannerProto))
 
@@ -1372,10 +1432,17 @@ func handleCascade(message: String, model: String?) async -> String {
             }
 
             let payload = streamData.subdata(in: offset + 5..<offset + 5 + len)
-            let foundStrings = protoFindStrings(payload, minLen: 5)
+            fputs(
+                "log: [windsurf] Payload (\(len) bytes) hex: \(payload.prefix(64).map { String(format: "%02x", $0) }.joined())\n",
+                stderr)
+            // Use minLen 3 to capture markdown fences "```"
+            let foundStrings = protoFindStrings(payload, minLen: 3)
+            if foundStrings.isEmpty {
+                fputs("log: [windsurf] No strings found in payload (\(len) bytes)\n", stderr)
+            }
             for s in foundStrings {
                 fputs(
-                    "log: [windsurf] Stream string (\(s.count) chars): \(s.prefix(100).replacingOccurrences(of: "\n", with: " "))\n",
+                    "log: [windsurf] Stream string (\(s.count) chars): \(s.prefix(100).replacingOccurrences(of: "\n", with: "\\n"))\n",
                     stderr)
             }
             strings.append(contentsOf: foundStrings)
@@ -1384,43 +1451,34 @@ func handleCascade(message: String, model: String?) async -> String {
         }
 
         // Enhanced filtering for Action Phase responses
-        // Look for actual file operations or tool execution signatures
         let actionSignatures = [
             "created", "modified", "deleted", "updated", "wrote", "saved", "executed",
         ]
 
         let filtered = strings.filter { response in
-            // Keep responses that contain action signatures
             let hasActionSignature = actionSignatures.contains { signature in
                 response.lowercased().contains(signature.lowercased())
             }
 
-            // Or keep natural responses without system noise
             let isNaturalResponse =
                 !response.contains(cascadeId)
                 && !response.contains(modelUid)
                 && !response.contains(apiKey)
                 && !response.contains("windsurf")
-                && !response.contains("CRITICAL:")
-                && !response.contains("IMPORTANT:")
-                && !response.contains("JSON FORMAT")
-                && !response.contains("WARNING:")
-                && !response.contains("jsonrpc")
-                && !response.contains("markdown_formatting")
-                && !response.contains("additional_guidelines")
-                && !response.contains("No acknowledgment phrases")
-                && !response.contains("Direct responses:")
-                && !response.contains("Be terse and direct")
-                && !response.contains("file:///")
-                && !response.contains("https://")
-                && response.count > 20  // Keep substantial responses
+                && response.count > 10
 
             return hasActionSignature || isNaturalResponse
         }
 
-        // Build combined response from all filtered strings for file extraction
-        // Use all strings (not just the longest) because code blocks may span multiple strings
-        let combinedResponse = filtered.joined(separator: "\n")
+        // Build combined response from all found strings for file extraction
+        // Use "" separator to correctly reconstruct fragmented code blocks across gRPC messages
+        let combinedResponse = strings.joined(separator: "")
+
+        // Log the reconstructed response (truncated if too large) to debug extraction
+        fputs(
+            "log: [windsurf] Action Phase: Reconstructed response (\(combinedResponse.count) chars):\n",
+            stderr)
+        fputs("\(combinedResponse.prefix(2000))\n", stderr)
 
         // Determine workspace path for file writing
         let workspacePath: String
@@ -1436,7 +1494,7 @@ func handleCascade(message: String, model: String?) async -> String {
 
         if !extractedFiles.isEmpty {
             fputs(
-                "log: [windsurf] Action Phase: found \(extractedFiles.count) file(s) to write\n",
+                "log: [windsurf] Action Phase: found \(extractedFiles.count) file(s) to write. Workspace: \(workspacePath)\n",
                 stderr)
             writtenFiles = writeExtractedFiles(extractedFiles, workspacePath: workspacePath)
         }
@@ -1669,7 +1727,9 @@ func handleDepreciationWarnings() -> String {
 // MARK: - Server Setup
 
 func setupAndStartServer() async throws -> Server {
-    fputs("log: Starting Windsurf MCP Bridge Server...\n", stderr)
+    fputs("log: [windsurf] Starting Windsurf MCP Bridge Server...\n", stderr)
+    fputs("log: [windsurf] Process ID: \(getpid())\n", stderr)
+    fputs("log: [windsurf] IDE Version: \(IDE_VERSION)\n", stderr)
 
     // Auto-detect LS on startup
     if let conn = detectLanguageServer() {
@@ -1876,6 +1936,7 @@ func setupAndStartServer() async throws -> Server {
     let transport = StdioTransport()
     try await server.start(transport: transport)
     fputs("log: Windsurf MCP Bridge Server started successfully!\n", stderr)
+    fflush(stdout)
 
     // Store globally to prevent deallocation
     GlobalState.server = server

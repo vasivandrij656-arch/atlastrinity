@@ -33,7 +33,8 @@ let WINDSURF_MODELS: [WindsurfModel] = [
         capabilities: ["code", "debug", "architecture", "testing"],
         contextWindow: 128000,
         maxTokens: 8192,
-        pricing: PricingInfo(inputPrice: 0.003, outputPrice: 0.009, currency: "USD", unit: "1K tokens")
+        pricing: PricingInfo(
+            inputPrice: 0.003, outputPrice: 0.009, currency: "USD", unit: "1K tokens")
     ),
     WindsurfModel(
         id: "deepseek-v3",
@@ -45,7 +46,8 @@ let WINDSURF_MODELS: [WindsurfModel] = [
         capabilities: ["reasoning", "math", "logic", "analysis"],
         contextWindow: 64000,
         maxTokens: 4096,
-        pricing: PricingInfo(inputPrice: 0.001, outputPrice: 0.003, currency: "USD", unit: "1K tokens")
+        pricing: PricingInfo(
+            inputPrice: 0.001, outputPrice: 0.003, currency: "USD", unit: "1K tokens")
     ),
     WindsurfModel(
         id: "windsurf-fast",
@@ -58,9 +60,9 @@ let WINDSURF_MODELS: [WindsurfModel] = [
         contextWindow: 32000,
         maxTokens: 2048,
         pricing: PricingInfo(inputPrice: 0.0, outputPrice: 0.0, currency: "USD", unit: "1K tokens")
-    )
+    ),
 ]
 
 // MARK: - Version Info
-let IDE_VERSION = "1.89.0"
-let EXTENSION_VERSION = "1.89.0"
+let IDE_VERSION = "1.107.0"
+let EXTENSION_VERSION = "1.9552.21"

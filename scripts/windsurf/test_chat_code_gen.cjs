@@ -9,7 +9,7 @@ function encodeMessage(msg) {
 }
 
 async function runTest() {
-    console.log('🚀 Starting Node.js MCP Test');
+    console.log('🚀 Starting Windsurf Chat Code Gen Test');
     
     if (!fs.existsSync(BINARY_PATH)) {
         console.error(`❌ Binary not found at: ${BINARY_PATH}`);
@@ -18,13 +18,15 @@ async function runTest() {
 
     const child = spawn(BINARY_PATH, [], {
         env: { ...process.env },
-        stdio: ['pipe', 'pipe', 'inherit'] // pipe stdin/stdout, inherit stderr
+        stdio: ['pipe', 'pipe', 'inherit']
     });
 
     let buffer = '';
     
     child.stdout.on('data', (data) => {
-        buffer += data.toString();
+        const str = data.toString();
+        console.log('📥 Raw Handshake Data:', str.slice(0, 100).replace(/\r\n/g, '\\r\\n'));
+        buffer += str;
         processBuffer();
     });
 
@@ -51,10 +53,18 @@ async function runTest() {
     const initPromise = new Promise(resolve => initResolver = resolve);
 
     function handleMessage(msg) {
-        console.log('📩 Received:', JSON.stringify(msg).slice(0, 100) + '...');
         if (msg.id === 1) {
             console.log('✅ Initialize response received');
             initResolver(msg);
+        } else if (msg.id === 2) {
+            console.log('📩 Chat Response:', JSON.stringify(msg.result, null, 2));
+            if (msg.result && msg.result.content && msg.result.content[0].text.includes('```')) {
+                 console.log('✅ Markdown code block detected!');
+            } else {
+                 console.log('⚠️ No markdown code block detected.');
+            }
+            child.kill();
+            process.exit(0);
         }
     }
 
@@ -82,35 +92,27 @@ async function runTest() {
         
         console.log('✅ Initialization successful!');
         
-        // Send Initialized Notification
+        // Send Initialized
         child.stdin.write(encodeMessage({
             jsonrpc: "2.0",
             method: "notifications/initialized"
         }));
 
-        // Send Tool Call
+        // Send Chat Tool Call
         const toolCall = {
             jsonrpc: "2.0",
             id: 2,
             method: "tools/call",
             params: {
-                name: "windsurf_cascade",
+                name: "windsurf_chat",
                 arguments: {
-                    message: "Create manual_node_test.txt with content 'NodeJS Test Success'",
-                    model: "sozu-1.5"
+                    message: "Create manual_node_chat_test.txt with content 'Chat Mode Works'",
+                    model: "swe-1.5"
                 }
             }
         };
-        console.log('📤 Sending tool call...');
+        console.log('📤 Sending chat tool call...');
         child.stdin.write(encodeMessage(toolCall));
-        
-        // Wait for tool response (just wait 5s then check file)
-        await new Promise(resolve => setTimeout(resolve, 5000));
-        
-        child.kill();
-        
-        // precise verification handled by caller or manual check
-        console.log('🏁 Test finished, check for file creation.');
         
     } catch (e) {
         console.error('❌ Test failed:', e);
@@ -118,5 +120,4 @@ async function runTest() {
         process.exit(1);
     }
 }
-
 runTest();
