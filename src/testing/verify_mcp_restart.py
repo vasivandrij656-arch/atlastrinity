@@ -5,7 +5,6 @@ import sys
 sys.path.append(os.path.join(os.path.dirname(__file__), "../src"))
 
 from src.brain.mcp.mcp_manager import mcp_manager  # pyre-ignore
-from src.brain.logger import logger  # pyre-ignore
 
 
 async def test_restart():
@@ -13,7 +12,7 @@ async def test_restart():
     We will target a less critical server like 'filesystem' or 'memory'.
     """
     target_server = "filesystem"
-    manager = mcp_manager()
+    manager = mcp_manager
     # Ensure server is running
     await manager.get_session(target_server)
 

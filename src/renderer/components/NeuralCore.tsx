@@ -182,7 +182,12 @@ const NeuralCore: React.FC<NeuralCoreProps> = ({ state, activeAgent, minimized =
           {/* Trailing particle */}
           <circle cx="280" cy="80" r="1.5" fill="currentColor" opacity={isActive ? 0.6 : 0.15}>
             {isActive && (
-              <animate attributeName="opacity" values="0.6;0.1;0.6" dur="2s" repeatCount="indefinite" />
+              <animate
+                attributeName="opacity"
+                values="0.6;0.1;0.6"
+                dur="2s"
+                repeatCount="indefinite"
+              />
             )}
           </circle>
         </g>
@@ -275,7 +280,12 @@ const NeuralCore: React.FC<NeuralCoreProps> = ({ state, activeAgent, minimized =
             opacity={isActive ? 0.7 : 0.2}
           >
             {isActive && (
-              <animate attributeName="opacity" values="0.7;0.3;0.7" dur="1.5s" repeatCount="indefinite" />
+              <animate
+                attributeName="opacity"
+                values="0.7;0.3;0.7"
+                dur="1.5s"
+                repeatCount="indefinite"
+              />
             )}
           </circle>
         </g>
@@ -302,15 +312,14 @@ const NeuralCore: React.FC<NeuralCoreProps> = ({ state, activeAgent, minimized =
           {/* Multi-layered pulse */}
           <circle r="60" fill="url(#grad-core)" className="animate-pulse" />
           {/* Breathing ring */}
-          <circle
-            r="45"
-            fill="none"
-            stroke="currentColor"
-            strokeWidth="0.3"
-            opacity="0.15"
-          >
+          <circle r="45" fill="none" stroke="currentColor" strokeWidth="0.3" opacity="0.15">
             <animate attributeName="r" values="42;48;42" dur="4s" repeatCount="indefinite" />
-            <animate attributeName="opacity" values="0.1;0.25;0.1" dur="4s" repeatCount="indefinite" />
+            <animate
+              attributeName="opacity"
+              values="0.1;0.25;0.1"
+              dur="4s"
+              repeatCount="indefinite"
+            />
           </circle>
 
           <circle
@@ -324,43 +333,85 @@ const NeuralCore: React.FC<NeuralCoreProps> = ({ state, activeAgent, minimized =
           <circle r="5" fill="#fff" opacity="0.9" />
 
           {/* Core Crosshair */}
-          <line x1="-20" y1="0" x2="20" y2="0" stroke="currentColor" strokeWidth="0.5" opacity="0.5" />
-          <line x1="0" y1="-20" x2="0" y2="20" stroke="currentColor" strokeWidth="0.5" opacity="0.5" />
+          <line
+            x1="-20"
+            y1="0"
+            x2="20"
+            y2="0"
+            stroke="currentColor"
+            strokeWidth="0.5"
+            opacity="0.5"
+          />
+          <line
+            x1="0"
+            y1="-20"
+            x2="0"
+            y2="20"
+            stroke="currentColor"
+            strokeWidth="0.5"
+            opacity="0.5"
+          />
         </g>
 
         {/* --- AGENT NODES --- */}
         {/* ATLAS */}
         <g>
           <line
-            x1="0" y1="-60" x2="0" y2="-170"
-            stroke="var(--atlas-blue)" strokeWidth="0.5"
+            x1="0"
+            y1="-60"
+            x2="0"
+            y2="-170"
+            stroke="var(--atlas-blue)"
+            strokeWidth="0.5"
             opacity={activeAgent === 'ATLAS' ? 0.6 : 0.1}
           />
           {/* Data stream particles on active link */}
           {activeAgent === 'ATLAS' && (
-            <>
-              <circle r="2" fill="var(--atlas-blue)" opacity="0.8">
-                <animateMotion dur="1.5s" repeatCount="indefinite" path="M0,-65 L0,-175" />
-                <animate attributeName="opacity" values="0.9;0.2;0.9" dur="1.5s" repeatCount="indefinite" />
-              </circle>
-            </>
+            <circle r="2" fill="var(--atlas-blue)" opacity="0.8">
+              <animateMotion dur="1.5s" repeatCount="indefinite" path="M0,-65 L0,-175" />
+              <animate
+                attributeName="opacity"
+                values="0.9;0.2;0.9"
+                dur="1.5s"
+                repeatCount="indefinite"
+              />
+            </circle>
           )}
           <circle
-            cx="0" cy="-180"
+            cx="0"
+            cy="-180"
             r={activeAgent === 'ATLAS' ? 10 : 4}
             fill="var(--atlas-blue)"
             className={activeAgent === 'ATLAS' ? 'animate-pulse' : ''}
           />
           {activeAgent === 'ATLAS' && (
-            <circle cx="0" cy="-180" r="16" fill="none" stroke="var(--atlas-blue)" strokeWidth="0.5" opacity="0.3">
+            <circle
+              cx="0"
+              cy="-180"
+              r="16"
+              fill="none"
+              stroke="var(--atlas-blue)"
+              strokeWidth="0.5"
+              opacity="0.3"
+            >
               <animate attributeName="r" values="14;20;14" dur="2s" repeatCount="indefinite" />
-              <animate attributeName="opacity" values="0.3;0.05;0.3" dur="2s" repeatCount="indefinite" />
+              <animate
+                attributeName="opacity"
+                values="0.3;0.05;0.3"
+                dur="2s"
+                repeatCount="indefinite"
+              />
             </circle>
           )}
           <text
-            x="0" y="-205" textAnchor="middle"
-            fill="var(--atlas-blue)" fontSize="9" fontWeight="bold"
-            letterSpacing="3" opacity={activeAgent === 'ATLAS' ? 1 : 0.3}
+            x="0"
+            y="-205"
+            textAnchor="middle"
+            fill="var(--atlas-blue)"
+            fontSize="9"
+            fontWeight="bold"
+            letterSpacing="3"
+            opacity={activeAgent === 'ATLAS' ? 1 : 0.3}
             style={{ fontFamily: "'JetBrains Mono', monospace" }}
           >
             ATLAS
@@ -370,32 +421,59 @@ const NeuralCore: React.FC<NeuralCoreProps> = ({ state, activeAgent, minimized =
         {/* GRISHA */}
         <g transform="rotate(120)">
           <line
-            x1="0" y1="-60" x2="0" y2="-170"
-            stroke="var(--grisha-orange)" strokeWidth="0.5"
+            x1="0"
+            y1="-60"
+            x2="0"
+            y2="-170"
+            stroke="var(--grisha-orange)"
+            strokeWidth="0.5"
             opacity={activeAgent === 'GRISHA' ? 0.6 : 0.1}
           />
           {activeAgent === 'GRISHA' && (
             <circle r="2" fill="var(--grisha-orange)" opacity="0.8">
               <animateMotion dur="1.5s" repeatCount="indefinite" path="M0,-65 L0,-175" />
-              <animate attributeName="opacity" values="0.9;0.2;0.9" dur="1.5s" repeatCount="indefinite" />
+              <animate
+                attributeName="opacity"
+                values="0.9;0.2;0.9"
+                dur="1.5s"
+                repeatCount="indefinite"
+              />
             </circle>
           )}
           <g transform="translate(0, -180)">
             <circle
               r={activeAgent === 'GRISHA' ? 10 : 4}
-              fill="var(--grisha-orange)" transform="rotate(-120)"
+              fill="var(--grisha-orange)"
+              transform="rotate(-120)"
               className={activeAgent === 'GRISHA' ? 'animate-pulse' : ''}
             />
             {activeAgent === 'GRISHA' && (
-              <circle r="16" fill="none" stroke="var(--grisha-orange)" strokeWidth="0.5" opacity="0.3" transform="rotate(-120)">
+              <circle
+                r="16"
+                fill="none"
+                stroke="var(--grisha-orange)"
+                strokeWidth="0.5"
+                opacity="0.3"
+                transform="rotate(-120)"
+              >
                 <animate attributeName="r" values="14;20;14" dur="2s" repeatCount="indefinite" />
-                <animate attributeName="opacity" values="0.3;0.05;0.3" dur="2s" repeatCount="indefinite" />
+                <animate
+                  attributeName="opacity"
+                  values="0.3;0.05;0.3"
+                  dur="2s"
+                  repeatCount="indefinite"
+                />
               </circle>
             )}
             <text
-              y="25" transform="rotate(-120)" textAnchor="middle"
-              fill="var(--grisha-orange)" fontSize="9" fontWeight="bold"
-              letterSpacing="3" opacity={activeAgent === 'GRISHA' ? 1 : 0.3}
+              y="25"
+              transform="rotate(-120)"
+              textAnchor="middle"
+              fill="var(--grisha-orange)"
+              fontSize="9"
+              fontWeight="bold"
+              letterSpacing="3"
+              opacity={activeAgent === 'GRISHA' ? 1 : 0.3}
               style={{ fontFamily: "'JetBrains Mono', monospace" }}
             >
               GRISHA
@@ -406,32 +484,59 @@ const NeuralCore: React.FC<NeuralCoreProps> = ({ state, activeAgent, minimized =
         {/* TETYANA */}
         <g transform="rotate(240)">
           <line
-            x1="0" y1="-60" x2="0" y2="-170"
-            stroke="var(--tetyana-green)" strokeWidth="0.5"
+            x1="0"
+            y1="-60"
+            x2="0"
+            y2="-170"
+            stroke="var(--tetyana-green)"
+            strokeWidth="0.5"
             opacity={activeAgent === 'TETYANA' ? 0.6 : 0.1}
           />
           {activeAgent === 'TETYANA' && (
             <circle r="2" fill="var(--tetyana-green)" opacity="0.8">
               <animateMotion dur="1.5s" repeatCount="indefinite" path="M0,-65 L0,-175" />
-              <animate attributeName="opacity" values="0.9;0.2;0.9" dur="1.5s" repeatCount="indefinite" />
+              <animate
+                attributeName="opacity"
+                values="0.9;0.2;0.9"
+                dur="1.5s"
+                repeatCount="indefinite"
+              />
             </circle>
           )}
           <g transform="translate(0, -180)">
             <circle
               r={activeAgent === 'TETYANA' ? 10 : 4}
-              fill="var(--tetyana-green)" transform="rotate(-240)"
+              fill="var(--tetyana-green)"
+              transform="rotate(-240)"
               className={activeAgent === 'TETYANA' ? 'animate-pulse' : ''}
             />
             {activeAgent === 'TETYANA' && (
-              <circle r="16" fill="none" stroke="var(--tetyana-green)" strokeWidth="0.5" opacity="0.3" transform="rotate(-240)">
+              <circle
+                r="16"
+                fill="none"
+                stroke="var(--tetyana-green)"
+                strokeWidth="0.5"
+                opacity="0.3"
+                transform="rotate(-240)"
+              >
                 <animate attributeName="r" values="14;20;14" dur="2s" repeatCount="indefinite" />
-                <animate attributeName="opacity" values="0.3;0.05;0.3" dur="2s" repeatCount="indefinite" />
+                <animate
+                  attributeName="opacity"
+                  values="0.3;0.05;0.3"
+                  dur="2s"
+                  repeatCount="indefinite"
+                />
               </circle>
             )}
             <text
-              y="25" transform="rotate(-240)" textAnchor="middle"
-              fill="var(--tetyana-green)" fontSize="9" fontWeight="bold"
-              letterSpacing="3" opacity={activeAgent === 'TETYANA' ? 1 : 0.3}
+              y="25"
+              transform="rotate(-240)"
+              textAnchor="middle"
+              fill="var(--tetyana-green)"
+              fontSize="9"
+              fontWeight="bold"
+              letterSpacing="3"
+              opacity={activeAgent === 'TETYANA' ? 1 : 0.3}
               style={{ fontFamily: "'JetBrains Mono', monospace" }}
             >
               TETYANA

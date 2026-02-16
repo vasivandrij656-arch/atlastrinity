@@ -69,7 +69,9 @@ body {
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
   text-rendering: optimizeLegibility;
-  font-feature-settings: "kern" 1, "liga" 1;
+  font-feature-settings:
+    "kern" 1,
+    "liga" 1;
 }
 
 /* --- KEYFRAME ANIMATIONS (from animations.css) --- */
@@ -1021,11 +1023,11 @@ body {
 
 /* Group hover opacity utility */
 .group:hover .group-hover-opacity-60 {
-  opacity: 0.6 !important;
+  opacity: 0.6;
 }
 
 .group:hover .group-hover-opacity-90 {
-  opacity: 0.9 !important;
+  opacity: 0.9;
 }
 
 .opacity-30 {

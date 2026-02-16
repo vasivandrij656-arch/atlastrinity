@@ -195,9 +195,7 @@ const ChatPanel: React.FC<ChatPanelProps> = React.memo(({ messages }) => {
                     paddingLeft: '6px',
                     borderLeft: `2px solid ${getAgentColor(msg.agent)}`,
                     borderLeftWidth: isUser ? '1px' : '2px',
-                    borderLeftColor: isUser
-                      ? 'rgba(0, 229, 255, 0.15)'
-                      : getAgentColor(msg.agent),
+                    borderLeftColor: isUser ? 'rgba(0, 229, 255, 0.15)' : getAgentColor(msg.agent),
                     opacity: isNew ? undefined : 1,
                     background: isUser ? 'transparent' : getMessageGlow(msg.agent),
                     borderRadius: '0 4px 4px 0',
@@ -205,10 +203,7 @@ const ChatPanel: React.FC<ChatPanelProps> = React.memo(({ messages }) => {
                     transition: 'background 0.3s ease, border-color 0.3s ease',
                   }}
                 >
-                  <div
-                    className="flex items-center"
-                    style={{ marginBottom: '4px', gap: '10px' }}
-                  >
+                  <div className="flex items-center" style={{ marginBottom: '4px', gap: '10px' }}>
                     <span
                       style={{
                         fontSize: '8px',

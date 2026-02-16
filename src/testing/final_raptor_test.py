@@ -1,6 +1,5 @@
 """Final test of raptor-mini alias with vibe"""
 
-import os
 import subprocess
 import time
 

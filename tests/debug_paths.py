@@ -1,6 +1,6 @@
-from pathlib import Path
-import sys
 import os
+import sys
+from pathlib import Path
 
 print(f"__file__: {__file__}")
 PROJECT_ROOT = Path(__file__).parent.parent

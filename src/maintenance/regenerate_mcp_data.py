@@ -46,17 +46,17 @@ async def send_and_recv(proc, method, params, msg_id, timeout=30):
     msg = json.dumps({"jsonrpc": "2.0", "id": msg_id, "method": method, "params": params})
     proc.stdin.write((msg + "\n").encode())
     await proc.stdin.drain()
-    
+
     # Read response (might get notifications first, loop until response with id)
     start_time = asyncio.get_event_loop().time()
     while True:
         if asyncio.get_event_loop().time() - start_time > timeout:
             return None
-            
+
         resp = await read_jsonrpc(proc.stdout, timeout=timeout)
         if not resp:
             return None
-        
+
         if resp.get("id") == msg_id:
             return resp
         # Ignore notifications or other messages
@@ -87,7 +87,7 @@ async def get_server_tools(name: str, cfg: dict) -> dict[str, Any] | None:
         srv_env[k] = v
 
     print(f"[{name}] Starting...", file=sys.stderr)
-    
+
     proc = None
     try:
         proc = await asyncio.create_subprocess_exec(
@@ -120,13 +120,15 @@ async def get_server_tools(name: str, cfg: dict) -> dict[str, Any] | None:
         # Send initialized
         if proc.stdin:
             proc.stdin.write(
-                (json.dumps({"jsonrpc": "2.0", "method": "notifications/initialized"}) + "\n").encode()
+                (
+                    json.dumps({"jsonrpc": "2.0", "method": "notifications/initialized"}) + "\n"
+                ).encode()
             )
             await proc.stdin.drain()
 
         # List tools
         tools_resp = await send_and_recv(proc, "tools/list", {}, 2, timeout=15)
-        
+
         # Clean shutdown
         try:
             proc.terminate()
@@ -141,7 +143,7 @@ async def get_server_tools(name: str, cfg: dict) -> dict[str, Any] | None:
             tools = tools_resp["result"].get("tools", [])
             print(f"[{name}] Found {len(tools)} tools", file=sys.stderr)
             return {"status": "ok", "tools": tools}
-        
+
         return {"status": "error", "error": "No tools returned"}
 
     except Exception as e:
@@ -160,55 +162,53 @@ async def main():
     if not config_path.exists():
         print(f"Config not found at {config_path}")
         return 1
-        
+
     config_data = json.loads(config_path.read_text())
     servers = config_data.get("mcpServers", {})
-    
+
     # 2. Dump Live Tools
     live_data = {}
-    
+
     tasks = []
     server_names = []
-    
+
     for name, cfg in servers.items():
         if name.startswith("_") or cfg.get("disabled") or cfg.get("transport") == "internal":
             continue
-            
+
         # Skip servers that might be problematic or heavy if not needed
         # but for regeneration we usually want everything possible.
-        
+
         server_names.append(name)
         tasks.append(get_server_tools(name, cfg))
-    
+
     print(f"Querying {len(tasks)} servers...", file=sys.stderr)
     results = await asyncio.gather(*tasks)
-    
-    for name, result in zip(server_names, results):
-        if result:
-            live_data[name] = result
-            
+
+    live_data = {name: result for name, result in zip(server_names, results, strict=True) if result}
+
     # Save live dump
     dump_path = Path("/tmp/mcp_tools_live_full.json")
     dump_path.write_text(json.dumps(live_data, indent=2))
     print(f"Live tools dumped to {dump_path}", file=sys.stderr)
-    
+
     # 3. Regenerate Catalog
     catalog = {}
-    
+
     for name, cfg in servers.items():
         # Include even disabled servers in catalog if they have descriptions
         if name.startswith("_"):
             continue
-            
+
         info = {
             "description": cfg.get("description", ""),
             "tier": cfg.get("tier", 4),
             "agents": cfg.get("agents", []),
         }
-        
+
         if "note" in cfg:
             info["priority_note"] = cfg["note"]
-            
+
         # Add key_tools if available from live dump
         if name in live_data and live_data[name].get("status") == "ok":
             tools = live_data[name].get("tools", [])
@@ -221,28 +221,30 @@ async def main():
             # Fallback for offline/disabled servers - verify if we can extract from description
             # or just leave empty
             info["key_tools"] = []
-            
+
         catalog[name] = info
-        
+
     # Ensure data dir exists
     data_dir = PROJECT_ROOT / "src" / "brain" / "data"
     data_dir.mkdir(parents=True, exist_ok=True)
-    
+
     catalog_path = data_dir / "mcp_catalog.json"
     catalog_path.write_text(json.dumps(catalog, indent=2))
     print(f"Regenerated catalog at {catalog_path}", file=sys.stderr)
-    
+
     # 4. Sync Schemas
     print("Running schema_sync.py...", file=sys.stderr)
     from src.maintenance import schema_sync
+
     try:
         schema_sync.main()
         print("Schema sync completed.", file=sys.stderr)
     except Exception as e:
         print(f"Schema sync failed: {e}", file=sys.stderr)
         return 1
-        
+
     return 0
+
 
 if __name__ == "__main__":
     sys.exit(asyncio.run(main()))

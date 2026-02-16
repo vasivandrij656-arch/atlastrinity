@@ -204,7 +204,8 @@ const ExecutionLog: React.FC<ExecutionLogProps> = ({ logs }) => {
           const isNew = newLogIds.has(log.id);
 
           return (
-            <div
+            <button
+              type="button"
               key={log.id}
               className={`group ${isNew ? 'log-stream-in' : ''}`}
               style={{
@@ -216,12 +217,21 @@ const ExecutionLog: React.FC<ExecutionLogProps> = ({ logs }) => {
                 borderRadius: '2px',
                 transition: 'background 0.2s ease',
                 cursor: 'default',
+                background: 'none',
+                border: 'none',
+                textAlign: 'left',
+                width: 'calc(100% - 2px)',
               }}
               onMouseEnter={(e) => {
                 e.currentTarget.style.background = 'rgba(255, 255, 255, 0.03)';
               }}
               onMouseLeave={(e) => {
                 e.currentTarget.style.background = 'transparent';
+              }}
+              onKeyDown={(e) => {
+                if (e.key === 'Enter' || e.key === ' ') {
+                  // If we added a click handler in the future, it would go here
+                }
               }}
             >
               {/* Header Row: Agent + Time + Type */}
@@ -231,10 +241,8 @@ const ExecutionLog: React.FC<ExecutionLogProps> = ({ logs }) => {
                   alignItems: 'center',
                   gap: '8px',
                   marginBottom: '2px',
-                  opacity: 0.35,
-                  transition: 'opacity 0.3s ease',
                 }}
-                className="group-hover-opacity-60"
+                className="group-hover-opacity-60 opacity-35"
               >
                 <span
                   style={{
@@ -274,8 +282,6 @@ const ExecutionLog: React.FC<ExecutionLogProps> = ({ logs }) => {
                   {getLogTypeIcon(log.type)} {log.type.toUpperCase()}
                 </span>
               </div>
-
-              {/* Content Row */}
               <div style={{ flex: 1, paddingLeft: '2px' }}>
                 <span
                   style={{
@@ -312,7 +318,7 @@ const ExecutionLog: React.FC<ExecutionLogProps> = ({ logs }) => {
                     : log.message.replace('🧠 [VIBE-THOUGHT]', '').trim()}
                 </span>
               </div>
-            </div>
+            </button>
           );
         })}
 

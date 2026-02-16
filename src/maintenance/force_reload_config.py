@@ -21,6 +21,7 @@ def force_reload_config():
 
     # Reload modules
     from src.brain.config_loader import config
+
     importlib.reload(sys.modules["src.brain.config_loader"])
 
     # Check config
