@@ -4,8 +4,8 @@ import sys
 
 sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), "..", "src")))
 
-from brain.agents.atlas import Atlas
-from brain.agents.grisha import Grisha
+from src.brain.agents.atlas import Atlas
+from src.brain.agents.grisha import Grisha
 
 
 async def test_grisha_audit():

@@ -1,6 +1,6 @@
 import pytest
 
-from brain.agents.tetyana import Tetyana
+from src.brain.agents.tetyana import Tetyana
 
 
 @pytest.mark.asyncio
@@ -16,7 +16,7 @@ async def test_fetch_urls_patch(monkeypatch):
         captured["args"] = dict(arguments)  # copy to inspect
         return {"success": True, "output": "ok"}
 
-    from brain.mcp_manager import mcp_manager
+    from src.brain.mcp_manager import mcp_manager
 
     monkeypatch.setattr(mcp_manager, "call_tool", fake_call)
 

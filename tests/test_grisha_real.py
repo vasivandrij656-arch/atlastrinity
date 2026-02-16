@@ -9,7 +9,7 @@ load_dotenv()
 # Add src path
 sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), "src")))
 
-from brain.agents.grisha import Grisha
+from src.brain.agents.grisha import Grisha
 
 
 async def test_grisha_real():

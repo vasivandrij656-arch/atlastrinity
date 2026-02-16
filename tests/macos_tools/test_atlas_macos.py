@@ -9,7 +9,7 @@ import sys
 import time
 
 sys.path.append("src")
-from brain.mcp_manager import MCPManager
+from src.brain.mcp_manager import MCPManager
 
 # Working tools with correct parameters
 ATLAS_TOOLS = [

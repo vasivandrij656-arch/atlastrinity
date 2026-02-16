@@ -1,7 +1,7 @@
 import pytest
 
-from brain.message_bus import AgentMsg, MessageType, message_bus
-from brain.prompts import AgentPrompts
+from src.brain.message_bus import AgentMsg, MessageType, message_bus
+from src.brain.prompts import AgentPrompts
 
 
 @pytest.mark.asyncio
@@ -37,7 +37,7 @@ async def test_tetyana_hearing_bus_messages():
     # we verify that the prompt generation logic (which we updated) includes it.
     from typing import Any
 
-    from brain.prompts import AgentPrompts
+    from src.brain.prompts import AgentPrompts
 
     step_typed: Any = step
     bus_messages_typed: Any = step["bus_messages"]

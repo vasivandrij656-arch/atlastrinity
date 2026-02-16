@@ -12,6 +12,7 @@ You must strictly adhere to the following operational rules and architectural co
 - **Workflow-Driven Generation**: Ensure that any generation pays attention to the workflow in the correct form, so that any generation has a clear direction.
 - **Git Protocol**: After successfully completing a work phase or fixing a bug, always propose a git commit with a clear and descriptive message summarizing the changes.
 - **Templates First**: Apply configuration changes ONLY to templates in the `Configuration Templates` directory. Verify that they are synchronized to the corresponding files in the `Active Configurations` folder.
+- **Python Version**: ALWAYS use **Python 3.12**. This version is mandatory for all core logic, scripts, and environment configurations. Ensure all dependency management and runtime checks adhere to this version.
 
 ## Model Suite (Copilot Provider Only)
 

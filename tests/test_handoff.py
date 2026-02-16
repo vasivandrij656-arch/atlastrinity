@@ -14,7 +14,7 @@ sys.modules["ukrainian_tts.tts"] = MagicMock()
 # Add src path
 sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), "src")))
 
-from brain.orchestrator import Trinity
+from src.brain.core.orchestration.orchestrator import Trinity
 
 
 # Mock Agents

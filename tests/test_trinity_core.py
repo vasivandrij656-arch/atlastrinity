@@ -80,8 +80,8 @@ class TestAtlasCore:
         result1 = await atlas.analyze_request("привіт")
         assert result1["intent"] == "chat"
 
-        result2 = await atlas.analyze_request("відкрий terminal")
-        assert result2["intent"] == "task"
+        result2 = await atlas.analyze_request("прошу тебе, відкрий термінал та виконай команду ls")
+        assert result2["intent"] == "solo_task"
 
     def test_atlas_voice_messages(self):
         """Test Atlas generates correct voice messages"""

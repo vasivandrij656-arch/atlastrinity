@@ -1,7 +1,7 @@
 import pytest
 
-from brain.agents.tetyana import Tetyana
-from brain.mcp_manager import mcp_manager
+from src.brain.agents.tetyana import Tetyana
+from src.brain.mcp_manager import mcp_manager
 
 
 @pytest.mark.asyncio

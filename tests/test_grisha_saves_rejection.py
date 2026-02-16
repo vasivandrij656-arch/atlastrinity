@@ -1,7 +1,7 @@
 import pytest
 
-from brain.agents.grisha import Grisha, VerificationResult
-from brain.mcp_manager import mcp_manager
+from src.brain.agents.grisha import Grisha, VerificationResult
+from src.brain.mcp_manager import mcp_manager
 
 
 @pytest.mark.asyncio

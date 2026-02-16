@@ -8,7 +8,7 @@ import asyncio
 import sys
 
 sys.path.append("src")
-from brain.mcp_manager import MCPManager
+from src.brain.mcp_manager import MCPManager
 
 
 async def test_enhanced_features():

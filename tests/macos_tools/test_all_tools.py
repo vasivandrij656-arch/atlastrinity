@@ -10,7 +10,7 @@ import sys
 from datetime import datetime
 
 sys.path.append("src")
-from brain.mcp_manager import MCPManager
+from src.brain.mcp_manager import MCPManager
 
 
 async def test_all_tools():

@@ -7,7 +7,7 @@ sys.path.insert(0, str(src_path))
 
 import logging
 
-from brain.logger import SecretFilter
+from src.brain.logger import SecretFilter
 
 
 class TestSecretFilter(unittest.TestCase):

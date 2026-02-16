@@ -10,7 +10,7 @@ import sys
 import time
 
 sys.path.append("src")
-from brain.mcp_manager import MCPManager
+from src.brain.mcp_manager import MCPManager
 
 # All 42 tools with comprehensive test scenarios
 DEEP_TEST_SCENARIOS = [
