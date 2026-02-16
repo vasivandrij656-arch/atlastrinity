@@ -26,11 +26,9 @@ WINDSURF_UID_MAP: dict[str, str] = {
     "swe-1-mini": "MODEL_SWE_1_MINI",
     "swe-grep": "MODEL_SWE_GREP",
     "windsurf-fast": "MODEL_CHAT_11121",
-
     # Windsurf Premier 🚀
     "llama-3.1-405b": "MODEL_LLAMA_3_1_405B",
     "llama-3.1-70b": "MODEL_LLAMA_3_1_70B",
-    
     # Next-Gen Premium (Changelog)
     "claude-4.6-opus": "MODEL_CLAUDE_4_6_OPUS",
     "claude-4.6-opus-fast": "MODEL_CLAUDE_4_6_OPUS_FAST",
@@ -41,7 +39,6 @@ WINDSURF_UID_MAP: dict[str, str] = {
     "sonnet-4.5": "MODEL_SONNET_4_5",
     "gpt-5.1-codex": "MODEL_GPT_5_1_CODEX",
     "gpt-5.1-codex-mini": "MODEL_GPT_5_1_CODEX_MINI",
-    
     # Legacy/Standard Premium
     "gpt-4o": "MODEL_GPT_4_O",
     "claude-3.5-sonnet": "MODEL_CLAUDE_3_5_SONNET",
