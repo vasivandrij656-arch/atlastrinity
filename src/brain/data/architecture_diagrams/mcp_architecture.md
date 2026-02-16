@@ -1,4 +1,8 @@
 
+<!-- AUTO-UPDATED: 2026-02-16T11:33:30.705750 -->
+<!-- Modified: .agent/docs/mcp_architecture_diagram.md, src/brain/data/architecture_diagrams/mcp_architecture.md, vendor/mcp-server-windsurf/Package.swift -->
+
+
 <!-- AUTO-UPDATED: 2026-02-16T11:33:03.614298 -->
 <!-- Modified: .agent/docs/mcp_architecture_diagram.md, .secrets.baseline, scripts/verify_native_deployment.py -->
 

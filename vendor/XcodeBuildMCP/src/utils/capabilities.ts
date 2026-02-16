@@ -36,11 +36,7 @@ export interface SystemCapabilities {
   bridgeBackends: BridgeAvailability;
 }
 
-async function runQuiet(
-  command: string,
-  args: string[],
-  timeoutMs = 3000,
-): Promise<string | null> {
+async function runQuiet(command: string, args: string[], timeoutMs = 3000): Promise<string | null> {
   try {
     const res = await execFileAsync(command, args, { timeout: timeoutMs });
     return (res.stdout ?? '').toString().trim() || null;
@@ -67,9 +63,7 @@ export async function detectXcodeCapabilities(): Promise<XcodeCapabilities> {
     build = buildMatch?.[1] ?? null;
   }
 
-  const hasSimulatorRuntime = installed
-    ? existsSync('/Library/Developer/CoreSimulator')
-    : false;
+  const hasSimulatorRuntime = installed ? existsSync('/Library/Developer/CoreSimulator') : false;
 
   // Xcode 26+ ships a Predictive Code Completion Model that gets downloaded
   // via Xcode > Settings > Components.  The model lands at a well-known path
@@ -101,8 +95,9 @@ async function detectInstalledSdks(): Promise<string[]> {
     const parsed: unknown = JSON.parse(output);
     if (Array.isArray(parsed)) {
       return parsed
-        .filter((sdk): sdk is { canonicalName: string } =>
-          typeof sdk === 'object' && sdk !== null && 'canonicalName' in sdk,
+        .filter(
+          (sdk): sdk is { canonicalName: string } =>
+            typeof sdk === 'object' && sdk !== null && 'canonicalName' in sdk,
         )
         .map((sdk) => sdk.canonicalName);
     }
@@ -117,10 +112,7 @@ async function detectInstalledSdks(): Promise<string[]> {
 }
 
 export async function detectMacOSCapabilities(): Promise<MacOSCapabilities> {
-  const [swVers, arch] = await Promise.all([
-    runQuiet('sw_vers', []),
-    runQuiet('uname', ['-m']),
-  ]);
+  const [swVers, arch] = await Promise.all([runQuiet('sw_vers', []), runQuiet('uname', ['-m'])]);
 
   let version: string | null = null;
   let build: string | null = null;
@@ -132,10 +124,11 @@ export async function detectMacOSCapabilities(): Promise<MacOSCapabilities> {
   // Check accessibility permission via System Events (heuristic)
   let hasAccessibilityPermission: boolean | null = null;
   try {
-    const axCheck = await runQuiet('osascript', [
-      '-e',
-      'tell application "System Events" to return name of first process',
-    ], 2000);
+    const axCheck = await runQuiet(
+      'osascript',
+      ['-e', 'tell application "System Events" to return name of first process'],
+      2000,
+    );
     hasAccessibilityPermission = axCheck !== null;
   } catch {
     hasAccessibilityPermission = null;
@@ -151,10 +144,7 @@ export async function detectMacOSCapabilities(): Promise<MacOSCapabilities> {
 }
 
 export async function detectSystemCapabilities(): Promise<SystemCapabilities> {
-  const [xcode, macos] = await Promise.all([
-    detectXcodeCapabilities(),
-    detectMacOSCapabilities(),
-  ]);
+  const [xcode, macos] = await Promise.all([detectXcodeCapabilities(), detectMacOSCapabilities()]);
 
   // Detect availability of native Swift MCP backend binaries
   const macosUseBinaryPath =

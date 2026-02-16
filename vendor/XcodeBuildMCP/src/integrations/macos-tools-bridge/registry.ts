@@ -1,4 +1,3 @@
-
 import type { CallToolResult } from '@modelcontextprotocol/sdk/types.js';
 import { BridgeBackend, type BridgeBackendConfig, type BridgeBackendStatus } from './backend.ts';
 import { log } from '../../utils/logger.ts';
@@ -36,10 +35,16 @@ export class BackendRegistry {
     try {
       await backend.connect();
       const status = backend.getStatus();
-      log('info', `[bridge-registry] Backend "${config.id}" connected (PID: ${status.bridgePid}, ${status.toolCount} server tools)`);
+      log(
+        'info',
+        `[bridge-registry] Backend "${config.id}" connected (PID: ${status.bridgePid}, ${status.toolCount} server tools)`,
+      );
       return true;
     } catch (error) {
-      log('warning', `[bridge-registry] Backend "${config.id}" unavailable: ${error instanceof Error ? error.message : String(error)}`);
+      log(
+        'warning',
+        `[bridge-registry] Backend "${config.id}" unavailable: ${error instanceof Error ? error.message : String(error)}`,
+      );
       return false;
     }
   }
@@ -62,7 +67,11 @@ export class BackendRegistry {
   /**
    * Route a tool call to the correct backend.
    */
-  async callTool(bridgedToolName: string, remoteToolName: string, args: Record<string, unknown>): Promise<CallToolResult> {
+  async callTool(
+    bridgedToolName: string,
+    remoteToolName: string,
+    args: Record<string, unknown>,
+  ): Promise<CallToolResult> {
     const backendId = this.toolToBackend.get(bridgedToolName);
     if (!backendId) {
       throw new Error(`No backend registered for tool "${bridgedToolName}"`);

@@ -178,7 +178,7 @@ export async function bootstrapServer(
   }
 
   await registerResources(server);
-  
+
   // Register all bridged native tools (macOS-use + Google Maps)
   await registerBridgedTools(server);
 }

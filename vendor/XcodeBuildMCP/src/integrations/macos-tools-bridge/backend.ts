@@ -1,4 +1,3 @@
-
 import { Client } from '@modelcontextprotocol/sdk/client/index.js';
 import {
   StdioClientTransport,
@@ -183,7 +182,10 @@ export class BridgeBackend {
     }
   }
 
-  private async executeToolCall(name: string, args: Record<string, unknown>): Promise<CallToolResult> {
+  private async executeToolCall(
+    name: string,
+    args: Record<string, unknown>,
+  ): Promise<CallToolResult> {
     if (!this.client) {
       throw new Error(`Backend "${this.config.id}" is not connected`);
     }
@@ -263,7 +265,10 @@ export function createSwiftBackendConfig(
     serverParams: {
       command: binaryPath,
       args: [],
-      env: { ...process.env, ...envOverrides } satisfies Record<string, string | undefined> as Record<string, string>,
+      env: { ...process.env, ...envOverrides } satisfies Record<
+        string,
+        string | undefined
+      > as Record<string, string>,
     },
   };
 }

@@ -1,4 +1,3 @@
-
 import type { McpServer } from '@modelcontextprotocol/sdk/server/mcp.js';
 import process from 'node:process';
 import { createSwiftBackendConfig } from './backend.ts';
@@ -83,29 +82,31 @@ export async function registerBridgedTools(
     createSwiftBackendConfig('windsurf', 'Windsurf IDE', WINDSURF_BINARY),
   ];
 
-  const enabledSet = options.enabledBackends
-    ? new Set(options.enabledBackends)
-    : null;
+  const enabledSet = options.enabledBackends ? new Set(options.enabledBackends) : null;
 
   const connectResults = await Promise.all(
     backends
       .filter((b) => !enabledSet || enabledSet.has(b.id))
       .map(async (config) => {
-        log('info', `[bridge] Attempting to connect to backend: ${config.id} (${config.serverParams.command})`);
+        log(
+          'info',
+          `[bridge] Attempting to connect to backend: ${config.id} (${config.serverParams.command})`,
+        );
         try {
           const ok = await reg.addBackend(config);
           log('info', `[bridge] Backend ${config.id}: ${ok ? 'CONNECTED' : 'FAILED'}`);
           return { id: config.id, connected: ok };
         } catch (error) {
-          log('error', `[bridge] Backend ${config.id} failed with error: ${error instanceof Error ? error.message : String(error)}`);
+          log(
+            'error',
+            `[bridge] Backend ${config.id} failed with error: ${error instanceof Error ? error.message : String(error)}`,
+          );
           return { id: config.id, connected: false };
         }
       }),
   );
 
-  const connectedIds = new Set(
-    connectResults.filter((r) => r.connected).map((r) => r.id),
-  );
+  const connectedIds = new Set(connectResults.filter((r) => r.connected).map((r) => r.id));
 
   if (connectedIds.size === 0) {
     log('warning', '[bridge] No backends available, skipping tool registration');
@@ -118,7 +119,10 @@ export async function registerBridgedTools(
 
   // Filter by connected backends
   tools = tools.filter((t) => connectedIds.has(t.backendId));
-  log('info', `[bridge] Tools after backend filter: ${tools.length} (backends: ${Array.from(connectedIds).join(', ')})`);
+  log(
+    'info',
+    `[bridge] Tools after backend filter: ${tools.length} (backends: ${Array.from(connectedIds).join(', ')})`,
+  );
 
   // Category filter
   if (options.categories && options.categories.length > 0) {
