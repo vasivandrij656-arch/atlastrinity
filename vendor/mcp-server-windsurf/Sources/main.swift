@@ -165,6 +165,177 @@ actor HealthMonitor {
 
 let healthMonitor = HealthMonitor()
 
+// MARK: - Protobuf Helpers
+
+/// Encode an integer as a protobuf varint
+func protoVarint(_ val: Int) -> Data {
+    var v = val
+    var data = Data()
+    while v > 0x7F {
+        data.append(UInt8((v & 0x7F) | 0x80))
+        v >>= 7
+    }
+    data.append(UInt8(v))
+    return data
+}
+
+/// Encode a string field in protobuf binary format
+func protoStr(_ fieldNum: Int, _ s: String) -> Data {
+    let b = s.data(using: .utf8) ?? Data()
+    var data = protoVarint((fieldNum << 3) | 2)
+    data.append(protoVarint(b.count))
+    data.append(b)
+    return data
+}
+
+/// Encode an integer field in protobuf binary format
+func protoInt(_ fieldNum: Int, _ val: Int) -> Data {
+    var data = protoVarint((fieldNum << 3) | 0)
+    data.append(protoVarint(val))
+    return data
+}
+
+/// Encode a sub-message field in protobuf binary format
+func protoMsg(_ fieldNum: Int, _ inner: Data) -> Data {
+    var data = protoVarint((fieldNum << 3) | 2)
+    data.append(protoVarint(inner.count))
+    data.append(inner)
+    return data
+}
+
+/// Build Metadata proto binary (exa.codeium_common_pb.Metadata)
+func buildMetadataProto(apiKey: String, sessionId: String) -> Data {
+    var data = Data()
+    data.append(protoStr(1, "windsurf"))
+    data.append(protoStr(2, EXTENSION_VERSION))
+    data.append(protoStr(3, apiKey))
+    data.append(protoStr(4, "en"))
+    data.append(protoStr(7, IDE_VERSION))
+    data.append(protoInt(9, 1))
+    data.append(protoStr(10, sessionId))
+    return data
+}
+
+/// Extract string at target field from proto binary
+func protoExtractString(_ data: Data, _ targetField: Int) -> String? {
+    var offset = 0
+    let len = data.count
+
+    while offset < len {
+        // Read tag
+        var tag = 0
+        var shift = 0
+        while offset < len {
+            let b = data[offset]
+            offset += 1
+            tag |= (Int(b & 0x7F) << shift)
+            shift += 7
+            if (b & 0x80) == 0 { break }
+        }
+
+        let fieldNum = tag >> 3
+        let wireType = tag & 0x07
+
+        if fieldNum == 0 { break }
+
+        if wireType == 0 {  // Varint
+            while offset < len {
+                let b = data[offset]
+                offset += 1
+                if (b & 0x80) == 0 { break }
+            }
+        } else if wireType == 2 {  // Length Delimited
+            var length = 0
+            var s = 0
+            while offset < len {
+                let b = data[offset]
+                offset += 1
+                length |= (Int(b & 0x7F) << s)
+                s += 7
+                if (b & 0x80) == 0 { break }
+            }
+
+            if offset + length > len { break }
+            let payload = data.subdata(in: offset..<offset + length)
+            offset += length
+
+            if fieldNum == targetField {
+                return String(data: payload, encoding: .utf8)
+            }
+        } else if wireType == 1 {  // 64-bit
+            offset += 8
+        } else if wireType == 5 {  // 32-bit
+            offset += 4
+        } else {
+            break
+        }
+    }
+    return nil
+}
+
+/// Recursively find all strings in proto binary (fallback)
+func protoFindStrings(_ data: Data, minLen: Int = 4) -> [String] {
+    var results: [String] = []
+    var offset = 0
+    let len = data.count
+
+    while offset < len {
+        // Read tag
+        var tag = 0
+        var shift = 0
+        while offset < len {
+            let b = data[offset]
+            offset += 1
+            tag |= (Int(b & 0x7F) << shift)
+            shift += 7
+            if (b & 0x80) == 0 { break }
+        }
+
+        let fieldNum = tag >> 3
+        let wireType = tag & 0x07
+
+        if fieldNum == 0 { break }
+
+        if wireType == 0 {  // Varint
+            while offset < len {
+                let b = data[offset]
+                offset += 1
+                if (b & 0x80) == 0 { break }
+            }
+        } else if wireType == 2 {  // Length Delimited
+            var length = 0
+            var s = 0
+            while offset < len {
+                let b = data[offset]
+                offset += 1
+                length |= (Int(b & 0x7F) << s)
+                s += 7
+                if (b & 0x80) == 0 { break }
+            }
+
+            if offset + length > len { break }
+            let payload = data.subdata(in: offset..<offset + length)
+            offset += length
+
+            if let text = String(data: payload, encoding: .utf8), text.count >= minLen,
+                text.allSatisfy({ $0.isASCII })
+            {
+                results.append(text)
+            }
+            // Recurse
+            results.append(contentsOf: protoFindStrings(payload, minLen: minLen))
+
+        } else if wireType == 1 {  // 64-bit
+            offset += 8
+        } else if wireType == 5 {  // 32-bit
+            offset += 4
+        } else {
+            break
+        }
+    }
+    return results
+}
+
 // MARK: - Windsurf Models
 
 struct WindsurfModel {
@@ -847,6 +1018,14 @@ func handleChat(message: String, model: String?, systemPrompt: String?, stream: 
     }
 }
 
+// MARK: - Stream Buffering
+actor StreamAccumulator {
+    var data = Data()
+    func append(_ d: Data) { data.append(d) }
+    func totalCount() -> Int { data.count }
+    func getData() -> Data { data }
+}
+
 func handleCascade(message: String, model: String?) async -> String {
     let activeModel = await state.getModel()
     let useModel = model ?? activeModel
@@ -855,163 +1034,188 @@ func handleCascade(message: String, model: String?) async -> String {
     }
 
     let apiKey = ProcessInfo.processInfo.environment["WINDSURF_API_KEY"] ?? ""
-    if apiKey.isEmpty {
-        return "❌ WINDSURF_API_KEY not set."
-    }
+    if apiKey.isEmpty { return "❌ WINDSURF_API_KEY not set." }
 
-    if !validateAPIKey(apiKey) {
-        return "❌ Invalid WINDSURF_API_KEY format. Expected format: sk-ws-..."
-    }
+    // Map model name to internal UID
+    let modelUid = {
+        if let m = WINDSURF_MODELS.first(where: { $0.id == useModel }) { return m.protobufId }
+        let map: [String: String] = [
+            "swe-1.5": "MODEL_SWE_1_5",
+            "deepseek-v3": "MODEL_DEEPSEEK_V3",
+            "swe-1": "MODEL_SWE_1",
+            "windsurf-fast": "MODEL_CHAT_11121",
+        ]
+        return map[useModel] ?? useModel
+    }()
 
-    let modelProtobufId = WINDSURF_MODELS.first { $0.id == useModel }?.protobufId ?? useModel
+    // Gen Session ID
+    let sessionId = "atlastrinity-mcp-\(getpid())-\(UUID().uuidString.prefix(8))"
+    let meta = buildMetadataProto(apiKey: apiKey, sessionId: sessionId)
 
-    // Step 1: StartCascade
-    let startPayload: [String: Any] = [
-        "metadata": buildLSMetadata(apiKey: apiKey)
-    ]
-    let startEnvelope = makeEnvelope(startPayload)
+    // Helper: Send Proto Request
+    func sendProto(_ endpoint: String, _ payload: Data) async throws -> Data {
+        let url = URL(string: "http://127.0.0.1:\(connection.port)\(endpoint)")!
+        var req = URLRequest(url: url, timeoutInterval: 30)
+        req.httpMethod = "POST"
+        req.setValue("application/grpc", forHTTPHeaderField: "Content-Type")
+        req.setValue("trailers", forHTTPHeaderField: "TE")
+        req.setValue(connection.csrfToken, forHTTPHeaderField: "x-codeium-csrf-token")
 
-    let startUrl = URL(string: "http://127.0.0.1:\(connection.port)\(LS_START_CASCADE)")!
-    var startRequest = URLRequest(url: startUrl, timeoutInterval: 30)
-    startRequest.httpMethod = "POST"
-    startRequest.setValue("application/connect+json", forHTTPHeaderField: "Content-Type")
-    startRequest.setValue("1", forHTTPHeaderField: "Connect-Protocol-Version")
-    startRequest.setValue(connection.csrfToken, forHTTPHeaderField: "x-codeium-csrf-token")
-    startRequest.httpBody = startEnvelope
+        // Envelope
+        var env = Data()
+        env.append(0)
+        var len = UInt32(payload.count).bigEndian
+        env.append(Data(bytes: &len, count: 4))
+        env.append(payload)
+        req.httpBody = env
 
-    var cascadeId: String = ""
-
-    do {
-        let (startData, _) = try await URLSession.shared.data(for: startRequest)
-        // Parse cascadeId from response
-        if let json = try? JSONSerialization.jsonObject(with: startData) as? [String: Any] {
-            cascadeId = json["cascadeId"] as? String ?? ""
+        let (data, resp) = try await URLSession.shared.data(for: req)
+        guard let httpResp = resp as? HTTPURLResponse, httpResp.statusCode == 200 else {
+            throw MCPError.internalError("HTTP Error for \(endpoint)")
         }
-        // Try parsing from streaming frames
-        if cascadeId.isEmpty {
-            let (text, _) = parseStreamingFrames(startData)
-            if let data = text.data(using: .utf8),
-                let json = try? JSONSerialization.jsonObject(with: data) as? [String: Any]
-            {
-                cascadeId = json["cascadeId"] as? String ?? ""
+
+        // Unwrap Envelope
+        if data.count >= 5 {
+            let len = UInt32(
+                bigEndian: data.subdata(in: 1..<5).withUnsafeBytes { $0.load(as: UInt32.self) })
+            if data.count >= 5 + Int(len) {
+                return data.subdata(in: 5..<5 + Int(len))
             }
         }
-    } catch {
-        return "❌ Failed to start Cascade: \(error.localizedDescription)"
+        return Data()
     }
-
-    if cascadeId.isEmpty {
-        cascadeId = UUID().uuidString
-        fputs("log: [windsurf] Using generated cascadeId\n", stderr)
-    }
-
-    fputs("log: [windsurf] Cascade started: \(cascadeId)\n", stderr)
-
-    // Step 2: Stream reactive updates (background listener)
-    let streamUrl = URL(string: "http://127.0.0.1:\(connection.port)\(LS_STREAM_CASCADE)")!
-    let streamPayload: [String: Any] = [
-        "metadata": buildLSMetadata(apiKey: apiKey),
-        "cascadeId": cascadeId,
-        "protocolVersion": 1,
-    ]
-    let streamEnvelope = makeEnvelope(streamPayload)
-
-    var streamRequest = URLRequest(url: streamUrl, timeoutInterval: CASCADE_TIMEOUT)
-    streamRequest.httpMethod = "POST"
-    streamRequest.setValue("application/connect+json", forHTTPHeaderField: "Content-Type")
-    streamRequest.setValue("1", forHTTPHeaderField: "Connect-Protocol-Version")
-    streamRequest.setValue(connection.csrfToken, forHTTPHeaderField: "x-codeium-csrf-token")
-    streamRequest.httpBody = streamEnvelope
-
-    // Start stream in background, collect response
-    let streamTask = Task<Data, Error> {
-        let (data, _) = try await URLSession.shared.data(for: streamRequest)
-        return data
-    }
-
-    // Step 3: Queue message
-    try? await Task.sleep(nanoseconds: 500_000_000)  // 0.5s delay for stream setup
-
-    let queueUrl = URL(string: "http://127.0.0.1:\(connection.port)\(LS_QUEUE_CASCADE)")!
-    let queuePayload: [String: Any] = [
-        "metadata": buildLSMetadata(apiKey: apiKey),
-        "cascadeId": cascadeId,
-        "items": [
-            [
-                "humanMessage": [
-                    "text": message
-                ]
-            ] as [String: Any]
-        ],
-        "cascadeConfig": [
-            "model": modelProtobufId
-        ] as [String: Any],
-    ]
-    let queueEnvelope = makeEnvelope(queuePayload)
-
-    var queueRequest = URLRequest(url: queueUrl, timeoutInterval: 30)
-    queueRequest.httpMethod = "POST"
-    queueRequest.setValue("application/connect+json", forHTTPHeaderField: "Content-Type")
-    queueRequest.setValue("1", forHTTPHeaderField: "Connect-Protocol-Version")
-    queueRequest.setValue(connection.csrfToken, forHTTPHeaderField: "x-codeium-csrf-token")
-    queueRequest.httpBody = queueEnvelope
 
     do {
-        let (_, _) = try await URLSession.shared.data(for: queueRequest)
-    } catch {
+        // Step 1: StartCascade
+        let startPayload = protoMsg(1, meta)
+        let startResp = try await sendProto(LS_START_CASCADE, startPayload)
+
+        guard let cascadeId = protoExtractString(startResp, 1), !cascadeId.isEmpty else {
+            return "❌ Failed to start Cascade (No ID returned)"
+        }
+        fputs("log: [windsurf] Cascade started: \(cascadeId)\n", stderr)
+
+        // Step 2: StreamCascadeReactiveUpdates (Background)
+        let streamPayload = protoInt(1, 1) + protoStr(2, cascadeId)
+
+        let streamUrl = URL(string: "http://127.0.0.1:\(connection.port)\(LS_STREAM_CASCADE)")!
+        var streamReq = URLRequest(url: streamUrl, timeoutInterval: CASCADE_TIMEOUT)
+        streamReq.httpMethod = "POST"
+        streamReq.setValue("application/grpc", forHTTPHeaderField: "Content-Type")
+        streamReq.setValue("trailers", forHTTPHeaderField: "TE")
+        streamReq.setValue(connection.csrfToken, forHTTPHeaderField: "x-codeium-csrf-token")
+
+        // Envelope
+        var streamEnv = Data()
+        streamEnv.append(0)
+        var sLen = UInt32(streamPayload.count).bigEndian
+        streamEnv.append(Data(bytes: &sLen, count: 4))
+        streamEnv.append(streamPayload)
+        streamReq.httpBody = streamEnv
+
+        // Use streaming bytes
+        let accumulator = StreamAccumulator()
+        let streamTask = Task {
+            do {
+                if #available(macOS 12.0, *) {
+                    let (bytes, resp) = try await URLSession.shared.bytes(for: streamReq)
+                    guard let httpResp = resp as? HTTPURLResponse, httpResp.statusCode == 200 else {
+                        fputs("log: [windsurf] Stream failed to start\n", stderr)
+                        return
+                    }
+                    for try await byte in bytes {
+                        await accumulator.append(Data([byte]))
+                    }
+                } else {
+                    fputs("log: [windsurf] Streaming requires macOS 12+\n", stderr)
+                }
+            } catch {
+                // Ignore cancellation
+                let nsErr = error as NSError
+                if nsErr.domain == NSURLErrorDomain && nsErr.code == NSURLErrorCancelled {
+                    return
+                }
+                fputs("log: [windsurf] Stream finished/error: \(error)\n", stderr)
+            }
+        }
+
+        try await Task.sleep(nanoseconds: 300_000_000)
+
+        // Step 3: QueueCascadeMessage
+        var itemsProto = Data()
+        let itemP = protoStr(1, message)
+        itemsProto.append(protoMsg(3, itemP))
+
+        let plannerProto = protoStr(34, modelUid) + protoStr(35, modelUid)
+        let configProto = protoMsg(5, protoMsg(1, plannerProto))
+
+        let queuePayload = protoMsg(1, meta) + protoStr(2, cascadeId) + itemsProto + configProto
+        let _ = try await sendProto(LS_QUEUE_CASCADE, queuePayload)
+
+        // Step 4: Interrupt
+        let interruptPayload = protoMsg(1, meta) + protoStr(2, cascadeId)
+        let _ = try await sendProto(LS_INTERRUPT_CASCADE, interruptPayload)
+
+        // Step 5: Poll for response stability
+        var lastCount = 0
+        var stableTicks = 0
+        // Wait up to 120s max
+        for _ in 0..<120 {
+            try await Task.sleep(nanoseconds: 1_000_000_000)
+            let currentCount = await accumulator.totalCount()
+            if currentCount > 0 && currentCount == lastCount {
+                stableTicks += 1
+                // Wait for 3 seconds of silence
+                if stableTicks >= 3 { break }
+            } else {
+                stableTicks = 0
+            }
+            lastCount = currentCount
+        }
+
         streamTask.cancel()
-        return "❌ Failed to queue Cascade message: \(error.localizedDescription)"
-    }
+        let streamData = await accumulator.getData()
 
-    // Step 4: Trigger processing
-    let interruptUrl = URL(string: "http://127.0.0.1:\(connection.port)\(LS_INTERRUPT_CASCADE)")!
-    let interruptPayload: [String: Any] = [
-        "metadata": buildLSMetadata(apiKey: apiKey),
-        "cascadeId": cascadeId,
-    ]
-    let interruptEnvelope = makeEnvelope(interruptPayload)
+        // Parse gRPC Envelopes first
+        var strings: [String] = []
+        var offset = 0
 
-    var interruptRequest = URLRequest(url: interruptUrl, timeoutInterval: 30)
-    interruptRequest.httpMethod = "POST"
-    interruptRequest.setValue("application/connect+json", forHTTPHeaderField: "Content-Type")
-    interruptRequest.setValue("1", forHTTPHeaderField: "Connect-Protocol-Version")
-    interruptRequest.setValue(connection.csrfToken, forHTTPHeaderField: "x-codeium-csrf-token")
-    interruptRequest.httpBody = interruptEnvelope
+        while offset + 5 <= streamData.count {
+            // Read length (bytes 1-4)
+            let lenData = streamData.subdata(in: offset + 1..<offset + 5)
+            let len = Int(UInt32(bigEndian: lenData.withUnsafeBytes { $0.load(as: UInt32.self) }))
 
-    do {
-        let (_, _) = try await URLSession.shared.data(for: interruptRequest)
-    } catch {
-        fputs("log: [windsurf] Interrupt failed (non-fatal): \(error)\n", stderr)
-    }
+            if offset + 5 + len > streamData.count {
+                break
+            }
 
-    // Step 5: Collect response from stream
-    do {
-        let streamData = try await streamTask.value
-        let (responseText, errorMsg) = parseStreamingFrames(streamData)
+            let payload = streamData.subdata(in: offset + 5..<offset + 5 + len)
+            strings.append(contentsOf: protoFindStrings(payload, minLen: 5))
 
-        if let err = errorMsg {
-            return """
-                ❌ Cascade Error
-                ───────────────────
-                \(err)
-                """
+            offset += 5 + len
         }
 
-        if responseText.isEmpty {
-            return """
-                ⚠️ Cascade completed but returned no text.
-                This may indicate: rate limit, model unavailable, or empty response.
-                CascadeId: \(cascadeId)
-                """
+        // Filter heuristic: remove system prompts and metadata
+        let filtered = strings.filter {
+            !$0.contains(cascadeId) && !$0.contains(modelUid) && !$0.contains(message)
+                && !$0.contains(apiKey) && !$0.contains("windsurf") && !$0.contains("swe-1.5")
+                && !$0.contains("CRITICAL:") && !$0.contains("IMPORTANT:")
+                && !$0.contains("JSON FORMAT") && !$0.contains("WARNING:")
+                && !$0.contains("jsonrpc")
         }
 
-        return """
-            🌊 Windsurf Cascade Response (model: \(useModel))
-            ═══════════════════════════════════════════════════
-            \(responseText)
-            """
+        // Prefer the longest remaining string that looks like a natural response
+        if let longest = filtered.max(by: { $0.count < $1.count }) {
+            return """
+                🌊 Cascade Response (\(useModel))
+                ──────────────────────
+                \(longest)
+                """
+        }
+        return "❌ No response text found in stream. (Raw bytes: \(streamData.count))"
+
     } catch {
-        return "❌ Cascade stream error: \(error.localizedDescription)"
+        return "❌ Cascade Error: \(error.localizedDescription)"
     }
 }
 
