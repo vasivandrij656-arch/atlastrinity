@@ -211,10 +211,10 @@ class VibeWindsurfProxyHandler(http.server.BaseHTTPRequestHandler):
                 with concurrent.futures.ThreadPoolExecutor(max_workers=1) as executor:
                     future = executor.submit(llm.invoke, windsurf_messages)
                     try:
-                        response = future.result(timeout=30)  # 30 second timeout
+                        response = future.result(timeout=120)  # 120 second timeout
                     except concurrent.futures.TimeoutError:
-                        error("Windsurf API timeout after 30 seconds")
-                        self.send_error_response("Windsurf API timeout after 30 seconds", 504)
+                        error("Windsurf API timeout after 120 seconds")
+                        self.send_error_response("Windsurf API timeout after 120 seconds", 504)
                         return
             except Exception as e:
                 error(f"Windsurf API error: {e}")

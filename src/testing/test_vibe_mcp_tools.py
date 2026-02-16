@@ -42,7 +42,7 @@ async def test_vibe_prompt_fallback():
             ),
             ProviderConfig(
                 name="copilot",
-                api_base="http://127.0.0.1:8085",
+                api_base="http://127.0.0.1:8086",
                 api_key_env_var="COPILOT_SESSION_TOKEN",
                 api_style=ApiStyle.OPENAI,
                 backend=Backend.GENERIC,

@@ -55,6 +55,10 @@ struct GlobalState {
     static let pluginManager = PluginManager.shared
     static let analyticsDashboard = AnalyticsDashboard.shared
     static let apiVersionManager = APIVersionManager.shared
+
+    // Server retention
+    static var server: Server?
+    static var transport: StdioTransport?
 }
 
 // MARK: - Health Monitoring
@@ -1871,8 +1875,12 @@ func setupAndStartServer() async throws -> Server {
     // Start server with stdio transport
     let transport = StdioTransport()
     try await server.start(transport: transport)
-
     fputs("log: Windsurf MCP Bridge Server started successfully!\n", stderr)
+
+    // Store globally to prevent deallocation
+    GlobalState.server = server
+    GlobalState.transport = transport
+
     return server
 }
 
