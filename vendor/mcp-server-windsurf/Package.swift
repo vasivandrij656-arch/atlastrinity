@@ -15,7 +15,15 @@ let package = Package(
             dependencies: [
                 .product(name: "MCP", package: "swift-sdk")
             ],
-            path: "Sources"
+            path: "Sources",
+            sources: [
+                "main.swift",
+                "FileSystemMonitor.swift",
+                "ProtobufFieldExplorer.swift", 
+                "WindsurfLogger.swift",
+                "WorkspaceManager.swift",
+                "ErrorRecoveryManager.swift"
+            ]
         )
     ]
 )

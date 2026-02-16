@@ -42,7 +42,15 @@ private func sigintHandler(_ sig: Int32) {
     GracefulShutdown.shared.initiateShutdown()
 }
 
-let gracefulShutdown = GracefulShutdown.shared
+// MARK: - Global State
+
+struct GlobalState {
+    static let gracefulShutdown = GracefulShutdown.shared
+    static let healthMonitor = HealthMonitor()
+    static let workspaceManager = WorkspaceManager.shared
+    static let errorRecoveryManager = ErrorRecoveryManager.shared
+    static let logger = WindsurfLogger.shared
+}
 
 // MARK: - Configuration
 
@@ -163,8 +171,6 @@ actor HealthMonitor {
         return status
     }
 }
-
-let healthMonitor = HealthMonitor()
 
 // MARK: - Protobuf Helpers
 
@@ -765,7 +771,78 @@ actor WindsurfState {
     }
 }
 
-let state = WindsurfState()
+// MARK: - Active State
+
+actor WindsurfState {
+    var activeModel: String = "swe-1.5"
+    var cachedConnection: LSConnection? = nil
+    var lastCacheUpdate: Date = Date.distantPast
+    var cacheValidDuration: TimeInterval = 300  // 5 minutes
+
+    func setModel(_ model: String) {
+        activeModel = model
+    }
+
+    func getModel() -> String {
+        return activeModel
+    }
+
+    func getConnection() -> LSConnection? {
+        // Check if cache is still valid
+        if let conn = cachedConnection,
+            Date().timeIntervalSince(lastCacheUpdate) < cacheValidDuration
+        {
+            return conn
+        }
+        return nil
+    }
+
+    func setConnection(_ conn: LSConnection?) {
+        cachedConnection = conn
+        lastCacheUpdate = Date()
+    }
+
+    func invalidateCache() {
+        cachedConnection = nil
+        lastCacheUpdate = Date.distantPast
+    }
+
+    /// Detect and cache LS connection, with heartbeat validation and caching
+    func ensureConnection() -> LSConnection? {
+        // First, try cached connection if still valid
+        if let cached = getConnection(), lsHeartbeat(connection: cached) {
+            return cached
+        }
+
+        // Cache miss or invalid - re-detect
+        let startTime = Date()
+        if let conn = detectLanguageServer() {
+            let latency = Date().timeIntervalSince(startTime)
+            let success = lsHeartbeat(connection: conn)
+
+            // Record metrics
+            Task {
+                await GlobalState.healthMonitor.recordRequest(
+                    success: success, latency: latency, type: "ls_detection")
+            }
+
+            if success {
+                setConnection(conn)
+                return conn
+            }
+        }
+
+        // Detection failed
+        let latency = Date().timeIntervalSince(startTime)
+        Task {
+            await GlobalState.healthMonitor.recordRequest(
+                success: false, latency: latency, type: "ls_detection")
+        }
+
+        invalidateCache()
+        return nil
+    }
+}
 
 // MARK: - Tool Schemas
 
@@ -837,6 +914,52 @@ let switchModelSchema: Value = .object([
         ])
     ]),
     "required": .array([.string("model")]),
+])
+
+let workspaceListSchema: Value = .object([
+    "type": .string("object"),
+    "properties": .object([:]),
+])
+
+let workspaceSwitchSchema: Value = .object([
+    "type": .string("object"),
+    "properties": .object([
+        "workspace_id": .object([
+            "type": .string("string"),
+            "description": .string("Workspace ID to switch to"),
+        ])
+    ]),
+    "required": .array([.string("workspace_id")]),
+])
+
+let workspaceCreateSchema: Value = .object([
+    "type": .string("object"),
+    "properties": .object([
+        "path": .object([
+            "type": .string("string"),
+            "description": .string("Path to the workspace directory"),
+        ]),
+        "name": .object([
+            "type": .string("string"),
+            "description": .string("Optional name for the workspace"),
+        ])
+    ]),
+    "required": .array([.string("path")]),
+])
+
+let systemHealthSchema: Value = .object([
+    "type": .string("object"),
+    "properties": .object([:]),
+])
+
+let fieldExperimentSchema: Value = .object([
+    "type": .string("object"),
+    "properties": .object([
+        "model": .object([
+            "type": .string("string"),
+            "description": .string("Model to use for experiments (default: active model)"),
+        ])
+    ]),
 ])
 
 // MARK: - Helper Functions
@@ -1035,6 +1158,18 @@ func handleCascade(message: String, model: String?) async -> String {
     let apiKey = ProcessInfo.processInfo.environment["WINDSURF_API_KEY"] ?? ""
     if apiKey.isEmpty { return "❌ WINDSURF_API_KEY not set." }
 
+    // Start Action Phase verification and logging
+    startActionPhaseVerification()
+    let cascadeId = "cascade-\(UUID().uuidString.prefix(8))"
+    WindsurfLogger.shared.logCascadeStart(message: message, model: useModel, cascadeId: cascadeId)
+    
+    defer { 
+        if let result = stopActionPhaseVerification() {
+            WindsurfLogger.shared.logActionPhaseComplete(cascadeId: cascadeId, result: result)
+            fputs("log: [windsurf] \(result.summary)\n", stderr)
+        }
+    }
+
     // Map model name to internal UID
     let modelUid = {
         if let m = WINDSURF_MODELS.first(where: { $0.id == useModel }) { return m.protobufId }
@@ -1162,45 +1297,8 @@ func handleCascade(message: String, model: String?) async -> String {
 
         itemsProto.append(protoMsg(3, textItem))
 
-        // 2. Scope Item (enhanced with full workspace context for Action Phase)
-        // Scope message structure for enabling tool execution
-        let currentPath = FileManager.default.currentDirectoryPath
-        let currentUri = "file://" + currentPath
-        
-        // Try to get git repo info for better context
-        var repoName = "atlastrinity"
-        var repoUrl = "https://github.com/solagurma/atlastrinity.git"
-        
-        let gitTask = Process()
-        gitTask.executableURL = URL(fileURLWithPath: "/usr/bin/git")
-        gitTask.arguments = ["remote", "get-url", "origin"]
-        let gitPipe = Pipe()
-        gitTask.standardOutput = gitPipe
-        gitTask.standardError = FileHandle.nullDevice
-        gitTask.currentDirectoryPath = currentPath
-        
-        do {
-            try gitTask.run()
-            let gitData = gitPipe.fileHandleForReading.readDataToEndOfFile()
-            gitTask.waitUntilExit()
-            if let gitUrl = String(data: gitData, encoding: .utf8)?.trimmingCharacters(in: .whitespacesAndNewlines), !gitUrl.isEmpty {
-                repoUrl = gitUrl
-                repoName = URL(string: gitUrl)?.lastPathComponent.replacingOccurrences(of: ".git", with: "") ?? repoName
-            }
-        } catch {
-            // Fallback to defaults
-        }
-        
-        var scopeMsg = Data()
-        scopeMsg.append(protoStr(1, currentPath))  // path
-        scopeMsg.append(protoStr(2, currentUri))   // uri  
-        scopeMsg.append(protoStr(3, repoName))     // repoName
-        scopeMsg.append(protoStr(4, repoUrl))      // repoUrl
-        
-        // Additional workspace metadata for Action Phase
-        scopeMsg.append(protoInt(5, 1))  // is_workspace_root: true
-        scopeMsg.append(protoInt(6, 1))  // enable_file_operations: true
-        scopeMsg.append(protoInt(7, 1))  // enable_tool_execution: true
+        // 2. Scope Item (enhanced with workspace context from WorkspaceManager)
+        let scopeMsg = WorkspaceManager.shared.enhanceScopeForCurrentWorkspace()
         
         var scopeItem = Data()
         scopeItem.append(protoMsg(2, scopeMsg))  // TextOrScopeItem.scope
@@ -1370,6 +1468,57 @@ func handleSwitchModel(model: String) async -> String {
         """
 }
 
+func handleFieldExperiment(model: String?) async -> String {
+    let activeModel = await state.getModel()
+    let useModel = model ?? activeModel
+    
+    guard let connection = await state.ensureConnection() else {
+        return "❌ Windsurf IDE not detected. Ensure Windsurf is running."
+    }
+
+    let apiKey = ProcessInfo.processInfo.environment["WINDSURF_API_KEY"] ?? ""
+    if apiKey.isEmpty { return "❌ WINDSURF_API_KEY not set." }
+
+    // Map model name to internal UID
+    let modelUid = {
+        if let m = WINDSURF_MODELS.first(where: { $0.id == useModel }) { return m.protobufId }
+        let map: [String: String] = [
+            "swe-1.5": "MODEL_SWE_1_5",
+            "deepseek-v3": "MODEL_DEEPSEEK_V3",
+            "swe-1": "MODEL_SWE_1",
+            "windsurf-fast": "MODEL_CHAT_11121",
+        ]
+        return map[useModel] ?? useModel
+    }()
+
+    let explorer = ProtobufFieldExplorer(connection: connection, apiKey: apiKey)
+    let experiments = await explorer.exploreCortexFields(baseModelUid: modelUid)
+    
+    // Log experiments
+    for experiment in experiments {
+        WindsurfLogger.shared.logFieldExperiment(experiment)
+    }
+    
+    // Analyze results
+    let analysis = FieldExperimentAnalyzer.analyzeResults(experiments)
+    
+    var result = """
+        🧪 Protobuf Field Experiment Results
+        ═══════════════════════════════════
+        Model: \(useModel) (\(modelUid))
+        Total Experiments: \(experiments.count)
+        
+        """
+    
+    for experiment in experiments {
+        result += experiment.summary + "\n"
+    }
+    
+    result += "\n" + analysis.summary
+    
+    return result
+}
+
 // MARK: - Server Setup
 
 func setupAndStartServer() async throws -> Server {
@@ -1420,6 +1569,31 @@ func setupAndStartServer() async throws -> Server {
             name: "windsurf_switch_model",
             description: "Switch the active Windsurf model for subsequent chat/cascade calls",
             inputSchema: switchModelSchema
+        ),
+        Tool(
+            name: "windsurf_workspace_list",
+            description: "List all available workspaces with their details",
+            inputSchema: workspaceListSchema
+        ),
+        Tool(
+            name: "windsurf_workspace_switch",
+            description: "Switch to a different workspace context",
+            inputSchema: workspaceSwitchSchema
+        ),
+        Tool(
+            name: "windsurf_workspace_create",
+            description: "Create a new workspace context",
+            inputSchema: workspaceCreateSchema
+        ),
+        Tool(
+            name: "windsurf_system_health",
+            description: "Get comprehensive system health and error recovery status",
+            inputSchema: systemHealthSchema
+        ),
+        Tool(
+            name: "windsurf_field_experiment",
+            description: "Run Protobuf field discovery experiments to find Cortex protocol fields",
+            inputSchema: fieldExperimentSchema
         ),
     ]
 
@@ -1475,6 +1649,26 @@ func setupAndStartServer() async throws -> Server {
                 let model = try getRequiredString(from: args, key: "model")
                 result = await handleSwitchModel(model: model)
 
+            case "windsurf_workspace_list":
+                result = WorkspaceManager.shared.handleWorkspaceList()
+
+            case "windsurf_workspace_switch":
+                let workspaceId = try getRequiredString(from: args, key: "workspace_id")
+                result = WorkspaceManager.shared.handleWorkspaceSwitch(workspaceId: workspaceId)
+
+            case "windsurf_workspace_create":
+                let path = try getRequiredString(from: args, key: "path")
+                let name = getOptionalString(from: args, key: "name")
+                result = WorkspaceManager.shared.handleWorkspaceCreate(path: path, name: name)
+
+            case "windsurf_system_health":
+                let health = ErrorRecoveryManager.shared.getSystemHealth()
+                result = health.summary
+
+            case "windsurf_field_experiment":
+                let model = getOptionalString(from: args, key: "model")
+                result = await handleFieldExperiment(model: model)
+
             default:
                 return .init(content: [.text("Unknown tool: \(params.name)")], isError: true)
             }
@@ -1505,7 +1699,7 @@ struct WindsurfMCPServer {
 
         // Start graceful shutdown monitor in background
         Task {
-            gracefulShutdown.waitForShutdown()
+            GlobalState.gracefulShutdown.waitForShutdown()
             exit(0)
         }
 
