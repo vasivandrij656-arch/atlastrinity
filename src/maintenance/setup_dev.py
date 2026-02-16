@@ -947,6 +947,41 @@ def build_googlemaps_mcp():
         return False
 
 
+def build_windsurf_mcp():
+    """Компілює Swift Windsurf MCP сервер"""
+    print_step("Компіляція Windsurf MCP серверу (windsurf)...")
+    mcp_path = PROJECT_ROOT / "vendor" / "mcp-server-windsurf"
+
+    if not mcp_path.exists():
+        print_warning("Папка vendor/mcp-server-windsurf не знайдена!")
+        print_info("Пропускаємо компіляцію Windsurf MCP...")
+        return False
+
+    # Check if binary already exists and is recent
+    binary_path = mcp_path / ".build" / "release" / "mcp-server-windsurf"
+    if binary_path.exists():
+        binary_age = time.time() - binary_path.stat().st_mtime
+        if binary_age < 7 * 24 * 3600:  # 7 days
+            print_success(f"Бінарний файл вже існує і свіжий: {binary_path}")
+            return True
+        print_info(f"Бінарний файл застарілий ({int(binary_age / 86400)} днів). Перекомпіляція...")
+
+    print_info("Компіляція windsurf...")
+
+    try:
+        print_info("Запуск 'swift build -c release' (це може зайняти час)...")
+        subprocess.run(["swift", "build", "-c", "release"], cwd=mcp_path, check=True)
+
+        if binary_path.exists():
+            print_success(f"Скомпільовано успішно: {binary_path}")
+            return True
+        print_error("Бінарний файл не знайдено після компіляції!")
+        return False
+    except subprocess.CalledProcessError as e:
+        print_error(f"Помилка компіляції Swift: {e}")
+        return False
+
+
 def setup_google_maps():
     """Адаптивне налаштування Google Maps API через gcloud"""
     print_step("Автоматизація Google Cloud / Google Maps...")
@@ -2200,6 +2235,7 @@ def main(args=None):
 
     build_swift_mcp()
     build_googlemaps_mcp()
+    build_windsurf_mcp()
 
     # Google Maps Automation
     gmaps_updated = False
@@ -2234,6 +2270,7 @@ def main(args=None):
                         "macos-use" in f
                         or "vibe" in f
                         or "googlemaps" in f
+                        or "windsurf" in f
                         or "mcp-server" in f
                         or fpath.suffix == ""
                         or "xcodebuild" in f.lower()

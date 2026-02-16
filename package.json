@@ -185,6 +185,10 @@
         "to": "bin/mcp-server-macos-use"
       },
       {
+        "from": "vendor/mcp-server-windsurf/.build/release/mcp-server-windsurf",
+        "to": "bin/mcp-server-windsurf"
+      },
+      {
         "from": "config/config.yaml",
         "to": "config.yaml"
       }

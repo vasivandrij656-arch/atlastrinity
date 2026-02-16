@@ -30,16 +30,71 @@ struct WindsurfModel {
 }
 
 let WINDSURF_MODELS: [WindsurfModel] = [
+    // Cascade Models
     WindsurfModel(
         id: "swe-1.5", displayName: "SWE-1.5", protobufId: "MODEL_SWE_1_5", tier: "free",
         family: "swe"),
     WindsurfModel(
         id: "swe-1", displayName: "SWE-1", protobufId: "MODEL_SWE_1", tier: "free", family: "swe"),
     WindsurfModel(
-        id: "deepseek-r1", displayName: "DeepSeek R1", protobufId: "MODEL_DEEPSEEK_R1",
-        tier: "free", family: "deepseek"),
+        id: "swe-1-mini", displayName: "SWE-1-mini", protobufId: "MODEL_SWE_1_MINI", tier: "free",
+        family: "swe"),
+    WindsurfModel(
+        id: "swe-grep", displayName: "SWE-grep", protobufId: "MODEL_SWE_GREP", tier: "free",
+        family: "swe"),
+    WindsurfModel(
+        id: "windsurf-fast", displayName: "Windsurf Fast", protobufId: "MODEL_CHAT_11121",
+        tier: "free", family: "windsurf"),
+
+    // Windsurf Premier 🚀
+    WindsurfModel(
+        id: "llama-3.1-405b", displayName: "Llama 3.1 405B (Premier)",
+        protobufId: "MODEL_LLAMA_3_1_405B", tier: "premium", family: "llama-3"),
+    WindsurfModel(
+        id: "llama-3.1-70b", displayName: "Llama 3.1 70B (Base)", protobufId: "MODEL_LLAMA_3_1_70B",
+        tier: "free", family: "llama-3"),
+
+    // Next-Gen Premium (Changelog)
+    WindsurfModel(
+        id: "claude-4.6-opus", displayName: "Claude 4.6 Opus", protobufId: "MODEL_CLAUDE_4_6_OPUS",
+        tier: "premium", family: "claude-4.6-opus"),
+    WindsurfModel(
+        id: "claude-4.6-opus-fast", displayName: "Claude 4.6 Opus (Fast Mode)",
+        protobufId: "MODEL_CLAUDE_4_6_OPUS_FAST", tier: "premium", family: "claude-4.6-opus"),
+    WindsurfModel(
+        id: "gpt-5.2-codex", displayName: "GPT-5.2 Codex (Reasoning)",
+        protobufId: "MODEL_GPT_5_2_CODEX", tier: "premium", family: "gpt-5-codex"),
+    WindsurfModel(
+        id: "gpt-5.3-codex-spark", displayName: "GPT-5.3 Codex-Spark (Arena)",
+        protobufId: "MODEL_GPT_5_3_CODEX_SPARK", tier: "premium", family: "gpt-5-codex"),
+    WindsurfModel(
+        id: "gemini-3-pro", displayName: "Gemini 3 Pro", protobufId: "MODEL_GEMINI_3_PRO",
+        tier: "free", family: "gemini-3"),
+    WindsurfModel(
+        id: "gemini-3-flash", displayName: "Gemini 3 Flash (3x Fast)",
+        protobufId: "MODEL_GEMINI_3_FLASH", tier: "free", family: "gemini-3"),
+    WindsurfModel(
+        id: "sonnet-4.5", displayName: "Sonnet 4.5 (1M Context)", protobufId: "MODEL_SONNET_4_5",
+        tier: "premium", family: "sonnet"),
+    WindsurfModel(
+        id: "gpt-5.1-codex", displayName: "GPT-5.1 Codex", protobufId: "MODEL_GPT_5_1_CODEX",
+        tier: "premium", family: "gpt-5-codex"),
+    WindsurfModel(
+        id: "gpt-5.1-codex-mini", displayName: "GPT-5.1 Codex Mini",
+        protobufId: "MODEL_GPT_5_1_CODEX_MINI", tier: "premium", family: "gpt-5-codex"),
+
+    // Legacy/Standard Premium
+    WindsurfModel(
+        id: "gpt-4o", displayName: "GPT-4o (Windsurf Premium)", protobufId: "MODEL_GPT_4_O",
+        tier: "premium", family: "gpt-4o"),
+    WindsurfModel(
+        id: "claude-3.5-sonnet", displayName: "Claude 3.5 Sonnet (Windsurf Premium)",
+        protobufId: "MODEL_CLAUDE_3_5_SONNET", tier: "premium", family: "claude-3.5-sonnet"),
     WindsurfModel(
         id: "deepseek-v3", displayName: "DeepSeek V3", protobufId: "MODEL_DEEPSEEK_V3",
+        tier: "free", family: "deepseek"),
+    WindsurfModel(
+        id: "deepseek-r1", displayName: "DeepSeek R1", protobufId: "MODEL_DEEPSEEK_R1",
         tier: "free", family: "deepseek"),
     WindsurfModel(
         id: "grok-code-fast-1", displayName: "Grok Code Fast 1",
@@ -47,9 +102,6 @@ let WINDSURF_MODELS: [WindsurfModel] = [
     WindsurfModel(
         id: "kimi-k2.5", displayName: "Kimi k2.5", protobufId: "kimi-k2-5", tier: "free",
         family: "kimi"),
-    WindsurfModel(
-        id: "windsurf-fast", displayName: "Windsurf Fast", protobufId: "MODEL_CHAT_11121",
-        tier: "free", family: "windsurf"),
 ]
 
 // MARK: - Language Server Detection

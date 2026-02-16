@@ -217,6 +217,11 @@ if [ -d "vendor/mcp-server-googlemaps/.build" ]; then
     echo "✅ Swift .build видалено (googlemaps)"
 fi
 
+if [ -d "vendor/mcp-server-windsurf/.build" ]; then
+    rm -rf vendor/mcp-server-windsurf/.build
+    echo "✅ Swift .build видалено (windsurf)"
+fi
+
 echo "ℹ️  XcodeBuildMCP тепер є частиною репозиторію в vendor/ (не потребує окремого клонування)"
 
 echo ""
