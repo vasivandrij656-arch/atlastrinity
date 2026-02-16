@@ -1,5 +1,48 @@
+import Darwin
 import Foundation
 import MCP
+
+// MARK: - Graceful Shutdown
+
+class GracefulShutdown {
+    private let shutdownSemaphore = DispatchSemaphore(value: 0)
+    private var isShuttingDown = false
+
+    static let shared = GracefulShutdown()
+
+    private init() {}
+
+    func setupSignalHandlers() {
+        // Set up signal handling using global function pointers
+        signal(SIGTERM, sigtermHandler)
+        signal(SIGINT, sigintHandler)
+    }
+
+    func initiateShutdown() {
+        guard !isShuttingDown else { return }
+        isShuttingDown = true
+        shutdownSemaphore.signal()
+    }
+
+    func waitForShutdown() {
+        setupSignalHandlers()
+        shutdownSemaphore.wait()
+        fputs("log: [windsurf] Graceful shutdown completed\n", stderr)
+    }
+}
+
+// Global C-compatible signal handlers
+private func sigtermHandler(_ sig: Int32) {
+    fputs("log: [windsurf] Received SIGTERM, shutting down gracefully...\n", stderr)
+    GracefulShutdown.shared.initiateShutdown()
+}
+
+private func sigintHandler(_ sig: Int32) {
+    fputs("log: [windsurf] Received SIGINT, shutting down gracefully...\n", stderr)
+    GracefulShutdown.shared.initiateShutdown()
+}
+
+let gracefulShutdown = GracefulShutdown.shared
 
 // MARK: - Configuration
 
@@ -12,12 +55,115 @@ let LS_QUEUE_CASCADE = "/exa.language_server_pb.LanguageServerService/QueueCasca
 let LS_INTERRUPT_CASCADE =
     "/exa.language_server_pb.LanguageServerService/InterruptWithQueuedMessage"
 
+/// Configuration constants
+let DEFAULT_TIMEOUT: TimeInterval = 30
+let CASCADE_TIMEOUT: TimeInterval = 120  // Increased from 90s
+let HEARTBEAT_TIMEOUT: TimeInterval = 5
+let MAX_RETRY_ATTEMPTS = 3
+let RETRY_BASE_DELAY: TimeInterval = 0.5
+
 /// Default IDE metadata
 let IDE_VERSION = "1.9552.21"
 let EXTENSION_VERSION = "1.48.2"
 
-/// Cascade timeout in seconds
-let CASCADE_TIMEOUT: TimeInterval = 90
+// MARK: - Health Monitoring
+
+struct HealthMetrics {
+    var totalRequests: Int = 0
+    var successfulRequests: Int = 0
+    var failedRequests: Int = 0
+    var chatRequests: Int = 0
+    var cascadeRequests: Int = 0
+    var lsDetections: Int = 0
+    var lsDetectionsFailed: Int = 0
+    var averageLatency: Double = 0.0
+    var lastRequestTime: Date = Date()
+    var startTime: Date = Date()
+
+    mutating func recordRequest(success: Bool, latency: Double, type: String) {
+        totalRequests += 1
+        lastRequestTime = Date()
+
+        if success {
+            successfulRequests += 1
+        } else {
+            failedRequests += 1
+        }
+
+        // Update type-specific counters
+        switch type {
+        case "chat":
+            chatRequests += 1
+        case "cascade":
+            cascadeRequests += 1
+        case "ls_detection":
+            lsDetections += 1
+            if !success {
+                lsDetectionsFailed += 1
+            }
+        default:
+            break
+        }
+
+        // Update average latency (simple moving average)
+        averageLatency =
+            (averageLatency * Double(totalRequests - 1) + latency) / Double(totalRequests)
+    }
+
+    func getSuccessRate() -> Double {
+        return totalRequests > 0 ? Double(successfulRequests) / Double(totalRequests) : 0.0
+    }
+
+    func getUptime() -> TimeInterval {
+        return Date().timeIntervalSince(startTime)
+    }
+}
+
+actor HealthMonitor {
+    private var metrics = HealthMetrics()
+
+    func recordRequest(success: Bool, latency: Double, type: String) {
+        metrics.recordRequest(success: success, latency: latency, type: type)
+    }
+
+    func getMetrics() -> HealthMetrics {
+        return metrics
+    }
+
+    func getHealthStatus() -> String {
+        let uptime = metrics.getUptime()
+        let successRate = metrics.getSuccessRate()
+        let uptimeFormatted = String(format: "%.0f", uptime / 60)  // minutes
+
+        var status = """
+            📊 Windsurf MCP Health Status
+            ═════════════════════════════
+            ⏱️ Uptime: \(uptimeFormatted) min
+            📈 Success Rate: \(String(format: "%.1f", successRate * 100))%
+            🔢 Total Requests: \(metrics.totalRequests)
+            💬 Chat Requests: \(metrics.chatRequests)
+            🌊 Cascade Requests: \(metrics.cascadeRequests)
+            🔍 LS Detections: \(metrics.lsDetections)/\(metrics.lsDetectionsFailed) failed
+            ⚡ Avg Latency: \(String(format: "%.2f", metrics.averageLatency))s
+            """
+
+        // Health indicator based on success rate
+        let healthEmoji: String
+        if successRate >= 0.9 {
+            healthEmoji = "🟢"
+        } else if successRate >= 0.7 {
+            healthEmoji = "🟡"
+        } else {
+            healthEmoji = "🔴"
+        }
+
+        status += "\n\(healthEmoji) Overall Health: \(String(format: "%.1f", successRate * 100))%"
+
+        return status
+    }
+}
+
+let healthMonitor = HealthMonitor()
 
 // MARK: - Windsurf Models
 
@@ -111,82 +257,99 @@ struct LSConnection {
     let csrfToken: String
 }
 
-/// Detect running Windsurf language server port and CSRF token.
+/// Detect running Windsurf language server port and CSRF token with retry logic.
 func detectLanguageServer() -> LSConnection? {
-    let psTask = Process()
-    psTask.executableURL = URL(fileURLWithPath: "/bin/ps")
-    psTask.arguments = ["aux"]
-    let psPipe = Pipe()
-    psTask.standardOutput = psPipe
-    psTask.standardError = FileHandle.nullDevice
-
-    do {
-        try psTask.run()
-        psTask.waitUntilExit()
-    } catch {
-        fputs("log: [windsurf] ps aux failed: \(error)\n", stderr)
-        return nil
-    }
-
-    let psOutput =
-        String(data: psPipe.fileHandleForReading.readDataToEndOfFile(), encoding: .utf8) ?? ""
-
-    for line in psOutput.components(separatedBy: "\n") {
-        guard line.contains("language_server_macos_arm"), !line.contains("grep") else { continue }
-
-        // Extract CSRF token
-        var csrfToken = ""
-        if let range = line.range(of: #"--csrf_token\s+(\S+)"#, options: .regularExpression) {
-            let match = String(line[range])
-            let parts = match.components(separatedBy: .whitespaces).filter { !$0.isEmpty }
-            if parts.count >= 2 {
-                csrfToken = parts[1]
-            }
+    for attempt in 1...MAX_RETRY_ATTEMPTS {
+        if attempt > 1 {
+            fputs("log: [windsurf] LS detection retry \(attempt)/\(MAX_RETRY_ATTEMPTS)\n", stderr)
+            Thread.sleep(forTimeInterval: RETRY_BASE_DELAY * Double(attempt - 1))
         }
 
-        // Extract PID
-        let lineParts = line.components(separatedBy: .whitespaces).filter { !$0.isEmpty }
-        guard lineParts.count >= 2 else { continue }
-        let pid = lineParts[1]
+        let psTask = Process()
+        psTask.executableURL = URL(fileURLWithPath: "/bin/ps")
+        psTask.arguments = ["aux"]
+        let psPipe = Pipe()
+        psTask.standardOutput = psPipe
+        psTask.standardError = FileHandle.nullDevice
 
-        // Get listening port via lsof
-        let lsofTask = Process()
-        lsofTask.executableURL = URL(fileURLWithPath: "/usr/sbin/lsof")
-        lsofTask.arguments = ["-nP", "-iTCP", "-sTCP:LISTEN", "-a", "-p", pid]
-        let lsofPipe = Pipe()
-        lsofTask.standardOutput = lsofPipe
-        lsofTask.standardError = FileHandle.nullDevice
-
+        var psOutput = ""
         do {
-            try lsofTask.run()
-            lsofTask.waitUntilExit()
+            try psTask.run()
+            let outputData = psPipe.fileHandleForReading.readDataToEndOfFile()
+            psTask.waitUntilExit()
+            psOutput = String(data: outputData, encoding: .utf8) ?? ""
         } catch {
+            fputs("log: [windsurf] ps aux failed (attempt \(attempt)): \(error)\n", stderr)
             continue
         }
 
-        let lsofOutput =
-            String(data: lsofPipe.fileHandleForReading.readDataToEndOfFile(), encoding: .utf8) ?? ""
+        for line in psOutput.components(separatedBy: "\n") {
+            guard line.contains("language_server_macos_arm"), !line.contains("grep") else {
+                continue
+            }
 
-        var port = 0
-        for lsofLine in lsofOutput.components(separatedBy: "\n") {
-            guard lsofLine.contains("LISTEN") else { continue }
-            if let portRange = lsofLine.range(
-                of: #":(\d+)\s+\(LISTEN\)"#, options: .regularExpression)
-            {
-                let portMatch = String(lsofLine[portRange])
-                let digits = portMatch.components(separatedBy: CharacterSet.decimalDigits.inverted)
-                    .joined()
-                if let candidate = Int(digits), port == 0 || candidate < port {
-                    port = candidate
+            // Ensure this is the Windsurf IDE's LS, not another editor's (like Antigravity/VSCode)
+            guard line.contains("ide_name windsurf") || line.contains("Windsurf.app") else {
+                continue
+            }
+
+            // Extract CSRF token
+            var csrfToken = ""
+            if let range = line.range(of: #"--csrf_token\s+(\S+)"#, options: .regularExpression) {
+                let match = String(line[range])
+                let parts = match.components(separatedBy: .whitespaces).filter { !$0.isEmpty }
+                if parts.count >= 2 {
+                    csrfToken = parts[1]
                 }
             }
-        }
 
-        if port > 0 && !csrfToken.isEmpty {
-            return LSConnection(port: port, csrfToken: csrfToken)
-        }
+            // Extract PID
+            let lineParts = line.components(separatedBy: .whitespaces).filter { !$0.isEmpty }
+            guard lineParts.count >= 2 else { continue }
+            let pid = lineParts[1]
 
-        break
+            // Get listening port via lsof
+            let lsofTask = Process()
+            lsofTask.executableURL = URL(fileURLWithPath: "/usr/sbin/lsof")
+            lsofTask.arguments = ["-nP", "-iTCP", "-sTCP:LISTEN", "-a", "-p", pid]
+            let lsofPipe = Pipe()
+            lsofTask.standardOutput = lsofPipe
+            lsofTask.standardError = FileHandle.nullDevice
+
+            var lsofOutput = ""
+            do {
+                try lsofTask.run()
+                let outputData = lsofPipe.fileHandleForReading.readDataToEndOfFile()
+                lsofTask.waitUntilExit()
+                lsofOutput = String(data: outputData, encoding: .utf8) ?? ""
+            } catch {
+                continue
+            }
+
+            var port = 0
+            for lsofLine in lsofOutput.components(separatedBy: "\n") {
+                guard lsofLine.contains("LISTEN") else { continue }
+                if let portRange = lsofLine.range(
+                    of: #":(\d+)\s+\(LISTEN\)"#, options: .regularExpression)
+                {
+                    let portMatch = String(lsofLine[portRange])
+                    let digits = portMatch.components(
+                        separatedBy: CharacterSet.decimalDigits.inverted
+                    )
+                    .joined()
+                    if let candidate = Int(digits), port == 0 || candidate < port {
+                        port = candidate
+                    }
+                }
+            }
+
+            if port > 0 && !csrfToken.isEmpty {
+                fputs("log: [windsurf] LS detected on port \(port) (attempt \(attempt))\n", stderr)
+                return LSConnection(port: port, csrfToken: csrfToken)
+            }
+
+            break
+        }
     }
 
     return nil
@@ -197,7 +360,7 @@ func detectLanguageServer() -> LSConnection? {
 /// Quick heartbeat check to verify LS is responding.
 func lsHeartbeat(connection: LSConnection) -> Bool {
     let url = URL(string: "http://127.0.0.1:\(connection.port)\(LS_HEARTBEAT)")!
-    var request = URLRequest(url: url, timeoutInterval: 3)
+    var request = URLRequest(url: url, timeoutInterval: HEARTBEAT_TIMEOUT)
     request.httpMethod = "POST"
     request.setValue("application/json", forHTTPHeaderField: "Content-Type")
     request.setValue(connection.csrfToken, forHTTPHeaderField: "x-codeium-csrf-token")
@@ -354,6 +517,8 @@ func sendChat(connection: LSConnection, message: String, model: String, apiKey: 
 actor WindsurfState {
     var activeModel: String = "swe-1.5"
     var cachedConnection: LSConnection? = nil
+    var lastCacheUpdate: Date = Date.distantPast
+    var cacheValidDuration: TimeInterval = 300  // 5 minutes
 
     func setModel(_ model: String) {
         activeModel = model
@@ -364,24 +529,58 @@ actor WindsurfState {
     }
 
     func getConnection() -> LSConnection? {
-        return cachedConnection
+        // Check if cache is still valid
+        if let conn = cachedConnection,
+            Date().timeIntervalSince(lastCacheUpdate) < cacheValidDuration
+        {
+            return conn
+        }
+        return nil
     }
 
     func setConnection(_ conn: LSConnection?) {
         cachedConnection = conn
+        lastCacheUpdate = Date()
     }
 
-    /// Detect and cache LS connection, with heartbeat validation
-    func ensureConnection() -> LSConnection? {
-        if let conn = cachedConnection, lsHeartbeat(connection: conn) {
-            return conn
-        }
-        // Re-detect
-        if let conn = detectLanguageServer(), lsHeartbeat(connection: conn) {
-            cachedConnection = conn
-            return conn
-        }
+    func invalidateCache() {
         cachedConnection = nil
+        lastCacheUpdate = Date.distantPast
+    }
+
+    /// Detect and cache LS connection, with heartbeat validation and caching
+    func ensureConnection() -> LSConnection? {
+        // First, try cached connection if still valid
+        if let cached = getConnection(), lsHeartbeat(connection: cached) {
+            return cached
+        }
+
+        // Cache miss or invalid - re-detect
+        let startTime = Date()
+        if let conn = detectLanguageServer() {
+            let latency = Date().timeIntervalSince(startTime)
+            let success = lsHeartbeat(connection: conn)
+
+            // Record metrics
+            Task {
+                await healthMonitor.recordRequest(
+                    success: success, latency: latency, type: "ls_detection")
+            }
+
+            if success {
+                setConnection(conn)
+                return conn
+            }
+        }
+
+        // Detection failed
+        let latency = Date().timeIntervalSince(startTime)
+        Task {
+            await healthMonitor.recordRequest(
+                success: false, latency: latency, type: "ls_detection")
+        }
+
+        invalidateCache()
         return nil
     }
 }
@@ -421,6 +620,10 @@ let chatSchema: Value = .object([
             "type": .string("string"),
             "description": .string("Optional system prompt to prepend"),
         ]),
+        "stream": .object([
+            "type": .string("boolean"),
+            "description": .string("Enable streaming response (default: false)"),
+        ]),
     ]),
     "required": .array([.string("message")]),
 ])
@@ -440,6 +643,11 @@ let cascadeSchema: Value = .object([
     "required": .array([.string("message")]),
 ])
 
+let healthSchema: Value = .object([
+    "type": .string("object"),
+    "properties": .object([:]),
+])
+
 let switchModelSchema: Value = .object([
     "type": .string("object"),
     "properties": .object([
@@ -452,6 +660,11 @@ let switchModelSchema: Value = .object([
 ])
 
 // MARK: - Helper Functions
+
+/// Validate Windsurf API key format
+func validateAPIKey(_ apiKey: String) -> Bool {
+    return apiKey.hasPrefix("sk-ws-") && apiKey.count > 20
+}
 
 func getRequiredString(from args: [String: Value]?, key: String) throws -> String {
     guard let val = args?[key]?.stringValue else {
@@ -466,9 +679,9 @@ func getOptionalString(from args: [String: Value]?, key: String) -> String? {
 
 // MARK: - Tool Implementations
 
-func handleStatus() async -> String {
+func handleHealthStatus() async -> String {
     let connection = await state.ensureConnection()
-    let activeModel = await state.getModel()
+    let healthStatus = await healthMonitor.getHealthStatus()
 
     var result = """
         🌊 Windsurf MCP Bridge Status
@@ -480,7 +693,7 @@ func handleStatus() async -> String {
         result += """
             ✅ Windsurf IDE: CONNECTED
                Port: \(conn.port)
-               CSRF: \(String(conn.csrfToken.prefix(8)))...
+               Status: Language Server responding
 
             """
     } else {
@@ -491,12 +704,17 @@ func handleStatus() async -> String {
             """
     }
 
+    let activeModel = await state.getModel()
     result += """
         🤖 Active Model: \(activeModel)
         📦 Available Models: \(WINDSURF_MODELS.count)
         🔧 IDE Version: \(IDE_VERSION)
         📎 Extension: \(EXTENSION_VERSION)
+
         """
+
+    // Add health monitoring status
+    result += healthStatus
 
     return result
 }
@@ -532,10 +750,19 @@ func handleGetModels(tier: String?) -> String {
     return result
 }
 
-func handleChat(message: String, model: String?, systemPrompt: String?) async -> String {
+func handleChat(message: String, model: String?, systemPrompt: String?, stream: Bool?) async
+    -> String
+{
+    let startTime = Date()
     let activeModel = await state.getModel()
     let useModel = model ?? activeModel
+    let shouldStream = stream ?? false
+
     guard let connection = await state.ensureConnection() else {
+        let latency = Date().timeIntervalSince(startTime)
+        Task {
+            await healthMonitor.recordRequest(success: false, latency: latency, type: "chat")
+        }
         return "❌ Windsurf IDE not detected. Ensure Windsurf is running."
     }
 
@@ -543,6 +770,10 @@ func handleChat(message: String, model: String?, systemPrompt: String?) async ->
     let apiKey = ProcessInfo.processInfo.environment["WINDSURF_API_KEY"] ?? ""
     if apiKey.isEmpty {
         return "❌ WINDSURF_API_KEY not set. Set it in the environment."
+    }
+
+    if !validateAPIKey(apiKey) {
+        return "❌ Invalid WINDSURF_API_KEY format. Expected format: sk-ws-..."
     }
 
     let fullMessage: String
@@ -559,12 +790,49 @@ func handleChat(message: String, model: String?, systemPrompt: String?) async ->
             model: useModel,
             apiKey: apiKey
         )
-        return """
-            🌊 Windsurf Response (model: \(useModel))
-            ───────────────────────────────────────
-            \(response)
-            """
+
+        let latency = Date().timeIntervalSince(startTime)
+        Task {
+            await healthMonitor.recordRequest(success: true, latency: latency, type: "chat")
+        }
+
+        if shouldStream {
+            // Simulate streaming by breaking response into chunks
+            let chunkSize = max(1, response.count / 20)  // Split into ~20 chunks
+            var streamedResponse = ""
+            var index = 0
+
+            while index < response.count {
+                let endIndex = min(index + chunkSize, response.count)
+                let chunk = String(
+                    response[
+                        response.index(
+                            response.startIndex, offsetBy: index)..<response.index(
+                                response.startIndex, offsetBy: endIndex)])
+                streamedResponse += chunk
+
+                if endIndex < response.count {
+                    streamedResponse += "⏳\n"
+                }
+                index = endIndex
+            }
+            return """
+                🌊 Windsurf Streaming Response (model: \(useModel))
+                ───────────────────────────────────────
+                \(streamedResponse)
+                """
+        } else {
+            return """
+                🌊 Windsurf Response (model: \(useModel))
+                ───────────────────────────────────────
+                \(response)
+                """
+        }
     } catch {
+        let latency = Date().timeIntervalSince(startTime)
+        Task {
+            await healthMonitor.recordRequest(success: false, latency: latency, type: "chat")
+        }
         return "❌ Chat error: \(error.localizedDescription)"
     }
 }
@@ -579,6 +847,10 @@ func handleCascade(message: String, model: String?) async -> String {
     let apiKey = ProcessInfo.processInfo.environment["WINDSURF_API_KEY"] ?? ""
     if apiKey.isEmpty {
         return "❌ WINDSURF_API_KEY not set."
+    }
+
+    if !validateAPIKey(apiKey) {
+        return "❌ Invalid WINDSURF_API_KEY format. Expected format: sk-ws-..."
     }
 
     let modelProtobufId = WINDSURF_MODELS.first { $0.id == useModel }?.protobufId ?? useModel
@@ -776,6 +1048,11 @@ func setupAndStartServer() async throws -> Server {
             inputSchema: statusSchema
         ),
         Tool(
+            name: "windsurf_health",
+            description: "Get detailed health monitoring metrics and performance statistics",
+            inputSchema: healthSchema
+        ),
+        Tool(
             name: "windsurf_get_models",
             description: "List all available Windsurf models with tier info (free/value/premium)",
             inputSchema: getModelsSchema
@@ -823,7 +1100,10 @@ func setupAndStartServer() async throws -> Server {
             let result: String
             switch params.name {
             case "windsurf_status":
-                result = await handleStatus()
+                result = await handleHealthStatus()
+
+            case "windsurf_health":
+                result = await healthMonitor.getHealthStatus()
 
             case "windsurf_get_models":
                 let tier = getOptionalString(from: args, key: "tier")
@@ -833,8 +1113,11 @@ func setupAndStartServer() async throws -> Server {
                 let message = try getRequiredString(from: args, key: "message")
                 let model = getOptionalString(from: args, key: "model")
                 let systemPrompt = getOptionalString(from: args, key: "system_prompt")
+                let stream = getOptionalString(from: args, key: "stream").map {
+                    $0.lowercased() == "true"
+                }
                 result = await handleChat(
-                    message: message, model: model, systemPrompt: systemPrompt)
+                    message: message, model: model, systemPrompt: systemPrompt, stream: stream)
 
             case "windsurf_cascade":
                 let message = try getRequiredString(from: args, key: "message")
@@ -873,9 +1156,13 @@ struct WindsurfMCPServer {
     static func main() async throws {
         let _ = try await setupAndStartServer()
 
-        // Keep running until terminated
-        await withCheckedContinuation { (_: CheckedContinuation<Void, Never>) in
-            // Server runs indefinitely via stdio
+        // Start graceful shutdown monitor in background
+        Task {
+            gracefulShutdown.waitForShutdown()
+            exit(0)
         }
+
+        // Keep running until terminated
+        try await Task.sleep(nanoseconds: UInt64.max)
     }
 }
