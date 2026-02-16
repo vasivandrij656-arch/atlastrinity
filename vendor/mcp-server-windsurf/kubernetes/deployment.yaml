@@ -1,0 +1,352 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: windsurf-mcp
+  namespace: windsurf
+  labels:
+    app: windsurf-mcp
+    version: v1.0.0
+spec:
+  replicas: 3
+  selector:
+    matchLabels:
+      app: windsurf-mcp
+  template:
+    metadata:
+      labels:
+        app: windsurf-mcp
+        version: v1.0.0
+    spec:
+      containers:
+      - name: windsurf-mcp
+        image: windsurf-mcp:latest
+        ports:
+        - containerPort: 8080
+          name: http
+        env:
+        - name: WINDSURF_API_KEY
+          valueFrom:
+            secretKeyRef:
+              name: windsurf-secrets
+              key: api-key
+        - name: WINDSURF_LOG_LEVEL
+          value: "info"
+        - name: WINDSURF_CACHE_SIZE
+          value: "100"
+        - name: WINDSURF_ENABLE_PLUGINS
+          value: "true"
+        - name: REDIS_URL
+          value: "redis://redis-service:6379"
+        resources:
+          requests:
+            memory: "512Mi"
+            cpu: "500m"
+          limits:
+            memory: "2Gi"
+            cpu: "2000m"
+        livenessProbe:
+          httpGet:
+            path: /health
+            port: 8080
+          initialDelaySeconds: 30
+          periodSeconds: 10
+          timeoutSeconds: 5
+          failureThreshold: 3
+        readinessProbe:
+          httpGet:
+            path: /ready
+            port: 8080
+          initialDelaySeconds: 5
+          periodSeconds: 5
+          timeoutSeconds: 3
+          failureThreshold: 3
+        volumeMounts:
+        - name: config
+          mountPath: /app/.config/atlastrinity
+        - name: logs
+          mountPath: /app/.config/atlastrinity/logs
+        - name: workspace
+          mountPath: /app/workspace
+      volumes:
+      - name: config
+        persistentVolumeClaim:
+          claimName: windsurf-config-pvc
+      - name: logs
+        persistentVolumeClaim:
+          claimName: windsurf-logs-pvc
+      - name: workspace
+        persistentVolumeClaim:
+          claimName: windsurf-workspace-pvc
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: windsurf-mcp-service
+  namespace: windsurf
+  labels:
+    app: windsurf-mcp
+spec:
+  selector:
+    app: windsurf-mcp
+  ports:
+  - name: http
+    port: 8080
+    targetPort: 8080
+  type: ClusterIP
+---
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: windsurf-config-pvc
+  namespace: windsurf
+spec:
+  accessModes:
+    - ReadWriteOnce
+  resources:
+    requests:
+      storage: 1Gi
+  storageClassName: fast-ssd
+---
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: windsurf-logs-pvc
+  namespace: windsurf
+spec:
+  accessModes:
+    - ReadWriteOnce
+  resources:
+    requests:
+      storage: 5Gi
+  storageClassName: fast-ssd
+---
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: windsurf-workspace-pvc
+  namespace: windsurf
+spec:
+  accessModes:
+    - ReadWriteOnce
+  resources:
+    requests:
+      storage: 10Gi
+  storageClassName: fast-ssd
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: redis
+  namespace: windsurf
+  labels:
+    app: redis
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: redis
+  template:
+    metadata:
+      labels:
+        app: redis
+    spec:
+      containers:
+      - name: redis
+        image: redis:7-alpine
+        ports:
+        - containerPort: 6379
+        resources:
+          requests:
+            memory: "256Mi"
+            cpu: "250m"
+          limits:
+            memory: "512Mi"
+            cpu: "500m"
+        volumeMounts:
+        - name: redis-data
+          mountPath: /data
+        command:
+        - redis-server
+        - --appendonly
+        - "yes"
+        - --maxmemory
+        - "512mb"
+        - --maxmemory-policy
+        - allkeys-lru
+      volumes:
+      - name: redis-data
+        persistentVolumeClaim:
+          claimName: redis-data-pvc
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: redis-service
+  namespace: windsurf
+  labels:
+    app: redis
+spec:
+  selector:
+    app: redis
+  ports:
+  - name: redis
+    port: 6379
+    targetPort: 6379
+  type: ClusterIP
+---
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: redis-data-pvc
+  namespace: windsurf
+spec:
+  accessModes:
+    - ReadWriteOnce
+  resources:
+    requests:
+      storage: 2Gi
+  storageClassName: fast-ssd
+---
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: windsurf-mcp-ingress
+  namespace: windsurf
+  annotations:
+    kubernetes.io/ingress.class: nginx
+    cert-manager.io/cluster-issuer: letsencrypt-prod
+    nginx.ingress.kubernetes.io/rewrite-target: /
+spec:
+  tls:
+  - hosts:
+    - windsurf-mcp.example.com
+    secretName: windsurf-mcp-tls
+  rules:
+  - host: windsurf-mcp.example.com
+    http:
+      paths:
+      - path: /
+        pathType: Prefix
+        backend:
+          service:
+            name: windsurf-mcp-service
+            port:
+              number: 8080
+---
+apiVersion: v1
+kind: Secret
+metadata:
+  name: windsurf-secrets
+  namespace: windsurf
+type: Opaque
+data:
+  api-key: c2std3M13LXdzLWV4LWV5LWV5LWV5LWV5LWV5LQ== # base64 encoded "sk-ws-xxxxxxxxxxxxxxxxxxxxxx"
+---
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: windsurf-config
+  namespace: windsurf
+data:
+  windsurf_config.json: |
+    {
+      "general": {
+        "defaultModel": "swe-1.5",
+        "timeoutDuration": 120,
+        "retryAttempts": 3,
+        "autoDetectWorkspace": true
+      },
+      "cascade": {
+        "enableActionPhase": true,
+        "enableCortexReasoning": true,
+        "enableFileOperations": true,
+        "enableToolExecution": true,
+        "enableAutonomousExecution": true,
+        "actionTimeout": 180
+      },
+      "performance": {
+        "enableCaching": true,
+        "cacheSize": 100,
+        "cacheExpiration": 300,
+        "enableConnectionPooling": true,
+        "maxConnections": 3,
+        "enableRequestBatching": true,
+        "batchSize": 5,
+        "enableOptimization": true
+      },
+      "logging": {
+        "enableLogging": true,
+        "logLevel": "info",
+        "logToFile": true,
+        "logToConsole": true,
+        "maxLogFileSize": 10485760,
+        "logRetentionDays": 7,
+        "enableDebugMode": false,
+        "logCategories": ["cascade", "actionphase", "performance", "workspace"]
+      },
+      "workspace": {
+        "autoSwitchOnGitChange": true,
+        "rememberLastWorkspace": true,
+        "workspaceSpecificSettings": {},
+        "enableProjectDetection": true,
+        "enableDependencyAnalysis": true
+      },
+      "experimental": {
+        "enableFieldExperimentation": false,
+        "autoOptimizeFields": true,
+        "enableAdvancedStreaming": true,
+        "enablePluginSystem": true,
+        "testFieldCombinations": [],
+        "learnedFieldMappings": {}
+      }
+    }
+---
+apiVersion: autoscaling/v2
+kind: HorizontalPodAutoscaler
+metadata:
+  name: windsurf-mcp-hpa
+  namespace: windsurf
+spec:
+  scaleTargetRef:
+    apiVersion: apps/v1
+    kind: Deployment
+    name: windsurf-mcp
+  minReplicas: 2
+  maxReplicas: 10
+  metrics:
+  - type: Resource
+    resource:
+      name: cpu
+      target:
+        type: Utilization
+        averageUtilization: 70
+  - type: Resource
+    resource:
+      name: memory
+      target:
+        type: Utilization
+        averageUtilization: 80
+  behavior:
+    scaleDown:
+      stabilizationWindowSeconds: 300
+      policies:
+      - type: Percent
+        value: 10
+        periodSeconds: 60
+    scaleUp:
+      stabilizationWindowSeconds: 60
+      policies:
+      - type: Percent
+        value: 50
+        periodSeconds: 60
+---
+apiVersion: policy/v1
+kind: PodDisruptionBudget
+metadata:
+  name: windsurf-mcp-pdb
+  namespace: windsurf
+spec:
+  minAvailable: 1
+  selector:
+    matchLabels:
+      app: windsurf-mcp

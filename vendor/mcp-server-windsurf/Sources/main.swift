@@ -47,9 +47,15 @@ private func sigintHandler(_ sig: Int32) {
 struct GlobalState {
     static let gracefulShutdown = GracefulShutdown.shared
     static let healthMonitor = HealthMonitor()
+    static let state = WindsurfState()
     static let workspaceManager = WorkspaceManager.shared
     static let errorRecoveryManager = ErrorRecoveryManager.shared
     static let logger = WindsurfLogger.shared
+    static let performanceManager = PerformanceManager.shared
+    static let configurationManager = ConfigurationManager.shared
+    static let pluginManager = PluginManager.shared
+    static let analyticsDashboard = AnalyticsDashboard.shared
+    static let apiVersionManager = APIVersionManager.shared
 }
 
 // MARK: - Configuration
@@ -962,6 +968,41 @@ let fieldExperimentSchema: Value = .object([
     ]),
 ])
 
+let apiVersionSchema: Value = .object([
+    "type": .string("object"),
+    "properties": .object([:]),
+])
+
+let versionInfoSchema: Value = .object([
+    "type": .string("object"),
+    "properties": .object([:]),
+])
+
+let compatibilityMatrixSchema: Value = .object([
+    "type": .string("object"),
+    "properties": .object([
+        "version": .object([
+            "type": .string("string"),
+            "description": .string("Version to get compatibility matrix for (optional)")
+        ])
+    ]),
+])
+
+let migrationPathSchema: Value = .object([
+    "type": .string("object"),
+    "properties": .object([
+        "fromVersion": .object([
+            "type": .string("string"),
+            "description": .string("Source version for migration path")
+        ]),
+        "toVersion": .object([
+            "type": .string("string"),
+            "description": .string("Target version for migration path")
+        ])
+    ]),
+    "required": .array([.string("fromVersion"), .string("toVersion")])
+])
+
 // MARK: - Helper Functions
 
 /// Validate Windsurf API key format
@@ -1519,6 +1560,105 @@ func handleFieldExperiment(model: String?) async -> String {
     return result
 }
 
+func handleMigrationPath(fromVersion: String, toVersion: String) -> String {
+    do {
+        let fromVer = try GlobalState.apiVersionManager.parseVersionString(fromVersion)
+        let toVer = try GlobalState.apiVersionManager.parseVersionString(toVersion)
+        
+        guard let migrationPath = GlobalState.apiVersionManager.getMigrationPath(from: fromVer, toVer) else {
+            return "❌ No migration path available from v\(fromVersion) to v\(toVersion)"
+        }
+        
+        var result = """
+        🔄 Migration Path Analysis
+        ══════════════════════════════════════
+        \(migrationPath.summary)
+        
+        Steps:
+        """
+        
+        for (index, step) in migrationPath.steps.enumerated() {
+            result += "\(index + 1). **\(step.type.description)**\n"
+            result += "   Instructions:\n"
+            for instruction in step.instructions {
+                result += "   • \(instruction)\n"
+            }
+            result += "   Estimated Time: \(formatDuration(step.estimatedTime))\n"
+            result += "   Requires Downtime: \(step.requiresDowntime ? "Yes" : "No")\n\n"
+        }
+        
+        // Log migration planning
+        GlobalState.logger.logCascadeStart(
+            message: "Migration planned from v\(fromVersion) to v\(toVersion)",
+            model: "system",
+            cascadeId: "migration-\(UUID().uuidString.prefix(8))"
+        )
+        
+        return result
+        
+    } catch {
+        return "❌ Migration path error: \(error.localizedDescription)"
+    }
+}
+
+func handleAPIVersion() -> String {
+    let versionInfo = GlobalState.apiVersionManager.getVersionInfo()
+    return versionInfo.summary
+}
+
+func handleVersionInfo() -> String {
+    let versionInfo = GlobalState.apiVersionManager.getVersionInfo()
+    
+    // Add deprecation warnings if any
+    let warnings = GlobalState.apiVersionManager.checkDepreciationWarnings()
+    var result = versionInfo.summary
+    
+    if !warnings.isEmpty {
+        result += "\n⚠️ Depreciation Warnings:\n"
+        for warning in warnings {
+            result += warning.summary + "\n"
+        }
+    }
+    
+    return result
+}
+
+func handleCompatibilityMatrix(version: String?) -> String {
+    let matrix = GlobalState.apiVersionManager.getCompatibilityMatrix()
+    
+    if let version = version {
+        // Filter for specific version
+        let versionKey = version.hasPrefix("v") ? version : "v\(version)"
+        if let versionData = matrix.matrix[versionKey] {
+            var result = "Compatibility Matrix for v\(version)\n"
+            result += matrix.summary
+            return result
+        } else {
+            return "❌ Version \(version) not found in compatibility matrix"
+        }
+    }
+    
+    // Show full matrix
+    return matrix.summary
+}
+
+func handleDepreciationWarnings() -> String {
+    let warnings = GlobalState.apiVersionManager.checkDepreciationWarnings()
+    
+    if warnings.isEmpty {
+        return "✅ No deprecation warnings at this time"
+    }
+    
+    var result = "⚠️ Depreciation Warnings\n"
+    result += "═══════════════════════════════════════\n"
+    
+    for warning in warnings {
+        result += warning.summary + "\n"
+    }
+    
+    return result
+}
+
 // MARK: - Server Setup
 
 func setupAndStartServer() async throws -> Server {
@@ -1668,6 +1808,24 @@ func setupAndStartServer() async throws -> Server {
             case "windsurf_field_experiment":
                 let model = getOptionalString(from: args, key: "model")
                 result = await handleFieldExperiment(model: model)
+
+            case "windsurf_api_version":
+                result = handleAPIVersion()
+
+            case "windsurf_version_info":
+                result = handleVersionInfo()
+
+            case "windsurf_compatibility_matrix":
+                let version = getOptionalString(from: args, key: "version")
+                result = handleCompatibilityMatrix(version: version)
+
+            case "windsurf_migration_path":
+                let fromVersion = getRequiredString(from: args, key: "fromVersion")
+                let toVersion = getRequiredString(from: args, key: "toVersion")
+                result = handleMigrationPath(fromVersion: fromVersion, toVersion: toVersion)
+
+            case "windsurf_deprecation_warnings":
+                result = handleDepreciationWarnings()
 
             default:
                 return .init(content: [.text("Unknown tool: \(params.name)")], isError: true)

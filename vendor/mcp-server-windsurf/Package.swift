@@ -25,7 +25,10 @@ let package = Package(
                 "ErrorRecoveryManager.swift",
                 "CascadeStreamer.swift",
                 "PerformanceManager.swift",
-                "ConfigurationManager.swift"
+                "ConfigurationManager.swift",
+                "PluginManager.swift",
+                "AnalyticsDashboard.swift",
+                "APIVersionManager.swift"
             ]
         )
     ]
