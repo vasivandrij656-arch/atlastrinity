@@ -1,4 +1,8 @@
 
+<!-- AUTO-UPDATED: 2026-02-16T08:39:25.315874 -->
+<!-- Modified: .agent/docs/mcp_architecture_diagram.md, src/brain/data/architecture_diagrams/mcp_architecture.md, vendor/mcp-server-windsurf/Package.swift -->
+
+
 <!-- AUTO-UPDATED: 2026-02-16T08:38:11.044679 -->
 <!-- Modified: .agent/docs/mcp_architecture_diagram.md, scripts/windsurf/demo_action_phase.py, scripts/windsurf/test_cascade_action_phase.py -->
 
