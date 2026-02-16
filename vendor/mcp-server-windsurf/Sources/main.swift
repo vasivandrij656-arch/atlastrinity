@@ -1735,6 +1735,31 @@ func setupAndStartServer() async throws -> Server {
             description: "Run Protobuf field discovery experiments to find Cortex protocol fields",
             inputSchema: fieldExperimentSchema
         ),
+        Tool(
+            name: "windsurf_api_version",
+            description: "Get API version information and supported features",
+            inputSchema: apiVersionSchema
+        ),
+        Tool(
+            name: "windsurf_version_info",
+            description: "Get detailed version information and build details",
+            inputSchema: versionInfoSchema
+        ),
+        Tool(
+            name: "windsurf_compatibility_matrix",
+            description: "Get compatibility matrix for different API versions",
+            inputSchema: compatibilityMatrixSchema
+        ),
+        Tool(
+            name: "windsurf_migration_path",
+            description: "Get migration path between API versions",
+            inputSchema: migrationPathSchema
+        ),
+        Tool(
+            name: "windsurf_deprecation_warnings",
+            description: "Get deprecation warnings and sunset information",
+            inputSchema: deprecationWarningsSchema
+        ),
     ]
 
     // Create server

@@ -1,6 +1,26 @@
 {
   "mcpServers": {
     "_comment_tier1": "=== TIER 1: MUST-HAVE (Ядро системи) ===",
+    "windsurf": {
+      "transport": "stdio",
+      "command": "${PROJECT_ROOT}/vendor/mcp-server-windsurf/.build/release/mcp-server-windsurf",
+      "connect_timeout": 3600,
+      "description": "Windsurf AI with Cascade Action Phase (16 tools: status, health, models, chat, cascade, switch_model, workspace_list, workspace_switch, workspace_create, system_health, field_experiment, api_version, version_info, compatibility_matrix, migration_path, deprecation_warnings)",
+      "env": {
+        "WINDSURF_API_KEY": "${WINDSURF_API_KEY}",
+        "PYTHONPATH": "${PROJECT_ROOT}",
+        "MCP_DIR": "${MCP_DIR}",
+        "WINDSURF_MODE": "cascade"
+      },
+      "disabled": false,
+      "tier": 1,
+      "agents": [
+        "atlas",
+        "tetyana",
+        "grisha"
+      ],
+      "note": "Native Swift MCP server with enterprise features: real-time streaming, advanced caching, plugin system, analytics dashboard, API versioning. Requires: Swift 5.9+, WINDSURF_API_KEY"
+    },
     "macos-use": {
       "transport": "stdio",
       "command": "${PROJECT_ROOT}/vendor/mcp-server-macos-use/mcp-server-macos-use",

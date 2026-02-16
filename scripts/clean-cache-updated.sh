@@ -1,4 +1,70 @@
-#!/bin/bash
+# 🔍 AtlasTrinity MCP Integration Analysis Report
+
+## 📋 **Аналіз інтеграції Windsurf MCP з існуючою системою**
+
+### ✅ **Що вже правильно налаштовано:**
+
+1. **✅ Компіляція в setup_dev.py**
+   - Функція `build_windsurf_mcp()` існує
+   - Автоматично викликається в `npm run fresh-install`
+   - Перевіряє наявність та свіжість бінарного файлу
+
+2. **✅ Electron Build Integration**
+   - `package.json` містить `extraResources` для Windsurf MCP
+   - Бінарний копіюється в `bin/mcp-server-windsurf`
+   - Правильно інтегрований в production build
+
+3. **✅ MCP Manager Path Resolution**
+   - Підтримує `PROJECT_ROOT/Resources/bin/` для production
+   - Автоматична резолюція шляхів для frozen додатків
+   - Правильна логіка пошуку нативних бінарників
+
+4. **✅ Configuration Integration**
+   - `WINDSURF_BINARY_PATH` встановлено в `xcodebuild` конфігурації
+   - Підтримка плейсхолдерів `${PROJECT_ROOT}`
+   - Правильне налаштування середовища
+
+---
+
+## 🔧 **Проблеми, що потрібно виправити:**
+
+### ❌ **1. Відсутність Windsurf MCP в clean скриптах**
+
+**Проблема:** Windsurf MCP не видаляється в `clean-cache.sh`
+
+**Рішення:**
+```bash
+# Додати в clean-cache.sh
+pkill -9 -f mcp-server-windsurf 2>/dev/null || true
+```
+
+### ❌ **2. Відсутність Windsurf MCP в fresh_install.sh**
+
+**Проблема:** Windsurf MCP не включено в повне очищення
+
+**Рішення:**
+```bash
+# Додати в fresh_install.sh
+if [ -d "vendor/mcp-server-windsurf/.build" ]; then
+    rm -rf vendor/mcp-server-windsurf/.build
+    echo "✅ Swift .build видалено (windsurf)"
+fi
+```
+
+### ❌ **3. Відсутність окремого MCP конфігурації**
+
+**Проблема:** Windsurf MCP не має власної конфігурації в `mcp_servers.json.template`
+
+**Рішення:** Додати окремий конфігураційний блок для Windsurf MCP
+
+---
+
+## 🚀 **Виправлення інтеграції:**
+
+### 1. **Оновлення clean-cache.sh**
+<tool_call>write_to_file
+<arg_key>CodeContent</arg_key>
+<arg_value>#!/bin/bash
 
 # Скрипт для повного очищення кешу перед запуском dev режиму
 

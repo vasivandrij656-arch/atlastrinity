@@ -61,13 +61,24 @@ class PluginManager {
         }
     }
     
-    enum PluginState {
+    enum PluginState: Equatable {
         case unloaded
         case loading
         case loaded
         case active
         case error(Error)
         case disabled
+        
+        static func == (lhs: PluginState, rhs: PluginState) -> Bool {
+            switch (lhs, rhs) {
+            case (.unloaded, .unloaded), (.loading, .loading), (.loaded, .loaded), (.active, .active), (.disabled, .disabled):
+                return true
+            case (.error(let lhsError), .error(let rhsError)):
+                return lhsError.localizedDescription == rhsError.localizedDescription
+            default:
+                return false
+            }
+        }
     }
     
     struct PluginContext {
@@ -80,13 +91,13 @@ class PluginManager {
     struct PluginRequest: Codable {
         let id: String
         let type: String
-        let parameters: [String: Any]
+        let parameters: [String: String]  // Changed from [String: Any] to [String: String]
         let metadata: [String: String]
     }
     
     struct PluginResponse: Codable {
         let success: Bool
-        let data: [String: Any]
+        let data: [String: String]  // Changed from [String: Any] to [String: String]
         let error: String?
         let metadata: [String: String]
     }
@@ -115,8 +126,11 @@ class PluginManager {
             return []
         }
         
-        return enumerator.compactMap { url, _ in
-            url.pathExtension == "windsurf-plugin" ? url : nil
+        return enumerator.compactMap { element in
+            if let url = element as? URL, url.pathExtension == "windsurf-plugin" {
+                return url
+            }
+            return nil
         }
     }
     
@@ -219,7 +233,7 @@ class PluginManager {
     }
     
     func unloadPlugin(_ name: String) throws {
-        try deactivatePlugin(name: name)
+        try deactivatePlugin(name)
         plugins.removeValue(forKey: name)
         pluginStates.removeValue(forKey: name)
     }
@@ -227,7 +241,18 @@ class PluginManager {
     // MARK: - Plugin Information
     
     func getPluginList() -> [PluginInfo] {
-        return plugins.values.map { $0.metadata }
+        return plugins.values.map { plugin in
+            PluginInfo(
+                name: plugin.metadata.name,
+                version: plugin.metadata.version,
+                type: plugin.metadata.category.rawValue,
+                description: plugin.metadata.description,
+                author: plugin.metadata.author,
+                dependencies: [],
+                permissions: [],
+                supportedModels: []
+            )
+        }
     }
     
     func getPluginState(_ name: String) -> PluginState? {
@@ -294,9 +319,19 @@ class CascadePlugin: PluginManager.Plugin {
         // Handle cascade-specific requests
         switch request.type {
         case "enhance_scope":
-            return try enhanceScope(request: request, context: context)
+            return PluginManager.PluginResponse(
+                success: true,
+                data: ["enhanced": "true"],
+                error: nil,
+                metadata: ["plugin": "cascade"]
+            )
         case "optimize_cascade":
-            return try optimizeCascade(request: request, context: context)
+            return PluginManager.PluginResponse(
+                success: true,
+                data: ["optimized": "true"],
+                error: nil,
+                metadata: ["plugin": "cascade"]
+            )
         default:
             throw PluginError.unsupportedRequest(request.type)
         }
@@ -310,7 +345,7 @@ class CascadePlugin: PluginManager.Plugin {
         // Enhance scope with plugin-specific logic
         return PluginManager.PluginResponse(
             success: true,
-            data: ["enhanced": true],
+            data: ["enhanced": "true"],
             error: nil,
             metadata: ["plugin": "cascade"]
         )
@@ -320,7 +355,7 @@ class CascadePlugin: PluginManager.Plugin {
         // Optimize cascade execution
         return PluginManager.PluginResponse(
             success: true,
-            data: ["optimized": true],
+            data: ["optimized": "true"],
             error: nil,
             metadata: ["plugin": "cascade"]
         )
@@ -352,7 +387,7 @@ class WorkspacePlugin: PluginManager.Plugin {
         // Handle workspace-specific requests
         return PluginManager.PluginResponse(
             success: true,
-            data: ["workspace_action": true],
+            data: ["workspace_action": "true"],
             error: nil,
             metadata: ["plugin": "workspace"]
         )
@@ -388,7 +423,7 @@ class MonitoringPlugin: PluginManager.Plugin {
         // Handle monitoring-specific requests
         return PluginManager.PluginResponse(
             success: true,
-            data: ["monitoring_data": true],
+            data: ["monitoring_data": "true"],
             error: nil,
             metadata: ["plugin": "monitoring"]
         )
@@ -424,7 +459,7 @@ class UtilityPlugin: PluginManager.Plugin {
         // Handle utility-specific requests
         return PluginManager.PluginResponse(
             success: true,
-            data: ["utility_result": true],
+            data: ["utility_result": "true"],
             error: nil,
             metadata: ["plugin": "utility"]
         )
@@ -460,7 +495,7 @@ class IntegrationPlugin: PluginManager.Plugin {
         // Handle integration-specific requests
         return PluginManager.PluginResponse(
             success: true,
-            data: ["integration_result": true],
+            data: ["integration_result": "true"],
             error: nil,
             metadata: ["plugin": "integration"]
         )
@@ -496,7 +531,7 @@ class ExperimentalPlugin: PluginManager.Plugin {
         // Handle experimental-specific requests
         return PluginManager.PluginResponse(
             success: true,
-            data: ["experimental_result": true],
+            data: ["experimental_result": "true"],
             error: nil,
             metadata: ["plugin": "experimental"]
         )
@@ -541,7 +576,7 @@ class EventBus {
     }
     
     func post(_ event: PluginEvent) {
-        subscribers[event.type]?.forEach { handler in
+        subscribers[event.type.rawValue]?.forEach { handler in
             handler(event)
         }
     }
@@ -554,11 +589,12 @@ struct PluginEvent {
     let pluginName: String
     let metadata: [String: Any]?
     
-    enum EventType {
+    enum EventType: String {
         case activated
         case deactivated
         case error
-        case executed
+        case performance
+        case cascade
     }
 }
 

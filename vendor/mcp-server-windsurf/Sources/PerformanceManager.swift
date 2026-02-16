@@ -377,7 +377,7 @@ class PerformanceManager {
             }
             
             // Compact if necessary
-            if self.responseCache.count > self.maxCacheSize * 0.8 {
+            if self.responseCache.count > Int(Double(self.maxCacheSize) * 0.8) {
                 self.evictOldestEntries()
             }
         }
@@ -432,7 +432,7 @@ class RequestBatcher {
                 group.addTask {
                     // Execute individual request
                     do {
-                        let result = try await executeIndividualRequest(request)
+                        let result = try await self.executeIndividualRequest(request)
                         request.completion(.success(result))
                     } catch {
                         request.completion(.failure(error))

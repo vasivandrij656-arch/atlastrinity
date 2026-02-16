@@ -119,6 +119,7 @@ mcp:
   # === TIER 1: MUST-HAVE (Ядро системи) ===
   # xcodebuild includes 168+ tools: 94 native + 63 macos-use bridge + 11 googlemaps bridge
   # macos_use and googlemaps are NOT separate servers — they are bridged through xcodebuild
+  windsurf:           { enabled: true }  # Native Swift MCP with Cascade Action Phase
   xcodebuild:          { enabled: true }
   filesystem:          { enabled: true }
   sequential_thinking:
