@@ -1156,7 +1156,7 @@ func handleCascade(message: String, model: String?) async -> String {
         let interruptPayload = protoMsg(1, meta) + protoStr(2, cascadeId)
         let _ = try await sendProto(LS_INTERRUPT_CASCADE, interruptPayload)
 
-        // Step 5: Poll for response stability
+        // Step 5: Wait for response stability
         var lastCount = 0
         var stableTicks = 0
         // Wait up to 120s max
@@ -1201,7 +1201,11 @@ func handleCascade(message: String, model: String?) async -> String {
                 && !$0.contains(apiKey) && !$0.contains("windsurf") && !$0.contains("swe-1.5")
                 && !$0.contains("CRITICAL:") && !$0.contains("IMPORTANT:")
                 && !$0.contains("JSON FORMAT") && !$0.contains("WARNING:")
-                && !$0.contains("jsonrpc")
+                && !$0.contains("jsonrpc") && !$0.contains("markdown_formatting")
+                && !$0.contains("additional_guidelines")
+                && !$0.contains("No acknowledgment phrases")
+                && !$0.contains("Direct responses:") && !$0.contains("Be terse and direct")
+                && !$0.contains("file:///") && !$0.contains("https://")
         }
 
         // Prefer the longest remaining string that looks like a natural response
