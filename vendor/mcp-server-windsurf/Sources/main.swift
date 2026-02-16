@@ -284,7 +284,11 @@ func detectLanguageServer() -> LSConnection? {
         }
 
         for line in psOutput.components(separatedBy: "\n") {
-            guard line.contains("language_server_macos_arm"), !line.contains("grep") else {
+            if !line.contains("language_server") || line.contains("grep") {
+                continue
+            }
+            // Prioritize Windsurf over Antigravity or others
+            if !line.contains("Windsurf") && !line.contains("windsurf") {
                 continue
             }
 
@@ -446,7 +450,7 @@ func parseStreamingFrames(_ data: Data) -> (String, String?) {
 
 /// Build LS metadata dict for Connect-RPC requests
 func buildLSMetadata(apiKey: String) -> [String: Any] {
-    return [
+    var metadata: [String: Any] = [
         "ideName": "windsurf",
         "ideVersion": IDE_VERSION,
         "extensionVersion": EXTENSION_VERSION,
@@ -455,6 +459,12 @@ func buildLSMetadata(apiKey: String) -> [String: Any] {
         "requestId": String(Int(Date().timeIntervalSince1970)),
         "apiKey": apiKey,
     ]
+
+    if let installId = ProcessInfo.processInfo.environment["WINDSURF_INSTALL_ID"] {
+        metadata["installationId"] = installId
+    }
+
+    return metadata
 }
 
 /// Send chat request via LS RawGetChatMessage

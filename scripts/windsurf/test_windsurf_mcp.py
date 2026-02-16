@@ -83,12 +83,12 @@ def main():
     # Give the server a moment to process the notification
     time.sleep(0.5)
     
-    print("\n📨 Sending Chat Request (windsurf_chat)...")
+    print("\n📨 Sending Chat Request (windsurf_chat) for Code Generation...")
     chat_params = {
         "name": "windsurf_chat",
         "arguments": {
-            "message": "Hello, are you working?",
-            "model": "swe-1.5" # Use a free model
+            "message": "Write a short Python function to calculate the N-th Fibonacci number. Provide only the code.",
+            "model": "swe-1.5"
         }
     }
     rpc_request(process, "tools/call", chat_params, req_id=3)
@@ -124,7 +124,16 @@ def main():
         else:
              print("\n✅ TEST PASSED: valid response received.")
 
-    # Cleanup
+    print("\n📨 Sending Cascade Request (windsurf_cascade)...")
+    rpc_request(process, "tools/call", {
+        "name": "windsurf_cascade",
+        "arguments": {
+            "message": "Create a file named fib.py with a Fibonacci function.",
+            "model": "swe-1.5"
+        }
+    }, req_id=6)
+    resp = read_response(process)
+    print(f"\n🌊 Cascade Response:\n{json.dumps(resp, indent=2)}")
     process.terminate()
     try:
         outs, errs = process.communicate(timeout=2)
