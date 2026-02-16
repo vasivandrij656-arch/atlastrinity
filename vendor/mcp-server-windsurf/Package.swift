@@ -18,6 +18,7 @@ let package = Package(
             path: "Sources",
             sources: [
                 "main.swift",
+                "Constants.swift",
                 "FileSystemMonitor.swift",
                 "ProtobufFieldExplorer.swift", 
                 "WindsurfLogger.swift",

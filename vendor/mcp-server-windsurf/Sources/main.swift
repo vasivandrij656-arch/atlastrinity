@@ -47,7 +47,6 @@ private func sigintHandler(_ sig: Int32) {
 struct GlobalState {
     static let gracefulShutdown = GracefulShutdown.shared
     static let healthMonitor = HealthMonitor()
-    static let state = WindsurfState()
     static let workspaceManager = WorkspaceManager.shared
     static let errorRecoveryManager = ErrorRecoveryManager.shared
     static let logger = WindsurfLogger.shared
@@ -57,29 +56,6 @@ struct GlobalState {
     static let analyticsDashboard = AnalyticsDashboard.shared
     static let apiVersionManager = APIVersionManager.shared
 }
-
-// MARK: - Configuration
-
-/// Windsurf LS endpoints (Connect-RPC / HTTP)
-let LS_RAW_CHAT = "/exa.language_server_pb.LanguageServerService/RawGetChatMessage"
-let LS_HEARTBEAT = "/exa.language_server_pb.LanguageServerService/Heartbeat"
-let LS_START_CASCADE = "/exa.language_server_pb.LanguageServerService/StartCascade"
-let LS_STREAM_CASCADE = "/exa.language_server_pb.LanguageServerService/StreamCascadeReactiveUpdates"
-let LS_QUEUE_CASCADE = "/exa.language_server_pb.LanguageServerService/QueueCascadeMessage"
-let LS_INTERRUPT_CASCADE = "/exa.language_server_pb.LanguageServerService/InterruptCascade"
-let LS_INTERRUPT_WITH_MESSAGE =
-    "/exa.language_server_pb.LanguageServerService/InterruptWithQueuedMessage"
-
-/// Configuration constants
-let DEFAULT_TIMEOUT: TimeInterval = 30
-let CASCADE_TIMEOUT: TimeInterval = 120  // Increased from 90s
-let HEARTBEAT_TIMEOUT: TimeInterval = 5
-let MAX_RETRY_ATTEMPTS = 3
-let RETRY_BASE_DELAY: TimeInterval = 0.5
-
-/// Default IDE metadata
-let IDE_VERSION = "1.9552.21"
-let EXTENSION_VERSION = "1.48.2"
 
 // MARK: - Health Monitoring
 
@@ -347,90 +323,28 @@ func protoFindStrings(_ data: Data, minLen: Int = 4) -> [String] {
     return results
 }
 
-// MARK: - Windsurf Models
+// MARK: - Global Variables
+let globalState = WindsurfState()
 
-struct WindsurfModel {
-    let id: String
-    let displayName: String
-    let protobufId: String
-    let tier: String  // "free", "value", "premium"
-    let family: String
-}
+// MARK: - Configuration
+/// Windsurf LS endpoints (Connect-RPC / HTTP)
+let LS_RAW_CHAT = "/exa.language_server_pb.LanguageServerService/RawGetChatMessage"
+let LS_HEARTBEAT = "/exa.language_server_pb.LanguageServerService/Heartbeat"
+let LS_START_CASCADE = "/exa.language_server_pb.LanguageServerService/StartCascade"
+let LS_STREAM_CASCADE = "/exa.language_server_pb.LanguageServerService/StreamCascadeReactiveUpdates"
+let LS_QUEUE_CASCADE = "/exa.language_server_pb.LanguageServerService/QueueCascadeMessage"
+let LS_INTERRUPT_CASCADE = "/exa.language_server_pb.LanguageServerService/InterruptCascade"
+let LS_INTERRUPT_WITH_MESSAGE =
+    "/exa.language_server_pb.LanguageServerService/InterruptWithQueuedMessage"
 
-let WINDSURF_MODELS: [WindsurfModel] = [
-    // Cascade Models
-    WindsurfModel(
-        id: "swe-1.5", displayName: "SWE-1.5", protobufId: "MODEL_SWE_1_5", tier: "free",
-        family: "swe"),
-    WindsurfModel(
-        id: "swe-1", displayName: "SWE-1", protobufId: "MODEL_SWE_1", tier: "free", family: "swe"),
-    WindsurfModel(
-        id: "swe-1-mini", displayName: "SWE-1-mini", protobufId: "MODEL_SWE_1_MINI", tier: "free",
-        family: "swe"),
-    WindsurfModel(
-        id: "swe-grep", displayName: "SWE-grep", protobufId: "MODEL_SWE_GREP", tier: "free",
-        family: "swe"),
-    WindsurfModel(
-        id: "windsurf-fast", displayName: "Windsurf Fast", protobufId: "MODEL_CHAT_11121",
-        tier: "free", family: "windsurf"),
+/// Configuration constants
+let DEFAULT_TIMEOUT: TimeInterval = 30
+let CASCADE_TIMEOUT: TimeInterval = 120
+let HEARTBEAT_TIMEOUT: TimeInterval = 5
+let MAX_RETRY_ATTEMPTS = 3
+let RETRY_BASE_DELAY: TimeInterval = 0.5
 
-    // Windsurf Premier 🚀
-    WindsurfModel(
-        id: "llama-3.1-405b", displayName: "Llama 3.1 405B (Premier)",
-        protobufId: "MODEL_LLAMA_3_1_405B", tier: "premium", family: "llama-3"),
-    WindsurfModel(
-        id: "llama-3.1-70b", displayName: "Llama 3.1 70B (Base)", protobufId: "MODEL_LLAMA_3_1_70B",
-        tier: "free", family: "llama-3"),
-
-    // Next-Gen Premium (Changelog)
-    WindsurfModel(
-        id: "claude-4.6-opus", displayName: "Claude 4.6 Opus", protobufId: "MODEL_CLAUDE_4_6_OPUS",
-        tier: "premium", family: "claude-4.6-opus"),
-    WindsurfModel(
-        id: "claude-4.6-opus-fast", displayName: "Claude 4.6 Opus (Fast Mode)",
-        protobufId: "MODEL_CLAUDE_4_6_OPUS_FAST", tier: "premium", family: "claude-4.6-opus"),
-    WindsurfModel(
-        id: "gpt-5.2-codex", displayName: "GPT-5.2 Codex (Reasoning)",
-        protobufId: "MODEL_GPT_5_2_CODEX", tier: "premium", family: "gpt-5-codex"),
-    WindsurfModel(
-        id: "gpt-5.3-codex-spark", displayName: "GPT-5.3 Codex-Spark (Arena)",
-        protobufId: "MODEL_GPT_5_3_CODEX_SPARK", tier: "premium", family: "gpt-5-codex"),
-    WindsurfModel(
-        id: "gemini-3-pro", displayName: "Gemini 3 Pro", protobufId: "MODEL_GEMINI_3_PRO",
-        tier: "free", family: "gemini-3"),
-    WindsurfModel(
-        id: "gemini-3-flash", displayName: "Gemini 3 Flash (3x Fast)",
-        protobufId: "MODEL_GEMINI_3_FLASH", tier: "free", family: "gemini-3"),
-    WindsurfModel(
-        id: "sonnet-4.5", displayName: "Sonnet 4.5 (1M Context)", protobufId: "MODEL_SONNET_4_5",
-        tier: "premium", family: "sonnet"),
-    WindsurfModel(
-        id: "gpt-5.1-codex", displayName: "GPT-5.1 Codex", protobufId: "MODEL_GPT_5_1_CODEX",
-        tier: "premium", family: "gpt-5-codex"),
-    WindsurfModel(
-        id: "gpt-5.1-codex-mini", displayName: "GPT-5.1 Codex Mini",
-        protobufId: "MODEL_GPT_5_1_CODEX_MINI", tier: "premium", family: "gpt-5-codex"),
-
-    // Legacy/Standard Premium
-    WindsurfModel(
-        id: "gpt-4o", displayName: "GPT-4o (Windsurf Premium)", protobufId: "MODEL_GPT_4_O",
-        tier: "premium", family: "gpt-4o"),
-    WindsurfModel(
-        id: "claude-3.5-sonnet", displayName: "Claude 3.5 Sonnet (Windsurf Premium)",
-        protobufId: "MODEL_CLAUDE_3_5_SONNET", tier: "premium", family: "claude-3.5-sonnet"),
-    WindsurfModel(
-        id: "deepseek-v3", displayName: "DeepSeek V3", protobufId: "MODEL_DEEPSEEK_V3",
-        tier: "free", family: "deepseek"),
-    WindsurfModel(
-        id: "deepseek-r1", displayName: "DeepSeek R1", protobufId: "MODEL_DEEPSEEK_R1",
-        tier: "free", family: "deepseek"),
-    WindsurfModel(
-        id: "grok-code-fast-1", displayName: "Grok Code Fast 1",
-        protobufId: "MODEL_GROK_CODE_FAST_1", tier: "free", family: "grok"),
-    WindsurfModel(
-        id: "kimi-k2.5", displayName: "Kimi k2.5", protobufId: "kimi-k2-5", tier: "free",
-        family: "kimi"),
-]
+// MARK: - Model Definitions
 
 // MARK: - Language Server Detection
 
@@ -755,79 +669,6 @@ actor WindsurfState {
 
             // Record metrics
             Task {
-                await healthMonitor.recordRequest(
-                    success: success, latency: latency, type: "ls_detection")
-            }
-
-            if success {
-                setConnection(conn)
-                return conn
-            }
-        }
-
-        // Detection failed
-        let latency = Date().timeIntervalSince(startTime)
-        Task {
-            await healthMonitor.recordRequest(
-                success: false, latency: latency, type: "ls_detection")
-        }
-
-        invalidateCache()
-        return nil
-    }
-}
-
-// MARK: - Active State
-
-actor WindsurfState {
-    var activeModel: String = "swe-1.5"
-    var cachedConnection: LSConnection? = nil
-    var lastCacheUpdate: Date = Date.distantPast
-    var cacheValidDuration: TimeInterval = 300  // 5 minutes
-
-    func setModel(_ model: String) {
-        activeModel = model
-    }
-
-    func getModel() -> String {
-        return activeModel
-    }
-
-    func getConnection() -> LSConnection? {
-        // Check if cache is still valid
-        if let conn = cachedConnection,
-            Date().timeIntervalSince(lastCacheUpdate) < cacheValidDuration
-        {
-            return conn
-        }
-        return nil
-    }
-
-    func setConnection(_ conn: LSConnection?) {
-        cachedConnection = conn
-        lastCacheUpdate = Date()
-    }
-
-    func invalidateCache() {
-        cachedConnection = nil
-        lastCacheUpdate = Date.distantPast
-    }
-
-    /// Detect and cache LS connection, with heartbeat validation and caching
-    func ensureConnection() -> LSConnection? {
-        // First, try cached connection if still valid
-        if let cached = getConnection(), lsHeartbeat(connection: cached) {
-            return cached
-        }
-
-        // Cache miss or invalid - re-detect
-        let startTime = Date()
-        if let conn = detectLanguageServer() {
-            let latency = Date().timeIntervalSince(startTime)
-            let success = lsHeartbeat(connection: conn)
-
-            // Record metrics
-            Task {
                 await GlobalState.healthMonitor.recordRequest(
                     success: success, latency: latency, type: "ls_detection")
             }
@@ -948,7 +789,7 @@ let workspaceCreateSchema: Value = .object([
         "name": .object([
             "type": .string("string"),
             "description": .string("Optional name for the workspace"),
-        ])
+        ]),
     ]),
     "required": .array([.string("path")]),
 ])
@@ -973,6 +814,11 @@ let apiVersionSchema: Value = .object([
     "properties": .object([:]),
 ])
 
+let deprecationWarningsSchema: Value = .object([
+    "type": .string("object"),
+    "properties": .object([:]),
+])
+
 let versionInfoSchema: Value = .object([
     "type": .string("object"),
     "properties": .object([:]),
@@ -983,7 +829,7 @@ let compatibilityMatrixSchema: Value = .object([
     "properties": .object([
         "version": .object([
             "type": .string("string"),
-            "description": .string("Version to get compatibility matrix for (optional)")
+            "description": .string("Version to get compatibility matrix for (optional)"),
         ])
     ]),
 ])
@@ -993,14 +839,14 @@ let migrationPathSchema: Value = .object([
     "properties": .object([
         "fromVersion": .object([
             "type": .string("string"),
-            "description": .string("Source version for migration path")
+            "description": .string("Source version for migration path"),
         ]),
         "toVersion": .object([
             "type": .string("string"),
-            "description": .string("Target version for migration path")
-        ])
+            "description": .string("Target version for migration path"),
+        ]),
     ]),
-    "required": .array([.string("fromVersion"), .string("toVersion")])
+    "required": .array([.string("fromVersion"), .string("toVersion")]),
 ])
 
 // MARK: - Helper Functions
@@ -1024,8 +870,8 @@ func getOptionalString(from args: [String: Value]?, key: String) -> String? {
 // MARK: - Tool Implementations
 
 func handleHealthStatus() async -> String {
-    let connection = await state.ensureConnection()
-    let healthStatus = await healthMonitor.getHealthStatus()
+    let connection = await globalState.ensureConnection()
+    let healthStatus = await GlobalState.healthMonitor.getHealthStatus()
 
     var result = """
         🌊 Windsurf MCP Bridge Status
@@ -1048,7 +894,7 @@ func handleHealthStatus() async -> String {
             """
     }
 
-    let activeModel = await state.getModel()
+    let activeModel = await globalState.getModel()
     result += """
         🤖 Active Model: \(activeModel)
         📦 Available Models: \(WINDSURF_MODELS.count)
@@ -1087,7 +933,7 @@ func handleGetModels(tier: String?) -> String {
         default: tierEmoji = "❓"
         }
 
-        result += "\(tierEmoji) \(model.displayName)\n"
+        result += "\(tierEmoji) \(model.name)\n"
         result += "   ID: \(model.id) | Family: \(model.family) | Proto: \(model.protobufId)\n\n"
     }
 
@@ -1098,14 +944,15 @@ func handleChat(message: String, model: String?, systemPrompt: String?, stream: 
     -> String
 {
     let startTime = Date()
-    let activeModel = await state.getModel()
+    let activeModel = await globalState.getModel()
     let useModel = model ?? activeModel
     let shouldStream = stream ?? false
 
-    guard let connection = await state.ensureConnection() else {
+    guard let connection = await globalState.ensureConnection() else {
         let latency = Date().timeIntervalSince(startTime)
         Task {
-            await healthMonitor.recordRequest(success: false, latency: latency, type: "chat")
+            await GlobalState.healthMonitor.recordRequest(
+                success: false, latency: latency, type: "chat")
         }
         return "❌ Windsurf IDE not detected. Ensure Windsurf is running."
     }
@@ -1137,7 +984,8 @@ func handleChat(message: String, model: String?, systemPrompt: String?, stream: 
 
         let latency = Date().timeIntervalSince(startTime)
         Task {
-            await healthMonitor.recordRequest(success: true, latency: latency, type: "chat")
+            await GlobalState.healthMonitor.recordRequest(
+                success: true, latency: latency, type: "chat")
         }
 
         if shouldStream {
@@ -1175,24 +1023,17 @@ func handleChat(message: String, model: String?, systemPrompt: String?, stream: 
     } catch {
         let latency = Date().timeIntervalSince(startTime)
         Task {
-            await healthMonitor.recordRequest(success: false, latency: latency, type: "chat")
+            await GlobalState.healthMonitor.recordRequest(
+                success: false, latency: latency, type: "chat")
         }
         return "❌ Chat error: \(error.localizedDescription)"
     }
 }
 
-// MARK: - Stream Buffering
-actor StreamAccumulator {
-    var data = Data()
-    func append(_ d: Data) { data.append(d) }
-    func totalCount() -> Int { data.count }
-    func getData() -> Data { data }
-}
-
 func handleCascade(message: String, model: String?) async -> String {
-    let activeModel = await state.getModel()
+    let activeModel = await globalState.getModel()
     let useModel = model ?? activeModel
-    guard let connection = await state.ensureConnection() else {
+    guard let connection = await globalState.ensureConnection() else {
         return "❌ Windsurf IDE not detected. Ensure Windsurf is running."
     }
 
@@ -1203,8 +1044,8 @@ func handleCascade(message: String, model: String?) async -> String {
     startActionPhaseVerification()
     let cascadeId = "cascade-\(UUID().uuidString.prefix(8))"
     WindsurfLogger.shared.logCascadeStart(message: message, model: useModel, cascadeId: cascadeId)
-    
-    defer { 
+
+    defer {
         if let result = stopActionPhaseVerification() {
             WindsurfLogger.shared.logActionPhaseComplete(cascadeId: cascadeId, result: result)
             fputs("log: [windsurf] \(result.summary)\n", stderr)
@@ -1340,10 +1181,10 @@ func handleCascade(message: String, model: String?) async -> String {
 
         // 2. Scope Item (enhanced with workspace context from WorkspaceManager)
         let scopeMsg = WorkspaceManager.shared.enhanceScopeForCurrentWorkspace()
-        
+
         var scopeItem = Data()
         scopeItem.append(protoMsg(2, scopeMsg))  // TextOrScopeItem.scope
-        
+
         itemsProto.append(protoMsg(3, scopeItem))
 
         // Step 4: Enhanced Cascade Config for Action Phase
@@ -1351,24 +1192,24 @@ func handleCascade(message: String, model: String?) async -> String {
         var plannerProto = Data()
         plannerProto.append(protoStr(34, modelUid))  // plan_model
         plannerProto.append(protoStr(35, modelUid))  // requested_model
-        
+
         // Action Phase enabling flags (experimental field numbers)
         plannerProto.append(protoInt(11, 1))  // enable_cortex_reasoning
         plannerProto.append(protoInt(12, 1))  // enable_action_phase
         plannerProto.append(protoInt(13, 1))  // enable_tool_execution
         plannerProto.append(protoInt(14, 1))  // enable_file_operations
         plannerProto.append(protoInt(15, 1))  // enable_autonomous_execution
-        
+
         // Additional Cortex configuration
         var cortexConfig = Data()
         cortexConfig.append(protoInt(1, 1))  // enable_autonomous_tools
         cortexConfig.append(protoInt(2, 1))  // enable_file_creation
         cortexConfig.append(protoInt(3, 1))  // enable_file_modification
         cortexConfig.append(protoInt(4, 1))  // enable_workspace_scoped_actions
-        cortexConfig.append(protoInt(5, 180)) // action_timeout_seconds
-        
+        cortexConfig.append(protoInt(5, 180))  // action_timeout_seconds
+
         plannerProto.append(protoMsg(20, cortexConfig))  // cortex_config (field 20)
-        
+
         let configProto = protoMsg(5, protoMsg(1, plannerProto))
 
         let queuePayload =
@@ -1428,33 +1269,36 @@ func handleCascade(message: String, model: String?) async -> String {
 
         // Enhanced filtering for Action Phase responses
         // Look for actual file operations or tool execution signatures
-        let actionSignatures = ["created", "modified", "deleted", "updated", "wrote", "saved", "executed"]
-        
+        let actionSignatures = [
+            "created", "modified", "deleted", "updated", "wrote", "saved", "executed",
+        ]
+
         let filtered = strings.filter { response in
             // Keep responses that contain action signatures
             let hasActionSignature = actionSignatures.contains { signature in
                 response.lowercased().contains(signature.lowercased())
             }
-            
+
             // Or keep natural responses without system noise
-            let isNaturalResponse = !response.contains(cascadeId) 
+            let isNaturalResponse =
+                !response.contains(cascadeId)
                 && !response.contains(modelUid)
-                && !response.contains(apiKey) 
+                && !response.contains(apiKey)
                 && !response.contains("windsurf")
-                && !response.contains("CRITICAL:") 
+                && !response.contains("CRITICAL:")
                 && !response.contains("IMPORTANT:")
-                && !response.contains("JSON FORMAT") 
+                && !response.contains("JSON FORMAT")
                 && !response.contains("WARNING:")
-                && !response.contains("jsonrpc") 
+                && !response.contains("jsonrpc")
                 && !response.contains("markdown_formatting")
                 && !response.contains("additional_guidelines")
                 && !response.contains("No acknowledgment phrases")
-                && !response.contains("Direct responses:") 
+                && !response.contains("Direct responses:")
                 && !response.contains("Be terse and direct")
-                && !response.contains("file:///") 
+                && !response.contains("file:///")
                 && !response.contains("https://")
                 && response.count > 20  // Keep substantial responses
-            
+
             return hasActionSignature || isNaturalResponse
         }
 
@@ -1465,7 +1309,7 @@ func handleCascade(message: String, model: String?) async -> String {
                 response.lowercased().contains(signature.lowercased())
             }
         }
-        
+
         if let actionResponse = actionResponses.max(by: { $0.count < $1.count }) {
             return """
                 🌊 Cascade Action Phase Response (\(useModel))
@@ -1474,7 +1318,7 @@ func handleCascade(message: String, model: String?) async -> String {
                 \(actionResponse)
                 """
         }
-        
+
         // Fallback to longest natural response
         if let longest = filtered.max(by: { $0.count < $1.count }) {
             return """
@@ -1483,7 +1327,7 @@ func handleCascade(message: String, model: String?) async -> String {
                 \(longest)
                 """
         }
-        
+
         return "❌ No response text found in stream. (Raw bytes: \(streamData.count))"
 
     } catch {
@@ -1500,7 +1344,7 @@ func handleSwitchModel(model: String) async -> String {
             """
     }
 
-    await state.setModel(model)
+    await globalState.setModel(model)
     let tier = WINDSURF_MODELS.first { $0.id == model }?.tier ?? "unknown"
     return """
         ✅ Active model switched to: \(model)
@@ -1510,10 +1354,10 @@ func handleSwitchModel(model: String) async -> String {
 }
 
 func handleFieldExperiment(model: String?) async -> String {
-    let activeModel = await state.getModel()
+    let activeModel = await globalState.getModel()
     let useModel = model ?? activeModel
-    
-    guard let connection = await state.ensureConnection() else {
+
+    guard let connection = await globalState.ensureConnection() else {
         return "❌ Windsurf IDE not detected. Ensure Windsurf is running."
     }
 
@@ -1534,29 +1378,29 @@ func handleFieldExperiment(model: String?) async -> String {
 
     let explorer = ProtobufFieldExplorer(connection: connection, apiKey: apiKey)
     let experiments = await explorer.exploreCortexFields(baseModelUid: modelUid)
-    
+
     // Log experiments
     for experiment in experiments {
         WindsurfLogger.shared.logFieldExperiment(experiment)
     }
-    
+
     // Analyze results
     let analysis = FieldExperimentAnalyzer.analyzeResults(experiments)
-    
+
     var result = """
         🧪 Protobuf Field Experiment Results
         ═══════════════════════════════════
         Model: \(useModel) (\(modelUid))
         Total Experiments: \(experiments.count)
-        
+
         """
-    
+
     for experiment in experiments {
         result += experiment.summary + "\n"
     }
-    
+
     result += "\n" + analysis.summary
-    
+
     return result
 }
 
@@ -1564,19 +1408,22 @@ func handleMigrationPath(fromVersion: String, toVersion: String) -> String {
     do {
         let fromVer = try GlobalState.apiVersionManager.parseVersionString(fromVersion)
         let toVer = try GlobalState.apiVersionManager.parseVersionString(toVersion)
-        
-        guard let migrationPath = GlobalState.apiVersionManager.getMigrationPath(from: fromVer, toVer) else {
+
+        guard
+            let migrationPath = GlobalState.apiVersionManager.getMigrationPath(
+                from: fromVer, to: toVer)
+        else {
             return "❌ No migration path available from v\(fromVersion) to v\(toVersion)"
         }
-        
+
         var result = """
-        🔄 Migration Path Analysis
-        ══════════════════════════════════════
-        \(migrationPath.summary)
-        
-        Steps:
-        """
-        
+            🔄 Migration Path Analysis
+            ══════════════════════════════════════
+            \(migrationPath.summary)
+
+            Steps:
+            """
+
         for (index, step) in migrationPath.steps.enumerated() {
             result += "\(index + 1). **\(step.type.description)**\n"
             result += "   Instructions:\n"
@@ -1586,16 +1433,16 @@ func handleMigrationPath(fromVersion: String, toVersion: String) -> String {
             result += "   Estimated Time: \(formatDuration(step.estimatedTime))\n"
             result += "   Requires Downtime: \(step.requiresDowntime ? "Yes" : "No")\n\n"
         }
-        
+
         // Log migration planning
         GlobalState.logger.logCascadeStart(
             message: "Migration planned from v\(fromVersion) to v\(toVersion)",
             model: "system",
             cascadeId: "migration-\(UUID().uuidString.prefix(8))"
         )
-        
+
         return result
-        
+
     } catch {
         return "❌ Migration path error: \(error.localizedDescription)"
     }
@@ -1608,28 +1455,28 @@ func handleAPIVersion() -> String {
 
 func handleVersionInfo() -> String {
     let versionInfo = GlobalState.apiVersionManager.getVersionInfo()
-    
+
     // Add deprecation warnings if any
-    let warnings = GlobalState.apiVersionManager.checkDepreciationWarnings()
+    let warnings = GlobalState.apiVersionManager.checkDeprecationWarnings()
     var result = versionInfo.summary
-    
+
     if !warnings.isEmpty {
         result += "\n⚠️ Depreciation Warnings:\n"
         for warning in warnings {
             result += warning.summary + "\n"
         }
     }
-    
+
     return result
 }
 
 func handleCompatibilityMatrix(version: String?) -> String {
     let matrix = GlobalState.apiVersionManager.getCompatibilityMatrix()
-    
+
     if let version = version {
         // Filter for specific version
         let versionKey = version.hasPrefix("v") ? version : "v\(version)"
-        if let versionData = matrix.matrix[versionKey] {
+        if matrix.matrix[versionKey] != nil {
             var result = "Compatibility Matrix for v\(version)\n"
             result += matrix.summary
             return result
@@ -1637,25 +1484,25 @@ func handleCompatibilityMatrix(version: String?) -> String {
             return "❌ Version \(version) not found in compatibility matrix"
         }
     }
-    
+
     // Show full matrix
     return matrix.summary
 }
 
 func handleDepreciationWarnings() -> String {
-    let warnings = GlobalState.apiVersionManager.checkDepreciationWarnings()
-    
+    let warnings = GlobalState.apiVersionManager.checkDeprecationWarnings()
+
     if warnings.isEmpty {
         return "✅ No deprecation warnings at this time"
     }
-    
+
     var result = "⚠️ Depreciation Warnings\n"
     result += "═══════════════════════════════════════\n"
-    
+
     for warning in warnings {
         result += warning.summary + "\n"
     }
-    
+
     return result
 }
 
@@ -1667,7 +1514,7 @@ func setupAndStartServer() async throws -> Server {
     // Auto-detect LS on startup
     if let conn = detectLanguageServer() {
         if lsHeartbeat(connection: conn) {
-            await state.setConnection(conn)
+            await globalState.setConnection(conn)
             fputs("log: [windsurf] IDE detected at port \(conn.port)\n", stderr)
         } else {
             fputs("log: [windsurf] IDE found but heartbeat failed\n", stderr)
@@ -1789,7 +1636,7 @@ func setupAndStartServer() async throws -> Server {
                 result = await handleHealthStatus()
 
             case "windsurf_health":
-                result = await healthMonitor.getHealthStatus()
+                result = await GlobalState.healthMonitor.getHealthStatus()
 
             case "windsurf_get_models":
                 let tier = getOptionalString(from: args, key: "tier")
@@ -1845,8 +1692,8 @@ func setupAndStartServer() async throws -> Server {
                 result = handleCompatibilityMatrix(version: version)
 
             case "windsurf_migration_path":
-                let fromVersion = getRequiredString(from: args, key: "fromVersion")
-                let toVersion = getRequiredString(from: args, key: "toVersion")
+                let fromVersion = try getRequiredString(from: args, key: "fromVersion")
+                let toVersion = try getRequiredString(from: args, key: "toVersion")
                 result = handleMigrationPath(fromVersion: fromVersion, toVersion: toVersion)
 
             case "windsurf_deprecation_warnings":
@@ -1873,20 +1720,13 @@ func setupAndStartServer() async throws -> Server {
     return server
 }
 
-// MARK: - Entry Point
+// Setup graceful shutdown
+GlobalState.gracefulShutdown.setupSignalHandlers()
 
-@main
-struct WindsurfMCPServer {
-    static func main() async throws {
-        let _ = try await setupAndStartServer()
+// Start server
+_ = try await setupAndStartServer()
 
-        // Start graceful shutdown monitor in background
-        Task {
-            GlobalState.gracefulShutdown.waitForShutdown()
-            exit(0)
-        }
+// Wait for shutdown signal
+GlobalState.gracefulShutdown.waitForShutdown()
 
-        // Keep running until terminated
-        try await Task.sleep(nanoseconds: UInt64.max)
-    }
-}
+// Server will automatically shut down when process exits
