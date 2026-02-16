@@ -1,5 +1,5 @@
 import type * as React from 'react';
-import { useCallback, useState } from 'react';
+import { useCallback, useEffect, useState } from 'react';
 import type { Session } from '../types';
 
 const API_BASE = 'http://127.0.0.1:8000';
@@ -32,6 +32,12 @@ const SessionManager: React.FC<SessionManagerProps> = ({
       console.error('[SessionManager] Failed to fetch sessions:', err);
     }
   }, []);
+
+  useEffect(() => {
+    if (isOpen) {
+      void fetchSessions();
+    }
+  }, [isOpen, fetchSessions]);
 
   const handleNewSession = async () => {
     try {

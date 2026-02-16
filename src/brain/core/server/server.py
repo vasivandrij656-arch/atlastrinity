@@ -397,6 +397,19 @@ async def get_state():
     return state
 
 
+@app.post("/api/pause")
+async def pause_system():
+    """Pause current execution"""
+    trinity.pause()
+    return {"status": "success", "message": "System paused"}
+
+
+@app.post("/api/resume")
+async def resume_system():
+    """Resume current execution"""
+    return await trinity.resume()
+
+
 @app.post("/api/stt")
 async def speech_to_text(audio: UploadFile = File(...)):
     """Convert speech to text using Whisper"""
@@ -623,11 +636,38 @@ def _handle_barge_in(text: str, confidence: float) -> bool:
         "stop system",
         "silence mode",
     }
+    pause_commands = {
+        "атлас пауза",
+        "призупини",
+        "система пауза",
+        "atlas pause",
+        "system pause",
+    }
+    resume_commands = {
+        "атлас продовж",
+        "продовжуємо",
+        "система продовж",
+        "atlas resume",
+        "system resume",
+        "continue",
+    }
     clean_text = text.strip().lower()
+
     if any(cmd in clean_text for cmd in stop_commands) and confidence > 0.70:
-        logger.info(f"[STT] 🛑 BARGE-IN DETECTED: '{text}'")
+        logger.info(f"[STT] 🛑 STOP DETECTED: '{text}'")
         trinity.stop()
         return True
+
+    if any(cmd in clean_text for cmd in pause_commands) and confidence > 0.70:
+        logger.info(f"[STT] ⏸️ PAUSE DETECTED: '{text}'")
+        trinity.pause()
+        return True
+
+    if any(cmd in clean_text for cmd in resume_commands) and confidence > 0.70:
+        logger.info(f"[STT] ▶️ RESUME DETECTED: '{text}'")
+        asyncio.create_task(trinity.resume())
+        return True
+
     return False
 
 

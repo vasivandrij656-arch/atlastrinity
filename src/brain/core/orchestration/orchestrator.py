@@ -498,6 +498,42 @@ class Trinity(TourMixin, VoiceOrchestrationMixin):
         self.state["system_state"] = "PAUSED"
         logger.info("[TRINITY] System paused. State preserved.")
 
+    async def resume(self):
+        """Resume execution from PAUSED state."""
+        if self.state.get("system_state") != "PAUSED":
+            logger.warning("[TRINITY] System is not paused, nothing to resume.")
+            return {"status": "error", "message": "System not paused"}
+
+        logger.info("[TRINITY] ▶️ RESUME SIGNAL RECEIVED.")
+
+        # Find the last human request to re-trigger run()
+        messages = self.state.get("messages", [])
+        last_request = ""
+
+        # Look for the last human message in history
+        if not isinstance(messages, list):
+            logger.warning("[TRINITY] Messages state is not a list, cannot resume.")
+            self.state["system_state"] = SystemState.IDLE.value
+            return {"status": "error", "message": "Invalid message state"}
+
+        for m in reversed(messages):
+            # Handle both object and dict formats
+            content = getattr(m, "content", None) if not isinstance(m, dict) else m.get("content")
+            m_type = getattr(m, "type", None) if not isinstance(m, dict) else m.get("type")
+
+            if m_type == "human" and content:
+                last_request = str(content)
+                break
+
+        if last_request:
+            logger.info(f"[TRINITY] Resuming with request: {last_request[:50]}...")
+            # Run in background to not block the API response
+            asyncio.create_task(self.run(last_request))
+            return {"status": "success", "message": "Resuming task"}
+        logger.warning("[TRINITY] No previous human request found to resume.")
+        self.state["system_state"] = SystemState.IDLE.value
+        return {"status": "error", "message": "No task history to resume"}
+
     async def resume_from_snapshot(self, snapshot_path: str):
         """Resume execution from a recovery snapshot."""
         try:

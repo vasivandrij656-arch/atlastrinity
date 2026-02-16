@@ -15,7 +15,8 @@ type SystemState =
   | 'COMPLETED'
   | 'ERROR'
   | 'CHAT'
-  | 'PROCESSING';
+  | 'PROCESSING'
+  | 'PAUSED';
 
 interface NeuralCoreProps {
   state: SystemState;

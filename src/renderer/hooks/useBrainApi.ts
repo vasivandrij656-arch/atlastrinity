@@ -348,6 +348,33 @@ export const useBrainApi = () => {
     return false;
   };
 
+  const handlePause = async () => {
+    try {
+      const response = await fetch(`${API_BASE}/api/pause`, { method: 'POST' });
+      if (response.ok) {
+        addLog('SYSTEM', '⏸️ Призупинено', 'warning');
+        setSystemState('PAUSED');
+        return true;
+      }
+    } catch (err) {
+      console.error('Failed to pause:', err);
+    }
+    return false;
+  };
+
+  const handleResume = async () => {
+    try {
+      const response = await fetch(`${API_BASE}/api/resume`, { method: 'POST' });
+      if (response.ok) {
+        addLog('SYSTEM', '▶️ Продовжено', 'success');
+        return true;
+      }
+    } catch (err) {
+      console.error('Failed to resume:', err);
+    }
+    return false;
+  };
+
   return {
     systemState,
     setSystemState,
@@ -369,5 +396,7 @@ export const useBrainApi = () => {
     addLog,
     handleNewSession,
     handleRestoreSession,
+    handlePause,
+    handleResume,
   };
 };

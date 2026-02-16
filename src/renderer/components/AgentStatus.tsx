@@ -15,7 +15,8 @@ type SystemState =
   | 'ERROR'
   | 'PLANNING'
   | 'COMPLETED'
-  | 'CHAT';
+  | 'CHAT'
+  | 'PAUSED';
 
 interface AgentStatusProps {
   activeAgent: AgentName;

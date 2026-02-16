@@ -32,6 +32,8 @@ const App: React.FC = () => {
     handleCommand,
     handleNewSession,
     handleRestoreSession,
+    handlePause,
+    handleResume,
     currentTask,
     activeMode,
   } = useBrainApi();
@@ -214,6 +216,38 @@ const App: React.FC = () => {
             <polyline points="12 8 12 12 14 14"></polyline>
             <path d="M3.05 11a9 9 0 1 1 .5 4m-.5 5v-5h5"></path>
           </svg>
+        </button>
+        <button
+          onClick={() => {
+            if (systemState === 'PAUSED') {
+              void handleResume();
+            } else {
+              void handlePause();
+            }
+          }}
+          className={`titlebar-btn group ${systemState === 'PAUSED' ? 'active' : ''}`}
+          title={systemState === 'PAUSED' ? 'Resume Session' : 'Pause Session'}
+          style={{
+            color: systemState === 'PAUSED' ? '#00FF41' : 'rgba(0, 163, 255, 0.6)',
+          }}
+        >
+          {systemState === 'PAUSED' ? (
+            <svg width="10" height="10" viewBox="0 0 24 24" fill="currentColor">
+              <path d="M5 3l14 9-14 9V3z" />
+            </svg>
+          ) : (
+            <svg
+              width="10"
+              height="10"
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="currentColor"
+              strokeWidth="3"
+            >
+              <line x1="10" y1="4" x2="10" y2="20"></line>
+              <line x1="14" y1="4" x2="14" y2="20"></line>
+            </svg>
+          )}
         </button>
         <button
           onClick={() => {
