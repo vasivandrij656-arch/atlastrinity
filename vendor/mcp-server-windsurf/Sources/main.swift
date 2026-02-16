@@ -1142,14 +1142,16 @@ func handleCascade(message: String, model: String?) async -> String {
         try await Task.sleep(nanoseconds: 300_000_000)
 
         // Step 3: QueueCascadeMessage
+        // Items (Field 3) -> Intent (Field 1) -> Generic (Field 1) -> Text (Field 1)
         var itemsProto = Data()
-        let itemP = protoStr(1, message)
-        itemsProto.append(protoMsg(3, itemP))
+        let intentP = protoMsg(1, protoMsg(1, protoStr(1, message)))
+        itemsProto.append(protoMsg(3, intentP))
 
         let plannerProto = protoStr(34, modelUid) + protoStr(35, modelUid)
         let configProto = protoMsg(5, protoMsg(1, plannerProto))
 
         let queuePayload = protoMsg(1, meta) + protoStr(2, cascadeId) + itemsProto + configProto
+        fputs("log: [windsurf] Queuing message with refined intent nesting...\n", stderr)
         let _ = try await sendProto(LS_QUEUE_CASCADE, queuePayload)
 
         // Step 4: Interrupt
