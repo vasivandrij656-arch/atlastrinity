@@ -236,10 +236,10 @@ def _build_metadata_proto(api_key: str, session_id: str) -> bytes:
     """Build Metadata proto binary (exa.codeium_common_pb.Metadata)."""
     return (
         _proto_str(1, "windsurf")
-        + _proto_str(2, "1.42.0")
+        + _proto_str(2, "1.48.2")
         + _proto_str(3, api_key)
         + _proto_str(4, "en")
-        + _proto_str(7, "1.9544.35")
+        + _proto_str(7, "1.9552.21")
         + _proto_int(9, 1)
         + _proto_str(10, session_id)
     )
@@ -678,8 +678,8 @@ class WindsurfLLM(BaseChatModel):
         """
         return {
             "ideName": "windsurf",
-            "ideVersion": "1.9544.35",
-            "extensionVersion": "1.42.0",
+            "ideVersion": "1.9552.21",
+            "extensionVersion": "1.48.2",
             "locale": "en",
             "sessionId": f"atlastrinity-{os.getpid()}",
             "requestId": str(int(time.time())),

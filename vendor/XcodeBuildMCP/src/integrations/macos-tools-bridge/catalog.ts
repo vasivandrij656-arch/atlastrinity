@@ -50,6 +50,8 @@ export const ToolCategory = {
   SECURITY: 'security',
   /** Meta-tools: help, diagnostics */
   META: 'meta',
+  /** IDE integration: Windsurf, Xcode, etc. */
+  IDE_INTEGRATION: 'ide-integration',
 } as const;
 
 export type ToolCategoryValue = (typeof ToolCategory)[keyof typeof ToolCategory];
@@ -1108,12 +1110,81 @@ const GOOGLEMAPS_TOOLS: BridgedToolDefinition[] = [
   },
 ];
 
+// ─── Windsurf IDE Tools ─────────────────────────────────────────────────────
+
+const WINDSURF = 'windsurf';
+
+const WINDSURF_TOOLS: BridgedToolDefinition[] = [
+  {
+    name: 'windsurf_status',
+    description: 'Get Windsurf IDE connection status, active model, and server health',
+    backendId: WINDSURF,
+    remoteToolName: 'windsurf_status',
+    schema: z.object({}),
+    categories: [ToolCategory.IDE_INTEGRATION, ToolCategory.META],
+    priority: 1,
+    tags: ['windsurf', 'status', 'health', 'ide', 'connection'],
+  },
+  {
+    name: 'windsurf_get_models',
+    description: 'List all available Windsurf models with tier info (free/value/premium)',
+    backendId: WINDSURF,
+    remoteToolName: 'windsurf_get_models',
+    schema: z.object({
+      tier: z.string().optional().describe('Filter by tier: free, value, premium, or all (default: all)'),
+    }),
+    categories: [ToolCategory.IDE_INTEGRATION],
+    priority: 2,
+    tags: ['windsurf', 'models', 'list', 'tier'],
+  },
+  {
+    name: 'windsurf_chat',
+    description: 'Send a chat message to Windsurf AI via the local language server (uses Chat API quota)',
+    backendId: WINDSURF,
+    remoteToolName: 'windsurf_chat',
+    schema: z.object({
+      message: z.string().describe('Message to send to Windsurf AI'),
+      model: z.string().optional().describe('Model to use (default: active model). e.g., swe-1.5, deepseek-r1'),
+      system_prompt: z.string().optional().describe('Optional system prompt to prepend'),
+    }),
+    categories: [ToolCategory.IDE_INTEGRATION],
+    priority: 1,
+    tags: ['windsurf', 'chat', 'ai', 'llm', 'code'],
+  },
+  {
+    name: 'windsurf_cascade',
+    description: 'Execute a Cascade flow in Windsurf (uses Cascade Actions quota). Best for complex multi-step tasks',
+    backendId: WINDSURF,
+    remoteToolName: 'windsurf_cascade',
+    schema: z.object({
+      message: z.string().describe('Task description for Cascade to execute'),
+      model: z.string().optional().describe('Model for Cascade (default: active model)'),
+    }),
+    categories: [ToolCategory.IDE_INTEGRATION],
+    priority: 2,
+    tags: ['windsurf', 'cascade', 'flow', 'multi-step', 'task'],
+  },
+  {
+    name: 'windsurf_switch_model',
+    description: 'Switch the active Windsurf model for subsequent chat/cascade calls',
+    backendId: WINDSURF,
+    remoteToolName: 'windsurf_switch_model',
+    schema: z.object({
+      model: z.string().describe('Model ID to switch to (e.g., swe-1.5, deepseek-r1, kimi-k2.5)'),
+    }),
+    categories: [ToolCategory.IDE_INTEGRATION],
+    priority: 2,
+    tags: ['windsurf', 'model', 'switch', 'configure'],
+  },
+];
+
 // ─── Full Catalog ───────────────────────────────────────────────────────────
 
 /** All bridged tools from all backends */
 export const ALL_BRIDGED_TOOLS: BridgedToolDefinition[] = [
   ...MACOS_USE_TOOLS,
   ...GOOGLEMAPS_TOOLS,
+  ...WINDSURF_TOOLS,
 ];
 
 /**

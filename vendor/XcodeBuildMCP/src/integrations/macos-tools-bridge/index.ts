@@ -29,6 +29,10 @@ const GOOGLEMAPS_BINARY =
   process.env['GOOGLEMAPS_BINARY_PATH'] ??
   '../mcp-server-googlemaps/.build/release/mcp-server-googlemaps';
 
+const WINDSURF_BINARY =
+  process.env['WINDSURF_BINARY_PATH'] ??
+  '../mcp-server-windsurf/.build/release/mcp-server-windsurf';
+
 // ─── Singleton Registry ─────────────────────────────────────────────────────
 
 let registry: BackendRegistry | null = null;
@@ -76,6 +80,7 @@ export async function registerBridgedTools(
     createSwiftBackendConfig('googlemaps', 'Google Maps', GOOGLEMAPS_BINARY, {
       GOOGLE_MAPS_API_KEY: process.env['GOOGLE_MAPS_API_KEY'] ?? '',
     }),
+    createSwiftBackendConfig('windsurf', 'Windsurf IDE', WINDSURF_BINARY),
   ];
 
   const enabledSet = options.enabledBackends

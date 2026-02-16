@@ -22,6 +22,7 @@
       "name": "GPT-4o",
       "object": "model",
       "preview": false,
+      "tier": "value",
       "vendor": "Copilot",
       "version": "gpt-4o"
     },
@@ -47,6 +48,7 @@
       "name": "GPT-4.1",
       "object": "model",
       "preview": true,
+      "tier": "premium",
       "vendor": "Copilot",
       "version": "gpt-4.1"
     },
@@ -71,6 +73,7 @@
       "name": "GPT-5 Mini",
       "object": "model",
       "preview": true,
+      "tier": "value",
       "vendor": "Copilot",
       "version": "gpt-5-mini"
     },
@@ -93,6 +96,7 @@
       "name": "Grok Code Fast 1",
       "object": "model",
       "preview": false,
+      "tier": "free",
       "vendor": "Copilot",
       "version": "grok-code-fast-1"
     },
@@ -115,6 +119,7 @@
       "name": "Raptor Mini (OSWE)",
       "object": "model",
       "preview": false,
+      "tier": "free",
       "vendor": "Copilot",
       "version": "oswe-vscode-secondary"
     },
@@ -122,8 +127,8 @@
       "capabilities": {
         "family": "swe",
         "limits": {
-          "max_context_window_tokens": 32000,
-          "max_output_tokens": 4096
+          "max_context_window_tokens": 128000,
+          "max_output_tokens": 16384
         },
         "object": "model_capabilities",
         "supports": {
@@ -134,40 +139,272 @@
       },
       "id": "swe-1.5",
       "model_picker_enabled": true,
-      "name": "SWE-1.5",
+      "name": "SWE-1.5 (Advanced Agentic)",
       "object": "model",
       "preview": false,
+      "tier": "free",
       "vendor": "Windsurf",
       "version": "swe-1.5"
     },
     {
       "capabilities": {
-        "family": "deepseek-r1",
+        "family": "claude-4.6-opus",
         "limits": {
-          "max_context_window_tokens": 64000,
-          "max_output_tokens": 8000
+          "max_context_window_tokens": 200000,
+          "max_output_tokens": 16384
         },
         "object": "model_capabilities",
         "supports": {
           "streaming": true
         },
-        "tokenizer": "deepseek",
+        "tokenizer": "o200k_base",
         "type": "chat"
       },
-      "id": "deepseek-r1",
+      "id": "claude-4.6-opus",
       "model_picker_enabled": true,
-      "name": "DeepSeek R1",
+      "name": "Claude 4.6 Opus",
       "object": "model",
       "preview": false,
+      "tier": "premium",
       "vendor": "Windsurf",
-      "version": "deepseek-r1"
+      "version": "claude-4.6-opus"
+    },
+    {
+      "capabilities": {
+        "family": "claude-4.6-opus",
+        "limits": {
+          "max_context_window_tokens": 200000,
+          "max_output_tokens": 16384
+        },
+        "object": "model_capabilities",
+        "supports": {
+          "streaming": true
+        },
+        "tokenizer": "o200k_base",
+        "type": "chat"
+      },
+      "id": "claude-4.6-opus-fast",
+      "model_picker_enabled": true,
+      "name": "Claude 4.6 Opus (Fast Mode)",
+      "object": "model",
+      "preview": false,
+      "tier": "premium",
+      "vendor": "Windsurf",
+      "version": "claude-4.6-opus-fast"
+    },
+    {
+      "capabilities": {
+        "family": "gpt-5-codex",
+        "limits": {
+          "max_context_window_tokens": 200000,
+          "max_output_tokens": 32768
+        },
+        "object": "model_capabilities",
+        "supports": {
+          "streaming": true
+        },
+        "tokenizer": "o200k_base",
+        "type": "chat"
+      },
+      "id": "gpt-5.2-codex",
+      "model_picker_enabled": true,
+      "name": "GPT-5.2 Codex (Reasoning)",
+      "object": "model",
+      "preview": false,
+      "tier": "premium",
+      "vendor": "Windsurf",
+      "version": "gpt-5.2-codex"
+    },
+    {
+      "capabilities": {
+        "family": "gpt-5-codex",
+        "limits": {
+          "max_context_window_tokens": 200000,
+          "max_output_tokens": 32768
+        },
+        "object": "model_capabilities",
+        "supports": {
+          "streaming": true
+        },
+        "tokenizer": "o200k_base",
+        "type": "chat"
+      },
+      "id": "gpt-5.3-codex-spark",
+      "model_picker_enabled": true,
+      "name": "GPT-5.3 Codex-Spark (Arena)",
+      "object": "model",
+      "preview": false,
+      "tier": "premium",
+      "vendor": "Windsurf",
+      "version": "gpt-5.3-codex-spark"
+    },
+    {
+      "capabilities": {
+        "family": "gemini-3",
+        "limits": {
+          "max_context_window_tokens": 1000000,
+          "max_output_tokens": 16384
+        },
+        "object": "model_capabilities",
+        "supports": {
+          "streaming": true
+        },
+        "tokenizer": "o200k_base",
+        "type": "chat"
+      },
+      "id": "gemini-3-pro",
+      "model_picker_enabled": true,
+      "name": "Gemini 3 Pro",
+      "object": "model",
+      "preview": false,
+      "tier": "free",
+      "vendor": "Windsurf",
+      "version": "gemini-3-pro"
+    },
+    {
+      "capabilities": {
+        "family": "gemini-3",
+        "limits": {
+          "max_context_window_tokens": 1000000,
+          "max_output_tokens": 16384
+        },
+        "object": "model_capabilities",
+        "supports": {
+          "streaming": true
+        },
+        "tokenizer": "o200k_base",
+        "type": "chat"
+      },
+      "id": "gemini-3-flash",
+      "model_picker_enabled": true,
+      "name": "Gemini 3 Flash (3x Fast)",
+      "object": "model",
+      "preview": false,
+      "tier": "free",
+      "vendor": "Windsurf",
+      "version": "gemini-3-flash"
+    },
+    {
+      "capabilities": {
+        "family": "sonnet",
+        "limits": {
+          "max_context_window_tokens": 1000000,
+          "max_output_tokens": 16384
+        },
+        "object": "model_capabilities",
+        "supports": {
+          "streaming": true
+        },
+        "tokenizer": "o200k_base",
+        "type": "chat"
+      },
+      "id": "sonnet-4.5",
+      "model_picker_enabled": true,
+      "name": "Sonnet 4.5 (1M Context)",
+      "object": "model",
+      "preview": false,
+      "tier": "premium",
+      "vendor": "Windsurf",
+      "version": "sonnet-4.5"
+    },
+    {
+      "capabilities": {
+        "family": "gpt-5-codex",
+        "limits": {
+          "max_context_window_tokens": 200000,
+          "max_output_tokens": 16384
+        },
+        "object": "model_capabilities",
+        "supports": {
+          "streaming": true
+        },
+        "tokenizer": "o200k_base",
+        "type": "chat"
+      },
+      "id": "gpt-5.1-codex",
+      "model_picker_enabled": true,
+      "name": "GPT-5.1 Codex",
+      "object": "model",
+      "preview": false,
+      "tier": "premium",
+      "vendor": "Windsurf",
+      "version": "gpt-5.1-codex"
+    },
+    {
+      "capabilities": {
+        "family": "gpt-5-codex",
+        "limits": {
+          "max_context_window_tokens": 128000,
+          "max_output_tokens": 8192
+        },
+        "object": "model_capabilities",
+        "supports": {
+          "streaming": true
+        },
+        "tokenizer": "o200k_base",
+        "type": "chat"
+      },
+      "id": "gpt-5.1-codex-mini",
+      "model_picker_enabled": true,
+      "name": "GPT-5.1 Codex Mini",
+      "object": "model",
+      "preview": false,
+      "tier": "premium",
+      "vendor": "Windsurf",
+      "version": "gpt-5.1-codex-mini"
+    },
+    {
+      "capabilities": {
+        "family": "llama-3",
+        "limits": {
+          "max_context_window_tokens": 128000,
+          "max_output_tokens": 16384
+        },
+        "object": "model_capabilities",
+        "supports": {
+          "streaming": true
+        },
+        "tokenizer": "o200k_base",
+        "type": "chat"
+      },
+      "id": "llama-3.1-405b",
+      "model_picker_enabled": true,
+      "name": "Llama 3.1 405B (Premier)",
+      "object": "model",
+      "preview": false,
+      "tier": "premium",
+      "vendor": "Windsurf",
+      "version": "llama-3.1-405b"
+    },
+    {
+      "capabilities": {
+        "family": "llama-3",
+        "limits": {
+          "max_context_window_tokens": 128000,
+          "max_output_tokens": 8192
+        },
+        "object": "model_capabilities",
+        "supports": {
+          "streaming": true
+        },
+        "tokenizer": "o200k_base",
+        "type": "chat"
+      },
+      "id": "llama-3.1-70b",
+      "model_picker_enabled": true,
+      "name": "Llama 3.1 70B (Base)",
+      "object": "model",
+      "preview": false,
+      "tier": "free",
+      "vendor": "Windsurf",
+      "version": "llama-3.1-70b"
     },
     {
       "capabilities": {
         "family": "swe",
         "limits": {
-          "max_context_window_tokens": 32000,
-          "max_output_tokens": 4096
+          "max_context_window_tokens": 128000,
+          "max_output_tokens": 8096
         },
         "object": "model_capabilities",
         "supports": {
@@ -178,9 +415,10 @@
       },
       "id": "swe-1",
       "model_picker_enabled": true,
-      "name": "SWE-1",
+      "name": "SWE-1 (Claude 3.5 Level)",
       "object": "model",
       "preview": false,
+      "tier": "free",
       "vendor": "Windsurf",
       "version": "swe-1"
     },
@@ -188,7 +426,7 @@
       "capabilities": {
         "family": "swe",
         "limits": {
-          "max_context_window_tokens": 32000,
+          "max_context_window_tokens": 64000,
           "max_output_tokens": 4096
         },
         "object": "model_capabilities",
@@ -198,20 +436,21 @@
         "tokenizer": "o200k_base",
         "type": "chat"
       },
-      "id": "swe-1.5",
+      "id": "swe-1-mini",
       "model_picker_enabled": true,
-      "name": "SWE-1.5",
+      "name": "SWE-1-mini (Suggestions)",
       "object": "model",
       "preview": false,
+      "tier": "free",
       "vendor": "Windsurf",
-      "version": "swe-1.5"
+      "version": "swe-1-mini"
     },
     {
       "capabilities": {
-        "family": "kimi",
+        "family": "swe",
         "limits": {
-          "max_context_window_tokens": 200000,
-          "max_output_tokens": 8192
+          "max_context_window_tokens": 128000,
+          "max_output_tokens": 4096
         },
         "object": "model_capabilities",
         "supports": {
@@ -220,17 +459,41 @@
         "tokenizer": "o200k_base",
         "type": "chat"
       },
-      "id": "kimi-k2.5",
+      "id": "swe-grep",
       "model_picker_enabled": true,
-      "name": "Kimi k2.5",
+      "name": "SWE-grep (Fast Context)",
       "object": "model",
       "preview": false,
+      "tier": "free",
       "vendor": "Windsurf",
-      "version": "kimi-k2.5"
+      "version": "swe-grep"
     },
     {
       "capabilities": {
-        "family": "grok",
+        "family": "gpt-4o",
+        "limits": {
+          "max_context_window_tokens": 128000,
+          "max_output_tokens": 4096
+        },
+        "object": "model_capabilities",
+        "supports": {
+          "streaming": true
+        },
+        "tokenizer": "o200k_base",
+        "type": "chat"
+      },
+      "id": "gpt-4o",
+      "model_picker_enabled": true,
+      "name": "GPT-4o (Windsurf Premium)",
+      "object": "model",
+      "preview": false,
+      "tier": "premium",
+      "vendor": "Windsurf",
+      "version": "gpt-4o"
+    },
+    {
+      "capabilities": {
+        "family": "claude-3.5-sonnet",
         "limits": {
           "max_context_window_tokens": 128000,
           "max_output_tokens": 8192
@@ -242,20 +505,21 @@
         "tokenizer": "o200k_base",
         "type": "chat"
       },
-      "id": "grok-code-fast-1",
+      "id": "claude-3.5-sonnet",
       "model_picker_enabled": true,
-      "name": "Grok Code Fast 1",
+      "name": "Claude 3.5 Sonnet (Windsurf Premium)",
       "object": "model",
       "preview": false,
+      "tier": "premium",
       "vendor": "Windsurf",
-      "version": "grok-code-fast-1"
+      "version": "claude-3.5-sonnet"
     },
     {
       "capabilities": {
-        "family": "deepseek-v3",
+        "family": "deepseek",
         "limits": {
           "max_context_window_tokens": 128000,
-          "max_output_tokens": 8000
+          "max_output_tokens": 8192
         },
         "object": "model_capabilities",
         "supports": {
@@ -269,30 +533,32 @@
       "name": "DeepSeek V3",
       "object": "model",
       "preview": false,
+      "tier": "free",
       "vendor": "Windsurf",
       "version": "deepseek-v3"
     },
     {
       "capabilities": {
-        "family": "windsurf-fast",
+        "family": "deepseek",
         "limits": {
-          "max_context_window_tokens": 32000,
-          "max_output_tokens": 4096
+          "max_context_window_tokens": 128000,
+          "max_output_tokens": 8192
         },
         "object": "model_capabilities",
         "supports": {
           "streaming": true
         },
-        "tokenizer": "o200k_base",
+        "tokenizer": "deepseek",
         "type": "chat"
       },
-      "id": "windsurf-fast",
+      "id": "deepseek-r1",
       "model_picker_enabled": true,
-      "name": "Windsurf Fast",
+      "name": "DeepSeek R1",
       "object": "model",
       "preview": false,
+      "tier": "free",
       "vendor": "Windsurf",
-      "version": "windsurf-fast"
+      "version": "deepseek-r1"
     }
   ]
 }

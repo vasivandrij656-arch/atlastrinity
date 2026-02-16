@@ -15,9 +15,12 @@
 # active_model = "grok-code-fast-1"  # Fast coding analysis
 #
 # === FOR WINDSURF PROVIDER ===
-# active_model = "deepseek-v3"       # Free general purpose
-# active_model = "deepseek-r1"       # Free reasoning model
-# active_model = "kimi-k2.5"         # Free coding model
+# active_model = "claude-4.6-opus"    # 🚀 NEW: Ultra-Advanced Reasoning
+# active_model = "gpt-5.2-codex"      # 🚀 NEW: 4 levels of reasoning
+# active_model = "swe-1.5"            # Best agentic model (near Claude 4.5)
+# active_model = "llama-3.1-405b"     # Windsurf Premier flagship
+# active_model = "gemini-3-pro"       # Free general purpose
+# active_model = "deepseek-v3"        # Free general purpose
 #
 # === FALLBACK CHAIN ===
 # Models to try if active_model fails (in order)
@@ -79,15 +82,15 @@ requires_proxy = true
 proxy_command = "python3 ${PROJECT_ROOT}/src/providers/proxy/copilot_vibe_proxy.py"
 requires_token_exchange = true
 
-# [[providers]]
-# name = "windsurf"
-# api_base = "http://127.0.0.1:8085"
-# api_key_env_var = "WINDSURF_API_KEY"
-# api_style = "openai"
-# backend = "generic"
-# requires_proxy = true
-# proxy_command = "python3 ${PROJECT_ROOT}/src/providers/proxy/vibe_windsurf_proxy.py"
-# requires_token_exchange = false
+[[providers]]
+name = "windsurf"
+api_base = "http://127.0.0.1:8085"
+api_key_env_var = "WINDSURF_API_KEY"
+api_style = "openai"
+backend = "generic"
+requires_proxy = true
+proxy_command = "python3 ${PROJECT_ROOT}/src/providers/proxy/vibe_windsurf_proxy.py"
+requires_token_exchange = false
 
 # =============================================================================
 # Model Presets
@@ -132,38 +135,89 @@ temperature = 0.1
 input_price = 0.0
 output_price = 0.0
 
-# Windsurf models (DISABLED — resource_exhausted)
-# [[models]]
-# name = "deepseek-v3"
-# provider = "windsurf"
-# alias = "deepseek-v3"
-# temperature = 0.1
-# input_price = 0.0
-# output_price = 0.0
+# Windsurf models (Enabled - stability improved via bridge)
 
-# [[models]]
-# name = "deepseek-r1"
-# provider = "windsurf"
-# alias = "deepseek-r1"
-# temperature = 0.1
-# input_price = 0.0
-# output_price = 0.0
+# --- Cascade & Agentic (Free/Standard) ---
+[[models]]
+name = "swe-1.5"
+provider = "windsurf"
+alias = "swe-1.5"
+temperature = 0.1
+input_price = 0.0
+output_price = 0.0
 
-# [[models]]
-# name = "swe-1.5"
-# provider = "windsurf"
-# alias = "swe-1.5"
-# temperature = 0.1
-# input_price = 0.0
-# output_price = 0.0
+[[models]]
+name = "swe-1"
+provider = "windsurf"
+alias = "swe-1"
+temperature = 0.1
+input_price = 0.0
+output_price = 0.0
 
-# [[models]]
-# name = "kimi-k2.5"
-# provider = "windsurf"
-# alias = "kimi-k2.5"
-# temperature = 0.1
-# input_price = 0.0
-# output_price = 0.0
+[[models]]
+name = "deepseek-v3"
+provider = "windsurf"
+alias = "deepseek-v3"
+temperature = 0.1
+input_price = 0.0
+output_price = 0.0
+
+[[models]]
+name = "deepseek-r1"
+provider = "windsurf"
+alias = "deepseek-r1"
+temperature = 0.1
+input_price = 0.0
+output_price = 0.0
+
+[[models]]
+name = "gemini-3-pro"
+provider = "windsurf"
+alias = "gemini-3-pro"
+temperature = 0.1
+input_price = 0.0
+output_price = 0.0
+
+# --- Windsurf Premier (Premium) ---
+[[models]]
+name = "llama-3.1-405b"
+provider = "windsurf"
+alias = "llama-premier"
+temperature = 0.1
+input_price = 0.0
+output_price = 0.0
+
+[[models]]
+name = "claude-4.6-opus"
+provider = "windsurf"
+alias = "claude-4.6-opus"
+temperature = 0.1
+input_price = 0.0
+output_price = 0.0
+
+[[models]]
+name = "claude-4.6-opus-fast"
+provider = "windsurf"
+alias = "claude-4.6-fast"
+temperature = 0.1
+input_price = 0.0
+output_price = 0.0
+
+[[models]]
+name = "gpt-5.2-codex"
+provider = "windsurf"
+alias = "gpt-5.2-codex"
+temperature = 0.1
+input_price = 0.0
+output_price = 0.0
+
+[[models]]
+name = "sonnet-4.5"
+provider = "windsurf"
+alias = "sonnet-4.5"
+temperature = 0.1
+input_price = 0.0
+output_price = 0.0
 
 # Default timeout in seconds for Vibe subprocess (prevents infinite tasks)
 timeout_s = 600.0

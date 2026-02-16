@@ -78,13 +78,14 @@
       "env": {
         "MACOS_USE_BINARY_PATH": "${PROJECT_ROOT}/vendor/mcp-server-macos-use/.build/release/mcp-server-macos-use",
         "GOOGLEMAPS_BINARY_PATH": "${PROJECT_ROOT}/vendor/mcp-server-googlemaps/.build/release/mcp-server-googlemaps",
+        "WINDSURF_BINARY_PATH": "${PROJECT_ROOT}/vendor/mcp-server-windsurf/.build/release/mcp-server-windsurf",
         "GOOGLE_MAPS_API_KEY": "${GOOGLE_MAPS_API_KEY}"
       },
       "permissions": {
         "accessibility": true,
         "screen_recording": true
       },
-      "description": "Unified MCP hub (168+ tools): Xcode Build/Test/Simulators (94 native tools) + macOS-use bridge (63 tools: GUI automation, Vision/OCR, System, Terminal, Calendar, Notes, Mail, Finder) + Google Maps bridge (11 tools: geocode, directions, street view, places). All native Swift backends accessed through single connection.",
+      "description": "Unified MCP hub (173+ tools): Xcode Build/Test/Simulators (94 native tools) + macOS-use bridge (63 tools: GUI automation, Vision/OCR, System, Terminal, Calendar, Notes, Mail, Finder) + Google Maps bridge (11 tools: geocode, directions, street view, places) + Windsurf IDE bridge (5 tools: chat, cascade, models, status, switch). All native Swift backends accessed through single connection.",
       "disabled": false,
       "tier": 1,
       "agents": [
@@ -92,7 +93,7 @@
         "tetyana",
         "grisha"
       ],
-      "note": "Unified hub: local build with multi-backend bridge. Requires: macOS 14.5+, Xcode 16.x+, Node.js 18.x+. Bridges mcp-server-macos-use and mcp-server-googlemaps Swift binaries via stdio."
+      "note": "Unified hub: local build with multi-backend bridge. Requires: macOS 14.5+, Xcode 16.x+, Node.js 18.x+. Bridges mcp-server-macos-use, mcp-server-googlemaps, and mcp-server-windsurf Swift binaries via stdio."
     },
     "chrome-devtools": {
       "transport": "stdio",
