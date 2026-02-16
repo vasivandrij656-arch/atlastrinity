@@ -4,10 +4,9 @@ Demonstration script for Windsurf MCP Cascade Action Phase
 Shows the enhanced implementation and how to use it
 """
 
-import os
-import sys
 import json
-from pathlib import Path
+import sys
+
 
 def show_implementation_details():
     """Show the key implementation details"""
@@ -188,7 +187,7 @@ def main():
     print("• Test Script: scripts/windsurf/test_cascade_action_phase.py")
     print("• Main Implementation: vendor/mcp-server-windsurf/Sources/main.swift")
     
-    print(f"\n✨ Enhanced Cascade Action Phase implementation complete!")
+    print("\n✨ Enhanced Cascade Action Phase implementation complete!")
     return 0
 
 if __name__ == "__main__":

@@ -4,13 +4,6 @@ Comprehensive Windsurf MCP Provider Demonstration
 Shows all the enhanced features and capabilities
 """
 
-import os
-import sys
-import json
-import subprocess
-import time
-from pathlib import Path
-
 def print_banner():
     """Print the demonstration banner"""
     print("🌊 Windsurf MCP Provider - Comprehensive Demo")

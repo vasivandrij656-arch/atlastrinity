@@ -22,7 +22,10 @@ let package = Package(
                 "ProtobufFieldExplorer.swift", 
                 "WindsurfLogger.swift",
                 "WorkspaceManager.swift",
-                "ErrorRecoveryManager.swift"
+                "ErrorRecoveryManager.swift",
+                "CascadeStreamer.swift",
+                "PerformanceManager.swift",
+                "ConfigurationManager.swift"
             ]
         )
     ]

@@ -1,4 +1,8 @@
 
+<!-- AUTO-UPDATED: 2026-02-16T08:45:02.698109 -->
+<!-- Modified: .agent/docs/mcp_architecture_diagram.md, scripts/windsurf/comprehensive_demo.py, src/brain/data/architecture_diagrams/mcp_architecture.md -->
+
+
 <!-- AUTO-UPDATED: 2026-02-16T08:39:25.315874 -->
 <!-- Modified: .agent/docs/mcp_architecture_diagram.md, src/brain/data/architecture_diagrams/mcp_architecture.md, vendor/mcp-server-windsurf/Package.swift -->
 

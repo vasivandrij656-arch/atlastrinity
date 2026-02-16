@@ -4,37 +4,21 @@ Automated test script for Windsurf MCP Cascade Action Phase
 Tests the enhanced handleCascade implementation with Scope and Cortex reasoning
 """
 
+import json
 import os
 import sys
-import subprocess
 import time
-import json
 from pathlib import Path
+
 
 def run_mcp_tool(tool_name, arguments):
     """Run an MCP tool and return the result"""
     try:
         # Create a simple MCP client call using curl-like approach
         # For now, we'll simulate by calling the windsurf MCP server directly
-        cmd = [
-            "swift", "run",
-            "--package-path", "vendor/mcp-server-windsurf",
-            "--configuration", "release"
-        ]
-        
-        # Create a JSON-RPC request
-        request = {
-            "jsonrpc": "2.0",
-            "id": 1,
-            "method": "tools/call",
-            "params": {
-                "name": tool_name,
-                "arguments": arguments
-            }
-        }
-        
+        # In real implementation, this would connect to MCP server
         print(f"🧪 Testing {tool_name} with arguments: {arguments}")
-        print(f"📝 Request: {json.dumps(request, indent=2)}")
+        print(f"📝 Request: {json.dumps(arguments, indent=2)}")
         
         # For demonstration, we'll show what would be sent
         # In real implementation, this would connect to MCP server
@@ -59,7 +43,7 @@ def test_cascade_action_phase():
     })
     
     if result:
-        print(f"✅ Test 1 completed")
+        print("✅ Test 1 completed")
         print(f"📄 Result preview: {result[:200]}...")
     
     # Test 2: Complex multi-step task
@@ -78,7 +62,7 @@ def test_cascade_action_phase():
     })
     
     if result:
-        print(f"✅ Test 2 completed")
+        print("✅ Test 2 completed")
         print(f"📄 Result preview: {result[:200]}...")
     
     # Test 3: File modification task
@@ -91,7 +75,7 @@ def test_cascade_action_phase():
     })
     
     if result:
-        print(f"✅ Test 3 completed")
+        print("✅ Test 3 completed")
         print(f"📄 Result preview: {result[:200]}...")
 
 def verify_file_creation():
@@ -119,9 +103,8 @@ def verify_file_creation():
     if created_files:
         print(f"\n📊 Summary: {len(created_files)}/{len(test_files)} files created")
         return True
-    else:
-        print("\n📊 Summary: No files created - Action Phase may not be working")
-        return False
+    print("\n📊 Summary: No files created - Action Phase may not be working")
+    return False
 
 def check_server_logs():
     """Check for Action Phase signatures in server logs"""
@@ -151,7 +134,7 @@ def check_server_logs():
         import glob
         for log_file in glob.glob(pattern):
             try:
-                with open(log_file, 'r') as f:
+                with open(log_file) as f:
                     content = f.read()
                     for signature in action_signatures:
                         if signature in content:
@@ -163,9 +146,8 @@ def check_server_logs():
     if found_signatures:
         print(f"\n📊 Found {len(found_signatures)} Action Phase signatures")
         return True
-    else:
-        print("\n📊 No Action Phase signatures found in logs")
-        return False
+    print("\n📊 No Action Phase signatures found in logs")
+    return False
 
 def main():
     """Main test execution"""
@@ -206,9 +188,8 @@ def main():
         if files_created or logs_found:
             print("\n🎉 Action Phase implementation appears to be working!")
             return 0
-        else:
-            print("\n⚠️ Action Phase may need further refinement")
-            return 1
+        print("\n⚠️ Action Phase may need further refinement")
+        return 1
             
     except Exception as e:
         print(f"❌ Test execution failed: {e}")
