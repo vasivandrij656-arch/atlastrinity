@@ -276,25 +276,71 @@ final class CascadeStreamer: @unchecked Sendable {
 
     private func extractFileOperationFromPayload(_ payload: Data) -> FileOperation? {
         let strings = protoFindStrings(payload, minLen: 5)
+        let allText = strings.joined(separator: "\n")
 
-        // Look for file operation signatures
+        // Look for file operation signatures with content extraction
         for string in strings {
-            if string.lowercased().contains("created") {
+            let lower = string.lowercased()
+            if lower.contains("created") || lower.contains("wrote") || lower.contains("saved") {
+                let path = extractFilePath(from: string) ?? "unknown"
+                // Try to extract content from the combined payload text
+                let content = extractCodeBlockContent(from: allText, nearFilename: path)
                 return FileOperation(
                     type: .create,
-                    path: extractFilePath(from: string) ?? "unknown",
-                    content: nil,
+                    path: path,
+                    content: content,
                     timestamp: Date()
                 )
-            } else if string.lowercased().contains("modified") {
+            } else if lower.contains("modified") || lower.contains("updated") {
+                let path = extractFilePath(from: string) ?? "unknown"
+                let content = extractCodeBlockContent(from: allText, nearFilename: path)
                 return FileOperation(
                     type: .modify,
+                    path: path,
+                    content: content,
+                    timestamp: Date()
+                )
+            } else if lower.contains("deleted") || lower.contains("removed") {
+                return FileOperation(
+                    type: .delete,
                     path: extractFilePath(from: string) ?? "unknown",
                     content: nil,
                     timestamp: Date()
                 )
             }
         }
+        return nil
+    }
+
+    /// Extract code block content from text that appears near a given filename
+    private func extractCodeBlockContent(from text: String, nearFilename filename: String)
+        -> String?
+    {
+        let lines = text.components(separatedBy: "\n")
+        var capturing = false
+        var captured: [String] = []
+
+        for line in lines {
+            if capturing {
+                if line.trimmingCharacters(in: .whitespaces).hasPrefix("```") {
+                    if !captured.isEmpty {
+                        return captured.joined(separator: "\n")
+                    }
+                    capturing = false
+                } else {
+                    captured.append(line)
+                }
+            } else if line.contains(filename)
+                || line.contains((filename as NSString).lastPathComponent)
+            {
+                // Found a line mentioning the file; look for the next code block
+                capturing = false
+            } else if line.trimmingCharacters(in: .whitespaces).hasPrefix("```") {
+                capturing = true
+                captured.removeAll()
+            }
+        }
+
         return nil
     }
 

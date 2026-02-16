@@ -1030,6 +1030,118 @@ func handleChat(message: String, model: String?, systemPrompt: String?, stream: 
     }
 }
 
+// MARK: - Action Phase File Operations
+
+struct ExtractedFile {
+    let filename: String
+    let content: String
+    let language: String?
+}
+
+/// Extract file contents from a cascade response containing markdown code blocks.
+/// Recognizes patterns like:
+///   ### filename.py           (then a code block)
+///   **filename.py**           (then a code block)
+///   `filename.py`:            (then a code block)
+///   Created file filename.py  (then a code block)
+///   ```python filename.py     (inline filename in fence)
+func extractFilesFromResponse(_ text: String) -> [ExtractedFile] {
+    var files: [ExtractedFile] = []
+    let lines = text.components(separatedBy: "\n")
+    var i = 0
+
+    // Regex for detecting filenames (word.ext pattern)
+    let fileNamePattern =
+        #"([\w\-/]+\.(py|js|ts|jsx|tsx|json|md|txt|yaml|yml|toml|html|css|swift|rs|go|java|rb|sh|sql|xml|cfg|ini|csv|env|dockerfile))"#
+
+    while i < lines.count {
+        let line = lines[i]
+
+        // Case 1: Code fence with inline filename  ```python filename.py
+        if line.trimmingCharacters(in: .whitespaces).hasPrefix("```") {
+            let fenceLine = line.trimmingCharacters(in: .whitespaces)
+            let afterBackticks = String(fenceLine.dropFirst(3)).trimmingCharacters(in: .whitespaces)
+            let parts = afterBackticks.components(separatedBy: .whitespaces).filter { !$0.isEmpty }
+
+            let language: String? = parts.first
+            var filename: String? = nil
+
+            // Check if second part looks like a filename
+            if parts.count >= 2,
+                let range = parts[1].range(of: fileNamePattern, options: .regularExpression)
+            {
+                filename = String(parts[1][range])
+            }
+
+            // If no inline filename, look at the line above for a filename hint
+            if filename == nil, i > 0 {
+                let prevLine = lines[i - 1]
+                if let range = prevLine.range(of: fileNamePattern, options: .regularExpression) {
+                    filename = String(prevLine[range])
+                }
+            }
+
+            // Collect code block content
+            var codeLines: [String] = []
+            i += 1
+            while i < lines.count {
+                let codeLine = lines[i]
+                if codeLine.trimmingCharacters(in: .whitespaces).hasPrefix("```") {
+                    break
+                }
+                codeLines.append(codeLine)
+                i += 1
+            }
+
+            if let fn = filename, !codeLines.isEmpty {
+                let content = codeLines.joined(separator: "\n")
+                // Skip trivially small blocks (likely inline examples, not files)
+                if content.count > 10 {
+                    files.append(ExtractedFile(filename: fn, content: content, language: language))
+                }
+            }
+        }
+
+        i += 1
+    }
+
+    return files
+}
+
+/// Write extracted files to a workspace directory.
+/// Returns list of written file paths (relative).
+func writeExtractedFiles(_ files: [ExtractedFile], workspacePath: String) -> [String] {
+    var written: [String] = []
+    let fm = FileManager.default
+
+    for file in files {
+        let fullPath = (workspacePath as NSString).appendingPathComponent(file.filename)
+        let dirPath = (fullPath as NSString).deletingLastPathComponent
+
+        // Create intermediate directories if needed
+        if !fm.fileExists(atPath: dirPath) {
+            do {
+                try fm.createDirectory(atPath: dirPath, withIntermediateDirectories: true)
+            } catch {
+                fputs("log: [windsurf] Failed to create directory \(dirPath): \(error)\n", stderr)
+                continue
+            }
+        }
+
+        do {
+            try file.content.write(toFile: fullPath, atomically: true, encoding: .utf8)
+            written.append(file.filename)
+            fputs(
+                "log: [windsurf] ✅ Action Phase wrote file: \(fullPath) (\(file.content.count) bytes)\n",
+                stderr)
+        } catch {
+            fputs("log: [windsurf] ❌ Failed to write \(fullPath): \(error)\n", stderr)
+        }
+    }
+
+    return written
+}
+
 func handleCascade(message: String, model: String?) async -> String {
     let activeModel = await globalState.getModel()
     let useModel = model ?? activeModel
@@ -1302,33 +1414,77 @@ func handleCascade(message: String, model: String?) async -> String {
             return hasActionSignature || isNaturalResponse
         }
 
-        // Enhanced response processing for Action Phase
-        // Prioritize responses with actual file operations or tool execution
+        // Build combined response from all filtered strings for file extraction
+        // Use all strings (not just the longest) because code blocks may span multiple strings
+        let combinedResponse = filtered.joined(separator: "\n")
+
+        // Determine workspace path for file writing
+        let workspacePath: String
+        if let activeWs = WorkspaceManager.shared.getActiveWorkspace() {
+            workspacePath = activeWs.path
+        } else {
+            workspacePath = FileManager.default.currentDirectoryPath
+        }
+
+        // Step 6: Extract and write files from cascade response (ACTION PHASE)
+        let extractedFiles = extractFilesFromResponse(combinedResponse)
+        var writtenFiles: [String] = []
+
+        if !extractedFiles.isEmpty {
+            fputs(
+                "log: [windsurf] Action Phase: found \(extractedFiles.count) file(s) to write\n",
+                stderr)
+            writtenFiles = writeExtractedFiles(extractedFiles, workspacePath: workspacePath)
+        }
+
+        // Build final response
         let actionResponses = filtered.filter { response in
             actionSignatures.contains { signature in
                 response.lowercased().contains(signature.lowercased())
             }
         }
 
+        // Choose best response text
+        let bestResponse: String
         if let actionResponse = actionResponses.max(by: { $0.count < $1.count }) {
+            bestResponse = actionResponse
+        } else if let longest = filtered.max(by: { $0.count < $1.count }) {
+            bestResponse = longest
+        } else {
+            return "❌ No response text found in stream. (Raw bytes: \(streamData.count))"
+        }
+
+        // Format result with file operation details
+        if !writtenFiles.isEmpty {
+            var result = """
+                🌊 Cascade Action Phase Response (\(useModel))
+                ────────────────────────────────────────
+                ✅ Action Phase Complete — \(writtenFiles.count) file(s) created
+
+                📁 Files written to \(workspacePath):
+                """
+            for file in writtenFiles {
+                result += "\n  ✅ \(file)"
+            }
+            result += "\n\n\(bestResponse)"
+            return result
+        }
+
+        // No files written — return response with hint
+        if actionResponses.max(by: { $0.count < $1.count }) != nil {
             return """
                 🌊 Cascade Action Phase Response (\(useModel))
                 ────────────────────────────────────────
-                ✅ Action Phase Detected - File operations may have occurred
-                \(actionResponse)
+                ⚠️ Action Phase detected but no writable code blocks found
+                \(bestResponse)
                 """
         }
 
-        // Fallback to longest natural response
-        if let longest = filtered.max(by: { $0.count < $1.count }) {
-            return """
-                🌊 Cascade Response (\(useModel))
-                ──────────────────────
-                \(longest)
-                """
-        }
-
-        return "❌ No response text found in stream. (Raw bytes: \(streamData.count))"
+        return """
+            🌊 Cascade Response (\(useModel))
+            ──────────────────────
+            \(bestResponse)
+            """
 
     } catch {
         return "❌ Cascade Error: \(error.localizedDescription)"

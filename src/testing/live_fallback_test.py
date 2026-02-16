@@ -39,7 +39,7 @@ async def simulate_tier3_fallback():
         if name == "copilot":
             return ProviderConfig(
                 name="copilot",
-                api_base="http://localhost:8085",
+                api_base="http://localhost:8086",
                 api_key_env_var="COPILOT_SESSION_TOKEN",
                 api_style=ApiStyle.OPENAI,
                 backend=Backend.GENERIC,
@@ -49,11 +49,10 @@ async def simulate_tier3_fallback():
     print("⚠️  Sabotaging Tier 1 (Mistral) and Tier 2 (OpenRouter)...")
 
     with patch("src.mcp_server.vibe_server.get_vibe_config") as mock_conf_getter:
-        # We need to return a mock config that uses our mock_get_provider
-        # We need to return a mock config that uses our mock_get_provider
-
-        mock_config = vibe_server.get_vibe_config()
-        mock_config.get_provider = mock_get_provider
+        # Get the real config and wrap it with a mock that overrides get_provider
+        real_config = vibe_server.get_vibe_config()
+        mock_config = MagicMock(wraps=real_config)
+        mock_config.get_provider = MagicMock(side_effect=mock_get_provider)
 
         # Verify gpt-4o is there
         copilot_model = mock_config.get_model_by_alias("gpt-4o")
@@ -77,9 +76,8 @@ async def simulate_tier3_fallback():
 
         print("🛠️  Invoking vibe_implement_feature...")
         try:
-            # We use a very low timeout to not hang if proxy isn't responding
             result = await vibe_server.vibe_implement_feature(
-                ctx=mock_ctx, goal=test_prompt, cwd=os.getcwd()
+                ctx=mock_ctx, goal=test_prompt, cwd=str(PROJECT_ROOT)
             )
             print("\n✅ Simulation Call Finished.")
             print(f"Result success: {result.get('success')}")
