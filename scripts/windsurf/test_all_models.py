@@ -1,7 +1,6 @@
 import json
 import os
 import subprocess
-import sys
 import time
 
 # Configuration
@@ -40,11 +39,14 @@ def rpc_request(process, method, params=None, req_id=1):
         msg["params"] = params
 
     json_line = json.dumps(msg)
-    process.stdin.write(json_line + "\n")
-    process.stdin.flush()
+    if process.stdin:
+        process.stdin.write(json_line + "\n")
+        process.stdin.flush()
 
 
 def read_response(process):
+    if not process.stdout:
+        return None
     line = process.stdout.readline()
     if not line:
         return None
@@ -81,8 +83,9 @@ def test_model(model_id):
 
     # Initialized notification
     msg = {"jsonrpc": "2.0", "method": "notifications/initialized"}
-    process.stdin.write(json.dumps(msg) + "\n")
-    process.stdin.flush()
+    if process.stdin:
+        process.stdin.write(json.dumps(msg) + "\n")
+        process.stdin.flush()
 
     # Call Chat
     chat_params = {
@@ -96,10 +99,10 @@ def test_model(model_id):
     # Wait for process to finish
     process.terminate()
     try:
-        stdout, stderr = process.communicate(timeout=2)
+        _, stderr = process.communicate(timeout=2)
     except subprocess.TimeoutExpired:
         process.kill()
-        stdout, stderr = process.communicate()
+        _, stderr = process.communicate()
 
     if resp and "result" in resp:
         content = resp["result"].get("content", [])
@@ -135,7 +138,7 @@ def main():
         status = "✅" if success else "❌"
         print(f"{status} {model}")
 
-    working = [m for m, s, i in results if s]
+    working = [m for m, s, _ in results if s]
     if working:
         print(f"\n🌟 Working Models: {', '.join(working)}")
     else:

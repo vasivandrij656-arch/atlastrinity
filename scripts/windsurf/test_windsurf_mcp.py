@@ -1,7 +1,6 @@
 import json
 import os
 import subprocess
-import sys
 import time
 
 # Configuration
@@ -21,11 +20,14 @@ def rpc_request(process, method, params=None, req_id=1):
         msg["params"] = params
 
     json_line = json.dumps(msg)
-    process.stdin.write(json_line + "\n")
-    process.stdin.flush()
+    if process.stdin:
+        process.stdin.write(json_line + "\n")
+        process.stdin.flush()
 
 
 def read_response(process):
+    if not process.stdout:
+        return None
     line = process.stdout.readline()
     if not line:
         return None
@@ -78,8 +80,9 @@ def main():
     print("\n🧪 Testing initialized. Attempting initialization notification...")
     # Send as notification (no id)
     msg = {"jsonrpc": "2.0", "method": "notifications/initialized"}
-    process.stdin.write(json.dumps(msg) + "\n")
-    process.stdin.flush()
+    if process.stdin:
+        process.stdin.write(json.dumps(msg) + "\n")
+        process.stdin.flush()
 
     # Give the server a moment to process the notification
     time.sleep(0.5)
@@ -141,11 +144,11 @@ def main():
     print(f"\n🌊 Cascade Response:\n{json.dumps(resp, indent=2)}")
     process.terminate()
     try:
-        outs, errs = process.communicate(timeout=2)
+        _, errs = process.communicate(timeout=2)
         if errs:
             print(f"\nServer Stderr:\n{errs}")
-    except:
-        pass
+    except subprocess.TimeoutExpired:
+        process.kill()
 
 
 if __name__ == "__main__":

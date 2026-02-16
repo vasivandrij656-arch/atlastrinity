@@ -1,7 +1,6 @@
 import json
 import os
 import subprocess
-import sys
 
 # Test MCP server
 server_path = "/Users/dev/Documents/GitHub/atlastrinity/vendor/mcp-server-windsurf/.build/release/mcp-server-windsurf"
@@ -30,17 +29,22 @@ proc = subprocess.Popen(
 )
 
 # Send request
-proc.stdin.write(json.dumps(request) + "\n")
-proc.stdin.flush()
+if proc.stdin:
+    proc.stdin.write(json.dumps(request) + "\n")
+    proc.stdin.flush()
 
 # Read response
 try:
     # Read initialization response
-    init_line = proc.stdout.readline()
+    init_line = None
+    if proc.stdout:
+        init_line = proc.stdout.readline()
     print("📡 Init:", init_line[:100] if init_line else "No response")
 
     # Read actual response
-    response_line = proc.stdout.readline()
+    response_line = None
+    if proc.stdout:
+        response_line = proc.stdout.readline()
     print("📥 Status Response:", response_line[:200] if response_line else "No response")
 
     # Try to parse JSON
