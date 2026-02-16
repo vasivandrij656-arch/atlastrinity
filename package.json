@@ -53,7 +53,7 @@
     "lint:logic": "npx eslint src/main src/renderer",
     "lint:dead": "npx knip && .venv/bin/vulture src scripts vulture_whitelist.py --min-confidence 80 --exclude .venv,dist_venv,node_modules,__pycache__",
     "lint:unused": "npx lefthook run lint:all --command 11-knip,10-vulture",
-    "lint:security": ".venv/bin/safety check --policy-file .safety-policy.yml && .venv/bin/detect-secrets scan --baseline .secrets.baseline --slim && jq 'del(.generated_at)' .secrets.baseline > .secrets.baseline.tmp && mv .secrets.baseline.tmp .secrets.baseline && npm audit --audit-level=high",
+    "lint:security": ".venv/bin/safety check --policy-file .safety-policy.yml && .venv/bin/detect-secrets scan --baseline .secrets.baseline --slim && jq 'del(.generated_at)' .secrets.baseline > .secrets.baseline.tmp && mv .secrets.baseline.tmp .secrets.baseline && (git diff --quiet .secrets.baseline || (git add .secrets.baseline && echo \"📋 .secrets.baseline staged for commit\")) && npm audit --audit-level=high",
     "format:check": "npx @biomejs/biome check src scripts",
     "format:write": "npx @biomejs/biome check --write src scripts && .venv/bin/ruff format .",
     "mcp:status": "export PYTHONPATH=$PYTHONPATH:. && python src/maintenance/mcp_health.py",
@@ -65,7 +65,8 @@
     "test:sandbox": ".venv/bin/python src/testing/mcp_sandbox.py --all --chain 2 --json",
     "diagram:export:all": "mkdir -p .agent/docs/diagrams && cd .agent/docs/diagrams && mmdc -i ../mcp_architecture_diagram.md -o mcp_architecture.png -t dark -b transparent && mmdc -i ../mcp_architecture_diagram.md -o mcp_architecture.svg -t dark -b transparent",
     "diagram:preview": "open .agent/docs/mcp_architecture_diagram.md",
-    "diagram:update-and-export": "npm run diagram:auto-update && npm run diagram:export"
+    "diagram:update-and-export": "npm run diagram:auto-update && npm run diagram:export",
+    "secrets:auto-commit": "./scripts/auto_commit_secrets.sh"
   },
   "author": "AtlasTrinity Team",
   "license": "MIT",
