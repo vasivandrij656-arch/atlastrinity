@@ -4,11 +4,11 @@ Comprehensive test suite for Windsurf MCP Provider
 Tests all major components and integration scenarios
 """
 
-import os
-import sys
 import json
-import time
+import os
 import subprocess
+import sys
+import time
 import unittest
 from pathlib import Path
 
@@ -496,9 +496,8 @@ def main():
     if failures == 0 and errors == 0 and integration_success:
         print("\n🎉 All tests passed! The Windsurf MCP Provider is ready for production.")
         return 0
-    else:
-        print("\n⚠️ Some tests failed. Please review the issues above.")
-        return 1
+    print("\n⚠️ Some tests failed. Please review the issues above.")
+    return 1
 
 if __name__ == "__main__":
     sys.exit(main())

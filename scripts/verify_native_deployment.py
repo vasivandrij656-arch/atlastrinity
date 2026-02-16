@@ -4,12 +4,12 @@
 Перевіряє нативну розгортку Windsurf MCP без Docker
 """
 
-import os
-import sys
-import subprocess
 import json
+import os
+import subprocess
+import sys
 from pathlib import Path
-from typing import Dict, Any
+from typing import Any, Dict
 
 # Colors for output
 RED = '\033[0;31m'
@@ -187,10 +187,9 @@ def test_windsurf_mcp_connection() -> bool:
         if result.returncode == 0:
             log_success("✅ Windsurf MCP binary responds to --help")
             return True
-        else:
-            log_warning("⚠️  Windsurf MCP binary --help failed")
-            log_error(f"Error: {result.stderr}")
-            return False
+        log_warning("⚠️  Windsurf MCP binary --help failed")
+        log_error(f"Error: {result.stderr}")
+        return False
             
     except subprocess.TimeoutExpired:
         log_error("❌ Windsurf MCP binary test timed out")
@@ -233,10 +232,9 @@ except Exception as e:
         if result.returncode == 0:
             log_success("✅ Python MCP integration test passed")
             return True
-        else:
-            log_warning("⚠️  Python MCP integration test failed")
-            log_error(f"Error: {result.stderr}")
-            return False
+        log_warning("⚠️  Python MCP integration test failed")
+        log_error(f"Error: {result.stderr}")
+        return False
             
     except subprocess.TimeoutExpired:
         log_error("❌ Python MCP integration test timed out")
@@ -309,7 +307,7 @@ def check_package_json() -> bool:
         log_error(f"❌ Error reading package.json: {e}")
         return False
 
-def generate_report() -> Dict[str, Any]:
+def generate_report() -> dict[str, Any]:
     """Генерує звіт про стан розгортки"""
     project_root = get_project_root()
     
@@ -356,8 +354,8 @@ def main():
     report = generate_report()
     
     # Print results
-    print(f"📊 Deployment Report")
-    print(f"==================")
+    print("📊 Deployment Report")
+    print("==================")
     print(f"Timestamp: {report['timestamp']}")
     print(f"Project Root: {report['project_root']}")
     print()
