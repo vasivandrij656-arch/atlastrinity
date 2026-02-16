@@ -1,6 +1,7 @@
 import json
 import subprocess
 import time
+from typing import Any
 
 
 def call_mcp_tool(tool_name, arguments):
@@ -92,17 +93,17 @@ def test_models():
         content = ""
         if resp and "result" in resp and isinstance(resp["result"], dict):
             result_dict = resp["result"]
-            content_list = result_dict.get("content")
+            content_value: Any = result_dict.get("content")  # type: ignore
             if (
-                isinstance(content_list, list)
-                and len(content_list) > 0
-                and isinstance(content_list[0], dict)
+                isinstance(content_value, list)
+                and len(content_value) > 0
+                and isinstance(content_value[0], dict)
             ):
-                content = content_list[0].get("text", "")
-            elif isinstance(content_list, str):
-                content = content_list
+                content = content_value[0].get("text", "")
+            elif isinstance(content_value, str):
+                content = content_value
             else:
-                content = str(content_list or "")
+                content = str(content_value or "")
 
         if "OK" in content.upper():
             results[m] = "✅ Working"
