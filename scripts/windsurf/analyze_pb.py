@@ -1,5 +1,6 @@
 import sys
 
+
 def analyze_proto(data, indent=0):
     offset = 0
     while offset < len(data):
@@ -68,7 +69,7 @@ def analyze_proto(data, indent=0):
             else:
                 print(f"{prefix}Unknown wire type {wire_type} at field {field_num}")
                 break
-        except Exception as e:
+        except Exception:
             # print(f"Error at offset {offset}: {e}")
             break
 
