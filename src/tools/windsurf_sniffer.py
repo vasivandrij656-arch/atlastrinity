@@ -41,6 +41,8 @@ import argparse
 import datetime
 import http.client
 import http.server
+import gzip
+import io
 import json
 import os
 import re
@@ -342,25 +344,28 @@ def format_timestamp() -> str:
 
 
 def print_separator(char: str = "─", width: int = 90) -> None:
-    pass
+    print(f"{C.DIM}{char * width}{C.RESET}")
 
 
 def print_request_header(method: str, path: str, req_num: int, content_type: str = "") -> None:
-    format_timestamp()
+    ts = format_timestamp()
     ep_info = KNOWN_ENDPOINTS.get(path, {})
-    ep_info.get("name", path.rsplit("/", maxsplit=1)[-1] if "/" in path else path)
-    ep_info.get("desc", "")
-    ep_info.get("direction", "?")
+    name = ep_info.get("name", path.rsplit("/", maxsplit=1)[-1] if "/" in path else path)
+    desc = ep_info.get("desc", "")
+    direction = ep_info.get("direction", "?")
 
     print_separator("═")
+    print(f"{C.BOLD}{C.BLUE}#{req_num} {method} {name}{C.RESET}  {C.DIM}({path}){C.RESET}")
+    print(f"{C.DIM}{ts} | {direction} | {desc}{C.RESET}")
     if content_type:
-        pass
+        print(f"Content-Type: {content_type}")
+    print_separator("─")
 
 
 def print_request_body(frames: list[dict], chat: dict) -> None:
     """Print decoded request body."""
     if chat.get("model"):
-        pass
+        print(f"{C.YELLOW}Model:{C.RESET} {chat['model']}")
 
     if chat.get("metadata"):
         meta = chat["metadata"]
@@ -369,54 +374,75 @@ def print_request_body(frames: list[dict], chat: dict) -> None:
             if k in meta:
                 parts.append(f"{k}={meta[k]}")
         if parts:
-            pass
+            print(f"{C.DIM}Meta: {', '.join(parts)}{C.RESET}")
 
     if chat.get("messages"):
+        print(f"{C.BOLD}Messages:{C.RESET}")
         for msg in chat["messages"]:
             role = msg["role"]
-            {
+            color = {
                 "SYSTEM": C.MAGENTA,
                 "USER": C.GREEN,
                 "ASSISTANT": C.BLUE,
             }.get(role, C.WHITE)
-            msg["content"]
+            content = msg["content"]
+            print(f"  {color}[{role}]{C.RESET} {content}")
 
-    # Show raw frames for non-chat endpoints
+    # Show raw frames for non-chat endpoints or binary data
     if not chat.get("messages") and not chat.get("model"):
+        print(f"{C.DIM}Frames: {len(frames)}{C.RESET}")
         for frame in frames:
             if frame.get("format") == "json":
                 compact = json.dumps(frame["json"], ensure_ascii=False)
                 if len(compact) > 200:
                     compact = compact[:200] + "..."
+                print(f"  {C.CYAN}JSON:{C.RESET} {compact}")
+            elif frame.get("readable_strings"):
+                print(f"  {C.YELLOW}Strings:{C.RESET}")
+                for s in frame["readable_strings"]:
+                    print(f"    {s}")
+            elif frame.get("hex"):
+                print(f"  {C.DIM}HEX:{C.RESET} {frame['hex'][:64]}...")
 
 
 def print_response_body(
     frames: list[dict], chat: dict, status_code: int, elapsed_ms: float
 ) -> None:
     """Print decoded response body."""
+    status_color = C.GREEN if 200 <= status_code < 300 else C.RED
+    print(f"Status: {status_color}{status_code}{C.RESET} ({elapsed_ms:.1f}ms)")
 
     if chat.get("errors"):
-        for _ in chat["errors"]:
-            pass
+        for err in chat["errors"]:
+            print(f"{C.RED}Error ({err['code']}): {err['message']}{C.RESET}")
 
     if chat.get("full_response"):
         resp = chat["full_response"]
         # Truncate long responses for display
         if len(resp) > 500:
-            pass
+            display = resp[:500].replace("\n", " ") + "..."
         else:
-            pass
+            display = resp.replace("\n", " ")
+        print(f"{C.BLUE}Response:{C.RESET} {display}")
 
     if chat.get("delta_texts") and len(chat["delta_texts"]) > 1:
-        pass
+        print(f"{C.DIM}(Streamed {len(chat['delta_texts'])} chunks){C.RESET}")
 
-    # Show raw frames for non-chat responses
+    # Show raw frames for non-chat responses or binary
     if not chat.get("full_response") and not chat.get("errors"):
         for frame in frames:
             if frame.get("format") == "json":
                 compact = json.dumps(frame["json"], ensure_ascii=False)
                 if len(compact) > 300:
                     compact = compact[:300] + "..."
+                print(f"  {C.CYAN}JSON:{C.RESET} {compact}")
+            elif frame.get("readable_strings"):
+                print(f"  {C.YELLOW}Strings:{C.RESET}")
+                for s in frame["readable_strings"]:
+                    if len(s) > 100:
+                        print(f"    {s[:100]}...")
+                    else:
+                        print(f"    {s}")
 
 
 # ─── Dump Writer ─────────────────────────────────────────────────────────────
@@ -563,6 +589,7 @@ class SnifferProxyHandler(http.server.BaseHTTPRequestHandler):
     request_counter: int = 0
     dump_writer: DumpWriter | None = None
     filter_heartbeat: bool = True
+    cascade_only: bool = False
     verbose: bool = False
     _lock = threading.Lock()
 
@@ -572,6 +599,11 @@ class SnifferProxyHandler(http.server.BaseHTTPRequestHandler):
 
     def _should_skip(self, path: str) -> bool:
         """Check if this request should be silently proxied without logging."""
+        if self.cascade_only:
+            # Only show Cascade-related endpoints
+            is_cascade = "Cascade" in path or "ChatClientRequestStream" in path or "Queue" in path
+            return not is_cascade
+
         if self.filter_heartbeat and "Heartbeat" in path:
             return True
         return bool("RecordEvent" in path and not self.verbose)
@@ -643,11 +675,21 @@ class SnifferProxyHandler(http.server.BaseHTTPRequestHandler):
 
         elapsed_ms = (time.monotonic() - start_time) * 1000
 
-        # Decode response
+        # Decode response for logging (handle gzip)
         resp_frames: list[dict] = []
         resp_chat: dict = {}
-        if resp_body and not skip_log:
-            resp_frames = decode_connect_rpc_frames(resp_body)
+        
+        log_body = resp_body
+        is_gzip = resp_headers_dict.get("Content-Encoding") == "gzip"
+        if is_gzip and log_body:
+            try:
+                with gzip.GzipFile(fileobj=io.BytesIO(log_body)) as f:
+                    log_body = f.read()
+            except Exception:
+                pass
+
+        if log_body and not skip_log:
+            resp_frames = decode_connect_rpc_frames(log_body)
             resp_chat = extract_chat_content(resp_frames)
 
         # Print response
@@ -656,6 +698,9 @@ class SnifferProxyHandler(http.server.BaseHTTPRequestHandler):
             print_separator("─")
 
         # Write dump
+        # Note: We dump even if skipped from display if dump is enabled? 
+        # Actually usually filtering applies to dump too to keep it clean, 
+        # but let's respect skip_log for now to avoid massive heartbeats in dumps.
         if self.dump_writer and not skip_log:
             self.dump_writer.write_exchange(
                 req_num=req_num,
@@ -694,6 +739,7 @@ def run_sniffer(
     ls_csrf: str = "",
     dump_file: str | None = None,
     filter_heartbeat: bool = True,
+    cascade_only: bool = False,
     verbose: bool = False,
 ) -> None:
     """Start the sniffer proxy."""
@@ -705,7 +751,12 @@ def run_sniffer(
             ls_port = ls_port or detected_port
             ls_csrf = ls_csrf or detected_csrf
         else:
+            print(f"{C.RED}❌ Could not auto-detect Windsurf Language Server.{C.RESET}")
+            print("Please ensure Windsurf is running.")
             sys.exit(1)
+
+    print(f"{C.GREEN}✅ Detected Windsurf LS on port {ls_port}{C.RESET}")
+    print(f"{C.DIM}CSRF: {ls_csrf[:15]}...{C.RESET}")
 
     # Verify LS is alive
     try:
@@ -723,14 +774,16 @@ def run_sniffer(
         resp.read()
         conn.close()
         if resp.status == 200:
-            pass
+            print(f"{C.GREEN}✨ Heartbeat successful{C.RESET}")
         else:
-            pass
-    except Exception:
-        pass
+            print(f"{C.YELLOW}⚠️ Heartbeat returned {resp.status}{C.RESET}")
+    except Exception as e:
+        print(f"{C.RED}❌ Failed to connect to LS: {e}{C.RESET}")
 
     # Setup dump writer
     dump_writer = DumpWriter(dump_file) if dump_file else None
+    if dump_writer:
+        print(f"📁 Dumps will be written to: {C.BOLD}{dump_file}{C.RESET}")
 
     # Configure handler
     SnifferProxyHandler.target_host = "127.0.0.1"
@@ -738,20 +791,24 @@ def run_sniffer(
     SnifferProxyHandler.target_csrf = ls_csrf
     SnifferProxyHandler.dump_writer = dump_writer
     SnifferProxyHandler.filter_heartbeat = filter_heartbeat
+    SnifferProxyHandler.cascade_only = cascade_only
     SnifferProxyHandler.verbose = verbose
 
     # Start server
     socketserver.TCPServer.allow_reuse_address = True
     server = socketserver.ThreadingTCPServer(("127.0.0.1", listen_port), SnifferProxyHandler)
 
-    if dump_file:
-        pass
+    print(f"\n🚀 {C.BOLD}Sniffer listening on port {listen_port}{C.RESET}")
+    print(f"👉 Configure Windsurf to use: {C.CYAN}http://127.0.0.1:{listen_port}{C.RESET}")
+    if cascade_only:
+        print(f"🔍 Filter: {C.YELLOW}Cascade traffic only{C.RESET}")
     print_separator("═")
     print_separator("═")
 
     def shutdown_handler(signum, frame):
+        print(f"\n\n🛑 {C.RED}Shutting down...{C.RESET}")
         if dump_writer and dump_writer.filepath:
-            pass
+            print(f"💾 Dump saved to {dump_writer.filepath}")
         server.shutdown()
         sys.exit(0)
 
@@ -770,6 +827,7 @@ Examples:
   %(prog)s                                    # Auto-detect LS, listen on 18080
   %(prog)s --port 19000                       # Custom listen port
   %(prog)s --dump-file /tmp/ws_dump.ndjson    # Save full dump
+  %(prog)s --cascade-only                     # Only show Cascade traffic
   %(prog)s --no-filter                        # Show heartbeats too
   %(prog)s --verbose                          # Show telemetry events
   %(prog)s --ls-port 42100 --ls-csrf TOKEN    # Manual LS config
@@ -805,6 +863,11 @@ Examples:
         help="Auto-create dump file in /tmp/windsurf_dump_<timestamp>.ndjson",
     )
     parser.add_argument(
+        "--cascade-only",
+        action="store_true",
+        help="Only display/log Cascade-related traffic",
+    )
+    parser.add_argument(
         "--no-filter",
         action="store_true",
         help="Don't filter out heartbeat requests",
@@ -834,6 +897,7 @@ Examples:
         ls_csrf=ls_csrf,
         dump_file=dump_file,
         filter_heartbeat=not args.no_filter,
+        cascade_only=args.cascade_only,
         verbose=args.verbose,
     )
 

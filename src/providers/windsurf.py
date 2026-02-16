@@ -27,6 +27,14 @@ from langchain_core.outputs import ChatGeneration, ChatResult
 from pydantic import PrivateAttr
 from tenacity import retry, retry_if_exception_type, stop_after_attempt, wait_exponential
 
+# Session watcher for proactive LS detection
+try:
+    from src.providers.utils.windsurf_session_watcher import WindsurfSessionWatcher
+
+    _SESSION_WATCHER_AVAILABLE = True
+except ImportError:
+    _SESSION_WATCHER_AVAILABLE = False
+
 # Type aliases
 ContentItem = str | dict[str, Any]
 
@@ -79,7 +87,10 @@ LS_CHECK_CAPACITY = "/exa.language_server_pb.LanguageServerService/CheckChatCapa
 LS_HEARTBEAT = "/exa.language_server_pb.LanguageServerService/Heartbeat"
 
 # Language Server gRPC service path prefix
+# Language Server gRPC service path prefix
+# Language Server gRPC service path prefix
 _GRPC_SVC = "/exa.language_server_pb.LanguageServerService/"
+
 
 # Cascade default model — pick first non-legacy UID from WINDSURF_MODELS
 _NON_LEGACY = [v for _, v in WINDSURF_MODELS.items() if v != "MODEL_CHAT_11121"]
@@ -236,10 +247,10 @@ def _build_metadata_proto(api_key: str, session_id: str) -> bytes:
     """Build Metadata proto binary (exa.codeium_common_pb.Metadata)."""
     return (
         _proto_str(1, "windsurf")
-        + _proto_str(2, "1.48.2")
+        + _proto_str(2, "1.9552.21")
         + _proto_str(3, api_key)
         + _proto_str(4, "en")
-        + _proto_str(7, "1.9552.21")
+        + _proto_str(7, "1.107.0")
         + _proto_int(9, 1)
         + _proto_str(10, session_id)
     )
@@ -410,8 +421,21 @@ class WindsurfLLM(BaseChatModel):
         # Auto-detect local LS if mode needs it or auto-detection
         ls_available = False
         if self._mode in ("cascade", "local") or forced_mode == "":
-            ls_port = int(os.getenv("WINDSURF_LS_PORT", "0"))
-            ls_csrf = os.getenv("WINDSURF_LS_CSRF", "")
+            # Try session watcher first (O(1), no subprocess)
+            ls_port = 0
+            ls_csrf = ""
+            if _SESSION_WATCHER_AVAILABLE:
+                watcher = WindsurfSessionWatcher.instance()
+                watcher.start()
+                w_port, w_csrf, _ = watcher.get_session()
+                if w_port and w_csrf:
+                    ls_port = w_port
+                    ls_csrf = w_csrf
+
+            # Fallback to env vars and manual detection
+            if not ls_port or not ls_csrf:
+                ls_port = int(os.getenv("WINDSURF_LS_PORT", "0"))
+                ls_csrf = os.getenv("WINDSURF_LS_CSRF", "")
             if not ls_port or not ls_csrf:
                 detected_port, detected_csrf = _detect_language_server()
                 if not ls_port:
@@ -670,16 +694,11 @@ class WindsurfLLM(BaseChatModel):
     # ─── Local Language Server Mode ────────────────────────────────────────
 
     def _build_ls_metadata(self) -> dict:
-        """Build metadata dict for LS requests.
-
-        Proto schema (Metadata / exa.codeium_common_pb):
-          f1: ideName, f2: extensionVersion, f3: apiKey, f4: locale,
-          f7: ideVersion, f9: requestId(uint64), f10: sessionId
-        """
+        """Build metadata dict for LS requests."""
         return {
             "ideName": "windsurf",
-            "ideVersion": "1.9552.21",
-            "extensionVersion": "1.48.2",
+            "ideVersion": "1.107.0",
+            "extensionVersion": "1.9552.21",
             "locale": "en",
             "sessionId": f"atlastrinity-{os.getpid()}",
             "requestId": str(int(time.time())),
@@ -733,8 +752,22 @@ class WindsurfLLM(BaseChatModel):
 
     def _refresh_ls_connection(self) -> bool:
         """Re-detect LS port/CSRF if the current connection is stale."""
+        # Fast path: current connection is still alive
         if self.ls_port and self.ls_csrf and _ls_heartbeat(self.ls_port, self.ls_csrf):
             return True
+
+        # Try session watcher (O(1), no subprocess)
+        if _SESSION_WATCHER_AVAILABLE:
+            watcher = WindsurfSessionWatcher.instance()
+            session = watcher.force_refresh()
+            if session and session.is_valid:
+                self.ls_port = session.port
+                self.ls_csrf = session.csrf
+                if session.api_key:
+                    self.api_key = session.api_key
+                return True
+
+        # Fallback: manual detection
         detected_port, detected_csrf = _detect_language_server()
         if detected_port and detected_csrf and _ls_heartbeat(detected_port, detected_csrf):
             self.ls_port = detected_port
@@ -971,8 +1004,34 @@ class WindsurfLLM(BaseChatModel):
             #   f3=items(repeated TextOrScopeItem), f5=cascade_config
             # TextOrScopeItem: oneof chunk { f1=text(str) }
             # CascadeConfig.f1=PlannerConfig, PlannerConfig.f34=plan_model_uid, f35=requested_model_uid
+            # TextOrScopeItem: oneof chunk { f1=text(str) }
+            # CascadeConfig.f1=PlannerConfig, PlannerConfig.f34=plan_model_uid, f35=requested_model_uid
             item_proto = _proto_str(1, user_text)
-            planner_proto = _proto_str(34, model_uid) + _proto_str(35, model_uid)
+            
+            # PlannerConfig
+            # 34: plan_model_uid, 35: requested_model_uid
+            planner_parts = [
+                _proto_str(34, model_uid),
+                _proto_str(35, model_uid),
+                # Action Phase Flags from main.swift
+                _proto_int(11, 1),  # enable_cortex_reasoning
+                _proto_int(12, 1),  # enable_action_phase
+                _proto_int(13, 1),  # enable_tool_execution
+                _proto_int(14, 1),  # enable_file_operations
+                _proto_int(15, 1),  # enable_autonomous_execution
+            ]
+
+            # CortexConfig (Field 20 of PlannerConfig)
+            cortex_config = (
+                _proto_int(1, 1)  # enable_autonomous_tools
+                + _proto_int(2, 1)  # enable_file_creation
+                + _proto_int(3, 1)  # enable_file_modification
+                + _proto_int(4, 1)  # enable_workspace_scoped_actions
+                + _proto_int(5, 180) # action_timeout_seconds
+            )
+            planner_parts.append(_proto_msg(20, cortex_config))
+            
+            planner_proto = b"".join(planner_parts)
             cascade_config = _proto_msg(1, planner_proto)
 
             queue_req = (
@@ -1525,6 +1584,8 @@ class WindsurfLLM(BaseChatModel):
                 )
 
         return AIMessage(content=f"[WINDSURF ERROR] {last_error}")
+
+
 
     @staticmethod
     def _parse_windsurf_openai_line(
