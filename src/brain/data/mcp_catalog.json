@@ -1,0 +1,347 @@
+{
+  "windsurf": {
+    "description": "Windsurf AI with Cascade Action Phase (16 tools: status, health, models, chat, cascade, switch_model, workspace_list, workspace_switch, workspace_create, system_health, field_experiment, api_version, version_info, compatibility_matrix, migration_path, deprecation_warnings)",
+    "tier": 1,
+    "agents": [
+      "atlas",
+      "tetyana",
+      "grisha"
+    ],
+    "priority_note": "Native Swift MCP server with enterprise features: real-time streaming, advanced caching, plugin system, analytics dashboard, API versioning. Requires: Swift 5.9+, WINDSURF_API_KEY",
+    "key_tools": []
+  },
+  "macos-use": {
+    "description": "DEPRECATED: Now bridged through xcodebuild. DO NOT USE DIRECTLY. All 63 macOS tools accessible via xcodebuild server.",
+    "tier": 1,
+    "agents": [],
+    "priority_note": "DISABLED: All 63 tools now accessible through xcodebuild bridge. Direct connection no longer needed.",
+    "key_tools": []
+  },
+  "filesystem": {
+    "description": "Official filesystem operations (pinned to @modelcontextprotocol/server-filesystem for reproducibility)",
+    "tier": 1,
+    "agents": [
+      "tetyana",
+      "grisha"
+    ],
+    "key_tools": [
+      "read_file",
+      "read_text_file",
+      "read_media_file",
+      "read_multiple_files",
+      "write_file",
+      "edit_file",
+      "create_directory",
+      "list_directory",
+      "list_directory_with_sizes",
+      "directory_tree"
+    ],
+    "tool_count": 14
+  },
+  "sequential-thinking": {
+    "description": "Dynamic problem-solving through thought sequences (Critical for Grisha). Model configured in config.yaml under mcp.sequential_thinking.model",
+    "tier": 1,
+    "agents": [
+      "atlas",
+      "tetyana",
+      "grisha"
+    ],
+    "key_tools": [
+      "sequentialthinking"
+    ],
+    "tool_count": 1
+  },
+  "googlemaps": {
+    "description": "DEPRECATED: Now bridged through xcodebuild. DO NOT USE DIRECTLY. Google Maps (11 tools).",
+    "tier": 2,
+    "agents": [],
+    "priority_note": "DISABLED: All 11 tools now accessible through xcodebuild bridge. Direct connection no longer needed.",
+    "key_tools": []
+  },
+  "xcodebuild": {
+    "description": "Unified MCP hub (173+ tools): Xcode Build/Test/Simulators (94 native tools) + macOS-use bridge (63 tools: GUI automation, Vision/OCR, System, Terminal, Calendar, Notes, Mail, Finder) + Google Maps bridge (11 tools: geocode, directions, street view, places) + Windsurf IDE bridge (5 tools: chat, cascade, models, status, switch). All native Swift backends accessed through single connection.",
+    "tier": 1,
+    "agents": [
+      "atlas",
+      "tetyana",
+      "grisha"
+    ],
+    "priority_note": "Unified hub: local build with multi-backend bridge. Requires: macOS 14.5+, Xcode 16.x+, Node.js 18.x+. Bridges mcp-server-macos-use, mcp-server-googlemaps, and mcp-server-windsurf Swift binaries via stdio.",
+    "key_tools": []
+  },
+  "chrome-devtools": {
+    "description": "Chrome DevTools Protocol for browser automation (Note: requires Chrome 145+, current: 144 - may have issues)",
+    "tier": 4,
+    "agents": [
+      "tetyana"
+    ],
+    "key_tools": [
+      "click",
+      "close_page",
+      "drag",
+      "emulate",
+      "evaluate_script",
+      "fill",
+      "fill_form",
+      "get_console_message",
+      "get_network_request",
+      "handle_dialog"
+    ],
+    "tool_count": 26
+  },
+  "vibe": {
+    "description": "Mistral AI-powered CLI for self-healing, debugging, code review, and deep coding. Tools: vibe_prompt, vibe_analyze_error, vibe_implement_feature, vibe_code_review, vibe_smart_plan, vibe_ask, vibe_check_db, vibe_get_system_context, vibe_get_config, vibe_configure_model, vibe_set_mode, vibe_configure_provider, vibe_session_resume, vibe_execute_subcommand, vibe_list_sessions, vibe_session_details, vibe_reload_config, vibe_which (18 tools).",
+    "tier": 2,
+    "agents": [
+      "atlas",
+      "tetyana",
+      "grisha"
+    ],
+    "priority_note": "Runs in programmatic CLI mode (--output json), not interactive TUI. Max output: 500KB.",
+    "key_tools": [
+      "vibe_test_in_sandbox",
+      "vibe_which",
+      "vibe_prompt",
+      "vibe_analyze_error",
+      "vibe_implement_feature",
+      "vibe_code_review",
+      "vibe_smart_plan",
+      "vibe_get_config",
+      "vibe_configure_model",
+      "vibe_set_mode"
+    ],
+    "tool_count": 19
+  },
+  "memory": {
+    "description": "Knowledge graph for persistent memory (SQLite + ChromaDB). Tools: create_entities, add_observations, create_relation, search, get_entity, list_entities, delete_entity, ingest_verified_dataset, trace_data_chain.",
+    "tier": 2,
+    "agents": [
+      "atlas",
+      "tetyana",
+      "grisha"
+    ],
+    "key_tools": [
+      "create_entities",
+      "batch_add_nodes",
+      "bulk_ingest_table",
+      "add_observations",
+      "get_entity",
+      "list_entities",
+      "search",
+      "create_relation",
+      "search_nodes",
+      "delete_entity"
+    ],
+    "tool_count": 14
+  },
+  "graph": {
+    "description": "Knowledge Graph visualization and interactive exploration. Tools: generate_mermaid, get_node_details, get_related_nodes, get_graph_json.",
+    "tier": 2,
+    "agents": [
+      "atlas",
+      "tetyana",
+      "grisha"
+    ],
+    "key_tools": [
+      "get_graph_json",
+      "generate_mermaid",
+      "get_node_details",
+      "get_related_nodes"
+    ],
+    "tool_count": 4
+  },
+  "puppeteer": {
+    "description": "High-speed Headless Browser (Puppeteer) for web searching, navigation, screenshots, element interaction, and JavaScript execution",
+    "tier": 3,
+    "agents": [
+      "tetyana",
+      "grisha"
+    ],
+    "priority_note": "For web tasks: searching info, checking weather, scraping data, interacting with websites",
+    "key_tools": [
+      "puppeteer_navigate",
+      "puppeteer_screenshot",
+      "puppeteer_click",
+      "puppeteer_fill",
+      "puppeteer_select",
+      "puppeteer_hover",
+      "puppeteer_evaluate"
+    ],
+    "tool_count": 7
+  },
+  "duckduckgo-search": {
+    "description": "Fast web search via DuckDuckGo HTML screen scraping. No API key required.",
+    "tier": 2,
+    "agents": [
+      "tetyana",
+      "grisha"
+    ],
+    "key_tools": [
+      "duckduckgo_search",
+      "business_registry_search",
+      "open_data_search",
+      "structured_data_search"
+    ],
+    "tool_count": 4
+  },
+  "golden-fund": {
+    "description": "Golden Fund Knowledge Base (8 tools): search_golden_fund, probe_entity, ingest_dataset, add_knowledge_node, analyze_and_store, get_dataset_insights, store_blob, retrieve_blob. Semantic search, entity probing, data analysis storage.",
+    "tier": 2,
+    "agents": [
+      "atlas",
+      "tetyana",
+      "grisha"
+    ],
+    "key_tools": [
+      "search_golden_fund",
+      "store_blob",
+      "retrieve_blob",
+      "ingest_dataset",
+      "probe_entity",
+      "add_knowledge_node",
+      "analyze_and_store",
+      "get_dataset_insights"
+    ],
+    "tool_count": 8
+  },
+  "context7": {
+    "description": "Context7 Documentation Server - Provides context-aware documentation for libraries and frameworks.",
+    "tier": 3,
+    "agents": [
+      "atlas",
+      "tetyana",
+      "grisha"
+    ],
+    "key_tools": [
+      "c7_query",
+      "c7_search",
+      "c7_info"
+    ],
+    "tool_count": 3
+  },
+  "whisper-stt": {
+    "description": "Speech-to-Text via Whisper (Local or Brain API). Used for voice recording and transcription.",
+    "tier": 2,
+    "agents": [
+      "tetyana"
+    ],
+    "key_tools": []
+  },
+  "devtools": {
+    "description": "Developer Tools (Linter, Analysis, MCP Inspector CLI & Sandbox) wrapper (Ruff, Oxlint, Knip, Pyrefly, Inspector, Health, Sandbox). PRIMARY for system self-analysis and tool verification.",
+    "tier": 2,
+    "agents": [
+      "grisha",
+      "tetyana"
+    ],
+    "key_tools": [
+      "devtools_list_processes",
+      "devtools_restart_mcp_server",
+      "devtools_kill_process",
+      "devtools_check_mcp_health",
+      "devtools_launch_inspector",
+      "mcp_inspector_list_tools",
+      "mcp_inspector_call_tool",
+      "mcp_inspector_list_resources",
+      "mcp_inspector_read_resource",
+      "mcp_inspector_list_prompts"
+    ],
+    "tool_count": 28
+  },
+  "github": {
+    "description": "Advanced GitHub API integration (PRs, Issues, Search, File Ops). Requires GITHUB_TOKEN.",
+    "tier": 2,
+    "agents": [
+      "atlas",
+      "tetyana",
+      "grisha"
+    ],
+    "key_tools": [
+      "create_or_update_file",
+      "search_repositories",
+      "create_repository",
+      "get_file_contents",
+      "push_files",
+      "create_issue",
+      "create_pull_request",
+      "fork_repository",
+      "create_branch",
+      "list_commits"
+    ],
+    "tool_count": 26
+  },
+  "redis": {
+    "description": "Redis Observability and State Inspection. Tools: redis_get, redis_set, redis_keys, redis_delete, redis_info.",
+    "tier": 2,
+    "agents": [
+      "atlas",
+      "tetyana",
+      "grisha"
+    ],
+    "key_tools": [
+      "redis_get",
+      "redis_set",
+      "redis_keys",
+      "redis_delete",
+      "redis_info",
+      "redis_ttl",
+      "redis_hgetall",
+      "redis_hset"
+    ],
+    "tool_count": 8
+  },
+  "data-analysis": {
+    "description": "Pandas-based Data Analysis Engine (10 tools): read_metadata, analyze_dataset, generate_statistics, create_visualization, data_cleaning, data_aggregation, interpret_column_data, run_pandas_code. Supports CSV, Excel, JSON, Parquet.",
+    "tier": 2,
+    "agents": [
+      "atlas",
+      "tetyana",
+      "grisha"
+    ],
+    "key_tools": [
+      "read_metadata",
+      "analyze_dataset",
+      "generate_statistics",
+      "create_visualization",
+      "data_cleaning",
+      "data_aggregation",
+      "interpret_column_data",
+      "run_pandas_code"
+    ],
+    "tool_count": 8
+  },
+  "postgres": {
+    "description": "PostgreSQL Database Access (Experimental). Requires local PostgreSQL 17 installation.",
+    "tier": 3,
+    "agents": [
+      "tetyana",
+      "grisha"
+    ],
+    "priority_note": "Disabled by default. Used for structured data querying when SQLite is insufficient.",
+    "key_tools": []
+  },
+  "react-devtools": {
+    "description": "React-specific introspection tools (Fiber tree, Props, State). Enhances autonomous React development capabilities.",
+    "tier": 3,
+    "agents": [
+      "atlas",
+      "tetyana"
+    ],
+    "priority_note": "Works in conjunction with chrome-devtools-mcp for browser interaction.",
+    "key_tools": [
+      "react_get_introspection_script"
+    ],
+    "tool_count": 1
+  },
+  "tour-guide": {
+    "description": "Interactive Virtual Tour Control (Internal). Real-time synchronization between Agent movement and User Map View. Tools: tour_start, tour_stop, tour_pause, tour_resume, tour_look, tour_set_speed.",
+    "tier": 2,
+    "agents": [
+      "atlas",
+      "tetyana",
+      "grisha"
+    ],
+    "priority_note": "Native Python service handled by ToolDispatcher. No separate process required.",
+    "key_tools": []
+  }
+}

@@ -1,0 +1,2518 @@
+{
+  "add_issue_comment": {
+    "server": "github",
+    "required": [
+      "owner",
+      "repo",
+      "issue_number",
+      "body"
+    ],
+    "optional": [],
+    "types": {
+      "owner": "str",
+      "repo": "str",
+      "issue_number": "float",
+      "body": "str"
+    },
+    "description": "Add a comment to an existing issue"
+  },
+  "add_knowledge_node": {
+    "server": "golden-fund",
+    "required": [
+      "content",
+      "metadata"
+    ],
+    "optional": [
+      "links"
+    ],
+    "types": {
+      "content": "str",
+      "metadata": "dict",
+      "links": "any"
+    },
+    "description": "\n    Manually add a confirmed knowledge node to the Golden Fund.\n\n    Args:\n        content: The core information/text of the node.\n        metadata: Key-value metadata pairs (e.g., {'type': 'company', 'source': 'manual'}).\n        links: List of links to other nodes [{'relation': 'related_to', 'target_id': '...'}]\n    "
+  },
+  "add_observations": {
+    "server": "memory",
+    "required": [
+      "name",
+      "observations"
+    ],
+    "optional": [
+      "namespace",
+      "task_id"
+    ],
+    "types": {
+      "name": "str",
+      "observations": "list",
+      "namespace": "str",
+      "task_id": "any"
+    },
+    "description": "Args:\n    name: The name of the entity to update\n    observations: List of new observation strings to add\n    namespace: Optional namespace filter.\n\n    "
+  },
+  "analyze_and_store": {
+    "server": "golden-fund",
+    "required": [
+      "file_path",
+      "dataset_name"
+    ],
+    "optional": [
+      "analysis_type"
+    ],
+    "types": {
+      "file_path": "str",
+      "dataset_name": "str",
+      "analysis_type": "str"
+    },
+    "description": "\n    Analyze a data file and store insights in Golden Fund.\n    Bridges data-analysis capabilities with knowledge persistence.\n\n    Args:\n        file_path: Path to CSV, Excel, or JSON file.\n        dataset_name: Name for this dataset in the knowledge base.\n        analysis_type: Type of analysis - 'summary', 'correlation', 'distribution'.\n    "
+  },
+  "analyze_dataset": {
+    "server": "data-analysis",
+    "required": [
+      "data_source"
+    ],
+    "optional": [
+      "analysis_type",
+      "output_format",
+      "target_path"
+    ],
+    "types": {
+      "data_source": "str",
+      "analysis_type": "str",
+      "output_format": "str",
+      "target_path": "any"
+    },
+    "description": "Analyze a dataset with statistical methods and generate insights."
+  },
+  "batch_add_nodes": {
+    "server": "memory",
+    "required": [
+      "nodes"
+    ],
+    "optional": [
+      "namespace"
+    ],
+    "types": {
+      "nodes": "list",
+      "namespace": "str"
+    },
+    "description": "Optimized batch insertion of multiple nodes into the Knowledge Graph.\n\n    Args:\n        nodes: List of dicts, each with 'node_id', 'node_type', and 'attributes'.\n        namespace: Isolation bucket for these nodes.\n\n    "
+  },
+  "bulk_ingest_table": {
+    "server": "memory",
+    "required": [
+      "file_path",
+      "table_name"
+    ],
+    "optional": [
+      "namespace",
+      "task_id"
+    ],
+    "types": {
+      "file_path": "str",
+      "table_name": "str",
+      "namespace": "str",
+      "task_id": "any"
+    },
+    "description": "Ingest a large table (CSV/JSON/XLSX) into the Knowledge Graph as a DATASET node.\n    This creates a summary node and indexes the content for semantic recall.\n\n    Args:\n        file_path: Path to the data file.\n        table_name: Name of the dataset for the KG.\n        namespace: Isolation bucket.\n        task_id: Optional association with a task.\n\n    "
+  },
+  "business_registry_search": {
+    "server": "duckduckgo-search",
+    "required": [
+      "company_name"
+    ],
+    "optional": [
+      "step_id"
+    ],
+    "types": {
+      "company_name": "str",
+      "step_id": "any"
+    },
+    "description": "Perform a specialized search for Ukrainian company data in business registries.\n    Rules and targets are defined in search_protocol.txt.\n\n    Enhanced with direct web scraping fallback for Opendatabot and YouControl.\n\n    Args:\n        company_name: The name or EDRPOU code of the company to search for.\n\n    "
+  },
+  "c7_info": {
+    "server": "context7",
+    "required": [
+      "projectIdentifier"
+    ],
+    "optional": [],
+    "types": {
+      "projectIdentifier": "str"
+    },
+    "description": "Display metadata about a specific Context7 project."
+  },
+  "c7_query": {
+    "server": "context7",
+    "required": [
+      "projectIdentifier",
+      "query"
+    ],
+    "optional": [
+      "format",
+      "tokens"
+    ],
+    "types": {
+      "projectIdentifier": "str",
+      "query": "str",
+      "format": "str",
+      "tokens": "float"
+    },
+    "description": "Query the Context7 API for information on a specific topic within a project."
+  },
+  "c7_search": {
+    "server": "context7",
+    "required": [
+      "term"
+    ],
+    "optional": [],
+    "types": {
+      "term": "str"
+    },
+    "description": "Search for available Context7 projects by keyword (title or path). Only returns projects with '/org/repo' style paths."
+  },
+  "click": {
+    "server": "chrome-devtools",
+    "required": [
+      "uid"
+    ],
+    "optional": [
+      "dblClick"
+    ],
+    "types": {
+      "uid": "str",
+      "dblClick": "bool"
+    },
+    "description": "Clicks on the provided element"
+  },
+  "close_page": {
+    "server": "chrome-devtools",
+    "required": [
+      "pageIdx"
+    ],
+    "optional": [],
+    "types": {
+      "pageIdx": "float"
+    },
+    "description": "Closes the page by its index. The last open page cannot be closed."
+  },
+  "create_branch": {
+    "server": "github",
+    "required": [
+      "owner",
+      "repo",
+      "branch"
+    ],
+    "optional": [
+      "from_branch"
+    ],
+    "types": {
+      "owner": "str",
+      "repo": "str",
+      "branch": "str",
+      "from_branch": "str"
+    },
+    "description": "Create a new branch in a GitHub repository"
+  },
+  "create_directory": {
+    "server": "filesystem",
+    "required": [
+      "path"
+    ],
+    "optional": [],
+    "types": {
+      "path": "str"
+    },
+    "description": "Create a new directory or ensure a directory exists. Can create multiple nested directories in one operation. If the directory already exists, this operation will succeed silently. Perfect for setting up directory structures for projects or ensuring required paths exist. Only works within allowed directories."
+  },
+  "create_entities": {
+    "server": "memory",
+    "required": [
+      "entities"
+    ],
+    "optional": [
+      "namespace",
+      "task_id"
+    ],
+    "types": {
+      "entities": "list",
+      "namespace": "str",
+      "task_id": "any"
+    },
+    "description": "Args:\n    entities: List of entity dictionaries. Each must have a 'name' field.\n    namespace: Isolation bucket for these entities.\n    task_id: Optional task association.\n\n    "
+  },
+  "create_issue": {
+    "server": "github",
+    "required": [
+      "owner",
+      "repo",
+      "title"
+    ],
+    "optional": [
+      "body",
+      "assignees",
+      "milestone",
+      "labels"
+    ],
+    "types": {
+      "owner": "str",
+      "repo": "str",
+      "title": "str",
+      "body": "str",
+      "assignees": "list",
+      "milestone": "float",
+      "labels": "list"
+    },
+    "description": "Create a new issue in a GitHub repository"
+  },
+  "create_or_update_file": {
+    "server": "github",
+    "required": [
+      "owner",
+      "repo",
+      "path",
+      "content",
+      "message",
+      "branch"
+    ],
+    "optional": [
+      "sha"
+    ],
+    "types": {
+      "owner": "str",
+      "repo": "str",
+      "path": "str",
+      "content": "str",
+      "message": "str",
+      "branch": "str",
+      "sha": "str"
+    },
+    "description": "Create or update a single file in a GitHub repository"
+  },
+  "create_pull_request": {
+    "server": "github",
+    "required": [
+      "owner",
+      "repo",
+      "title",
+      "head",
+      "base"
+    ],
+    "optional": [
+      "body",
+      "draft",
+      "maintainer_can_modify"
+    ],
+    "types": {
+      "owner": "str",
+      "repo": "str",
+      "title": "str",
+      "body": "str",
+      "head": "str",
+      "base": "str",
+      "draft": "bool",
+      "maintainer_can_modify": "bool"
+    },
+    "description": "Create a new pull request in a GitHub repository"
+  },
+  "create_pull_request_review": {
+    "server": "github",
+    "required": [
+      "owner",
+      "repo",
+      "pull_number",
+      "body",
+      "event"
+    ],
+    "optional": [
+      "commit_id",
+      "comments"
+    ],
+    "types": {
+      "owner": "str",
+      "repo": "str",
+      "pull_number": "float",
+      "commit_id": "str",
+      "body": "str",
+      "event": "str",
+      "comments": "list"
+    },
+    "description": "Create a review on a pull request"
+  },
+  "create_relation": {
+    "server": "memory",
+    "required": [
+      "source",
+      "target",
+      "relation"
+    ],
+    "optional": [
+      "namespace"
+    ],
+    "types": {
+      "source": "str",
+      "target": "str",
+      "relation": "str",
+      "namespace": "any"
+    },
+    "description": "Create a relationship between two entities in the knowledge graph.\n\n    Args:\n        source: Name of the source entity\n        target: Name of the target entity\n        relation: Type of relationship (e.g. 'part_of', 'depends_on', 'works_with')\n        namespace: Optional namespace bucket.\n\n    "
+  },
+  "create_repository": {
+    "server": "github",
+    "required": [
+      "name"
+    ],
+    "optional": [
+      "description",
+      "private",
+      "autoInit"
+    ],
+    "types": {
+      "name": "str",
+      "description": "str",
+      "private": "bool",
+      "autoInit": "bool"
+    },
+    "description": "Create a new GitHub repository in your account"
+  },
+  "create_visualization": {
+    "server": "data-analysis",
+    "required": [
+      "data_source",
+      "visualization_type"
+    ],
+    "optional": [
+      "x_axis",
+      "y_axis",
+      "title",
+      "output_format"
+    ],
+    "types": {
+      "data_source": "str",
+      "visualization_type": "str",
+      "x_axis": "any",
+      "y_axis": "any",
+      "title": "any",
+      "output_format": "str"
+    },
+    "description": "Create visualizations from data."
+  },
+  "data_aggregation": {
+    "server": "data-analysis",
+    "required": [
+      "data_source",
+      "group_by"
+    ],
+    "optional": [
+      "aggregation_methods",
+      "output_format"
+    ],
+    "types": {
+      "data_source": "str",
+      "group_by": "str",
+      "aggregation_methods": "any",
+      "output_format": "str"
+    },
+    "description": "Aggregate and summarize data by grouping.\n\n    Args:\n        data_source: Path to data file\n        group_by: Column name to group by\n        aggregation_methods: List of methods - 'sum', 'mean', 'count', 'min', 'max', 'std'\n        output_format: Output format - 'json', 'csv'\n\n    Returns:\n        Aggregated data\n    "
+  },
+  "data_cleaning": {
+    "server": "data-analysis",
+    "required": [
+      "data_source"
+    ],
+    "optional": [
+      "cleaning_methods",
+      "handle_missing",
+      "output_path"
+    ],
+    "types": {
+      "data_source": "str",
+      "cleaning_methods": "any",
+      "handle_missing": "str",
+      "output_path": "any"
+    },
+    "description": "Clean and preprocess data."
+  },
+  "delete_entity": {
+    "server": "memory",
+    "required": [
+      "name"
+    ],
+    "optional": [
+      "namespace"
+    ],
+    "types": {
+      "name": "str",
+      "namespace": "any"
+    },
+    "description": "Delete an entity from the knowledge graph (SQLite + ChromaDB)."
+  },
+  "devtools_analyze_trace": {
+    "server": "devtools",
+    "required": [],
+    "optional": [
+      "log_path"
+    ],
+    "types": {
+      "log_path": "str"
+    },
+    "description": "Analyze an MCP execution log file for logic issues.\n\n    Detects infinite loops (repeated tool calls), inefficiencies, and\n    potential hallucinations in tool usage.\n\n    Args:\n        log_path: Path to the log file. Defaults to ~/.config/atlastrinity/logs/brain.log\n    "
+  },
+  "devtools_check_complexity": {
+    "server": "devtools",
+    "required": [],
+    "optional": [
+      "path"
+    ],
+    "types": {
+      "path": "str"
+    },
+    "description": "Run complexity audit (xenon)."
+  },
+  "devtools_check_integrity": {
+    "server": "devtools",
+    "required": [],
+    "optional": [
+      "path"
+    ],
+    "types": {
+      "path": "str"
+    },
+    "description": "Run 'pyrefly' to check code integrity and find generic coding errors."
+  },
+  "devtools_check_mcp_health": {
+    "server": "devtools",
+    "required": [],
+    "optional": [],
+    "types": {},
+    "description": "Run the system-wide MCP health check script.\n    Ping all enabled servers and report their status, response time, and tool counts.\n    "
+  },
+  "devtools_check_security": {
+    "server": "devtools",
+    "required": [],
+    "optional": [
+      "path"
+    ],
+    "types": {
+      "path": "str"
+    },
+    "description": "Run security audit tools (bandit, safety, detect-secrets, npm audit)."
+  },
+  "devtools_check_types_python": {
+    "server": "devtools",
+    "required": [],
+    "optional": [
+      "path"
+    ],
+    "types": {
+      "path": "str"
+    },
+    "description": "Run deep type checking for Python (pyright).\n    Uses the project's pyrightconfig.json for configuration.\n    "
+  },
+  "devtools_check_types_ts": {
+    "server": "devtools",
+    "required": [],
+    "optional": [],
+    "types": {},
+    "description": "Run deep type checking for TypeScript (tsc --noEmit) on both tsconfigs."
+  },
+  "devtools_find_dead_code": {
+    "server": "devtools",
+    "required": [],
+    "optional": [
+      "target_path"
+    ],
+    "types": {
+      "target_path": "str"
+    },
+    "description": "Run 'knip' (JS/TS) and 'vulture' (Python) to find unused code.\n    Detects unused files, dependencies, exports, variables, and functions.\n    "
+  },
+  "devtools_get_system_map": {
+    "server": "devtools",
+    "required": [],
+    "optional": [],
+    "types": {},
+    "description": "Get the complete AtlasTrinity system map: all paths, MCP servers, databases, logs, tools.\n\n    Returns a structured map of:\n    - Repository structure (src/, scripts/, config/, vendor/, tests/)\n    - Global paths (~/.config/atlastrinity/): logs, databases, configs, models\n    - All MCP servers with their commands and tool counts\n    - Linter/code quality tool locations and configs\n    - Testing methods for MCP servers\n\n    Use this tool FIRST when you need to find any file, log, database, or tool location.\n    "
+  },
+  "devtools_kill_process": {
+    "server": "devtools",
+    "required": [
+      "pid"
+    ],
+    "optional": [
+      "hard"
+    ],
+    "types": {
+      "pid": "int",
+      "hard": "bool"
+    },
+    "description": "Forcefully terminate or kill a specific process by PID.\n\n    Args:\n        pid: The Process ID to kill.\n        hard: If True, send SIGKILL (hard kill). Otherwise SIGTERM (graceful).\n    "
+  },
+  "devtools_launch_inspector": {
+    "server": "devtools",
+    "required": [
+      "server_name"
+    ],
+    "optional": [],
+    "types": {
+      "server_name": "str"
+    },
+    "description": "Launch the official MCP Inspector for a specific server (Tier 1-4).\n    This starts a background process and returns a URL (localhost) to open in the browser.\n\n    Args:\n        server_name: The name of the server to inspect (e.g., 'memory', 'vibe', 'filesystem').\n\n    Note: The inspector process continues running in the background.\n\n    "
+  },
+  "devtools_lint_js": {
+    "server": "devtools",
+    "required": [],
+    "optional": [
+      "file_path"
+    ],
+    "types": {
+      "file_path": "str"
+    },
+    "description": "Run JS/TS linters (oxlint and eslint) on a specific file or directory.\n    Returns structured results from both tools.\n    "
+  },
+  "devtools_lint_python": {
+    "server": "devtools",
+    "required": [],
+    "optional": [
+      "file_path"
+    ],
+    "types": {
+      "file_path": "str"
+    },
+    "description": "Run the 'ruff' linter on a specific file or directory.\n    Returns structured JSON results of any violations found.\n    "
+  },
+  "devtools_list_processes": {
+    "server": "devtools",
+    "required": [],
+    "optional": [],
+    "types": {},
+    "description": "List all processes tracked by the AtlasTrinity Watchdog.\n    Includes PID, type (vibe, mcp, proxy), CPU usage history, and health status.\n    "
+  },
+  "devtools_restart_mcp_server": {
+    "server": "devtools",
+    "required": [
+      "server_name"
+    ],
+    "optional": [],
+    "types": {
+      "server_name": "str"
+    },
+    "description": "Gracefully restart a specific MCP server.\n\n    Args:\n        server_name: The name of the server to restart (e.g., 'vibe', 'memory', 'filesystem').\n    "
+  },
+  "devtools_run_context_check": {
+    "server": "devtools",
+    "required": [
+      "test_file"
+    ],
+    "optional": [],
+    "types": {
+      "test_file": "str"
+    },
+    "description": "Run logic validation tests from a YAML/JSON file against a mock runner (dry run).\n\n    This tool validates the format of your test scenarios and runs them.\n    Currently runs in 'dry_run' mode unless a runner is programmatically injected.\n    Future versions will integrate with the active LLM session.\n\n    Args:\n        test_file: Path to the .yaml or .json test definition file.\n    "
+  },
+  "devtools_run_global_lint": {
+    "server": "devtools",
+    "required": [],
+    "optional": [],
+    "types": {},
+    "description": "Run the complete system linting suite (npm run lint:all).\n    This runs 13 parallel checks via lefthook:\n    - JS/TS: biome, oxlint, tsc --noEmit (both tsconfigs), eslint type-aware\n    - Python: ruff (25 rule sets), pyright (standard), pyrefly, xenon, bandit, vulture\n    - Cross: knip (unused JS), security audit, yaml-sync\n    "
+  },
+  "devtools_run_mcp_sandbox": {
+    "server": "devtools",
+    "required": [],
+    "optional": [
+      "server_name",
+      "all_servers",
+      "chain_length",
+      "autofix"
+    ],
+    "types": {
+      "server_name": "any",
+      "all_servers": "bool",
+      "chain_length": "int",
+      "autofix": "bool"
+    },
+    "description": "Run MCP sandbox tests with LLM-generated realistic scenarios.\n\n    This tool tests ALL MCP tools (including destructive ones) in a safe\n    isolated sandbox environment. It generates realistic test scenarios\n    using LLM and can chain multiple tools together for natural testing flows.\n\n    Args:\n        server_name: Specific server to test (e.g., 'filesystem', 'memory')\n        all_servers: Test all enabled MCP servers\n        chain_length: Number of tools to chain in each scenario (1-5)\n        autofix: Automatically attempt to fix failures via Vibe MCP\n\n    Returns:\n        Dict with test results including passed/failed counts and details.\n    "
+  },
+  "devtools_test_all_mcp_native": {
+    "server": "devtools",
+    "required": [],
+    "optional": [],
+    "types": {},
+    "description": "Test ALL enabled MCP servers natively by spawning each server process,\n    listing its tools via stdio JSON-RPC, and reporting results.\n\n    This is a quick smoke test that verifies each server can start and respond.\n    For deeper testing, use devtools_run_mcp_sandbox().\n\n    Returns:\n        Dict with per-server results: status, tool_count, response_time_ms, error.\n    "
+  },
+  "devtools_update_architecture_diagrams": {
+    "server": "devtools",
+    "required": [],
+    "optional": [
+      "project_path",
+      "commits_back",
+      "target_mode",
+      "github_repo",
+      "github_token",
+      "init_git",
+      "use_reasoning"
+    ],
+    "types": {
+      "project_path": "any",
+      "commits_back": "int",
+      "target_mode": "str",
+      "github_repo": "any",
+      "github_token": "any",
+      "init_git": "bool",
+      "use_reasoning": "bool"
+    },
+    "description": "Auto-update architecture diagrams by analyzing git changes.\n\n    Universal system that works for ANY project type (Python, Node.js, Rust, Go, etc.).\n    Analyzes project structure dynamically and generates appropriate diagrams.\n\n    Features:\n    - Universal project detection (Python, Node.js, Rust, Go, generic)\n    - Dynamic component analysis\n    - Git initialization for new projects\n    - GitHub token setup and remote configuration\n    - Intelligent diagram generation based on project structure\n    - LLM reasoning via sequential-thinking MCP (raptor-mini) for complex changes\n\n    Args:\n        project_path: Path to project. None = AtlasTrinity internal project\n        commits_back: Number of commits to analyze for changes (default: 1)\n        target_mode: 'internal' (AtlasTrinity) or 'external' (other projects)\n        github_repo: GitHub repo name (e.g., 'user/repo') for remote setup\n        github_token: GitHub token (reads from .env if not provided)\n        init_git: Auto-initialize git if not present (default: True)\n        use_reasoning: Use sequential-thinking MCP for deep analysis (default: True)\n\n    Returns:\n        Status of diagram updates with file locations, git status, GitHub config,\n        and reasoning analysis if enabled\n    "
+  },
+  "devtools_validate_config": {
+    "server": "devtools",
+    "required": [],
+    "optional": [],
+    "types": {},
+    "description": "Validate the syntax and basic structure of the local MCP configuration file."
+  },
+  "directory_tree": {
+    "server": "filesystem",
+    "required": [
+      "path"
+    ],
+    "optional": [
+      "excludePatterns"
+    ],
+    "types": {
+      "path": "str",
+      "excludePatterns": "list"
+    },
+    "description": "Get a recursive tree view of files and directories as a JSON structure. Each entry includes 'name', 'type' (file/directory), and 'children' for directories. Files have no children array, while directories always have a children array (which may be empty). The output is formatted with 2-space indentation for readability. Only works within allowed directories."
+  },
+  "drag": {
+    "server": "chrome-devtools",
+    "required": [
+      "from_uid",
+      "to_uid"
+    ],
+    "optional": [],
+    "types": {
+      "from_uid": "str",
+      "to_uid": "str"
+    },
+    "description": "Drag an element onto another element"
+  },
+  "duckduckgo_search": {
+    "server": "duckduckgo-search",
+    "required": [
+      "query"
+    ],
+    "optional": [
+      "max_results",
+      "timeout_s",
+      "step_id"
+    ],
+    "types": {
+      "query": "str",
+      "max_results": "int",
+      "timeout_s": "float",
+      "step_id": "any"
+    },
+    "description": "Perform a web search using DuckDuckGo.\n\n    Args:\n        query: The search query string\n        max_results: Maximum number of results to return (default: 5, max: 20)\n        timeout_s: Request timeout in seconds (default: 10.0)\n\n    "
+  },
+  "edit_file": {
+    "server": "filesystem",
+    "required": [
+      "path",
+      "edits"
+    ],
+    "optional": [
+      "dryRun"
+    ],
+    "types": {
+      "path": "str",
+      "edits": "list",
+      "dryRun": "bool"
+    },
+    "description": "Make line-based edits to a text file. Each edit replaces exact line sequences with new content. Returns a git-style diff showing the changes made. Only works within allowed directories."
+  },
+  "emulate": {
+    "server": "chrome-devtools",
+    "required": [],
+    "optional": [
+      "networkConditions",
+      "cpuThrottlingRate",
+      "geolocation"
+    ],
+    "types": {
+      "networkConditions": "str",
+      "cpuThrottlingRate": "float",
+      "geolocation": "any"
+    },
+    "description": "Emulates various features on the selected page."
+  },
+  "evaluate_script": {
+    "server": "chrome-devtools",
+    "required": [
+      "function"
+    ],
+    "optional": [
+      "args"
+    ],
+    "types": {
+      "function": "str",
+      "args": "list"
+    },
+    "description": "Evaluate a JavaScript function inside the currently selected page. Returns the response as JSON\nso returned values have to JSON-serializable."
+  },
+  "fill": {
+    "server": "chrome-devtools",
+    "required": [
+      "uid",
+      "value"
+    ],
+    "optional": [],
+    "types": {
+      "uid": "str",
+      "value": "str"
+    },
+    "description": "Type text into a input, text area or select an option from a <select> element."
+  },
+  "fill_form": {
+    "server": "chrome-devtools",
+    "required": [
+      "elements"
+    ],
+    "optional": [],
+    "types": {
+      "elements": "list"
+    },
+    "description": "Fill out multiple form elements at once"
+  },
+  "fork_repository": {
+    "server": "github",
+    "required": [
+      "owner",
+      "repo"
+    ],
+    "optional": [
+      "organization"
+    ],
+    "types": {
+      "owner": "str",
+      "repo": "str",
+      "organization": "str"
+    },
+    "description": "Fork a GitHub repository to your account or specified organization"
+  },
+  "generate_mermaid": {
+    "server": "graph",
+    "required": [],
+    "optional": [
+      "node_type",
+      "namespace"
+    ],
+    "types": {
+      "node_type": "any",
+      "namespace": "any"
+    },
+    "description": "Generates a Mermaid.js flowchart representation of the current Knowledge Graph.\n\n    Args:\n        node_type: Optional filter (FILE, TASK, TOOL, ENTITY)\n        namespace: Optional filter (task_id or 'global')\n\n    "
+  },
+  "generate_statistics": {
+    "server": "data-analysis",
+    "required": [
+      "data_source"
+    ],
+    "optional": [
+      "statistics_type",
+      "group_by",
+      "output_format"
+    ],
+    "types": {
+      "data_source": "str",
+      "statistics_type": "str",
+      "group_by": "any",
+      "output_format": "str"
+    },
+    "description": "Generate statistical analysis from a dataset.\n\n    Args:\n        data_source: Path to data file or URL\n        statistics_type: Type - 'descriptive', 'inferential', 'frequency'\n        group_by: Optional column name to group by\n        output_format: Output format - 'json', 'markdown'\n\n    Returns:\n        Statistical analysis results\n    "
+  },
+  "get_console_message": {
+    "server": "chrome-devtools",
+    "required": [
+      "msgid"
+    ],
+    "optional": [],
+    "types": {
+      "msgid": "float"
+    },
+    "description": "Gets a console message by its ID. You can get all messages by calling list_console_messages."
+  },
+  "get_dataset_insights": {
+    "server": "golden-fund",
+    "required": [
+      "dataset_name"
+    ],
+    "optional": [],
+    "types": {
+      "dataset_name": "str"
+    },
+    "description": "\n    Retrieve stored insights for a dataset from Golden Fund.\n\n    Args:\n        dataset_name: Name of the dataset to retrieve insights for.\n    "
+  },
+  "get_db_schema": {
+    "server": "memory",
+    "required": [],
+    "optional": [],
+    "types": {},
+    "description": "Retrieve the database schema (tables and columns) for technical audits."
+  },
+  "get_entity": {
+    "server": "memory",
+    "required": [
+      "name"
+    ],
+    "optional": [],
+    "types": {
+      "name": "str"
+    },
+    "description": "Retrieve full details of a specific entity."
+  },
+  "get_file_contents": {
+    "server": "github",
+    "required": [
+      "owner",
+      "repo",
+      "path"
+    ],
+    "optional": [
+      "branch"
+    ],
+    "types": {
+      "owner": "str",
+      "repo": "str",
+      "path": "str",
+      "branch": "str"
+    },
+    "description": "Get the contents of a file or directory from a GitHub repository"
+  },
+  "get_file_info": {
+    "server": "filesystem",
+    "required": [
+      "path"
+    ],
+    "optional": [],
+    "types": {
+      "path": "str"
+    },
+    "description": "Retrieve detailed metadata about a file or directory. Returns comprehensive information including size, creation time, last modified time, permissions, and type. This tool is perfect for understanding file characteristics without reading the actual content. Only works within allowed directories."
+  },
+  "get_graph_json": {
+    "server": "graph",
+    "required": [],
+    "optional": [
+      "namespace"
+    ],
+    "types": {
+      "namespace": "any"
+    },
+    "description": "Returns the Knowledge Graph in JSON format.\n\n    Args:\n        namespace: Optional filter (e.g. task_id or 'global').\n\n    "
+  },
+  "get_issue": {
+    "server": "github",
+    "required": [
+      "owner",
+      "repo",
+      "issue_number"
+    ],
+    "optional": [],
+    "types": {
+      "owner": "str",
+      "repo": "str",
+      "issue_number": "float"
+    },
+    "description": "Get details of a specific issue in a GitHub repository."
+  },
+  "get_network_request": {
+    "server": "chrome-devtools",
+    "required": [],
+    "optional": [
+      "reqid"
+    ],
+    "types": {
+      "reqid": "float"
+    },
+    "description": "Gets a network request by an optional reqid, if omitted returns the currently selected request in the DevTools Network panel."
+  },
+  "get_node_details": {
+    "server": "graph",
+    "required": [
+      "node_id"
+    ],
+    "optional": [],
+    "types": {
+      "node_id": "str"
+    },
+    "description": "Retrieve all attributes of a specific node."
+  },
+  "get_pull_request": {
+    "server": "github",
+    "required": [
+      "owner",
+      "repo",
+      "pull_number"
+    ],
+    "optional": [],
+    "types": {
+      "owner": "str",
+      "repo": "str",
+      "pull_number": "float"
+    },
+    "description": "Get details of a specific pull request"
+  },
+  "get_pull_request_comments": {
+    "server": "github",
+    "required": [
+      "owner",
+      "repo",
+      "pull_number"
+    ],
+    "optional": [],
+    "types": {
+      "owner": "str",
+      "repo": "str",
+      "pull_number": "float"
+    },
+    "description": "Get the review comments on a pull request"
+  },
+  "get_pull_request_files": {
+    "server": "github",
+    "required": [
+      "owner",
+      "repo",
+      "pull_number"
+    ],
+    "optional": [],
+    "types": {
+      "owner": "str",
+      "repo": "str",
+      "pull_number": "float"
+    },
+    "description": "Get the list of files changed in a pull request"
+  },
+  "get_pull_request_reviews": {
+    "server": "github",
+    "required": [
+      "owner",
+      "repo",
+      "pull_number"
+    ],
+    "optional": [],
+    "types": {
+      "owner": "str",
+      "repo": "str",
+      "pull_number": "float"
+    },
+    "description": "Get the reviews on a pull request"
+  },
+  "get_pull_request_status": {
+    "server": "github",
+    "required": [
+      "owner",
+      "repo",
+      "pull_number"
+    ],
+    "optional": [],
+    "types": {
+      "owner": "str",
+      "repo": "str",
+      "pull_number": "float"
+    },
+    "description": "Get the combined status of all status checks for a pull request"
+  },
+  "get_related_nodes": {
+    "server": "graph",
+    "required": [
+      "node_id"
+    ],
+    "optional": [],
+    "types": {
+      "node_id": "str"
+    },
+    "description": "Find all nodes directly connected to the specified node."
+  },
+  "handle_dialog": {
+    "server": "chrome-devtools",
+    "required": [
+      "action"
+    ],
+    "optional": [
+      "promptText"
+    ],
+    "types": {
+      "action": "str",
+      "promptText": "str"
+    },
+    "description": "If a browser dialog was opened, use this command to handle it"
+  },
+  "hover": {
+    "server": "chrome-devtools",
+    "required": [
+      "uid"
+    ],
+    "optional": [],
+    "types": {
+      "uid": "str"
+    },
+    "description": "Hover over the provided element"
+  },
+  "ingest_dataset": {
+    "server": "golden-fund",
+    "required": [
+      "url",
+      "type"
+    ],
+    "optional": [
+      "process_pipeline"
+    ],
+    "types": {
+      "url": "str",
+      "type": "str",
+      "process_pipeline": "any"
+    },
+    "description": "\n    Ingest a dataset into the Golden Fund.\n\n    Args:\n        url: URL of the dataset or API endpoint.\n        type: Type of data source (e.g., 'api', 'web_page', 'csv_url').\n        process_pipeline: List of processing steps.\n    "
+  },
+  "ingest_verified_dataset": {
+    "server": "memory",
+    "required": [
+      "file_path",
+      "dataset_name"
+    ],
+    "optional": [
+      "namespace",
+      "task_id"
+    ],
+    "types": {
+      "file_path": "str",
+      "dataset_name": "str",
+      "namespace": "str",
+      "task_id": "any"
+    },
+    "description": "High-Precision Ingestion Pipeline:\n    1. Validates data quality and integrity.\n    2. Creates a dedicated SQLite table for structured storage.\n    3. Indexes metadata in the Knowledge Graph.\n    4. Syncs semantic preview to Vector Memory.\n    "
+  },
+  "interpret_column_data": {
+    "server": "data-analysis",
+    "required": [
+      "file_path",
+      "column_names"
+    ],
+    "optional": [
+      "sheet_name"
+    ],
+    "types": {
+      "file_path": "str",
+      "column_names": "list",
+      "sheet_name": "any"
+    },
+    "description": "Interpret specific columns to understand their value patterns.\n\n    Args:\n        file_path: Path to the data file\n        column_names: List of column names to interpret\n        sheet_name: For Excel files, specify sheet name or index\n\n    Returns:\n        Detailed interpretation of column values with counts\n    "
+  },
+  "list_allowed_directories": {
+    "server": "filesystem",
+    "required": [],
+    "optional": [],
+    "types": {},
+    "description": "Returns the list of directories that this server is allowed to access. Subdirectories within these allowed directories are also accessible. Use this to understand which directories and their nested paths are available before trying to access files."
+  },
+  "list_commits": {
+    "server": "github",
+    "required": [
+      "owner",
+      "repo"
+    ],
+    "optional": [
+      "sha",
+      "page",
+      "perPage"
+    ],
+    "types": {
+      "owner": "str",
+      "repo": "str",
+      "sha": "str",
+      "page": "float",
+      "perPage": "float"
+    },
+    "description": "Get list of commits of a branch in a GitHub repository"
+  },
+  "list_console_messages": {
+    "server": "chrome-devtools",
+    "required": [],
+    "optional": [
+      "pageSize",
+      "pageIdx",
+      "types",
+      "includePreservedMessages"
+    ],
+    "types": {
+      "pageSize": "int",
+      "pageIdx": "int",
+      "types": "list",
+      "includePreservedMessages": "bool"
+    },
+    "description": "List all console messages for the currently selected page since the last navigation."
+  },
+  "list_directory": {
+    "server": "filesystem",
+    "required": [
+      "path"
+    ],
+    "optional": [],
+    "types": {
+      "path": "str"
+    },
+    "description": "Get a detailed listing of all files and directories in a specified path. Results clearly distinguish between files and directories with [FILE] and [DIR] prefixes. This tool is essential for understanding directory structure and finding specific files within a directory. Only works within allowed directories."
+  },
+  "list_directory_with_sizes": {
+    "server": "filesystem",
+    "required": [
+      "path"
+    ],
+    "optional": [
+      "sortBy"
+    ],
+    "types": {
+      "path": "str",
+      "sortBy": "str"
+    },
+    "description": "Get a detailed listing of all files and directories in a specified path, including sizes. Results clearly distinguish between files and directories with [FILE] and [DIR] prefixes. This tool is useful for understanding directory structure and finding specific files within a directory. Only works within allowed directories."
+  },
+  "list_entities": {
+    "server": "memory",
+    "required": [],
+    "optional": [],
+    "types": {},
+    "description": "List all entity names in the knowledge graph."
+  },
+  "list_issues": {
+    "server": "github",
+    "required": [
+      "owner",
+      "repo"
+    ],
+    "optional": [
+      "direction",
+      "labels",
+      "page",
+      "per_page",
+      "since",
+      "sort",
+      "state"
+    ],
+    "types": {
+      "owner": "str",
+      "repo": "str",
+      "direction": "str",
+      "labels": "list",
+      "page": "float",
+      "per_page": "float",
+      "since": "str",
+      "sort": "str",
+      "state": "str"
+    },
+    "description": "List issues in a GitHub repository with filtering options"
+  },
+  "list_network_requests": {
+    "server": "chrome-devtools",
+    "required": [],
+    "optional": [
+      "pageSize",
+      "pageIdx",
+      "resourceTypes",
+      "includePreservedRequests"
+    ],
+    "types": {
+      "pageSize": "int",
+      "pageIdx": "int",
+      "resourceTypes": "list",
+      "includePreservedRequests": "bool"
+    },
+    "description": "List all requests for the currently selected page since the last navigation."
+  },
+  "list_pages": {
+    "server": "chrome-devtools",
+    "required": [],
+    "optional": [],
+    "types": {},
+    "description": "Get a list of pages open in the browser."
+  },
+  "list_pull_requests": {
+    "server": "github",
+    "required": [
+      "owner",
+      "repo"
+    ],
+    "optional": [
+      "state",
+      "head",
+      "base",
+      "sort",
+      "direction",
+      "per_page",
+      "page"
+    ],
+    "types": {
+      "owner": "str",
+      "repo": "str",
+      "state": "str",
+      "head": "str",
+      "base": "str",
+      "sort": "str",
+      "direction": "str",
+      "per_page": "float",
+      "page": "float"
+    },
+    "description": "List and filter repository pull requests"
+  },
+  "mcp_inspector_call_tool": {
+    "server": "devtools",
+    "required": [
+      "server_name",
+      "tool_name"
+    ],
+    "optional": [
+      "args"
+    ],
+    "types": {
+      "server_name": "str",
+      "tool_name": "str",
+      "args": "any"
+    },
+    "description": "Call a specific tool on an MCP server via Inspector CLI.\n\n    Args:\n        server_name: Name of the MCP server.\n        tool_name: Name of the tool to call.\n        args: Optional dictionary of arguments to pass to the tool.\n\n    Returns:\n        Dict with 'success' and 'data' (tool execution result).\n    "
+  },
+  "mcp_inspector_get_prompt": {
+    "server": "devtools",
+    "required": [
+      "server_name",
+      "prompt_name"
+    ],
+    "optional": [
+      "args"
+    ],
+    "types": {
+      "server_name": "str",
+      "prompt_name": "str",
+      "args": "any"
+    },
+    "description": "Get a specific prompt from an MCP server via Inspector CLI.\n\n    Args:\n        server_name: Name of the MCP server.\n        prompt_name: Name of the prompt to retrieve.\n        args: Optional dictionary of arguments to pass to the prompt.\n\n    Returns:\n        Dict with 'success' and 'data' (prompt content with messages).\n    "
+  },
+  "mcp_inspector_get_schema": {
+    "server": "devtools",
+    "required": [
+      "server_name",
+      "tool_name"
+    ],
+    "optional": [],
+    "types": {
+      "server_name": "str",
+      "tool_name": "str"
+    },
+    "description": "Get the JSON schema for a specific tool on an MCP server.\n\n    Args:\n        server_name: Name of the MCP server.\n        tool_name: Name of the tool to get schema for.\n\n    Returns:\n        Dict with 'success' and 'schema' (input schema for the tool).\n    "
+  },
+  "mcp_inspector_list_prompts": {
+    "server": "devtools",
+    "required": [
+      "server_name"
+    ],
+    "optional": [],
+    "types": {
+      "server_name": "str"
+    },
+    "description": "List all prompts available on a specified MCP server via Inspector CLI.\n\n    Args:\n        server_name: Name of the MCP server.\n\n    Returns:\n        Dict with 'success' and 'data' (list of prompts with names and descriptions).\n    "
+  },
+  "mcp_inspector_list_resources": {
+    "server": "devtools",
+    "required": [
+      "server_name"
+    ],
+    "optional": [],
+    "types": {
+      "server_name": "str"
+    },
+    "description": "List all resources available on a specified MCP server via Inspector CLI.\n\n    Args:\n        server_name: Name of the MCP server.\n\n    Returns:\n        Dict with 'success' and 'data' (list of resources with URIs and descriptions).\n    "
+  },
+  "mcp_inspector_list_tools": {
+    "server": "devtools",
+    "required": [
+      "server_name"
+    ],
+    "optional": [],
+    "types": {
+      "server_name": "str"
+    },
+    "description": "List all tools available on a specified MCP server via Inspector CLI.\n\n    Args:\n        server_name: Name of the MCP server (e.g., 'filesystem', 'memory', 'vibe').\n\n    Returns:\n        Dict with 'success' and 'data' (list of tools with names and schemas).\n    "
+  },
+  "mcp_inspector_read_resource": {
+    "server": "devtools",
+    "required": [
+      "server_name",
+      "uri"
+    ],
+    "optional": [],
+    "types": {
+      "server_name": "str",
+      "uri": "str"
+    },
+    "description": "Read a specific resource from an MCP server via Inspector CLI.\n\n    Args:\n        server_name: Name of the MCP server.\n        uri: URI of the resource to read.\n\n    Returns:\n        Dict with 'success' and 'data' (resource contents).\n    "
+  },
+  "merge_pull_request": {
+    "server": "github",
+    "required": [
+      "owner",
+      "repo",
+      "pull_number"
+    ],
+    "optional": [
+      "commit_title",
+      "commit_message",
+      "merge_method"
+    ],
+    "types": {
+      "owner": "str",
+      "repo": "str",
+      "pull_number": "float",
+      "commit_title": "str",
+      "commit_message": "str",
+      "merge_method": "str"
+    },
+    "description": "Merge a pull request"
+  },
+  "move_file": {
+    "server": "filesystem",
+    "required": [
+      "source",
+      "destination"
+    ],
+    "optional": [],
+    "types": {
+      "source": "str",
+      "destination": "str"
+    },
+    "description": "Move or rename files and directories. Can move files between directories and rename them in a single operation. If the destination exists, the operation will fail. Works across different directories and can be used for simple renaming within the same directory. Both source and destination must be within allowed directories."
+  },
+  "navigate_page": {
+    "server": "chrome-devtools",
+    "required": [],
+    "optional": [
+      "type",
+      "url",
+      "ignoreCache",
+      "timeout"
+    ],
+    "types": {
+      "type": "str",
+      "url": "str",
+      "ignoreCache": "bool",
+      "timeout": "int"
+    },
+    "description": "Navigates the currently selected page to a URL."
+  },
+  "new_page": {
+    "server": "chrome-devtools",
+    "required": [
+      "url"
+    ],
+    "optional": [
+      "timeout"
+    ],
+    "types": {
+      "url": "str",
+      "timeout": "int"
+    },
+    "description": "Creates a new page"
+  },
+  "open_data_search": {
+    "server": "duckduckgo-search",
+    "required": [
+      "query"
+    ],
+    "optional": [
+      "step_id"
+    ],
+    "types": {
+      "query": "str",
+      "step_id": "any"
+    },
+    "description": "Search for datasets on the Ukrainian Open Data Portal (data.gov.ua).\n    Rules and targets are defined in search_protocol.txt.\n\n    Args:\n        query: The search query for datasets.\n\n    "
+  },
+  "performance_analyze_insight": {
+    "server": "chrome-devtools",
+    "required": [
+      "insightSetId",
+      "insightName"
+    ],
+    "optional": [],
+    "types": {
+      "insightSetId": "str",
+      "insightName": "str"
+    },
+    "description": "Provides more detailed information on a specific Performance Insight of an insight set that was highlighted in the results of a trace recording."
+  },
+  "performance_start_trace": {
+    "server": "chrome-devtools",
+    "required": [
+      "reload",
+      "autoStop"
+    ],
+    "optional": [],
+    "types": {
+      "reload": "bool",
+      "autoStop": "bool"
+    },
+    "description": "Starts a performance trace recording on the selected page. This can be used to look for performance problems and insights to improve the performance of the page. It will also report Core Web Vital (CWV) scores for the page."
+  },
+  "performance_stop_trace": {
+    "server": "chrome-devtools",
+    "required": [],
+    "optional": [],
+    "types": {},
+    "description": "Stops the active performance trace recording on the selected page."
+  },
+  "press_key": {
+    "server": "chrome-devtools",
+    "required": [
+      "key"
+    ],
+    "optional": [],
+    "types": {
+      "key": "str"
+    },
+    "description": "Press a key or key combination. Use this when other input methods like fill() cannot be used (e.g., keyboard shortcuts, navigation keys, or special key combinations)."
+  },
+  "probe_entity": {
+    "server": "golden-fund",
+    "required": [
+      "entity_id"
+    ],
+    "optional": [
+      "depth"
+    ],
+    "types": {
+      "entity_id": "str",
+      "depth": "int"
+    },
+    "description": "Probe the knowledge graph for an entity to explore relationships."
+  },
+  "puppeteer_click": {
+    "server": "puppeteer",
+    "required": [
+      "selector"
+    ],
+    "optional": [],
+    "types": {
+      "selector": "str"
+    },
+    "description": "Click an element on the page"
+  },
+  "puppeteer_evaluate": {
+    "server": "puppeteer",
+    "required": [
+      "script"
+    ],
+    "optional": [],
+    "types": {
+      "script": "str"
+    },
+    "description": "Execute JavaScript in the browser console"
+  },
+  "puppeteer_fill": {
+    "server": "puppeteer",
+    "required": [
+      "selector",
+      "value"
+    ],
+    "optional": [],
+    "types": {
+      "selector": "str",
+      "value": "str"
+    },
+    "description": "Fill out an input field"
+  },
+  "puppeteer_hover": {
+    "server": "puppeteer",
+    "required": [
+      "selector"
+    ],
+    "optional": [],
+    "types": {
+      "selector": "str"
+    },
+    "description": "Hover an element on the page"
+  },
+  "puppeteer_navigate": {
+    "server": "puppeteer",
+    "required": [
+      "url"
+    ],
+    "optional": [
+      "launchOptions",
+      "allowDangerous"
+    ],
+    "types": {
+      "url": "str",
+      "launchOptions": "dict",
+      "allowDangerous": "bool"
+    },
+    "description": "Navigate to a URL"
+  },
+  "puppeteer_screenshot": {
+    "server": "puppeteer",
+    "required": [
+      "name"
+    ],
+    "optional": [
+      "selector",
+      "width",
+      "height",
+      "encoded"
+    ],
+    "types": {
+      "name": "str",
+      "selector": "str",
+      "width": "float",
+      "height": "float",
+      "encoded": "bool"
+    },
+    "description": "Take a screenshot of the current page or a specific element"
+  },
+  "puppeteer_select": {
+    "server": "puppeteer",
+    "required": [
+      "selector",
+      "value"
+    ],
+    "optional": [],
+    "types": {
+      "selector": "str",
+      "value": "str"
+    },
+    "description": "Select an element on the page with Select tag"
+  },
+  "push_files": {
+    "server": "github",
+    "required": [
+      "owner",
+      "repo",
+      "branch",
+      "files",
+      "message"
+    ],
+    "optional": [],
+    "types": {
+      "owner": "str",
+      "repo": "str",
+      "branch": "str",
+      "files": "list",
+      "message": "str"
+    },
+    "description": "Push multiple files to a GitHub repository in a single commit"
+  },
+  "query_db": {
+    "server": "memory",
+    "required": [
+      "query"
+    ],
+    "optional": [],
+    "types": {
+      "query": "str"
+    },
+    "description": "Execute a raw SQL query against the system database (READ-ONLY).\n    Used for technical audits of 'tool_executions' and other tables.\n\n    Args:\n        query: SQL SELECT statement.\n    "
+  },
+  "react_get_introspection_script": {
+    "server": "react-devtools",
+    "required": [
+      "queryType"
+    ],
+    "optional": [],
+    "types": {
+      "queryType": "str"
+    },
+    "description": "Returns a JavaScript snippet to be executed in the browser (via evaluate_script) to inspect React internals."
+  },
+  "read_file": {
+    "server": "filesystem",
+    "required": [
+      "path"
+    ],
+    "optional": [
+      "tail",
+      "head"
+    ],
+    "types": {
+      "path": "str",
+      "tail": "float",
+      "head": "float"
+    },
+    "description": "Read the complete contents of a file as text. DEPRECATED: Use read_text_file instead."
+  },
+  "read_media_file": {
+    "server": "filesystem",
+    "required": [
+      "path"
+    ],
+    "optional": [],
+    "types": {
+      "path": "str"
+    },
+    "description": "Read an image or audio file. Returns the base64 encoded data and MIME type. Only works within allowed directories."
+  },
+  "read_metadata": {
+    "server": "data-analysis",
+    "required": [
+      "file_path"
+    ],
+    "optional": [
+      "sheet_name"
+    ],
+    "types": {
+      "file_path": "str",
+      "sheet_name": "any"
+    },
+    "description": "Extract comprehensive metadata from a data file (CSV, Excel, JSON, Parquet).\n\n    Args:\n        file_path: Path to the data file\n        sheet_name: For Excel files, specify sheet name or index (default: first sheet)\n\n    Returns:\n        Metadata including columns, types, statistics, and data quality info\n    "
+  },
+  "read_multiple_files": {
+    "server": "filesystem",
+    "required": [
+      "paths"
+    ],
+    "optional": [],
+    "types": {
+      "paths": "list"
+    },
+    "description": "Read the contents of multiple files simultaneously. This is more efficient than reading files one by one when you need to analyze or compare multiple files. Each file's content is returned with its path as a reference. Failed reads for individual files won't stop the entire operation. Only works within allowed directories."
+  },
+  "read_text_file": {
+    "server": "filesystem",
+    "required": [
+      "path"
+    ],
+    "optional": [
+      "tail",
+      "head"
+    ],
+    "types": {
+      "path": "str",
+      "tail": "float",
+      "head": "float"
+    },
+    "description": "Read the complete contents of a file from the file system as text. Handles various text encodings and provides detailed error messages if the file cannot be read. Use this tool when you need to examine the contents of a single file. Use the 'head' parameter to read only the first N lines of a file, or the 'tail' parameter to read only the last N lines of a file. Operates on the file as text regardless of extension. Only works within allowed directories."
+  },
+  "redis_delete": {
+    "server": "redis",
+    "required": [
+      "key"
+    ],
+    "optional": [],
+    "types": {
+      "key": "str"
+    },
+    "description": "Delete a key from Redis.\n\n    Args:\n        key: The Redis key\n\n    "
+  },
+  "redis_get": {
+    "server": "redis",
+    "required": [
+      "key"
+    ],
+    "optional": [],
+    "types": {
+      "key": "str"
+    },
+    "description": "Get the value of a key from Redis.\n\n    Args:\n        key: The Redis key\n\n    "
+  },
+  "redis_hgetall": {
+    "server": "redis",
+    "required": [
+      "key"
+    ],
+    "optional": [],
+    "types": {
+      "key": "str"
+    },
+    "description": "Get all fields and values in a hash.\n\n    Args:\n        key: The Redis key (must be a hash)\n\n    "
+  },
+  "redis_hset": {
+    "server": "redis",
+    "required": [
+      "key",
+      "mapping"
+    ],
+    "optional": [],
+    "types": {
+      "key": "str",
+      "mapping": "dict"
+    },
+    "description": "Set multiple hash fields to multiple values.\n\n    Args:\n        key: The Redis key\n        mapping: Dictionary of fields and values\n\n    "
+  },
+  "redis_info": {
+    "server": "redis",
+    "required": [],
+    "optional": [],
+    "types": {},
+    "description": "Get Redis server information and statistics."
+  },
+  "redis_keys": {
+    "server": "redis",
+    "required": [],
+    "optional": [
+      "pattern"
+    ],
+    "types": {
+      "pattern": "str"
+    },
+    "description": "List keys matching a pattern.\n\n    Args:\n        pattern: Redis glob-style pattern (default: \"*\")\n\n    "
+  },
+  "redis_set": {
+    "server": "redis",
+    "required": [
+      "key",
+      "value"
+    ],
+    "optional": [
+      "ex_seconds"
+    ],
+    "types": {
+      "key": "str",
+      "value": "any",
+      "ex_seconds": "any"
+    },
+    "description": "Set the value of a key in Redis.\n\n    Args:\n        key: The Redis key\n        value: The value to set (will be JSON serialized if not a string)\n        ex_seconds: Optional expiry time in seconds\n\n    "
+  },
+  "redis_ttl": {
+    "server": "redis",
+    "required": [
+      "key"
+    ],
+    "optional": [],
+    "types": {
+      "key": "str"
+    },
+    "description": "Get the time-to-live (TTL) for a key in seconds.\n\n    Args:\n        key: The Redis key\n\n    "
+  },
+  "resize_page": {
+    "server": "chrome-devtools",
+    "required": [
+      "width",
+      "height"
+    ],
+    "optional": [],
+    "types": {
+      "width": "float",
+      "height": "float"
+    },
+    "description": "Resizes the selected page's window so that the page has specified dimension"
+  },
+  "retrieve_blob": {
+    "server": "golden-fund",
+    "required": [
+      "filename"
+    ],
+    "optional": [],
+    "types": {
+      "filename": "str"
+    },
+    "description": "Retrieve raw data blob."
+  },
+  "run_pandas_code": {
+    "server": "data-analysis",
+    "required": [
+      "code"
+    ],
+    "optional": [
+      "data_source",
+      "timeout_seconds"
+    ],
+    "types": {
+      "code": "str",
+      "data_source": "any",
+      "timeout_seconds": "int"
+    },
+    "description": "Execute pandas code safely in a sandboxed environment.\n\n    Args:\n        code: Python/Pandas code to execute\n        data_source: Optional path to load as 'df' variable\n        timeout_seconds: Maximum execution time\n\n    Returns:\n        Execution result or error\n    "
+  },
+  "search": {
+    "server": "memory",
+    "required": [
+      "query"
+    ],
+    "optional": [
+      "limit",
+      "namespace"
+    ],
+    "types": {
+      "query": "str",
+      "limit": "int",
+      "namespace": "any"
+    },
+    "description": "Search for knowledge within entity names, types, and observations."
+  },
+  "search_code": {
+    "server": "github",
+    "required": [
+      "q"
+    ],
+    "optional": [
+      "order",
+      "page",
+      "per_page"
+    ],
+    "types": {
+      "q": "str",
+      "order": "str",
+      "page": "float",
+      "per_page": "float"
+    },
+    "description": "Search for code across GitHub repositories"
+  },
+  "search_files": {
+    "server": "filesystem",
+    "required": [
+      "path",
+      "pattern"
+    ],
+    "optional": [
+      "excludePatterns"
+    ],
+    "types": {
+      "path": "str",
+      "pattern": "str",
+      "excludePatterns": "list"
+    },
+    "description": "Recursively search for files and directories matching a pattern. The patterns should be glob-style patterns that match paths relative to the working directory. Use pattern like '*.ext' to match files in current directory, and '**/*.ext' to match files in all subdirectories. Returns full paths to all matching items. Great for finding files when you don't know their exact location. Only searches within allowed directories."
+  },
+  "search_golden_fund": {
+    "server": "golden-fund",
+    "required": [
+      "query"
+    ],
+    "optional": [
+      "mode"
+    ],
+    "types": {
+      "query": "str",
+      "mode": "any"
+    },
+    "description": "\n    Search the Golden Fund knowledge base.\n\n    Args:\n        query: The search query.\n        mode: Search mode - 'semantic', 'keyword', 'hybrid', or 'recursive'. If None, uses multi-stage fallback.\n    "
+  },
+  "search_issues": {
+    "server": "github",
+    "required": [
+      "q"
+    ],
+    "optional": [
+      "order",
+      "page",
+      "per_page",
+      "sort"
+    ],
+    "types": {
+      "q": "str",
+      "order": "str",
+      "page": "float",
+      "per_page": "float",
+      "sort": "str"
+    },
+    "description": "Search for issues and pull requests across GitHub repositories"
+  },
+  "search_nodes": {
+    "server": "memory",
+    "required": [
+      "query"
+    ],
+    "optional": [
+      "limit",
+      "namespace"
+    ],
+    "types": {
+      "query": "str",
+      "limit": "int",
+      "namespace": "any"
+    },
+    "description": "Alias for search function to maintain compatibility"
+  },
+  "search_repositories": {
+    "server": "github",
+    "required": [
+      "query"
+    ],
+    "optional": [
+      "page",
+      "perPage"
+    ],
+    "types": {
+      "query": "str",
+      "page": "float",
+      "perPage": "float"
+    },
+    "description": "Search for GitHub repositories"
+  },
+  "search_users": {
+    "server": "github",
+    "required": [
+      "q"
+    ],
+    "optional": [
+      "order",
+      "page",
+      "per_page",
+      "sort"
+    ],
+    "types": {
+      "q": "str",
+      "order": "str",
+      "page": "float",
+      "per_page": "float",
+      "sort": "str"
+    },
+    "description": "Search for users on GitHub"
+  },
+  "select_page": {
+    "server": "chrome-devtools",
+    "required": [
+      "pageIdx"
+    ],
+    "optional": [
+      "bringToFront"
+    ],
+    "types": {
+      "pageIdx": "float",
+      "bringToFront": "bool"
+    },
+    "description": "Select a page as a context for future tool calls."
+  },
+  "sequentialthinking": {
+    "server": "sequential-thinking",
+    "required": [
+      "thought",
+      "nextThoughtNeeded",
+      "thoughtNumber",
+      "totalThoughts"
+    ],
+    "optional": [
+      "isRevision",
+      "revisesThought",
+      "branchFromThought",
+      "branchId",
+      "needsMoreThoughts"
+    ],
+    "types": {
+      "thought": "str",
+      "nextThoughtNeeded": "bool",
+      "thoughtNumber": "int",
+      "totalThoughts": "int",
+      "isRevision": "bool",
+      "revisesThought": "int",
+      "branchFromThought": "int",
+      "branchId": "str",
+      "needsMoreThoughts": "bool"
+    },
+    "description": "A detailed tool for dynamic and reflective problem-solving through thoughts.\nThis tool helps analyze problems through a flexible thinking process that can adapt and evolve.\nEach thought can build on, question, or revise previous insights as understanding deepens.\n\nWhen to use this tool:\n- Breaking down complex problems into steps\n- Planning and design with room for revision\n- Analysis that might need course correction\n- Problems where the full scope might not be clear initially\n- Problems that require a multi-step solution\n- Tasks that need to maintain context over multiple steps\n- Situations where irrelevant information needs to be filtered out\n\nKey features:\n- You can adjust total_thoughts up or down as you progress\n- You can question or revise previous thoughts\n- You can add more thoughts even after reaching what seemed like the end\n- You can express uncertainty and explore alternative approaches\n- Not every thought needs to build linearly - you can branch or backtrack\n- Generates a solution hypothesis\n- Verifies the hypothesis based on the Chain of Thought steps\n- Repeats the process until satisfied\n- Provides a correct answer\n\nParameters explained:\n- thought: Your current thinking step, which can include:\n  * Regular analytical steps\n  * Revisions of previous thoughts\n  * Questions about previous decisions\n  * Realizations about needing more analysis\n  * Changes in approach\n  * Hypothesis generation\n  * Hypothesis verification\n- nextThoughtNeeded: True if you need more thinking, even if at what seemed like the end\n- thoughtNumber: Current number in sequence (can go beyond initial total if needed)\n- totalThoughts: Current estimate of thoughts needed (can be adjusted up/down)\n- isRevision: A boolean indicating if this thought revises previous thinking\n- revisesThought: If is_revision is true, which thought number is being reconsidered\n- branchFromThought: If branching, which thought number is the branching point\n- branchId: Identifier for the current branch (if any)\n- needsMoreThoughts: If reaching end but realizing more thoughts needed\n\nYou should:\n1. Start with an initial estimate of needed thoughts, but be ready to adjust\n2. Feel free to question or revise previous thoughts\n3. Don't hesitate to add more thoughts if needed, even at the \"end\"\n4. Express uncertainty when present\n5. Mark thoughts that revise previous thinking or branch into new paths\n6. Ignore information that is irrelevant to the current step\n7. Generate a solution hypothesis when appropriate\n8. Verify the hypothesis based on the Chain of Thought steps\n9. Repeat the process until satisfied with the solution\n10. Provide a single, ideally correct answer as the final output\n11. Only set nextThoughtNeeded to false when truly done and a satisfactory answer is reached"
+  },
+  "store_blob": {
+    "server": "golden-fund",
+    "required": [
+      "content"
+    ],
+    "optional": [
+      "filename"
+    ],
+    "types": {
+      "content": "str",
+      "filename": "any"
+    },
+    "description": "Store raw data as a blob (mock MinIO)."
+  },
+  "structured_data_search": {
+    "server": "duckduckgo-search",
+    "required": [
+      "query"
+    ],
+    "optional": [
+      "step_id"
+    ],
+    "types": {
+      "query": "str",
+      "step_id": "any"
+    },
+    "description": "Search for structured data sources (CSV, XLSX, JSON) on data.gov.ua.\n    Uses refined queries targeting specific file types.\n\n    Args:\n        query: The search query for structured data.\n\n    "
+  },
+  "take_screenshot": {
+    "server": "chrome-devtools",
+    "required": [],
+    "optional": [
+      "format",
+      "quality",
+      "uid",
+      "fullPage",
+      "filePath"
+    ],
+    "types": {
+      "format": "str",
+      "quality": "float",
+      "uid": "str",
+      "fullPage": "bool",
+      "filePath": "str"
+    },
+    "description": "Take a screenshot of the page or element."
+  },
+  "take_snapshot": {
+    "server": "chrome-devtools",
+    "required": [],
+    "optional": [
+      "verbose",
+      "filePath"
+    ],
+    "types": {
+      "verbose": "bool",
+      "filePath": "str"
+    },
+    "description": "Take a text snapshot of the currently selected page based on the a11y tree. The snapshot lists page elements along with a unique\nidentifier (uid). Always use the latest snapshot. Prefer taking a snapshot over taking a screenshot. The snapshot indicates the element selected\nin the DevTools Elements panel (if any)."
+  },
+  "trace_data_chain": {
+    "server": "memory",
+    "required": [
+      "start_value",
+      "start_dataset_id"
+    ],
+    "optional": [
+      "namespace",
+      "max_depth"
+    ],
+    "types": {
+      "start_value": "any",
+      "start_dataset_id": "str",
+      "namespace": "str",
+      "max_depth": "int"
+    },
+    "description": "Recursively follows LINKED_TO edges in the KG to reconstruct a unified record\n    accross multiple datasets.\n    "
+  },
+  "update_issue": {
+    "server": "github",
+    "required": [
+      "owner",
+      "repo",
+      "issue_number"
+    ],
+    "optional": [
+      "title",
+      "body",
+      "assignees",
+      "milestone",
+      "labels",
+      "state"
+    ],
+    "types": {
+      "owner": "str",
+      "repo": "str",
+      "issue_number": "float",
+      "title": "str",
+      "body": "str",
+      "assignees": "list",
+      "milestone": "float",
+      "labels": "list",
+      "state": "str"
+    },
+    "description": "Update an existing issue in a GitHub repository"
+  },
+  "update_pull_request_branch": {
+    "server": "github",
+    "required": [
+      "owner",
+      "repo",
+      "pull_number"
+    ],
+    "optional": [
+      "expected_head_sha"
+    ],
+    "types": {
+      "owner": "str",
+      "repo": "str",
+      "pull_number": "float",
+      "expected_head_sha": "str"
+    },
+    "description": "Update a pull request branch with the latest changes from the base branch"
+  },
+  "upload_file": {
+    "server": "chrome-devtools",
+    "required": [
+      "uid",
+      "filePath"
+    ],
+    "optional": [],
+    "types": {
+      "uid": "str",
+      "filePath": "str"
+    },
+    "description": "Upload a file through a provided element."
+  },
+  "vibe_analyze_error": {
+    "server": "vibe",
+    "required": [
+      "error_message"
+    ],
+    "optional": [
+      "file_path",
+      "log_context",
+      "recovery_history",
+      "cwd",
+      "timeout_s",
+      "auto_fix",
+      "session_id",
+      "step_action",
+      "expected_result",
+      "actual_result",
+      "full_plan_context",
+      "model"
+    ],
+    "types": {
+      "error_message": "str",
+      "file_path": "any",
+      "log_context": "any",
+      "recovery_history": "any",
+      "cwd": "any",
+      "timeout_s": "any",
+      "auto_fix": "bool",
+      "session_id": "any",
+      "step_action": "any",
+      "expected_result": "any",
+      "actual_result": "any",
+      "full_plan_context": "any",
+      "model": "any"
+    },
+    "description": "Deep error analysis and optional auto-fix using Vibe AI.\n\n    Designed for self-healing scenarios when the system encounters errors\n    it cannot resolve. Vibe acts as a Senior Engineer.\n\n    Args:\n        error_message: The error message or stack trace\n        file_path: Path to the file with the error (if known)\n        log_context: Recent log entries for context\n        recovery_history: List of past recovery attempts or a summary string\n        cwd: Working directory\n        timeout_s: Timeout in seconds (default: 600)\n        auto_fix: Automatically apply fixes (default: True)\n        step_action: The action that was being performed when the error occurred\n        expected_result: What was expected to happen\n        actual_result: What actually happened\n        full_plan_context: The full execution plan for context\n\n    Returns:\n        Analysis with root cause, suggested or applied fixes, and verification\n\n    "
+  },
+  "vibe_ask": {
+    "server": "vibe",
+    "required": [
+      "question"
+    ],
+    "optional": [
+      "cwd",
+      "timeout_s",
+      "model"
+    ],
+    "types": {
+      "question": "str",
+      "cwd": "any",
+      "timeout_s": "any",
+      "model": "any"
+    },
+    "description": "Ask Vibe AI a quick question (read-only, no tool execution).\n\n    Args:\n        question: The question to ask\n        cwd: Working directory\n        timeout_s: Timeout in seconds (default: 300)\n\n    Returns:\n        AI response without file modifications\n\n    "
+  },
+  "vibe_check_db": {
+    "server": "vibe",
+    "required": [],
+    "optional": [
+      "query",
+      "action",
+      "expected_files",
+      "verify_integrity",
+      "log_output",
+      "timeout_s",
+      "cwd"
+    ],
+    "types": {
+      "query": "any",
+      "action": "any",
+      "expected_files": "any",
+      "verify_integrity": "bool",
+      "log_output": "bool",
+      "timeout_s": "any",
+      "cwd": "any"
+    },
+    "description": "Execute a read-only SQL SELECT query against the AtlasTrinity database OR verify files.\n\n    CRITICAL: This tool ONLY accepts valid SQL SELECT statements OR a list of expected files.\n\n    MODES:\n    1. RAW SQL: Provide `query` (e.g., \"SELECT * FROM sessions\").\n    2. FILE CHECK: Provide `expected_files` (e.g., [\"task.md\", \"src/main.py\"]).\n       - This works by querying the 'files' table.\n\n    SCHEMA:\n    - sessions: id, started_at, ended_at\n    - tasks: id, session_id, goal, status, created_at\n    - task_steps: id, task_id, sequence_number, action, tool, status, error_message\n    - tool_executions: id, step_id, server_name, tool_name, arguments, result\n    - logs: timestamp, level, source, message\n    - files: id, path, name, size, mtime, is_dir, last_scanned\n\n    Args:\n        query: A valid SQL SELECT statement (optional if expected_files is provided).\n        action: (Optional) Description of the action (used for logging/logic).\n        expected_files: (Optional) List of filenames or paths to verify existence of.\n        verify_integrity: (Optional) Unused flag, kept for compatibility.\n        log_output: (Optional) Unused flag, kept for compatibility.\n        timeout_s: (Optional) Unused flag, kept for compatibility.\n        cwd: (Optional) Unused flag, kept for compatibility.\n\n    Returns:\n        Query results as list of dictionaries OR file verification results.\n\n    "
+  },
+  "vibe_code_review": {
+    "server": "vibe",
+    "required": [
+      "file_path"
+    ],
+    "optional": [
+      "focus_areas",
+      "cwd",
+      "timeout_s",
+      "session_id",
+      "model"
+    ],
+    "types": {
+      "file_path": "str",
+      "focus_areas": "any",
+      "cwd": "any",
+      "timeout_s": "any",
+      "session_id": "any",
+      "model": "any"
+    },
+    "description": "Request a code review from Vibe AI for a specific file.\n\n    Args:\n        file_path: Path to the file to review\n        focus_areas: Specific areas to focus on (e.g., \"security\", \"performance\")\n        cwd: Working directory\n        timeout_s: Timeout in seconds (default: 300)\n\n    Returns:\n        Code review analysis with suggestions\n\n    "
+  },
+  "vibe_configure_model": {
+    "server": "vibe",
+    "required": [
+      "model_alias"
+    ],
+    "optional": [
+      "persist"
+    ],
+    "types": {
+      "model_alias": "str",
+      "persist": "bool"
+    },
+    "description": "Switch the active model for Vibe operations.\n\n    Args:\n        model_alias: Alias of the model to use (from models list)\n        persist: If True, update the config file (not yet implemented)\n\n    Returns:\n        Confirmation with the new active model\n\n    "
+  },
+  "vibe_configure_provider": {
+    "server": "vibe",
+    "required": [
+      "name",
+      "api_base",
+      "api_key_env_var"
+    ],
+    "optional": [
+      "api_style",
+      "backend"
+    ],
+    "types": {
+      "name": "str",
+      "api_base": "str",
+      "api_key_env_var": "str",
+      "api_style": "str",
+      "backend": "str"
+    },
+    "description": "Add or update a provider configuration (runtime only).\n\n    Args:\n        name: Provider identifier\n        api_base: Base URL for API calls\n        api_key_env_var: Environment variable for API key\n        api_style: API style - \"mistral\", \"openai\", or \"anthropic\"\n        backend: Backend implementation - \"mistral\", \"generic\", or \"anthropic\"\n\n    Returns:\n        Confirmation with provider details\n\n    "
+  },
+  "vibe_execute_subcommand": {
+    "server": "vibe",
+    "required": [
+      "subcommand"
+    ],
+    "optional": [
+      "args",
+      "cwd",
+      "timeout_s",
+      "env"
+    ],
+    "types": {
+      "subcommand": "str",
+      "args": "any",
+      "cwd": "any",
+      "timeout_s": "any",
+      "env": "any"
+    },
+    "description": "Execute a specific Vibe CLI subcommand (utility operations).\n\n    For AI interactions, use vibe_prompt() instead.\n\n    Allowed subcommands:\n        list-editors, list-modules, run, enable, disable, install,\n        agent-reset, agent-on, agent-off, vibe-status, vibe-continue,\n        vibe-cancel, vibe-help, eternal-engine, screenshots\n\n    Args:\n        subcommand: The Vibe subcommand\n        args: Optional arguments\n        cwd: Working directory\n        timeout_s: Timeout in seconds\n        env: Additional environment variables\n\n    Returns:\n        Command output and exit code\n\n    "
+  },
+  "vibe_get_config": {
+    "server": "vibe",
+    "required": [],
+    "optional": [],
+    "types": {},
+    "description": "Get the current Vibe configuration state.\n\n    Returns:\n        Current configuration including active model, mode, providers, and models\n\n    "
+  },
+  "vibe_get_system_context": {
+    "server": "vibe",
+    "required": [],
+    "optional": [],
+    "types": {},
+    "description": "Retrieve current operational context from the database.\n\n    Helps Vibe focus on the current state before performing deep analysis.\n\n    Returns:\n        Current session, recent tasks, and errors\n\n    "
+  },
+  "vibe_implement_feature": {
+    "server": "vibe",
+    "required": [
+      "goal"
+    ],
+    "optional": [
+      "context_files",
+      "constraints",
+      "cwd",
+      "timeout_s",
+      "session_id",
+      "quality_checks",
+      "iterative_review",
+      "max_iterations",
+      "run_linting",
+      "code_style",
+      "model"
+    ],
+    "types": {
+      "goal": "str",
+      "context_files": "any",
+      "constraints": "any",
+      "cwd": "any",
+      "timeout_s": "any",
+      "session_id": "any",
+      "quality_checks": "bool",
+      "iterative_review": "bool",
+      "max_iterations": "int",
+      "run_linting": "bool",
+      "code_style": "str",
+      "model": "any"
+    },
+    "description": "Deep coding mode: Implements a complex feature or refactoring.\n\n    Vibe acts as a Senior Architect to plan, implement, verify, and iteratively\n    improve the code until quality standards are met.\n\n    Args:\n        goal: High-level objective (e.g., \"Add user profile page with API and DB\")\n        context_files: List of relevant file paths\n        constraints: Technical constraints or guidelines\n        cwd: Working directory\n        timeout_s: Timeout (default: 1200s for deep work)\n        quality_checks: Run lint/syntax checks after implementation (default: True)\n        iterative_review: Self-review and fix issues until clean (default: True)\n        max_iterations: Maximum review/fix iterations (default: 3)\n        run_linting: Run linter on modified files (default: True)\n        code_style: Linter to use - \"ruff\" or \"pylint\" (default: \"ruff\")\n\n    Returns:\n        Implementation report with changed files, verification results, and quality metrics\n\n    "
+  },
+  "vibe_list_sessions": {
+    "server": "vibe",
+    "required": [],
+    "optional": [
+      "limit"
+    ],
+    "types": {
+      "limit": "int"
+    },
+    "description": "List recent Vibe session logs with metrics.\n\n    Useful for tracking costs, context size, and session IDs for resuming.\n\n    Args:\n        limit: Number of sessions to return (default: 10)\n\n    Returns:\n        List of recent sessions with metadata\n\n    "
+  },
+  "vibe_prompt": {
+    "server": "vibe",
+    "required": [
+      "prompt"
+    ],
+    "optional": [
+      "cwd",
+      "timeout_s",
+      "model",
+      "agent",
+      "mode",
+      "session_id",
+      "enabled_tools",
+      "disabled_tools",
+      "max_turns",
+      "max_price",
+      "output_format"
+    ],
+    "types": {
+      "prompt": "str",
+      "cwd": "any",
+      "timeout_s": "any",
+      "model": "any",
+      "agent": "any",
+      "mode": "any",
+      "session_id": "any",
+      "enabled_tools": "any",
+      "disabled_tools": "any",
+      "max_turns": "any",
+      "max_price": "any",
+      "output_format": "str"
+    },
+    "description": "Send a prompt to Vibe AI agent in programmatic mode.\n\n    The PRIMARY tool for interacting with Vibe. Executes in CLI mode with\n    structured output. All execution is logged and visible.\n\n    Args:\n        prompt: The message/query for Vibe AI (Mistral-powered)\n        cwd: Working directory for execution (default: vibe_workspace)\n        timeout_s: Timeout in seconds (default from config)\n        model: Model alias to use (overrides active_model)\n        agent: Agent profile name (loads from agents directory)\n        mode: Operational mode (plan/auto-approve/accept-edits)\n        session_id: Session ID to resume\n        enabled_tools: Additional tools to enable (glob/regex patterns)\n        disabled_tools: Additional tools to disable (glob/regex patterns)\n        max_turns: Maximum conversation turns\n        max_price: Maximum cost limit in dollars\n        output_format: Output format (streaming/json/text)\n\n    Returns:\n        Dict with 'success', 'stdout', 'stderr', 'returncode', 'parsed_response'\n\n    "
+  },
+  "vibe_reload_config": {
+    "server": "vibe",
+    "required": [],
+    "optional": [],
+    "types": {},
+    "description": "Reload the Vibe configuration from disk.\n\n    Returns:\n        New configuration summary\n\n    "
+  },
+  "vibe_session_details": {
+    "server": "vibe",
+    "required": [
+      "session_id_or_file"
+    ],
+    "optional": [],
+    "types": {
+      "session_id_or_file": "str"
+    },
+    "description": "Get full details of a specific Vibe session.\n\n    Args:\n        session_id_or_file: Session ID or filename\n\n    Returns:\n        Full session details including history and token counts\n\n    "
+  },
+  "vibe_session_resume": {
+    "server": "vibe",
+    "required": [
+      "session_id"
+    ],
+    "optional": [
+      "prompt",
+      "cwd",
+      "timeout_s",
+      "model"
+    ],
+    "types": {
+      "session_id": "str",
+      "prompt": "any",
+      "cwd": "any",
+      "timeout_s": "any",
+      "model": "any"
+    },
+    "description": "Resume a previous Vibe session.\n\n    Args:\n        session_id: Session ID to resume (partial match supported)\n        prompt: Optional new prompt to continue with\n        cwd: Working directory\n        timeout_s: Timeout in seconds\n\n    Returns:\n        Result of the resumed session\n\n    "
+  },
+  "vibe_set_mode": {
+    "server": "vibe",
+    "required": [
+      "mode"
+    ],
+    "optional": [],
+    "types": {
+      "mode": "str"
+    },
+    "description": "Change the operational mode for Vibe.\n\n    Args:\n        mode: Operational mode - \"default\", \"plan\", \"accept-edits\", or \"auto-approve\"\n            - default: Requires confirmation for tool executions\n            - plan: Read-only mode for exploration\n            - accept-edits: Auto-approves file edit tools only\n            - auto-approve: Auto-approves all tool executions\n\n    Returns:\n        Confirmation with the new mode\n\n    "
+  },
+  "vibe_smart_plan": {
+    "server": "vibe",
+    "required": [
+      "objective"
+    ],
+    "optional": [
+      "context",
+      "cwd",
+      "timeout_s",
+      "session_id",
+      "model"
+    ],
+    "types": {
+      "objective": "str",
+      "context": "any",
+      "cwd": "any",
+      "timeout_s": "any",
+      "session_id": "any",
+      "model": "any"
+    },
+    "description": "Generate a smart execution plan for a complex objective.\n\n    Args:\n        objective: The goal or task to plan for\n        context: Additional context (existing code, constraints, etc.)\n        cwd: Working directory\n        timeout_s: Timeout in seconds (default: 300)\n\n    Returns:\n        Structured plan with steps, actions, tools, and verification criteria\n\n    "
+  },
+  "vibe_test_in_sandbox": {
+    "server": "vibe",
+    "required": [
+      "test_script",
+      "target_files",
+      "command"
+    ],
+    "optional": [
+      "dependencies",
+      "timeout_s"
+    ],
+    "types": {
+      "test_script": "str",
+      "target_files": "dict",
+      "command": "str",
+      "dependencies": "any",
+      "timeout_s": "float"
+    },
+    "description": "Execute a test script in an isolated temporary sandbox.\n\n    Args:\n        test_script: Content of the test script (e.g., Python unit test)\n        target_files: Dictionary of {filename: content} to mock/create in sandbox\n        command: Command to run (e.g., \"python test_script.py\")\n        dependencies: (Optional) Mock dependencies or instructions\n        timeout_s: Execution timeout (default: 30s)\n\n    Returns:\n        Execution results (stdout, stderr, returncode)\n    "
+  },
+  "vibe_which": {
+    "server": "vibe",
+    "required": [],
+    "optional": [],
+    "types": {},
+    "description": "Locate the Vibe CLI binary and report its version and configuration.\n\n    Returns:\n        Dict with 'binary' path, 'version', current 'model', and 'mode'\n\n    "
+  },
+  "wait_for": {
+    "server": "chrome-devtools",
+    "required": [
+      "text"
+    ],
+    "optional": [
+      "timeout"
+    ],
+    "types": {
+      "text": "str",
+      "timeout": "int"
+    },
+    "description": "Wait for the specified text to appear on the selected page."
+  },
+  "write_file": {
+    "server": "filesystem",
+    "required": [
+      "path",
+      "content"
+    ],
+    "optional": [],
+    "types": {
+      "path": "str",
+      "content": "str"
+    },
+    "description": "Create a new file or completely overwrite an existing file with new content. Use with caution as it will overwrite existing files without warning. Handles text content with proper encoding. Only works within allowed directories."
+  }
+}

@@ -1,4 +1,8 @@
 
+<!-- AUTO-UPDATED: 2026-02-16T15:11:06.467894 -->
+<!-- Modified: .agent/docs/mcp_architecture_diagram.md, src/brain/data/architecture_diagrams/mcp_architecture.md, vendor/mcp-server-windsurf/Sources/CascadeStreamer.swift -->
+
+
 <!-- AUTO-UPDATED: 2026-02-16T11:37:45.643947 -->
 <!-- Modified: .agent/docs/mcp_architecture_diagram.md, scripts/verify_native_deployment.py, scripts/windsurf/analyze_pb.py -->
 
