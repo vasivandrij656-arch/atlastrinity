@@ -176,7 +176,7 @@ class ActionPhaseVerifier {
 
     func startVerification() {
         detectedEvents.removeAll()
-        fileMonitor.startMonitoring()
+        _ = fileMonitor.startMonitoring()
         fputs("log: [windsurf] Action Phase verification started\n", stderr)
     }
 

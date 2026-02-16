@@ -2,7 +2,7 @@ import Dispatch
 import Foundation
 
 /// Advanced caching and performance optimization system
-class PerformanceManager {
+final class PerformanceManager: @unchecked Sendable {
     static let shared = PerformanceManager()
 
     private var responseCache: [String: CachedResponse] = [:]

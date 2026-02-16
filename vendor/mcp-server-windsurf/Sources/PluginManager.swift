@@ -1,37 +1,40 @@
-import Foundation
 import Combine
+import Foundation
 
 /// Plugin system for custom extensions
 class PluginManager {
     static let shared = PluginManager()
-    
+
     private var plugins: [String: Plugin] = [:]
     private var pluginStates: [String: PluginState] = [:]
     private let pluginsDirectory: URL
     private let eventBus = EventBus()
-    
+
     private init() {
         // Store plugins in user's application support
-        let configPath = FileManager.default.urls(for: .applicationSupportDirectory, in: .userDomainMask).first!
+        let configPath = FileManager.default.urls(
+            for: .applicationSupportDirectory, in: .userDomainMask
+        ).first!
         pluginsDirectory = configPath.appendingPathComponent("atlastrinity")
             .appendingPathComponent("windsurf_plugins")
-        
-        try? FileManager.default.createDirectory(at: pluginsDirectory, withIntermediateDirectories: true)
-        
+
+        try? FileManager.default.createDirectory(
+            at: pluginsDirectory, withIntermediateDirectories: true)
+
         loadPlugins()
     }
-    
+
     // MARK: - Plugin Protocol
-    
+
     protocol Plugin: AnyObject {
         var metadata: PluginMetadata { get }
         var state: PluginState { get set }
-        
+
         func initialize(context: PluginContext) throws
         func execute(request: PluginRequest) async throws -> PluginResponse
         func shutdown() throws
     }
-    
+
     struct PluginMetadata: Codable {
         let name: String
         let version: String
@@ -41,7 +44,7 @@ class PluginManager {
         let permissions: [PluginPermission]
         let supportedModels: [String]
         let category: PluginCategory
-        
+
         enum PluginCategory: String, Codable, CaseIterable {
             case cascade = "cascade"
             case workspace = "workspace"
@@ -50,7 +53,7 @@ class PluginManager {
             case integration = "integration"
             case experimental = "experimental"
         }
-        
+
         enum PluginPermission: String, Codable, CaseIterable {
             case fileRead = "file_read"
             case fileWrite = "file_write"
@@ -60,7 +63,7 @@ class PluginManager {
             case cascadeControl = "cascade_control"
         }
     }
-    
+
     enum PluginState: Equatable {
         case unloaded
         case loading
@@ -68,10 +71,11 @@ class PluginManager {
         case active
         case error(Error)
         case disabled
-        
+
         static func == (lhs: PluginState, rhs: PluginState) -> Bool {
             switch (lhs, rhs) {
-            case (.unloaded, .unloaded), (.loading, .loading), (.loaded, .loaded), (.active, .active), (.disabled, .disabled):
+            case (.unloaded, .unloaded), (.loading, .loading), (.loaded, .loaded),
+                (.active, .active), (.disabled, .disabled):
                 return true
             case (.error(let lhsError), .error(let rhsError)):
                 return lhsError.localizedDescription == rhsError.localizedDescription
@@ -80,39 +84,39 @@ class PluginManager {
             }
         }
     }
-    
+
     struct PluginContext {
         let workspacePath: String
         let config: ConfigurationManager.WindsurfConfig
         let eventBus: EventBus
         let logger: PluginLogger
     }
-    
+
     struct PluginRequest: Codable {
         let id: String
         let type: String
         let parameters: [String: String]  // Changed from [String: Any] to [String: String]
         let metadata: [String: String]
     }
-    
+
     struct PluginResponse: Codable {
         let success: Bool
         let data: [String: String]  // Changed from [String: Any] to [String: String]
         let error: String?
         let metadata: [String: String]
     }
-    
+
     // MARK: - Plugin Management
-    
+
     func loadPlugins() {
         let pluginFiles = discoverPluginFiles()
-        
+
         for pluginFile in pluginFiles {
             do {
                 let plugin = try loadPlugin(from: pluginFile)
                 plugins[plugin.metadata.name] = plugin
                 pluginStates[plugin.metadata.name] = .loaded
-                
+
                 print("🔌 Loaded plugin: \(plugin.metadata.name) v\(plugin.metadata.version)")
             } catch {
                 print("❌ Failed to load plugin from \(pluginFile.lastPathComponent): \(error)")
@@ -120,12 +124,15 @@ class PluginManager {
             }
         }
     }
-    
+
     private func discoverPluginFiles() -> [URL] {
-        guard let enumerator = FileManager.default.enumerator(at: pluginsDirectory, includingPropertiesForKeys: nil) else {
+        guard
+            let enumerator = FileManager.default.enumerator(
+                at: pluginsDirectory, includingPropertiesForKeys: nil)
+        else {
             return []
         }
-        
+
         return enumerator.compactMap { element in
             if let url = element as? URL, url.pathExtension == "windsurf-plugin" {
                 return url
@@ -133,15 +140,15 @@ class PluginManager {
             return nil
         }
     }
-    
+
     private func loadPlugin(from url: URL) throws -> Plugin {
         let data = try Data(contentsOf: url)
         let decoder = JSONDecoder()
         let pluginInfo = try decoder.decode(PluginInfo.self, from: data)
-        
+
         // Create plugin instance based on type
         let plugin: Plugin
-        
+
         switch pluginInfo.type {
         case "cascade":
             plugin = try CascadePlugin(info: pluginInfo)
@@ -158,88 +165,93 @@ class PluginManager {
         default:
             throw PluginError.unknownPluginType(pluginInfo.type)
         }
-        
+
         return plugin
     }
-    
+
     // MARK: - Plugin Execution
-    
-    func executePlugin(_ pluginName: String, request: PluginRequest) async throws -> PluginResponse {
+
+    func executePlugin(_ pluginName: String, request: PluginRequest) async throws -> PluginResponse
+    {
         guard let plugin = plugins[pluginName] else {
             throw PluginError.pluginNotFound(pluginName)
         }
-        
+
         guard pluginStates[pluginName] == .active else {
             throw PluginError.pluginNotActive(pluginName)
         }
-        
+
         do {
             let response = try await plugin.execute(request: request)
-            
+
             // Log plugin execution
             let logger = PluginLogger(pluginName: pluginName)
-            logger.info("Plugin execution successful", metadata: [
-                "requestId": request.id,
-                "requestType": request.type,
-                "responseSuccess": response.success
-            ])
-            
+            logger.info(
+                "Plugin execution successful",
+                metadata: [
+                    "requestId": request.id,
+                    "requestType": request.type,
+                    "responseSuccess": response.success,
+                ])
+
             return response
         } catch {
             let logger = PluginLogger(pluginName: pluginName)
-            logger.error("Plugin execution failed", metadata: [
-                "requestId": request.id,
-                "requestType": request.type,
-                "error": error.localizedDescription
-            ])
-            
+            logger.error(
+                "Plugin execution failed",
+                metadata: [
+                    "requestId": request.id,
+                    "requestType": request.type,
+                    "error": error.localizedDescription,
+                ])
+
             throw error
         }
     }
-    
+
     // MARK: - Plugin Lifecycle
-    
+
     func activatePlugin(_ name: String) throws {
-        guard var plugin = plugins[name] else {
+        guard let plugin = plugins[name] else {
             throw PluginError.pluginNotFound(name)
         }
-        
+
         let context = PluginContext(
             workspacePath: FileManager.default.currentDirectoryPath,
             config: ConfigurationManager.shared.currentConfig,
             eventBus: eventBus,
             logger: PluginLogger(pluginName: name)
         )
-        
+
         try plugin.initialize(context: context)
         plugin.state = .active
         pluginStates[name] = .active
-        
+
         // Notify plugin activation
         eventBus.post(PluginEvent(type: .activated, pluginName: name, metadata: nil))
     }
-    
+
     func deactivatePlugin(_ name: String) throws {
-        guard var plugin = plugins[name] else {
+        guard let plugin = plugins[name] else {
             throw PluginError.pluginNotFound(name)
         }
-        
+
         try plugin.shutdown()
         plugin.state = .loaded
         pluginStates[name] = .loaded
-        
+
         // Notify plugin deactivation
         eventBus.post(PluginEvent(type: .deactivated, pluginName: name, metadata: nil))
     }
-    
+
     func unloadPlugin(_ name: String) throws {
         try deactivatePlugin(name)
         plugins.removeValue(forKey: name)
         pluginStates.removeValue(forKey: name)
     }
-    
+
     // MARK: - Plugin Information
-    
+
     func getPluginList() -> [PluginInfo] {
         return plugins.values.map { plugin in
             PluginInfo(
@@ -254,16 +266,20 @@ class PluginManager {
             )
         }
     }
-    
+
     func getPluginState(_ name: String) -> PluginState? {
         return pluginStates[name]
     }
-    
+
     func getPluginMetrics() -> PluginMetrics {
         let totalPlugins = plugins.count
-        let activePlugins = pluginStates.values.filter { if case .active = $0 { return true } else { return false } }.count
-        let errorPlugins = pluginStates.values.filter { if case .error = $0 { return true } else { return false } }.count
-        
+        let activePlugins = pluginStates.values.filter {
+            if case .active = $0 { return true } else { return false }
+        }.count
+        let errorPlugins = pluginStates.values.filter {
+            if case .error = $0 { return true } else { return false }
+        }.count
+
         return PluginMetrics(
             total: totalPlugins,
             active: activePlugins,
@@ -271,22 +287,22 @@ class PluginManager {
             errors: errorPlugins
         )
     }
-    
+
     struct PluginMetrics {
         let total: Int
         let active: Int
         let loaded: Int
         let errors: Int
-        
+
         var summary: String {
             return """
-            🔌 Plugin Metrics
-            ═══════════════════════════
-            Total: \(total)
-            Active: \(active)
-            Loaded: \(loaded)
-            Errors: \(errors)
-            """
+                🔌 Plugin Metrics
+                ═══════════════════════════
+                Total: \(total)
+                Active: \(active)
+                Loaded: \(loaded)
+                Errors: \(errors)
+                """
         }
     }
 }
@@ -296,7 +312,7 @@ class PluginManager {
 class CascadePlugin: PluginManager.Plugin {
     var metadata: PluginManager.PluginMetadata
     var state: PluginManager.PluginState = .unloaded
-    
+
     init(info: PluginInfo) throws {
         self.metadata = PluginManager.PluginMetadata(
             name: info.name,
@@ -304,18 +320,21 @@ class CascadePlugin: PluginManager.Plugin {
             description: info.description,
             author: info.author,
             dependencies: info.dependencies,
-            permissions: info.permissions.map { PluginManager.PluginMetadata.PluginPermission(rawValue: $0)! },
+            permissions: info.permissions.map {
+                PluginManager.PluginMetadata.PluginPermission(rawValue: $0)!
+            },
             supportedModels: info.supportedModels,
             category: .cascade
         )
     }
-    
+
     func initialize(context: PluginManager.PluginContext) throws {
         // Initialize cascade-specific functionality
         state = .loaded
     }
-    
-    func execute(request: PluginManager.PluginRequest) async throws -> PluginManager.PluginResponse {
+
+    func execute(request: PluginManager.PluginRequest) async throws -> PluginManager.PluginResponse
+    {
         // Handle cascade-specific requests
         switch request.type {
         case "enhance_scope":
@@ -336,12 +355,14 @@ class CascadePlugin: PluginManager.Plugin {
             throw PluginError.unsupportedRequest(request.type)
         }
     }
-    
+
     func shutdown() throws {
         state = .loaded
     }
-    
-    private func enhanceScope(request: PluginManager.PluginRequest, context: PluginManager.PluginContext) throws -> PluginManager.PluginResponse {
+
+    private func enhanceScope(
+        request: PluginManager.PluginRequest, context: PluginManager.PluginContext
+    ) throws -> PluginManager.PluginResponse {
         // Enhance scope with plugin-specific logic
         return PluginManager.PluginResponse(
             success: true,
@@ -350,8 +371,10 @@ class CascadePlugin: PluginManager.Plugin {
             metadata: ["plugin": "cascade"]
         )
     }
-    
-    private func optimizeCascade(request: PluginManager.PluginRequest, context: PluginManager.PluginContext) throws -> PluginManager.PluginResponse {
+
+    private func optimizeCascade(
+        request: PluginManager.PluginRequest, context: PluginManager.PluginContext
+    ) throws -> PluginManager.PluginResponse {
         // Optimize cascade execution
         return PluginManager.PluginResponse(
             success: true,
@@ -365,7 +388,7 @@ class CascadePlugin: PluginManager.Plugin {
 class WorkspacePlugin: PluginManager.Plugin {
     var metadata: PluginManager.PluginMetadata
     var state: PluginManager.PluginState = .unloaded
-    
+
     init(info: PluginInfo) throws {
         self.metadata = PluginManager.PluginMetadata(
             name: info.name,
@@ -373,17 +396,20 @@ class WorkspacePlugin: PluginManager.Plugin {
             description: info.description,
             author: info.author,
             dependencies: info.dependencies,
-            permissions: info.permissions.map { PluginManager.PluginMetadata.PluginPermission(rawValue: $0)! },
+            permissions: info.permissions.map {
+                PluginManager.PluginMetadata.PluginPermission(rawValue: $0)!
+            },
             supportedModels: info.supportedModels,
             category: .workspace
         )
     }
-    
+
     func initialize(context: PluginManager.PluginContext) throws {
         state = .loaded
     }
-    
-    func execute(request: PluginManager.PluginRequest) async throws -> PluginManager.PluginResponse {
+
+    func execute(request: PluginManager.PluginRequest) async throws -> PluginManager.PluginResponse
+    {
         // Handle workspace-specific requests
         return PluginManager.PluginResponse(
             success: true,
@@ -392,7 +418,7 @@ class WorkspacePlugin: PluginManager.Plugin {
             metadata: ["plugin": "workspace"]
         )
     }
-    
+
     func shutdown() throws {
         state = .loaded
     }
@@ -401,7 +427,7 @@ class WorkspacePlugin: PluginManager.Plugin {
 class MonitoringPlugin: PluginManager.Plugin {
     var metadata: PluginManager.PluginMetadata
     var state: PluginManager.PluginState = .unloaded
-    
+
     init(info: PluginInfo) throws {
         self.metadata = PluginManager.PluginMetadata(
             name: info.name,
@@ -409,17 +435,20 @@ class MonitoringPlugin: PluginManager.Plugin {
             description: info.description,
             author: info.author,
             dependencies: info.dependencies,
-            permissions: info.permissions.map { PluginManager.PluginMetadata.PluginPermission(rawValue: $0)! },
+            permissions: info.permissions.map {
+                PluginManager.PluginMetadata.PluginPermission(rawValue: $0)!
+            },
             supportedModels: info.supportedModels,
             category: .monitoring
         )
     }
-    
+
     func initialize(context: PluginManager.PluginContext) throws {
         state = .loaded
     }
-    
-    func execute(request: PluginManager.PluginRequest) async throws -> PluginManager.PluginResponse {
+
+    func execute(request: PluginManager.PluginRequest) async throws -> PluginManager.PluginResponse
+    {
         // Handle monitoring-specific requests
         return PluginManager.PluginResponse(
             success: true,
@@ -428,7 +457,7 @@ class MonitoringPlugin: PluginManager.Plugin {
             metadata: ["plugin": "monitoring"]
         )
     }
-    
+
     func shutdown() throws {
         state = .loaded
     }
@@ -437,7 +466,7 @@ class MonitoringPlugin: PluginManager.Plugin {
 class UtilityPlugin: PluginManager.Plugin {
     var metadata: PluginManager.PluginMetadata
     var state: PluginManager.PluginState = .unloaded
-    
+
     init(info: PluginInfo) throws {
         self.metadata = PluginManager.PluginMetadata(
             name: info.name,
@@ -445,17 +474,20 @@ class UtilityPlugin: PluginManager.Plugin {
             description: info.description,
             author: info.author,
             dependencies: info.dependencies,
-            permissions: info.permissions.map { PluginManager.PluginMetadata.PluginPermission(rawValue: $0)! },
+            permissions: info.permissions.map {
+                PluginManager.PluginMetadata.PluginPermission(rawValue: $0)!
+            },
             supportedModels: info.supportedModels,
             category: .utility
         )
     }
-    
+
     func initialize(context: PluginManager.PluginContext) throws {
         state = .loaded
     }
-    
-    func execute(request: PluginManager.PluginRequest) async throws -> PluginManager.PluginResponse {
+
+    func execute(request: PluginManager.PluginRequest) async throws -> PluginManager.PluginResponse
+    {
         // Handle utility-specific requests
         return PluginManager.PluginResponse(
             success: true,
@@ -464,7 +496,7 @@ class UtilityPlugin: PluginManager.Plugin {
             metadata: ["plugin": "utility"]
         )
     }
-    
+
     func shutdown() throws {
         state = .loaded
     }
@@ -473,7 +505,7 @@ class UtilityPlugin: PluginManager.Plugin {
 class IntegrationPlugin: PluginManager.Plugin {
     var metadata: PluginManager.PluginMetadata
     var state: PluginManager.PluginState = .unloaded
-    
+
     init(info: PluginInfo) throws {
         self.metadata = PluginManager.PluginMetadata(
             name: info.name,
@@ -481,17 +513,20 @@ class IntegrationPlugin: PluginManager.Plugin {
             description: info.description,
             author: info.author,
             dependencies: info.dependencies,
-            permissions: info.permissions.map { PluginManager.PluginMetadata.PluginPermission(rawValue: $0)! },
+            permissions: info.permissions.map {
+                PluginManager.PluginMetadata.PluginPermission(rawValue: $0)!
+            },
             supportedModels: info.supportedModels,
             category: .integration
         )
     }
-    
+
     func initialize(context: PluginManager.PluginContext) throws {
         state = .loaded
     }
-    
-    func execute(request: PluginManager.PluginRequest) async throws -> PluginManager.PluginResponse {
+
+    func execute(request: PluginManager.PluginRequest) async throws -> PluginManager.PluginResponse
+    {
         // Handle integration-specific requests
         return PluginManager.PluginResponse(
             success: true,
@@ -500,7 +535,7 @@ class IntegrationPlugin: PluginManager.Plugin {
             metadata: ["plugin": "integration"]
         )
     }
-    
+
     func shutdown() throws {
         state = .loaded
     }
@@ -509,7 +544,7 @@ class IntegrationPlugin: PluginManager.Plugin {
 class ExperimentalPlugin: PluginManager.Plugin {
     var metadata: PluginManager.PluginMetadata
     var state: PluginManager.PluginState = .unloaded
-    
+
     init(info: PluginInfo) throws {
         self.metadata = PluginManager.PluginMetadata(
             name: info.name,
@@ -517,17 +552,20 @@ class ExperimentalPlugin: PluginManager.Plugin {
             description: info.description,
             author: info.author,
             dependencies: info.dependencies,
-            permissions: info.permissions.map { PluginManager.PluginMetadata.PluginPermission(rawValue: $0)! },
+            permissions: info.permissions.map {
+                PluginManager.PluginMetadata.PluginPermission(rawValue: $0)!
+            },
             supportedModels: info.supportedModels,
             category: .experimental
         )
     }
-    
+
     func initialize(context: PluginManager.PluginContext) throws {
         state = .loaded
     }
-    
-    func execute(request: PluginManager.PluginRequest) async throws -> PluginManager.PluginResponse {
+
+    func execute(request: PluginManager.PluginRequest) async throws -> PluginManager.PluginResponse
+    {
         // Handle experimental-specific requests
         return PluginManager.PluginResponse(
             success: true,
@@ -536,7 +574,7 @@ class ExperimentalPlugin: PluginManager.Plugin {
             metadata: ["plugin": "experimental"]
         )
     }
-    
+
     func shutdown() throws {
         state = .loaded
     }
@@ -567,14 +605,14 @@ enum PluginError: Error {
 
 class EventBus {
     private var subscribers: [String: [PluginEventHandler]] = [:]
-    
+
     func subscribe(to eventType: String, handler: @escaping PluginEventHandler) {
         if subscribers[eventType] == nil {
             subscribers[eventType] = []
         }
         subscribers[eventType]?.append(handler)
     }
-    
+
     func post(_ event: PluginEvent) {
         subscribers[event.type.rawValue]?.forEach { handler in
             handler(event)
@@ -588,7 +626,7 @@ struct PluginEvent {
     let type: EventType
     let pluginName: String
     let metadata: [String: Any]?
-    
+
     enum EventType: String {
         case activated
         case deactivated
@@ -602,52 +640,52 @@ struct PluginEvent {
 
 class PluginLogger {
     private let pluginName: String
-    
+
     init(pluginName: String) {
         self.pluginName = pluginName
     }
-    
+
     func info(_ message: String, metadata: [String: Any]? = nil) {
         let timestamp = ISO8601DateFormatter().string(from: Date())
         var logEntry = "[\(timestamp)] [PLUGIN:\(pluginName)] INFO: \(message)"
-        
+
         if let metadata = metadata {
             logEntry += " | \(metadata)"
         }
-        
+
         print(logEntry)
     }
-    
+
     func warning(_ message: String, metadata: [String: Any]? = nil) {
         let timestamp = ISO8601DateFormatter().string(from: Date())
         var logEntry = "[\(timestamp)] [PLUGIN:\(pluginName)] WARNING: \(message)"
-        
+
         if let metadata = metadata {
             logEntry += " | \(metadata)"
         }
-        
+
         print(logEntry)
     }
-    
+
     func error(_ message: String, metadata: [String: Any]? = nil) {
         let timestamp = ISO8601DateFormatter().string(from: Date())
         var logEntry = "[\(timestamp)] [PLUGIN:\(pluginName)] ERROR: \(message)"
-        
+
         if let metadata = metadata {
             logEntry += " | \(metadata)"
         }
-        
+
         print(logEntry)
     }
-    
+
     func debug(_ message: String, metadata: [String: Any]? = nil) {
         let timestamp = ISO8601DateFormatter().string(from: Date())
         var logEntry = "[\(timestamp)] [PLUGIN:\(pluginName)] DEBUG: \(message)"
-        
+
         if let metadata = metadata {
             logEntry += " | \(metadata)"
         }
-        
+
         print(logEntry)
     }
 }

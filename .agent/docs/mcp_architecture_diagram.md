@@ -1,4 +1,8 @@
 
+<!-- AUTO-UPDATED: 2026-02-16T11:37:45.643947 -->
+<!-- Modified: .agent/docs/mcp_architecture_diagram.md, scripts/verify_native_deployment.py, scripts/windsurf/analyze_pb.py -->
+
+
 <!-- AUTO-UPDATED: 2026-02-16T11:33:41.481102 -->
 <!-- Modified: .agent/docs/mcp_architecture_diagram.md, src/brain/data/architecture_diagrams/mcp_architecture.md, vendor/XcodeBuildMCP/src/integrations/macos-tools-bridge/backend.ts -->
 
