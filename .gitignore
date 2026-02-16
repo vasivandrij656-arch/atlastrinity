@@ -80,3 +80,8 @@ backups/databases/*.sqlite3
 !backups/databases/backup_metadata.json
 !backups/databases/golden_fund/
 !backups/databases/memory/
+
+# Test Artifacts and Session State
+pytest-results.xml
+.recovery_state.json
+test_audio.wav
