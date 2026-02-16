@@ -96,16 +96,16 @@ async function runTest() {
             params: {
                 name: "windsurf_cascade",
                 arguments: {
-                    message: "Create manual_node_test.txt with content 'NodeJS Test Success'",
-                    model: "sozu-1.5"
+                    message: "Create /Users/dev/Documents/GitHub/atlastrinity/demo.txt with content 'Windsurf Bridge Demonstration'",
+                    model: "windsurf-fast"
                 }
             }
         };
         console.log('📤 Sending tool call...');
         child.stdin.write(encodeMessage(toolCall));
         
-        // Wait for tool response (just wait 5s then check file)
-        await new Promise(resolve => setTimeout(resolve, 5000));
+        // Wait for tool response (just wait 10s then check file)
+        await new Promise(resolve => setTimeout(resolve, 10000));
         
         child.kill();
         

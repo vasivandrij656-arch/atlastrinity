@@ -138,6 +138,7 @@ output_price = 0.0
 # Windsurf models (Enabled - stability improved via bridge)
 
 # --- Cascade & Agentic (Free/Standard) ---
+# Aligned with MCP protocol v1.9552.21
 [[models]]
 name = "swe-1.5"
 provider = "windsurf"

@@ -106,7 +106,7 @@ async function runTest() {
             params: {
                 name: "windsurf_chat",
                 arguments: {
-                    message: "Create manual_node_chat_test.txt with content 'Chat Mode Works'",
+                    message: "Create /Users/dev/Documents/GitHub/atlastrinity/manual_node_chat_test.txt with content 'Chat Mode Works'",
                     model: "swe-1.5"
                 }
             }
