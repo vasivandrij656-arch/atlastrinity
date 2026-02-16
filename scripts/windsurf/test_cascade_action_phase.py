@@ -12,11 +12,62 @@ import tempfile
 import time
 from pathlib import Path
 
+# Load .env from project root
+PROJECT_ROOT = Path(__file__).resolve().parent.parent.parent
+_env_file = PROJECT_ROOT / ".env"
+if _env_file.exists():
+    with open(_env_file) as f:
+        for line in f:
+            line = line.strip()
+            if line and not line.startswith("#") and "=" in line:
+                key, _, value = line.partition("=")
+                os.environ.setdefault(key.strip(), value.strip())
+
+
+def _mcp_encode(msg: dict) -> bytes:
+    """Encode a JSON-RPC message with Content-Length header (MCP stdio framing)."""
+    body = json.dumps(msg).encode("utf-8")
+    header = f"Content-Length: {len(body)}\r\n\r\n".encode("ascii")
+    return header + body
+
+
+def _mcp_read_response(stdout, timeout: float = 120) -> dict | None:
+    """Read a Content-Length framed JSON-RPC response from stdout."""
+    import select
+    import threading
+
+    result = [None]
+
+    def _read():
+        try:
+            # Read header
+            header = b""
+            while b"\r\n\r\n" not in header:
+                ch = stdout.read(1)
+                if not ch:
+                    return
+                header += ch
+
+            # Parse Content-Length
+            for line in header.decode("ascii").split("\r\n"):
+                if line.lower().startswith("content-length:"):
+                    length = int(line.split(":")[1].strip())
+                    body = stdout.read(length)
+                    result[0] = json.loads(body.decode("utf-8"))
+                    return
+        except Exception:
+            pass
+
+    t = threading.Thread(target=_read, daemon=True)
+    t.start()
+    t.join(timeout=timeout)
+    return result[0]
+
 
 def run_mcp_tool(tool_name: str, arguments: dict, timeout: int = 120) -> dict | None:
     """Run an MCP tool by sending a JSON-RPC request to the MCP server via stdio."""
     mcp_binary = (
-        Path(__file__).resolve().parent.parent.parent
+        PROJECT_ROOT
         / "vendor"
         / "mcp-server-windsurf"
         / ".build"
@@ -25,33 +76,13 @@ def run_mcp_tool(tool_name: str, arguments: dict, timeout: int = 120) -> dict | 
     )
 
     if not mcp_binary.exists():
-        # Try debug build
         mcp_binary = mcp_binary.parent.parent / "debug" / "mcp-server-windsurf"
         if not mcp_binary.exists():
-            print(f"❌ MCP server binary not found. Build it first:")
+            print("❌ MCP server binary not found. Build it first:")
             print(
-                f"   cd vendor/mcp-server-windsurf && swift build --configuration release"
+                "   cd vendor/mcp-server-windsurf && swift build --configuration release"
             )
             return None
-
-    # JSON-RPC request for tool call
-    request = {
-        "jsonrpc": "2.0",
-        "id": 1,
-        "method": "initialize",
-        "params": {
-            "protocolVersion": "2024-11-05",
-            "capabilities": {},
-            "clientInfo": {"name": "test-client", "version": "1.0.0"},
-        },
-    }
-
-    tool_request = {
-        "jsonrpc": "2.0",
-        "id": 2,
-        "method": "tools/call",
-        "params": {"name": tool_name, "arguments": arguments},
-    }
 
     try:
         print(f"🧪 Testing {tool_name} with arguments: {json.dumps(arguments)}")
@@ -62,41 +93,74 @@ def run_mcp_tool(tool_name: str, arguments: dict, timeout: int = 120) -> dict | 
             stdout=subprocess.PIPE,
             stderr=subprocess.PIPE,
             env={**os.environ},
+            bufsize=0,
         )
 
-        # Send initialize + tool call
-        init_msg = json.dumps(request) + "\n"
-        tool_msg = json.dumps(tool_request) + "\n"
+        # Step 1: Send initialize request
+        init_request = {
+            "jsonrpc": "2.0",
+            "id": 1,
+            "method": "initialize",
+            "params": {
+                "protocolVersion": "2024-11-05",
+                "capabilities": {},
+                "clientInfo": {"name": "test-client", "version": "1.0.0"},
+            },
+        }
+        proc.stdin.write(_mcp_encode(init_request))
+        proc.stdin.flush()
 
-        stdout, stderr = proc.communicate(
-            input=(init_msg + tool_msg).encode(), timeout=timeout
-        )
+        # Read initialize response
+        init_resp = _mcp_read_response(proc.stdout, timeout=15)
+        if init_resp:
+            print(f"  ✅ MCP initialized (protocol ok)")
+        else:
+            print(f"  ❌ MCP initialization timed out")
+            # Try to read stderr to see what happened
+            proc.terminate()
+            try:
+                stderr_output = proc.stderr.read()
+                if stderr_output:
+                    print(f"  🔴 Server stderr:\n{stderr_output.decode('utf-8', errors='replace')}")
+            except Exception:
+                pass
+            return None
 
-        if stderr:
-            stderr_text = stderr.decode("utf-8", errors="replace")
-            # Filter only important log lines
-            for line in stderr_text.split("\n"):
-                if "Action Phase" in line or "wrote file" in line or "Error" in line:
-                    print(f"  📋 {line.strip()}")
+        # Step 2: Send initialized notification
+        initialized_notif = {
+            "jsonrpc": "2.0",
+            "method": "notifications/initialized",
+        }
+        proc.stdin.write(_mcp_encode(initialized_notif))
+        proc.stdin.flush()
 
-        if stdout:
-            stdout_text = stdout.decode("utf-8", errors="replace")
-            # Parse last JSON-RPC response
-            for line in reversed(stdout_text.strip().split("\n")):
-                line = line.strip()
-                if line.startswith("{"):
-                    try:
-                        response = json.loads(line)
-                        return response
-                    except json.JSONDecodeError:
-                        continue
+        # Step 3: Send tool call
+        tool_request = {
+            "jsonrpc": "2.0",
+            "id": 2,
+            "method": "tools/call",
+            "params": {"name": tool_name, "arguments": arguments},
+        }
+        proc.stdin.write(_mcp_encode(tool_request))
+        proc.stdin.flush()
 
-        return None
+        # Read tool response (may take a while for cascade)
+        tool_resp = _mcp_read_response(proc.stdout, timeout=timeout)
 
-    except subprocess.TimeoutExpired:
-        print(f"⏱️ Tool call timed out after {timeout}s")
+        # Check stderr for action phase logs
         proc.kill()
-        return None
+        try:
+            stderr_data = proc.stderr.read()
+            if stderr_data:
+                stderr_text = stderr_data.decode("utf-8", errors="replace")
+                for line in stderr_text.split("\n"):
+                    if "Action Phase" in line or "wrote file" in line:
+                        print(f"  📋 {line.strip()}")
+        except Exception:
+            pass
+
+        return tool_resp
+
     except Exception as e:
         print(f"❌ Error running {tool_name}: {e}")
         return None

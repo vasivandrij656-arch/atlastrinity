@@ -1,6 +1,7 @@
 import asyncio
 import os
 import sys
+import tempfile
 from pathlib import Path
 from unittest.mock import AsyncMock, MagicMock, patch
 
@@ -49,10 +50,22 @@ async def simulate_tier3_fallback():
     print("⚠️  Sabotaging Tier 1 (Mistral) and Tier 2 (OpenRouter)...")
 
     with patch("src.mcp_server.vibe_server.get_vibe_config") as mock_conf_getter:
-        # Get the real config and wrap it with a mock that overrides get_provider
-        real_config = vibe_server.get_vibe_config()
-        mock_config = MagicMock(wraps=real_config)
+        # Use explicit config instead of calling the mocked function
+        mock_config = MagicMock()
         mock_config.get_provider = MagicMock(side_effect=mock_get_provider)
+        
+        # Explicitly set path properties
+        test_workspace = os.path.join(tempfile.gettempdir(), "vibe_test_workspace")
+        os.makedirs(test_workspace, exist_ok=True)
+        mock_config.workspace = test_workspace
+        
+        # Mock model lookup (required for vibe_server internal checks)
+        def mock_get_model(alias):
+            m = MagicMock()
+            m.name = alias
+            m.alias = alias
+            return m
+        mock_config.get_model_by_alias = MagicMock(side_effect=mock_get_model)
 
         # Verify gpt-4o is there
         copilot_model = mock_config.get_model_by_alias("gpt-4o")
