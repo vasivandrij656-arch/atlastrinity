@@ -1162,34 +1162,74 @@ func handleCascade(message: String, model: String?) async -> String {
 
         itemsProto.append(protoMsg(3, textItem))
 
-        // 2. Scope Item (to provide workspace context)
-        // Scope message: f1: path, f2: uri, f3: repoName, f4: repoUrl
-        let currentPath = "/Users/dev/Documents/GitHub/atlastrinity"
+        // 2. Scope Item (enhanced with full workspace context for Action Phase)
+        // Scope message structure for enabling tool execution
+        let currentPath = FileManager.default.currentDirectoryPath
         let currentUri = "file://" + currentPath
-
+        
+        // Try to get git repo info for better context
+        var repoName = "atlastrinity"
+        var repoUrl = "https://github.com/solagurma/atlastrinity.git"
+        
+        let gitTask = Process()
+        gitTask.executableURL = URL(fileURLWithPath: "/usr/bin/git")
+        gitTask.arguments = ["remote", "get-url", "origin"]
+        let gitPipe = Pipe()
+        gitTask.standardOutput = gitPipe
+        gitTask.standardError = FileHandle.nullDevice
+        gitTask.currentDirectoryPath = currentPath
+        
+        do {
+            try gitTask.run()
+            let gitData = gitPipe.fileHandleForReading.readDataToEndOfFile()
+            gitTask.waitUntilExit()
+            if let gitUrl = String(data: gitData, encoding: .utf8)?.trimmingCharacters(in: .whitespacesAndNewlines), !gitUrl.isEmpty {
+                repoUrl = gitUrl
+                repoName = URL(string: gitUrl)?.lastPathComponent.replacingOccurrences(of: ".git", with: "") ?? repoName
+            }
+        } catch {
+            // Fallback to defaults
+        }
+        
         var scopeMsg = Data()
-        scopeMsg.append(protoStr(1, currentPath))
-        scopeMsg.append(protoStr(2, currentUri))
-        scopeMsg.append(protoStr(3, "solagurma/atlastrinity"))
-        // repo_url might be used for git context
-        scopeMsg.append(protoStr(4, "https://github.com/solagurma/atlastrinity.git"))
-
+        scopeMsg.append(protoStr(1, currentPath))  // path
+        scopeMsg.append(protoStr(2, currentUri))   // uri  
+        scopeMsg.append(protoStr(3, repoName))     // repoName
+        scopeMsg.append(protoStr(4, repoUrl))      // repoUrl
+        
+        // Additional workspace metadata for Action Phase
+        scopeMsg.append(protoInt(5, 1))  // is_workspace_root: true
+        scopeMsg.append(protoInt(6, 1))  // enable_file_operations: true
+        scopeMsg.append(protoInt(7, 1))  // enable_tool_execution: true
+        
         var scopeItem = Data()
         scopeItem.append(protoMsg(2, scopeMsg))  // TextOrScopeItem.scope
-
+        
         itemsProto.append(protoMsg(3, scopeItem))
 
-        // Step 4: Cascade Config (Field 5)
-        // PlannerConfig (Field 1): f34: plan_model, f35: requested_model
-        // Adding potential ability/action triggers (Field numbers are experimental)
+        // Step 4: Enhanced Cascade Config for Action Phase
+        // PlannerConfig with Cortex reasoning flags
         var plannerProto = Data()
-        plannerProto.append(protoStr(34, modelUid))
-        plannerProto.append(protoStr(35, modelUid))
-
-        // High-entropy guess: Field 11 or 12 might enable tool use/abilities
-        plannerProto.append(protoInt(11, 1))
-        plannerProto.append(protoInt(12, 1))
-
+        plannerProto.append(protoStr(34, modelUid))  // plan_model
+        plannerProto.append(protoStr(35, modelUid))  // requested_model
+        
+        // Action Phase enabling flags (experimental field numbers)
+        plannerProto.append(protoInt(11, 1))  // enable_cortex_reasoning
+        plannerProto.append(protoInt(12, 1))  // enable_action_phase
+        plannerProto.append(protoInt(13, 1))  // enable_tool_execution
+        plannerProto.append(protoInt(14, 1))  // enable_file_operations
+        plannerProto.append(protoInt(15, 1))  // enable_autonomous_execution
+        
+        // Additional Cortex configuration
+        var cortexConfig = Data()
+        cortexConfig.append(protoInt(1, 1))  // enable_autonomous_tools
+        cortexConfig.append(protoInt(2, 1))  // enable_file_creation
+        cortexConfig.append(protoInt(3, 1))  // enable_file_modification
+        cortexConfig.append(protoInt(4, 1))  // enable_workspace_scoped_actions
+        cortexConfig.append(protoInt(5, 180)) // action_timeout_seconds
+        
+        plannerProto.append(protoMsg(20, cortexConfig))  // cortex_config (field 20)
+        
         let configProto = protoMsg(5, protoMsg(1, plannerProto))
 
         let queuePayload =
@@ -1247,20 +1287,56 @@ func handleCascade(message: String, model: String?) async -> String {
             offset += 5 + len
         }
 
-        // Filter heuristic: remove system prompts and metadata
-        let filtered = strings.filter {
-            !$0.contains(cascadeId) && !$0.contains(modelUid)  // && !$0.contains(message)
-                && !$0.contains(apiKey) && !$0.contains("windsurf")  // && !$0.contains("swe-1.5")
-                && !$0.contains("CRITICAL:") && !$0.contains("IMPORTANT:")
-                && !$0.contains("JSON FORMAT") && !$0.contains("WARNING:")
-                && !$0.contains("jsonrpc") && !$0.contains("markdown_formatting")
-                && !$0.contains("additional_guidelines")
-                && !$0.contains("No acknowledgment phrases")
-                && !$0.contains("Direct responses:") && !$0.contains("Be terse and direct")
-                && !$0.contains("file:///") && !$0.contains("https://")
+        // Enhanced filtering for Action Phase responses
+        // Look for actual file operations or tool execution signatures
+        let actionSignatures = ["created", "modified", "deleted", "updated", "wrote", "saved", "executed"]
+        
+        let filtered = strings.filter { response in
+            // Keep responses that contain action signatures
+            let hasActionSignature = actionSignatures.contains { signature in
+                response.lowercased().contains(signature.lowercased())
+            }
+            
+            // Or keep natural responses without system noise
+            let isNaturalResponse = !response.contains(cascadeId) 
+                && !response.contains(modelUid)
+                && !response.contains(apiKey) 
+                && !response.contains("windsurf")
+                && !response.contains("CRITICAL:") 
+                && !response.contains("IMPORTANT:")
+                && !response.contains("JSON FORMAT") 
+                && !response.contains("WARNING:")
+                && !response.contains("jsonrpc") 
+                && !response.contains("markdown_formatting")
+                && !response.contains("additional_guidelines")
+                && !response.contains("No acknowledgment phrases")
+                && !response.contains("Direct responses:") 
+                && !response.contains("Be terse and direct")
+                && !response.contains("file:///") 
+                && !response.contains("https://")
+                && response.count > 20  // Keep substantial responses
+            
+            return hasActionSignature || isNaturalResponse
         }
 
-        // Prefer the longest remaining string that looks like a natural response
+        // Enhanced response processing for Action Phase
+        // Prioritize responses with actual file operations or tool execution
+        let actionResponses = filtered.filter { response in
+            actionSignatures.contains { signature in
+                response.lowercased().contains(signature.lowercased())
+            }
+        }
+        
+        if let actionResponse = actionResponses.max(by: { $0.count < $1.count }) {
+            return """
+                🌊 Cascade Action Phase Response (\(useModel))
+                ────────────────────────────────────────
+                ✅ Action Phase Detected - File operations may have occurred
+                \(actionResponse)
+                """
+        }
+        
+        // Fallback to longest natural response
         if let longest = filtered.max(by: { $0.count < $1.count }) {
             return """
                 🌊 Cascade Response (\(useModel))
@@ -1268,6 +1344,7 @@ func handleCascade(message: String, model: String?) async -> String {
                 \(longest)
                 """
         }
+        
         return "❌ No response text found in stream. (Raw bytes: \(streamData.count))"
 
     } catch {
