@@ -1,4 +1,8 @@
 
+<!-- AUTO-UPDATED: 2026-02-16T02:48:15.658168 -->
+<!-- Modified: .agent/docs/mcp_architecture_diagram.md, .vscode/launch.json, package.json -->
+
+
 <!-- AUTO-UPDATED: 2026-02-16T02:45:53.291581 -->
 <!-- Modified: .agent/docs/mcp_architecture_diagram.md, .secrets.baseline, src/brain/data/architecture_diagrams/mcp_architecture.md -->
 
