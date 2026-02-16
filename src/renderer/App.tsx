@@ -342,7 +342,7 @@ const App: React.FC = () => {
           }}
           isVoiceEnabled={isVoiceEnabled}
           onToggleVoice={() => setIsVoiceEnabled(!isVoiceEnabled)}
-          isProcessing={['PROCESSING', 'EXECUTING', 'VERIFYING'].includes(systemState)}
+          isProcessing={false}
           onFocusChange={setIsInputFocused}
         />
       </div>

@@ -1,4 +1,8 @@
 
+<!-- AUTO-UPDATED: 2026-02-16T15:44:17.740261 -->
+<!-- Modified: .agent/docs/mcp_architecture_diagram.md, .gitignore, src/brain/data/architecture_diagrams/mcp_architecture.md -->
+
+
 <!-- AUTO-UPDATED: 2026-02-16T15:17:09.584310 -->
 <!-- Modified: .agent/docs/mcp_architecture_diagram.md, .vscode/launch.json, package.json -->
 

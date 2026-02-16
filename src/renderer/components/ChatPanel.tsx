@@ -1,5 +1,6 @@
 /**
  * ChatPanel - Right panel for agent messages
+ * Smooth streaming with fade-in + slide animation
  */
 
 import * as React from 'react';
@@ -20,8 +21,9 @@ interface ChatPanelProps {
 }
 
 const ChatPanel: React.FC<ChatPanelProps> = React.memo(({ messages }) => {
-  // FILTER: Only voice messages and user messages
-  const filteredMessages = messages.filter((m) => m.type === 'voice' || m.agent === 'USER');
+  // Show ALL messages — no filtering by type.
+  // The backend sends both text and voice types; we want them all visible.
+  const filteredMessages = messages;
 
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const scrollContainerRef = useRef<HTMLDivElement>(null);
@@ -30,13 +32,14 @@ const ChatPanel: React.FC<ChatPanelProps> = React.memo(({ messages }) => {
   const [userScrolledUp, setUserScrolledUp] = useState(false);
   const lastMessageCountRef = useRef(filteredMessages.length);
 
+  // Track new message IDs for streaming animation
+  const [newMessageIds, setNewMessageIds] = useState<Set<string>>(new Set());
+
   // Check if user is near bottom
   const isNearBottom = useCallback(() => {
     const container = scrollContainerRef.current;
     if (!container) return true;
     const { scrollTop, scrollHeight, clientHeight } = container;
-    // Using a more robust threshold and Math.ceil for fractional values
-    // Increased threshold to 150px to be more forgiving
     return Math.ceil(scrollHeight - scrollTop - clientHeight) <= 150;
   }, []);
 
@@ -52,16 +55,10 @@ const ChatPanel: React.FC<ChatPanelProps> = React.memo(({ messages }) => {
     };
 
     const handleWheel = (e: WheelEvent) => {
-      // Any scroll action by user should pause auto-scroll if it moves away from bottom
       if (e.deltaY < 0) {
         setUserScrolledUp(true);
       }
-
-      // Resumes auto-scroll if user scrolls down
-      // We relax the condition: if they scroll down, we assume they might want to see new content
-      // If they hit the bottom threshold, we definitely latch back on
       if (e.deltaY > 0) {
-        // If we are close enough, snap back to auto-scroll
         if (isNearBottom()) {
           setUserScrolledUp(false);
         }
@@ -77,30 +74,41 @@ const ChatPanel: React.FC<ChatPanelProps> = React.memo(({ messages }) => {
     };
   }, [isNearBottom]);
 
-  // Auto-scroll logic - only scroll if user hasn't scrolled up
+  // Track new messages for streaming animation
+  useEffect(() => {
+    const hasNewMessages = filteredMessages.length > lastMessageCountRef.current;
+    if (hasNewMessages) {
+      const newIds = new Set<string>();
+      for (let i = lastMessageCountRef.current; i < filteredMessages.length; i++) {
+        newIds.add(filteredMessages[i].id);
+      }
+      setNewMessageIds(newIds);
+      // Clear animation class after animation completes
+      const timer = setTimeout(() => setNewMessageIds(new Set()), 800);
+      return () => clearTimeout(timer);
+    }
+  }, [filteredMessages]);
+
+  // Auto-scroll logic - smooth scrolling
   useLayoutEffect(() => {
     const hasNewMessages = filteredMessages.length > lastMessageCountRef.current;
     lastMessageCountRef.current = filteredMessages.length;
 
-    // Auto-scroll logic:
-    // 1. If we are already near bottom
-    // 2. If it's the very first message(s)
-    // 3. If new messages arrived AND user hasn't explicitly scrolled up
     if (isNearBottom() || (hasNewMessages && !userScrolledUp) || filteredMessages.length <= 1) {
-      // Use a small timeout to ensure DOM has rendered
       const timer = setTimeout(() => {
         const container = scrollContainerRef.current;
         if (container) {
-          // Use scrollTop directly for more reliable scrolling in Electron
-          // Add a small buffer to ensure we really hit the bottom
-          container.scrollTop = container.scrollHeight;
+          container.scrollTo({
+            top: container.scrollHeight,
+            behavior: 'smooth',
+          });
         }
       }, 50);
       return () => clearTimeout(timer);
     }
   }, [filteredMessages, userScrolledUp, isNearBottom]);
 
-  const getHeaderColor = (agent: string) => {
+  const getAgentColor = (agent: string) => {
     const a = agent.toUpperCase().trim();
     switch (a) {
       case 'GRISHA':
@@ -109,26 +117,37 @@ const ChatPanel: React.FC<ChatPanelProps> = React.memo(({ messages }) => {
         return 'var(--tetyana-green, #00FF88)';
       case 'USER':
         return 'var(--user-turquoise, #00E5FF)';
+      case 'SYSTEM':
+        return 'rgba(255, 255, 255, 0.5)';
       default:
         return 'var(--atlas-blue, #00A3FF)';
     }
   };
 
-  const getMessageTextColor = (agent: string) => {
-    return agent.toUpperCase().trim() === 'USER'
-      ? 'var(--user-turquoise, #00E5FF)'
-      : 'var(--atlas-blue, #00A3FF)';
+  const getMessageGlow = (agent: string) => {
+    const a = agent.toUpperCase().trim();
+    switch (a) {
+      case 'GRISHA':
+        return 'rgba(255, 140, 0, 0.03)';
+      case 'TETYANA':
+        return 'rgba(0, 255, 65, 0.03)';
+      case 'USER':
+        return 'rgba(0, 229, 255, 0.04)';
+      default:
+        return 'rgba(0, 163, 255, 0.03)';
+    }
   };
 
   return (
     <div
-      className="flex-1 flex flex-col font-mono h-full overflow-hidden relative min-h-0"
+      className="flex-1 flex flex-col h-full overflow-hidden relative min-h-0"
       style={{
         display: 'flex',
         flexDirection: 'column',
         height: '100%',
         overflow: 'hidden',
         minHeight: 0,
+        fontFamily: "'Outfit', 'Inter', sans-serif",
       }}
     >
       <div style={{ height: '32px', flexShrink: 0 }} /> {/* Spacer for title bar area */}
@@ -145,27 +164,76 @@ const ChatPanel: React.FC<ChatPanelProps> = React.memo(({ messages }) => {
         }}
       >
         {filteredMessages.length === 0 ? (
-          <div className="h-full flex items-center justify-center opacity-10 italic text-[9px] tracking-[0.5em] uppercase">
+          <div
+            className="h-full flex items-center justify-center"
+            style={{
+              opacity: 0.08,
+              fontStyle: 'italic',
+              fontSize: '9px',
+              letterSpacing: '0.5em',
+              textTransform: 'uppercase',
+              fontFamily: "'Outfit', sans-serif",
+            }}
+          >
             Waiting for neural link...
           </div>
         ) : (
           <div
-            className="flex flex-col gap-2 py-1 pb-32 px-4"
-            style={{ paddingLeft: '16px', paddingRight: '16px' }}
+            className="flex flex-col py-1 pb-32 px-4"
+            style={{ paddingLeft: '16px', paddingRight: '16px', gap: '6px' }}
           >
-            {filteredMessages.map((msg) => (
-              <div key={msg.id} className="animate-fade-in group mb-3">
-                <div className="flex items-center mb-1.5">
-                  <div className="flex items-center gap-4 filter grayscale opacity-20 group-hover:grayscale-0 group-hover:opacity-40 transition-all duration-500">
+            {filteredMessages.map((msg) => {
+              const isNew = newMessageIds.has(msg.id);
+              const isUser = msg.agent === 'USER';
+
+              return (
+                <div
+                  key={msg.id}
+                  className={`group ${isNew ? 'chat-stream-in' : ''}`}
+                  style={{
+                    marginBottom: '8px',
+                    paddingLeft: '6px',
+                    borderLeft: `2px solid ${getAgentColor(msg.agent)}`,
+                    borderLeftWidth: isUser ? '1px' : '2px',
+                    borderLeftColor: isUser
+                      ? 'rgba(0, 229, 255, 0.15)'
+                      : getAgentColor(msg.agent),
+                    opacity: isNew ? undefined : 1,
+                    background: isUser ? 'transparent' : getMessageGlow(msg.agent),
+                    borderRadius: '0 4px 4px 0',
+                    padding: '6px 8px 6px 10px',
+                    transition: 'background 0.3s ease, border-color 0.3s ease',
+                  }}
+                >
+                  <div
+                    className="flex items-center"
+                    style={{ marginBottom: '4px', gap: '10px' }}
+                  >
                     <span
-                      className="text-[8px] font-bold tracking-[0.1em] uppercase"
-                      style={{ color: getHeaderColor(msg.agent), fontFamily: 'JetBrains Mono' }}
+                      style={{
+                        fontSize: '8px',
+                        fontWeight: 700,
+                        letterSpacing: '0.12em',
+                        textTransform: 'uppercase',
+                        color: getAgentColor(msg.agent),
+                        fontFamily: "'JetBrains Mono', monospace",
+                        opacity: 0.7,
+                        transition: 'opacity 0.3s ease',
+                      }}
+                      className="group-hover-opacity-90"
                     >
                       {msg.agent}
                     </span>
                     <span
-                      className="text-[8px] font-mono tracking-tighter uppercase font-medium"
-                      style={{ color: getHeaderColor(msg.agent) }}
+                      style={{
+                        fontSize: '8px',
+                        fontFamily: "'JetBrains Mono', monospace",
+                        letterSpacing: '-0.02em',
+                        textTransform: 'uppercase',
+                        fontWeight: 500,
+                        color: getAgentColor(msg.agent),
+                        opacity: 0.35,
+                      }}
                     >
                       {msg.timestamp.toLocaleTimeString([], {
                         hour: '2-digit',
@@ -174,20 +242,31 @@ const ChatPanel: React.FC<ChatPanelProps> = React.memo(({ messages }) => {
                       })}
                     </span>
                   </div>
-                </div>
 
-                <div
-                  className="text-[11px] font-[400] leading-relaxed break-words pl-0.5 py-0.5 transition-colors"
-                  style={{
-                    fontFamily: 'JetBrains Mono',
-                    letterSpacing: '0.01em',
-                    color: getMessageTextColor(msg.agent),
-                  }}
-                >
-                  {msg.text}
+                  <div
+                    style={{
+                      fontSize: '11.5px',
+                      fontWeight: isUser ? 400 : 350,
+                      lineHeight: '1.65',
+                      overflowWrap: 'break-word',
+                      wordBreak: 'break-word',
+                      paddingLeft: '2px',
+                      paddingTop: '1px',
+                      paddingBottom: '1px',
+                      fontFamily: isUser
+                        ? "'JetBrains Mono', monospace"
+                        : "'Outfit', 'Inter', sans-serif",
+                      letterSpacing: isUser ? '0.01em' : '0.015em',
+                      color: getAgentColor(msg.agent),
+                      opacity: isUser ? 0.85 : 0.9,
+                      transition: 'color 0.3s ease, opacity 0.3s ease',
+                    }}
+                  >
+                    {msg.text}
+                  </div>
                 </div>
-              </div>
-            ))}
+              );
+            })}
             <div ref={messagesEndRef} />
           </div>
         )}

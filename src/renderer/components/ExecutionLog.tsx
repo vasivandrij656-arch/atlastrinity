@@ -1,6 +1,6 @@
 /**
  * ExecutionLog - Left panel log display
- * Cyberpunk Terminal Style
+ * Smooth streaming with slide-in animations
  */
 
 import type * as React from 'react';
@@ -25,13 +25,14 @@ const ExecutionLog: React.FC<ExecutionLogProps> = ({ logs }) => {
   const [userScrolledUp, setUserScrolledUp] = useState(false);
   const lastLogCountRef = useRef(filteredLogs.length);
 
+  // Track new log IDs for streaming animation
+  const [newLogIds, setNewLogIds] = useState<Set<string>>(new Set());
+
   // Check if user is near bottom
   const isNearBottom = useCallback(() => {
     const container = scrollContainerRef.current;
     if (!container) return true;
     const { scrollTop, scrollHeight, clientHeight } = container;
-    // Using a more robust threshold and Math.ceil for fractional values
-    // Increased threshold to 150px to be more forgiving
     return Math.ceil(scrollHeight - scrollTop - clientHeight) <= 150;
   }, []);
 
@@ -47,12 +48,9 @@ const ExecutionLog: React.FC<ExecutionLogProps> = ({ logs }) => {
     };
 
     const handleWheel = (e: WheelEvent) => {
-      // Any scroll action by user should pause auto-scroll if it moves away from bottom
       if (e.deltaY < 0) {
         setUserScrolledUp(true);
       }
-
-      // Resumes auto-scroll if user scrolls down
       if (e.deltaY > 0) {
         if (isNearBottom()) {
           setUserScrolledUp(false);
@@ -69,17 +67,26 @@ const ExecutionLog: React.FC<ExecutionLogProps> = ({ logs }) => {
     };
   }, [isNearBottom]);
 
-  // Auto-scroll logic - only scroll if user hasn't scrolled up
+  // Track new logs for streaming animation
+  useEffect(() => {
+    const hasNewLogs = filteredLogs.length > lastLogCountRef.current;
+    if (hasNewLogs) {
+      const newIds = new Set<string>();
+      for (let i = lastLogCountRef.current; i < filteredLogs.length; i++) {
+        newIds.add(filteredLogs[i].id);
+      }
+      setNewLogIds(newIds);
+      const timer = setTimeout(() => setNewLogIds(new Set()), 600);
+      return () => clearTimeout(timer);
+    }
+  }, [filteredLogs]);
+
+  // Auto-scroll logic - smooth scrolling
   useLayoutEffect(() => {
     const hasNewLogs = filteredLogs.length > lastLogCountRef.current;
     lastLogCountRef.current = filteredLogs.length;
 
-    // Auto-scroll logic:
-    // 1. If we are already near bottom
-    // 2. If it's the very first log(s)
-    // 3. If new logs arrived AND user hasn't explicitly scrolled up
     if (isNearBottom() || filteredLogs.length <= 1 || (hasNewLogs && !userScrolledUp)) {
-      // Use a small timeout to ensure DOM has rendered
       const timer = setTimeout(() => {
         const container = scrollContainerRef.current;
         if (container) {
@@ -98,7 +105,6 @@ const ExecutionLog: React.FC<ExecutionLogProps> = ({ logs }) => {
     if (ts instanceof Date) {
       d = ts;
     } else if (typeof ts === 'number') {
-      // Assume seconds if < 10^12, else milliseconds
       d = new Date(ts < 10000000000 ? ts * 1000 : ts);
     } else if (typeof ts === 'string') {
       const n = Number(ts);
@@ -133,20 +139,51 @@ const ExecutionLog: React.FC<ExecutionLogProps> = ({ logs }) => {
         return '#00FF88';
       case 'action':
         return '#00A3FF';
+      case 'voice':
+        return '#BB86FC';
       default:
-        return 'rgba(255, 255, 255, 0.5)';
+        return 'rgba(255, 255, 255, 0.45)';
+    }
+  };
+
+  const getAgentColor = (agent: string) => {
+    switch (agent) {
+      case 'GRISHA':
+        return 'var(--grisha-orange)';
+      case 'TETYANA':
+        return 'var(--tetyana-green)';
+      case 'USER':
+        return 'var(--user-turquoise)';
+      default:
+        return 'var(--atlas-blue)';
+    }
+  };
+
+  const getLogTypeIcon = (type: string) => {
+    switch (type) {
+      case 'error':
+        return '●';
+      case 'warning':
+        return '◆';
+      case 'success':
+        return '✓';
+      case 'action':
+        return '▸';
+      default:
+        return '·';
     }
   };
 
   return (
     <div
-      className="flex-1 flex flex-col h-full overflow-hidden font-mono relative min-h-0"
+      className="flex-1 flex flex-col h-full overflow-hidden relative min-h-0"
       style={{
         display: 'flex',
         flexDirection: 'column',
         height: '100%',
         overflow: 'hidden',
         minHeight: 0,
+        fontFamily: "'Outfit', 'Inter', sans-serif",
       }}
     >
       <div style={{ height: '32px', flexShrink: 0 }} /> {/* Spacer for title bar area */}
@@ -163,75 +200,146 @@ const ExecutionLog: React.FC<ExecutionLogProps> = ({ logs }) => {
           paddingRight: 0,
         }}
       >
-        {filteredLogs.map((log) => (
-          <div
-            key={log.id}
-            className="flex flex-col mb-2 animate-fade-in group hover:bg-white/5 rounded transition-colors"
-            style={{ padding: '4px 4px 4px 8px', marginRight: '2px' }}
-          >
-            <div className="flex items-center mb-1">
-              <div className="flex items-center gap-4 filter grayscale opacity-20 group-hover:grayscale-0 group-hover:opacity-40 transition-all duration-500">
+        {filteredLogs.map((log) => {
+          const isNew = newLogIds.has(log.id);
+
+          return (
+            <div
+              key={log.id}
+              className={`group ${isNew ? 'log-stream-in' : ''}`}
+              style={{
+                display: 'flex',
+                flexDirection: 'column',
+                marginBottom: '1px',
+                padding: '5px 6px 5px 10px',
+                marginRight: '2px',
+                borderRadius: '2px',
+                transition: 'background 0.2s ease',
+                cursor: 'default',
+              }}
+              onMouseEnter={(e) => {
+                e.currentTarget.style.background = 'rgba(255, 255, 255, 0.03)';
+              }}
+              onMouseLeave={(e) => {
+                e.currentTarget.style.background = 'transparent';
+              }}
+            >
+              {/* Header Row: Agent + Time + Type */}
+              <div
+                style={{
+                  display: 'flex',
+                  alignItems: 'center',
+                  gap: '8px',
+                  marginBottom: '2px',
+                  opacity: 0.35,
+                  transition: 'opacity 0.3s ease',
+                }}
+                className="group-hover-opacity-60"
+              >
                 <span
-                  className="text-[8px] font-bold tracking-[0.2em] uppercase"
                   style={{
-                    color:
-                      log.agent === 'GRISHA'
-                        ? 'var(--grisha-orange)'
-                        : log.agent === 'TETYANA'
-                          ? 'var(--tetyana-green)'
-                          : log.agent === 'USER'
-                            ? 'var(--user-turquoise)'
-                            : 'var(--atlas-blue)',
-                    fontFamily: 'JetBrains Mono',
+                    fontSize: '7.5px',
+                    fontWeight: 700,
+                    letterSpacing: '0.15em',
+                    textTransform: 'uppercase',
+                    color: getAgentColor(log.agent),
+                    fontFamily: "'JetBrains Mono', monospace",
                   }}
                 >
                   {log.agent}
                 </span>
 
-                <div
-                  className="flex items-center gap-3 text-[8px] font-mono font-medium tracking-[0.05em] uppercase"
+                <span
                   style={{
+                    fontSize: '7.5px',
+                    fontFamily: "'JetBrains Mono', monospace",
+                    fontWeight: 500,
+                    letterSpacing: '-0.02em',
                     color: getLogColor(log.type),
                   }}
                 >
-                  <span className="tracking-tighter">{formatTime(log.timestamp)}</span>
-                  <span className="font-bold">{log.type.toUpperCase()}</span>
-                </div>
+                  {formatTime(log.timestamp)}
+                </span>
+
+                <span
+                  style={{
+                    fontSize: '7.5px',
+                    fontWeight: 700,
+                    color: getLogColor(log.type),
+                    fontFamily: "'JetBrains Mono', monospace",
+                    letterSpacing: '0.05em',
+                    textTransform: 'uppercase',
+                  }}
+                >
+                  {getLogTypeIcon(log.type)} {log.type.toUpperCase()}
+                </span>
+              </div>
+
+              {/* Content Row */}
+              <div style={{ flex: 1, paddingLeft: '2px' }}>
+                <span
+                  style={{
+                    fontSize: '10.5px',
+                    fontWeight: 350,
+                    lineHeight: '1.55',
+                    overflowWrap: 'break-word',
+                    wordBreak: 'break-word',
+                    transition: 'color 0.2s ease',
+                    fontFamily: log.message.includes('[VIBE-')
+                      ? "'JetBrains Mono', monospace"
+                      : "'Outfit', 'Inter', sans-serif",
+                    ...(log.message.includes('[VIBE-THOUGHT]')
+                      ? {
+                          color: 'rgba(180, 180, 200, 0.6)',
+                          paddingLeft: '12px',
+                          fontStyle: 'italic',
+                          marginLeft: '6px',
+                          borderLeft: '1px solid rgba(120, 120, 140, 0.2)',
+                        }
+                      : log.message.includes('[VIBE-ACTION]')
+                        ? { color: '#FBBF24' }
+                        : log.message.includes('[VIBE-GEN]')
+                          ? { color: '#4ADE80' }
+                          : log.message.includes('[VIBE-LIVE]')
+                            ? { color: '#93C5FD' }
+                            : log.agent === 'USER'
+                              ? { color: '#00E5FF', opacity: 0.85 }
+                              : { color: '#00A3FF', opacity: 0.8 }),
+                  }}
+                >
+                  {typeof log.message === 'object'
+                    ? JSON.stringify(log.message)
+                    : log.message.replace('🧠 [VIBE-THOUGHT]', '').trim()}
+                </span>
               </div>
             </div>
-
-            {/* Content Row */}
-            <div className="flex-1 flex flex-col pl-0.5">
-              {/* Message */}
-              <span
-                className={`text-[11px] font-normal leading-relaxed break-words transition-colors font-mono ${
-                  log.message.includes('[VIBE-THOUGHT]')
-                    ? 'text-gray-400 pl-4 italic ml-2 border-l border-gray-700/50'
-                    : log.message.includes('[VIBE-ACTION]')
-                      ? 'text-yellow-400'
-                      : log.message.includes('[VIBE-GEN]')
-                        ? 'text-green-400'
-                        : log.message.includes('[VIBE-LIVE]')
-                          ? 'text-blue-300'
-                          : log.agent === 'USER'
-                            ? 'text-[#00E5FF]'
-                            : 'text-[#00A3FF] group-hover:text-[#33B5FF]'
-                }`}
-                style={{ fontFamily: 'JetBrains Mono' }}
-              >
-                {typeof log.message === 'object'
-                  ? JSON.stringify(log.message)
-                  : log.message.replace('🧠 [VIBE-THOUGHT]', '').trim()}
-              </span>
-            </div>
-          </div>
-        ))}
+          );
+        })}
 
         <div ref={logsEndRef} />
 
         {filteredLogs.length === 0 && (
-          <div className="h-full flex flex-col items-center justify-center opacity-10 text-[9px] gap-2 tracking-[0.4em] uppercase">
-            <div className="w-10 h-10 rounded-full border border-current animate-spin-slow opacity-20"></div>
+          <div
+            className="h-full flex flex-col items-center justify-center"
+            style={{
+              opacity: 0.08,
+              fontSize: '9px',
+              gap: '8px',
+              letterSpacing: '0.4em',
+              textTransform: 'uppercase',
+              fontFamily: "'Outfit', sans-serif",
+            }}
+          >
+            <div
+              style={{
+                width: '40px',
+                height: '40px',
+                borderRadius: '50%',
+                border: '1px solid currentColor',
+                opacity: 0.2,
+              }}
+              className="animate-spin-slow"
+            />
             <span>System Initialized</span>
             <span>Awaiting Core Link...</span>
           </div>
