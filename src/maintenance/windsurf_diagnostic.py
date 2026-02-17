@@ -56,7 +56,10 @@ async def test_model(model_id: str):
             # Handle string response
             content_str = str(response.content).strip()
 
-        if content_str and all(err not in content_str for err in ["WINDSURF ERROR", "resource_exhausted", "internal error"]):
+        if content_str and all(
+            err not in content_str
+            for err in ["WINDSURF ERROR", "resource_exhausted", "internal error"]
+        ):
             print(f"  [SUCCESS] Response: {content_str} ({duration:.2f}s)")
             return True, content_str
         print(f"  [FAILED] Empty response ({duration:.2f}s)")

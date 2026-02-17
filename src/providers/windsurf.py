@@ -1088,17 +1088,10 @@ class WindsurfLLM(BaseChatModel):
                 if "resource exhausted" in str(e).lower() and planner_parts[3] != _proto_int(12, 0):
                     # RETRY: Disable Action Phase if quota exhausted
                     print(
-                        f"log: [windsurf] Cascade resource exhausted, retrying without Action Phase...",
+                        "log: [windsurf] Cascade resource exhausted, retrying without Action Phase...",
                         file=sys.stderr,
                     )
                     # Re-build planner parts without action phase
-                    safe_planner_parts = [
-                        _proto_str(34, model_uid),
-                        _proto_str(35, model_uid),
-                        _proto_int(11, 0),  # disable_cortex_reasoning
-                        _proto_int(12, 0),  # disable_action_phase
-                        _proto_int(13, 0),  # disable_tool_execution
-                    ]
                     # ... simplified retry (direct call instead of recursive for safety)
                     # For now, let the automatic mode fallback handle it by elevating the error
                     raise

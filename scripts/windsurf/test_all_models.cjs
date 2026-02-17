@@ -51,7 +51,7 @@ async function testModel(modelName, toolName = 'windsurf_chat') {
     });
 
     const sendMessage = (msg) => {
-      mcp.stdin.write(JSON.stringify(msg) + '\n');
+      mcp.stdin.write(`${JSON.stringify(msg)}\n`);
     };
 
     // 1. Initialize
