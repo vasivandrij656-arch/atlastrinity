@@ -1205,37 +1205,37 @@ def devtools_update_architecture_diagrams(
             )
             docs_path = PROJECT_ROOT / ".agent" / "docs" / "mcp_architecture_diagram.md"
 
-            # For internal, keep existing diagram and add update marker
-            if docs_path.exists():
-                with open(docs_path, encoding="utf-8") as f:
-                    current_diagram = f.read()
+            # Generate fresh diagram based on current project structure
+            # This ensures we actually reflect architectural changes
+            diagram_content = generate_architecture_diagram(project_path_obj, project_analysis)
 
-                # Add update notice
-                update_notice = f"\n<!-- AUTO-UPDATED: {datetime.now().isoformat()} -->\n"
-                update_notice += f"<!-- Modified: {', '.join(modified_files[:3])} -->\n\n"
-                updated_diagram = update_notice + current_diagram
+            # Create clean header
+            update_notice = f"\n<!-- AUTO-UPDATED: {datetime.now().isoformat()} -->\n"
+            update_notice += f"<!-- Modified: {', '.join(modified_files[:3])} -->\n\n"
+            
+            updated_diagram = update_notice + diagram_content
 
-                # If a Vibe usage doc/diagram exists, append a reference so it's
-                # included in the canonical architecture doc and exported assets.
-                try:
-                    vibe_doc = PROJECT_ROOT / "docs" / "vibe-usage.md"
-                    vibe_svg = PROJECT_ROOT / "docs" / "vibe-usage-diagram.svg"
-                    if vibe_svg.exists() or vibe_doc.exists():
-                        vibe_section = "\n\n### Vibe (AI agent) — Usage & Integration\n"
-                        vibe_section += "The Vibe usage diagram and inventory are included in project exports.\n\n"
-                        # Prefer PNG (exported into exports/) then fallback to svg
-                        vibe_section += "![](/src/brain/data/architecture_diagrams/exports/vibe-usage-diagram.png)\n"
-                        updated_diagram = updated_diagram + vibe_section
-                except Exception:
-                    # non-fatal
-                    pass
+            # If a Vibe usage doc/diagram exists, append a reference so it's
+            # included in the canonical architecture doc and exported assets.
+            try:
+                vibe_doc = PROJECT_ROOT / "docs" / "vibe-usage.md"
+                vibe_svg = PROJECT_ROOT / "docs" / "vibe-usage-diagram.svg"
+                if vibe_svg.exists() or vibe_doc.exists():
+                    vibe_section = "\n\n### Vibe (AI agent) — Usage & Integration\n"
+                    vibe_section += "The Vibe usage diagram and inventory are included in project exports.\n\n"
+                    # Prefer PNG (exported into exports/) then fallback to svg
+                    vibe_section += "![](/src/brain/data/architecture_diagrams/exports/vibe-usage-diagram.png)\n"
+                    updated_diagram = updated_diagram + vibe_section
+            except Exception:
+                # non-fatal
+                pass
 
-                with open(internal_path, "w", encoding="utf-8") as f:
-                    f.write(updated_diagram)
-                with open(docs_path, "w", encoding="utf-8") as f:
-                    f.write(updated_diagram)
+            with open(internal_path, "w", encoding="utf-8") as f:
+                f.write(updated_diagram)
+            with open(docs_path, "w", encoding="utf-8") as f:
+                f.write(updated_diagram)
 
-                updated_files = [str(internal_path), str(docs_path)]
+            updated_files = [str(internal_path), str(docs_path)]
         else:
             # External project - generate diagram from project analysis
             diagram_path = project_path_obj / "architecture_diagram.md"
