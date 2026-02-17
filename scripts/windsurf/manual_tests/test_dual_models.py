@@ -4,7 +4,6 @@ import os
 import subprocess
 
 
-
 async def test_model(model_name, test_name, message):
     print(f"🧪 Testing {model_name} - {test_name}...")
 

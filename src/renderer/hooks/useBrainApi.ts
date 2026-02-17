@@ -117,7 +117,7 @@ export const useBrainApi = () => {
             );
           }
 
-          if (data.messages && data.messages.length > 0) {
+          if (data.messages) {
             setChatHistory(
               data.messages.map((m: { timestamp: string | number }) => ({
                 ...m,
@@ -260,6 +260,18 @@ export const useBrainApi = () => {
         `Command: ${cmd}${files.length > 0 ? ` [${files.length} files]` : ''}`,
         'action',
       );
+
+      // Add user message to chat history
+      setChatHistory((prev) => [
+        ...prev,
+        {
+          agent: 'USER' as const,
+          text: cmd,
+          timestamp: new Date(),
+          type: 'text' as const,
+        },
+      ]);
+
       setSystemState('PROCESSING');
       try {
         const formData = new FormData();
@@ -296,6 +308,19 @@ export const useBrainApi = () => {
             message = String(result);
           }
           addLog('ATLAS', message, 'success');
+
+          // Add agent response to chat history
+          const agentName = data.active_agent || 'ATLAS';
+          setChatHistory((prev) => [
+            ...prev,
+            {
+              agent: agentName,
+              text: message,
+              timestamp: new Date(),
+              type: 'voice' as const,
+            },
+          ]);
+
           setSystemState('IDLE');
         } else {
           addLog('TETYANA', 'Task execution finished', 'info');

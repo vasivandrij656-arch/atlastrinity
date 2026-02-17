@@ -240,9 +240,9 @@ const ChatPanel: React.FC<ChatPanelProps> = React.memo(({ messages }) => {
 
                   <div
                     style={{
-                      fontSize: '11.5px',
+                      fontSize: '11px',
                       fontWeight: isUser ? 400 : 350,
-                      lineHeight: '1.65',
+                      lineHeight: '1.6',
                       overflowWrap: 'break-word',
                       wordBreak: 'break-word',
                       paddingLeft: '2px',

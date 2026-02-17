@@ -12,7 +12,7 @@ PROJECT_ROOT = Path(__file__).resolve().parent.parent.parent
 
 
 # Helper to create a dummy audio file
-def create_dummy_wav(filename="test_audio.wav"):
+def create_dummy_wav(filename="src/testing/data/test_audio.wav"):
     path = PROJECT_ROOT / filename
     if not path.exists():
         with wave.open(str(path), "w") as f:

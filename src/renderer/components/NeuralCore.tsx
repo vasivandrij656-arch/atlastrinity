@@ -1,6 +1,7 @@
 /**
  * NeuralCore - Central Orbital Visualization
- * Premium "Cyberpunk" Edition with Dynamic State Animations
+ * Gear Mechanism Edition — Reducer/Gearbox viewed from shaft side
+ * Trinity agent spheres surrounded by rotating gears
  */
 
 import type React from 'react';
@@ -23,6 +24,54 @@ interface NeuralCoreProps {
   activeAgent: AgentName;
   minimized?: boolean;
 }
+
+/**
+ * Generate SVG path for a gear with given parameters.
+ * Creates a gear shape centered at origin.
+ */
+const generateGearPath = (
+  innerRadius: number,
+  outerRadius: number,
+  teeth: number,
+): string => {
+  const points: string[] = [];
+  const toothAngle = (2 * Math.PI) / teeth;
+  const toothWidth = 0.35; // fraction of tooth angle for the top
+
+  for (let i = 0; i < teeth; i++) {
+    const startAngle = i * toothAngle;
+    // Inner arc start
+    const a1 = startAngle;
+    // Tooth rise
+    const a2 = startAngle + toothAngle * (0.5 - toothWidth / 2);
+    // Tooth top start
+    const a3 = startAngle + toothAngle * (0.5 - toothWidth / 2);
+    // Tooth top end
+    const a4 = startAngle + toothAngle * (0.5 + toothWidth / 2);
+    // Tooth fall
+    const a5 = startAngle + toothAngle * (0.5 + toothWidth / 2);
+    // Inner arc end
+    const a6 = (i + 1) * toothAngle;
+
+    if (i === 0) {
+      points.push(`M ${innerRadius * Math.cos(a1)} ${innerRadius * Math.sin(a1)}`);
+    }
+
+    // Inner arc to tooth start
+    points.push(`A ${innerRadius} ${innerRadius} 0 0 1 ${innerRadius * Math.cos(a2)} ${innerRadius * Math.sin(a2)}`);
+    // Rise to outer
+    points.push(`L ${outerRadius * Math.cos(a3)} ${outerRadius * Math.sin(a3)}`);
+    // Outer arc (tooth top)
+    points.push(`A ${outerRadius} ${outerRadius} 0 0 1 ${outerRadius * Math.cos(a4)} ${outerRadius * Math.sin(a4)}`);
+    // Fall to inner
+    points.push(`L ${innerRadius * Math.cos(a5)} ${innerRadius * Math.sin(a5)}`);
+    // Inner arc to next tooth
+    points.push(`A ${innerRadius} ${innerRadius} 0 0 1 ${innerRadius * Math.cos(a6)} ${innerRadius * Math.sin(a6)}`);
+  }
+
+  points.push('Z');
+  return points.join(' ');
+};
 
 const NeuralCore: React.FC<NeuralCoreProps> = ({ state, activeAgent, minimized = false }) => {
   const [prevState, setPrevState] = useState<SystemState>(state);
@@ -100,6 +149,11 @@ const NeuralCore: React.FC<NeuralCoreProps> = ({ state, activeAgent, minimized =
   const isError = state === 'ERROR';
   const speedFactor = isActive ? (isError ? 0.5 : 2.0) : 1.0;
 
+  // Generate gear paths
+  const outerGearPath = generateGearPath(280, 310, 28);
+  const middleGearPath = generateGearPath(205, 230, 20);
+  const innerGearPath = generateGearPath(130, 150, 14);
+
   const containerStyle = {
     color: getStateColor(),
   } as React.CSSProperties;
@@ -126,29 +180,19 @@ const NeuralCore: React.FC<NeuralCoreProps> = ({ state, activeAgent, minimized =
               <feMergeNode in="SourceGraphic" />
             </feMerge>
           </filter>
+          <filter id="glow-gear">
+            <feGaussianBlur stdDeviation="3" result="gearBlur" />
+            <feMerge>
+              <feMergeNode in="gearBlur" />
+              <feMergeNode in="SourceGraphic" />
+            </feMerge>
+          </filter>
           <radialGradient id="grad-core" cx="0.5" cy="0.5" r="0.5">
             <stop offset="0%" stopColor="currentColor" stopOpacity="0.6" />
             <stop offset="60%" stopColor="currentColor" stopOpacity="0.2" />
             <stop offset="100%" stopColor="currentColor" stopOpacity="0" />
           </radialGradient>
-          {/* Animated gradient for energy arc */}
-          <linearGradient id="energy-grad" x1="0" y1="0" x2="1" y2="0">
-            <stop offset="0%" stopColor="currentColor" stopOpacity="0" />
-            <stop offset="40%" stopColor="currentColor" stopOpacity="0.8" />
-            <stop offset="100%" stopColor="currentColor" stopOpacity="0" />
-          </linearGradient>
         </defs>
-
-        {/* --- DECORATIVE OUTER RINGS --- */}
-        <circle r="380" fill="none" stroke="currentColor" strokeWidth="0.5" opacity="0.05" />
-        <circle
-          r="340"
-          fill="none"
-          stroke="currentColor"
-          strokeWidth="1"
-          opacity="0.1"
-          strokeDasharray="2 10"
-        />
 
         {/* --- RIPPLE EFFECT on state change --- */}
         <circle
@@ -161,152 +205,123 @@ const NeuralCore: React.FC<NeuralCoreProps> = ({ state, activeAgent, minimized =
           className="state-ripple"
         />
 
-        {/* --- DATA FLOW RINGS --- */}
+        {/* ═══════════════════════════════════════════════
+            GEAR MECHANISM — Reducer viewed from shaft side
+            Three concentric gears rotating in alternating directions
+            ═══════════════════════════════════════════════ */}
 
-        {/* Outer orbital (300) - Data Nodes */}
+        {/* --- OUTER GEAR (28 teeth) — Slow CW rotation --- */}
         <g
           style={{
-            animation: `rotate-cw ${20 / speedFactor}s linear infinite`,
+            animation: `rotate-cw ${40 / speedFactor}s linear infinite`,
             transformOrigin: 'center',
           }}
+          filter="url(#glow-gear)"
         >
+          <path
+            d={outerGearPath}
+            fill="none"
+            stroke="currentColor"
+            strokeWidth="1.5"
+            opacity={isActive ? 0.35 : 0.15}
+          />
+          {/* Inner ring of the outer gear (hub) */}
           <circle
-            r="300"
+            r="275"
+            fill="none"
+            stroke="currentColor"
+            strokeWidth="0.5"
+            opacity="0.08"
+          />
+          {/* Spoke markings every 90° */}
+          <line x1="275" y1="0" x2="310" y2="0" stroke="currentColor" strokeWidth="0.5" opacity="0.12" />
+          <line x1="-275" y1="0" x2="-310" y2="0" stroke="currentColor" strokeWidth="0.5" opacity="0.12" />
+          <line x1="0" y1="275" x2="0" y2="310" stroke="currentColor" strokeWidth="0.5" opacity="0.12" />
+          <line x1="0" y1="-275" x2="0" y2="-310" stroke="currentColor" strokeWidth="0.5" opacity="0.12" />
+        </g>
+
+        {/* --- MIDDLE GEAR (20 teeth) — Medium CCW rotation --- */}
+        <g
+          style={{
+            animation: `rotate-ccw ${22 / speedFactor}s linear infinite`,
+            transformOrigin: 'center',
+          }}
+          filter="url(#glow-gear)"
+        >
+          <path
+            d={middleGearPath}
+            fill="none"
+            stroke="currentColor"
+            strokeWidth="1.8"
+            opacity={isActive ? 0.45 : 0.2}
+          />
+          {/* Inner ring of middle gear */}
+          <circle
+            r="200"
             fill="none"
             stroke="currentColor"
             strokeWidth="0.5"
             opacity="0.1"
-            strokeDasharray="1 150"
           />
-          <circle cx="300" cy="0" r="3" fill="currentColor" opacity="0.4" />
-          <circle cx="-300" cy="0" r="3" fill="currentColor" opacity="0.4" />
-          {/* Trailing particle */}
-          <circle cx="280" cy="80" r="1.5" fill="currentColor" opacity={isActive ? 0.6 : 0.15}>
-            {isActive && (
-              <animate
-                attributeName="opacity"
-                values="0.6;0.1;0.6"
-                dur="2s"
-                repeatCount="indefinite"
-              />
-            )}
-          </circle>
+          {/* Accent dots on gear face */}
+          <circle cx="215" cy="0" r="2" fill="currentColor" opacity={isActive ? 0.5 : 0.15} />
+          <circle cx="-215" cy="0" r="2" fill="currentColor" opacity={isActive ? 0.5 : 0.15} />
+          <circle cx="0" cy="215" r="2" fill="currentColor" opacity={isActive ? 0.5 : 0.15} />
+          <circle cx="0" cy="-215" r="2" fill="currentColor" opacity={isActive ? 0.5 : 0.15} />
+          <circle cx="152" cy="152" r="1.5" fill="currentColor" opacity={isActive ? 0.4 : 0.1} />
+          <circle cx="-152" cy="152" r="1.5" fill="currentColor" opacity={isActive ? 0.4 : 0.1} />
+          <circle cx="152" cy="-152" r="1.5" fill="currentColor" opacity={isActive ? 0.4 : 0.1} />
+          <circle cx="-152" cy="-152" r="1.5" fill="currentColor" opacity={isActive ? 0.4 : 0.1} />
         </g>
 
-        {/* Layer 2 (250) - Dashed Pulse */}
+        {/* --- INNER GEAR (14 teeth) — Fast CW rotation --- */}
         <g
           style={{
-            animation: `rotate-ccw ${25 / speedFactor}s linear infinite`,
+            animation: `rotate-cw ${12 / speedFactor}s linear infinite`,
             transformOrigin: 'center',
           }}
+          filter="url(#glow-gear)"
         >
-          <circle
-            r="250"
+          <path
+            d={innerGearPath}
             fill="none"
             stroke="currentColor"
-            strokeWidth="1"
-            strokeDasharray="100 200"
-            opacity="0.2"
+            strokeWidth="2"
+            opacity={isActive ? 0.55 : 0.25}
           />
-          <circle cx="0" cy="250" r="2" fill="currentColor" />
-          {/* Energy arc segment */}
+          {/* Hub ring */}
           <circle
-            r="248"
+            r="125"
             fill="none"
-            stroke="url(#energy-grad)"
-            strokeWidth="3"
-            strokeDasharray="60 440"
-            opacity={isActive ? 0.5 : 0.1}
-          >
-            {isActive && (
+            stroke="currentColor"
+            strokeWidth="0.8"
+            opacity="0.12"
+          />
+          {/* Energy pulse on inner gear when active */}
+          {isActive && (
+            <circle
+              r="140"
+              fill="none"
+              stroke="currentColor"
+              strokeWidth="3"
+              strokeDasharray="15 800"
+              opacity="0.6"
+            >
               <animateTransform
                 attributeName="transform"
                 type="rotate"
                 from="0"
                 to="360"
-                dur="3s"
+                dur="2s"
                 repeatCount="indefinite"
               />
-            )}
-          </circle>
+            </circle>
+          )}
         </g>
 
-        {/* Layer 3 (200) - Middle Orbital */}
-        <g
-          style={{
-            animation: `rotate-cw ${10 / speedFactor}s linear infinite`,
-            transformOrigin: 'center',
-          }}
-        >
-          <circle
-            r="190"
-            fill="none"
-            stroke="currentColor"
-            strokeWidth="3"
-            strokeDasharray="10 370"
-            opacity="0.5"
-          />
-          <circle
-            r="185"
-            fill="none"
-            stroke="currentColor"
-            strokeWidth="1"
-            strokeDasharray="50 50"
-            opacity="0.1"
-          />
-        </g>
-
-        {/* Inner Logic Ring (130) */}
-        <g
-          style={{
-            animation: `rotate-ccw ${8 / speedFactor}s linear infinite`,
-            transformOrigin: 'center',
-          }}
-        >
-          <circle
-            r="130"
-            fill="none"
-            stroke="currentColor"
-            strokeWidth="1"
-            strokeDasharray="5 5"
-            opacity="0.3"
-          />
-          {/* Scanning segment */}
-          <circle
-            r="128"
-            fill="none"
-            stroke="currentColor"
-            strokeWidth="4"
-            strokeDasharray="20 790"
-            opacity={isActive ? 0.7 : 0.2}
-          >
-            {isActive && (
-              <animate
-                attributeName="opacity"
-                values="0.7;0.3;0.7"
-                dur="1.5s"
-                repeatCount="indefinite"
-              />
-            )}
-          </circle>
-        </g>
-
-        {/* Inner Logic Ring (100) */}
-        <g
-          style={{
-            animation: `rotate-cw ${5 / speedFactor}s linear infinite`,
-            transformOrigin: 'center',
-          }}
-        >
-          <circle
-            r="100"
-            fill="none"
-            stroke="currentColor"
-            strokeWidth="2"
-            strokeDasharray="80 120"
-            opacity="0.6"
-          />
-        </g>
+        {/* --- Thin accent ring between gears --- */}
+        <circle r="260" fill="none" stroke="currentColor" strokeWidth="0.3" opacity="0.06" />
+        <circle r="170" fill="none" stroke="currentColor" strokeWidth="0.3" opacity="0.06" />
 
         {/* --- CENTRAL CORE --- */}
         <g className="core-group" filter={isActive ? 'url(#glow-strong)' : 'url(#glow-core)'}>
@@ -628,12 +643,6 @@ const NeuralCore: React.FC<NeuralCoreProps> = ({ state, activeAgent, minimized =
         }
         .state-ripple {
           animation: state-ripple 1.2s cubic-bezier(0, 0.5, 0.3, 1) forwards;
-        }
-
-        /* Custom CCW rotation for inner rings */
-        @keyframes spin-ccw {
-          from { transform: rotate(360deg); }
-          to { transform: rotate(0deg); }
         }
       `}</style>
     </div>

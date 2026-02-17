@@ -246,9 +246,9 @@ const ExecutionLog: React.FC<ExecutionLogProps> = ({ logs }) => {
               >
                 <span
                   style={{
-                    fontSize: '7.5px',
+                    fontSize: '8px',
                     fontWeight: 700,
-                    letterSpacing: '0.15em',
+                    letterSpacing: '0.12em',
                     textTransform: 'uppercase',
                     color: getAgentColor(log.agent),
                     fontFamily: "'JetBrains Mono', monospace",
@@ -259,7 +259,7 @@ const ExecutionLog: React.FC<ExecutionLogProps> = ({ logs }) => {
 
                 <span
                   style={{
-                    fontSize: '7.5px',
+                    fontSize: '8px',
                     fontFamily: "'JetBrains Mono', monospace",
                     fontWeight: 500,
                     letterSpacing: '-0.02em',
@@ -271,7 +271,7 @@ const ExecutionLog: React.FC<ExecutionLogProps> = ({ logs }) => {
 
                 <span
                   style={{
-                    fontSize: '7.5px',
+                    fontSize: '8px',
                     fontWeight: 700,
                     color: getLogColor(log.type),
                     fontFamily: "'JetBrains Mono', monospace",
@@ -285,9 +285,9 @@ const ExecutionLog: React.FC<ExecutionLogProps> = ({ logs }) => {
               <div style={{ flex: 1, paddingLeft: '2px' }}>
                 <span
                   style={{
-                    fontSize: '10.5px',
+                    fontSize: '11px',
                     fontWeight: 350,
-                    lineHeight: '1.55',
+                    lineHeight: '1.6',
                     overflowWrap: 'break-word',
                     wordBreak: 'break-word',
                     transition: 'color 0.2s ease',

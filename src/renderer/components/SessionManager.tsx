@@ -20,16 +20,26 @@ const SessionManager: React.FC<SessionManagerProps> = ({
   onClose,
 }) => {
   const [sessions, setSessions] = useState<Session[]>([]);
+  const [isLoading, setIsLoading] = useState(false);
+  const [fetchError, setFetchError] = useState<string | null>(null);
 
   const fetchSessions = useCallback(async () => {
+    setIsLoading(true);
+    setFetchError(null);
     try {
       const response = await fetch(`${API_BASE}/api/sessions`);
       if (response.ok) {
         const data = await response.json();
-        setSessions(data);
+        setSessions(Array.isArray(data) ? data : []);
+      } else {
+        console.error('[SessionManager] Server returned', response.status);
+        setFetchError('Failed to load sessions');
       }
     } catch (err) {
       console.error('[SessionManager] Failed to fetch sessions:', err);
+      setFetchError('Cannot reach server');
+    } finally {
+      setIsLoading(false);
     }
   }, []);
 
@@ -135,8 +145,43 @@ const SessionManager: React.FC<SessionManagerProps> = ({
         </div>
 
         <div className="flex-1 overflow-y-auto pr-2">
-          {sessions.length === 0 ? (
-            <div className="text-[8px] text-[#00e5ff]/40 uppercase tracking-widest text-center mt-20">
+          {isLoading ? (
+            <div
+              className="flex items-center justify-center mt-20"
+              style={{
+                fontSize: '8px',
+                color: 'rgba(0, 229, 255, 0.4)',
+                letterSpacing: '0.3em',
+                textTransform: 'uppercase',
+                fontFamily: "'JetBrains Mono', monospace",
+              }}
+            >
+              Loading sessions...
+            </div>
+          ) : fetchError ? (
+            <div
+              className="text-center mt-20"
+              style={{
+                fontSize: '8px',
+                color: 'rgba(255, 77, 77, 0.6)',
+                letterSpacing: '0.2em',
+                textTransform: 'uppercase',
+                fontFamily: "'JetBrains Mono', monospace",
+              }}
+            >
+              {fetchError}
+            </div>
+          ) : sessions.length === 0 ? (
+            <div
+              className="text-center mt-20"
+              style={{
+                fontSize: '8px',
+                color: 'rgba(0, 229, 255, 0.4)',
+                letterSpacing: '0.3em',
+                textTransform: 'uppercase',
+                fontFamily: "'JetBrains Mono', monospace",
+              }}
+            >
               No previous sessions found
             </div>
           ) : (
@@ -153,10 +198,27 @@ const SessionManager: React.FC<SessionManagerProps> = ({
                       : 'border-[#00e5ff]/20 bg-black/40'
                   }`}
                 >
-                  <div className="text-[9px] uppercase tracking-wider text-[#00e5ff] mb-1">
-                    {s.theme || 'Untiltled Session'}
+                  <div
+                    style={{
+                      fontSize: '9px',
+                      letterSpacing: '0.1em',
+                      textTransform: 'uppercase',
+                      color: '#00e5ff',
+                      marginBottom: '4px',
+                      fontFamily: "'Outfit', sans-serif",
+                    }}
+                  >
+                    {s.theme || 'Untitled Session'}
                   </div>
-                  <div className="text-[7px] uppercase tracking-widest text-[#00e5ff]/40 font-mono">
+                  <div
+                    style={{
+                      fontSize: '7px',
+                      letterSpacing: '0.15em',
+                      textTransform: 'uppercase',
+                      color: 'rgba(0, 229, 255, 0.4)',
+                      fontFamily: "'JetBrains Mono', monospace",
+                    }}
+                  >
                     ID: {s.id} • {new Date(s.saved_at).toLocaleString()}
                   </div>
                 </button>
