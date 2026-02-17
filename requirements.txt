@@ -72,6 +72,7 @@ grpcio>=1.60.0
 # === Vision & Automation ===
 pyautogui>=0.9.54
 pillow>=10.0.0
+cairosvg>=2.7.0
 pyobjc-framework-Quartz>=10.0 ; sys_platform == 'darwin'
 pyobjc-framework-ApplicationServices>=10.0 ; sys_platform == 'darwin'
 
