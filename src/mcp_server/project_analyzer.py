@@ -38,8 +38,13 @@ def analyze_project_structure(project_path: Path) -> dict[str, Any]:
     if (project_path / ".git").exists():
         analysis["git_initialized"] = True
 
+    # Detect AtlasTrinity (Internal)
+    if project_path.name == "atlastrinity" or (project_path / "src" / "brain").exists():
+        analysis["project_type"] = "atlastrinity"
+        analysis.update(_analyze_atlastrinity_project(project_path))
+
     # Detect Python project
-    if (project_path / "requirements.txt").exists() or (project_path / "pyproject.toml").exists():
+    elif (project_path / "requirements.txt").exists() or (project_path / "pyproject.toml").exists():
         analysis["project_type"] = "python"
         analysis.update(_analyze_python_project(project_path))
 
@@ -212,6 +217,55 @@ def _analyze_generic_project(project_path: Path) -> dict[str, Any]:
     for item in project_path.iterdir():
         if item.is_dir() and not item.name.startswith("."):
             info["components"].append(item.name.title())
+
+    return info
+
+
+
+def _analyze_atlastrinity_project(project_path: Path) -> dict[str, Any]:
+    """Analyze AtlasTrinity specific structure."""
+    info: dict[str, Any] = {
+        "entry_points": ["src/main/main.ts", "src/brain/server.py"],
+        "key_files": ["package.json", "pyproject.toml", "config/config.yaml.template"],
+        "components": [],
+        "directories": {},
+    }
+
+    # Detect Brain components (Core Logic)
+    brain_path = project_path / "src" / "brain"
+    if brain_path.exists():
+        info["directories"]["brain"] = []
+        # Core submodules
+        for item in brain_path.iterdir():
+            if item.is_dir() and item.name not in ["__pycache__", "data", "tests", "mcp"]:
+                component_name = f"Brain.{item.name.title()}"
+                info["components"].append(component_name)
+                info["directories"]["brain"].append(item.name)
+
+    # Detect MCP Servers
+    mcp_path = project_path / "src" / "mcp_server"
+    if mcp_path.exists():
+        info["directories"]["mcp_server"] = []
+        for item in mcp_path.iterdir():
+            # Check for _server.py files or directories like "golden_fund"
+            valid_server = False
+            server_name = ""
+            if item.suffix == ".py" and item.stem.endswith("_server"):
+                server_name = item.stem.replace("_server", "").title()
+                valid_server = True
+            elif item.is_dir() and (item / "server.py").exists():
+                server_name = item.name.title()
+                valid_server = True
+            
+            if valid_server:
+                info["components"].append(f"MCP.{server_name}")
+                info["directories"]["mcp_server"].append(item.name)
+
+    # Detect Frontend
+    renderer_path = project_path / "src" / "renderer"
+    if renderer_path.exists():
+        info["directories"]["renderer"] = ["components", "hooks", "pages"]
+        info["components"].append("Frontend.React")
 
     return info
 

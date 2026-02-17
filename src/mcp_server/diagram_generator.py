@@ -30,6 +30,8 @@ def generate_architecture_diagram(project_path: Path, project_analysis: dict[str
         diagram = _generate_rust_diagram(project_name, project_analysis)
     elif project_type == "go":
         diagram = _generate_go_diagram(project_name, project_analysis)
+    elif project_type == "atlastrinity":
+        diagram = _generate_atlastrinity_diagram(project_name, project_analysis)
     else:
         diagram = _generate_generic_diagram(project_name, project_analysis)
 
@@ -218,3 +220,65 @@ def _generate_components_list(analysis: dict[str, Any]) -> str:
         )
 
     return "\n\n".join(sections) if sections else "*No components detected*"
+
+
+def _generate_atlastrinity_diagram(project_name: str, analysis: dict[str, Any]) -> str:
+    """Generate specialized diagram for AtlasTrinity."""
+    components = analysis.get("components", [])
+
+    # Categorize components
+    brain_comps = [c.split(".")[1] for c in components if c.startswith("Brain.")]
+    mcp_servers = [c.split(".")[1] for c in components if c.startswith("MCP.")]
+    frontend = any(c.startswith("Frontend") for c in components)
+
+    nodes = [
+        '    subgraph Frontend["Frontend (Electron)"]',
+        "        UI[React UI]",
+        "        Main[Electron Main]",
+        "        UI <--> Main",
+        "    end",
+        "",
+        '    subgraph Core["Brain (Python Core)"]',
+        "        Orchestrator{Orchestrator}",
+        "        Context[Context Manager]",
+        "        Tools[Tool Dispatcher]",
+        "        Orchestrator --> Context",
+        "        Orchestrator --> Tools",
+    ]
+
+    # Add Brain components
+    for i, comp in enumerate(brain_comps):
+        if comp not in ["Orchestrator", "Context", "Tools", "Mcp_Server"]:  # Skip if already added or special
+            nodes.append(f"        Tools --> BrainComp{i}[{comp}]")
+    
+    nodes.append("    end")
+    nodes.append("")
+    
+    nodes.append('    subgraph MCP["MCP Servers"]')
+    for i, server in enumerate(mcp_servers):
+        nodes.append(f"        Tools <--> MCP{i}[{server}]")
+    nodes.append("    end")
+
+    nodes.append("")
+    nodes.append('    subgraph Data["Persistence"]')
+    nodes.append("        DB[(SQLite DB)]")
+    nodes.append("        Logs[Log Files]")
+    nodes.append("    end")
+
+    # Connect major blocks
+    nodes.append("    Main <--> Orchestrator")
+    nodes.append("    Context --> DB")
+    nodes.append("    Orchestrator -.-> Logs")
+
+    diagram_code = "\n".join(nodes)
+
+    return f"""```mermaid
+flowchart TD
+{diagram_code}
+
+    style Frontend fill:#e1f5ff,stroke:#007acc
+    style Core fill:#fff0e6,stroke:#ff6b6b
+    style MCP fill:#f0f7e6,stroke:#4caf50
+    style Data fill:#f5f5f5,stroke:#666
+```"""
+
