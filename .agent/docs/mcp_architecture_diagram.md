@@ -1,4 +1,8 @@
 
+<!-- AUTO-UPDATED: 2026-02-17T23:30:23.503243 -->
+<!-- Modified: .agent/docs/mcp_architecture_diagram.md, src/brain/data/architecture_diagrams/mcp_architecture.md -->
+
+
 <!-- AUTO-UPDATED: 2026-02-17T23:26:09.101388 -->
 <!-- Modified: .agent/docs/mcp_architecture_diagram.md, .githuworkflows/ci-core.yml, docs/vibe-usage.md -->
 
@@ -2566,6 +2570,32 @@ npm run diagram:update
 The Vibe usage diagram and inventory are included in project exports.
 
 ![](/src/brain/data/architecture_diagrams/exports/vibe-usage-diagram.png)
+
+<!--
+    Editable Mermaid source for the Vibe usage diagram.
+    This block is kept in-sync with `src/brain/data/architecture_diagrams/mcp_architecture.md`
+    and `docs/vibe-usage.md`. Edit here to update the canonical diagram used by
+    the export pipeline and documentation.
+-->
+
+```mermaid
+flowchart LR
+    UI["User / UI (Electron / CLI)"] --> MCP["MCP Manager / API"]
+    MCP --> VSERVER["`src/mcp_server/vibe_server.py`\n(MCP wrapper)"]
+    VSERVER --> VCONFIG["`src/mcp_server/vibe_config.py`\n(config models & loader)"]
+    VSERVER --> VCLI["Vibe CLI binary / VIBE_HOME (runtime)"]
+    VCLI --> PROVIDERS["LLM providers\n(mistral / copilot / windsurf)"]
+    PROVIDERS --> PROXIES["Provider proxies\n(`copilot_vibe_proxy.py`, `vibe_windsurf_proxy.py`)"]
+    VSERVER --> WORKSPACE["`vibe_workspace`\n(instructions, logs, sessions)"]
+    VSERVER --> SESSIONS["~/.vibe/logs/session (session persistence)"]
+    VSERVER --> DB["AtlasTrinity DB / logs"]
+    VSERVER --> TOOLS["MCP tools: `vibe_prompt`, `vibe_ask`,\n`vibe_analyze_error`, `vibe_implement_feature`, ..."]
+    DOCS["Docs & Templates (.docs/, docs/, .agent/docs/)"] --> VSERVER
+    SCRIPTS["Scripts & Tests (src/testing/, scripts/, src/maintenance/)"] --> VSERVER
+    note_right of VSERVER: "Token-exchange (Copilot), VIBE_HOME overrides,\nqueueing, retries & fallback chain"
+```
+
+<!-- END: Vibe mermaid source -->
 
 
 ### Vibe (AI agent) — Usage & Integration
