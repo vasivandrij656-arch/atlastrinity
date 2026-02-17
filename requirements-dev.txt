@@ -25,3 +25,7 @@ safety>=3.0.0
 xenon>=0.9.0
 detect-secrets>=1.5.0
 zizmor>=1.22.0
+
+# === Optional utilities (dev) ===
+# Used to convert SVG diagrams to PNG in CI/documentation exports (best-effort)
+cairosvg>=2.6.0

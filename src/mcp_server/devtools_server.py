@@ -1215,6 +1215,21 @@ def devtools_update_architecture_diagrams(
                 update_notice += f"<!-- Modified: {', '.join(modified_files[:3])} -->\n\n"
                 updated_diagram = update_notice + current_diagram
 
+                # If a Vibe usage doc/diagram exists, append a reference so it's
+                # included in the canonical architecture doc and exported assets.
+                try:
+                    vibe_doc = PROJECT_ROOT / "docs" / "vibe-usage.md"
+                    vibe_svg = PROJECT_ROOT / "docs" / "vibe-usage-diagram.svg"
+                    if vibe_svg.exists() or vibe_doc.exists():
+                        vibe_section = "\n\n### Vibe (AI agent) — Usage & Integration\n"
+                        vibe_section += "The Vibe usage diagram and inventory are included in project exports.\n\n"
+                        # Prefer PNG (exported into exports/) then fallback to svg
+                        vibe_section += "![](/src/brain/data/architecture_diagrams/exports/vibe-usage-diagram.png)\n"
+                        updated_diagram = updated_diagram + vibe_section
+                except Exception:
+                    # non-fatal
+                    pass
+
                 with open(internal_path, "w", encoding="utf-8") as f:
                     f.write(updated_diagram)
                 with open(docs_path, "w", encoding="utf-8") as f:
@@ -1359,6 +1374,43 @@ def _export_diagrams(target_mode: str, project_path: Path) -> None:
         ]
 
         subprocess.run(cmd, capture_output=True, check=False, stdin=subprocess.DEVNULL)
+
+        # Also look for any auxiliary diagrams (e.g. Vibe usage) and copy/convert
+        # them into the exports directory so they are included in documentation
+        # bundles. This keeps ad-hoc diagrams (docs/vibe-*.svg) in-sync.
+        try:
+            # Source candidate in docs/
+            vibe_svg = PROJECT_ROOT / "docs" / "vibe-usage-diagram.svg"
+            if vibe_svg.exists():
+                target_svg = output_dir / "vibe-usage-diagram.svg"
+                shutil.copy2(vibe_svg, target_svg)
+
+                # Try best-effort PNG conversion (cairosvg / rsvg-convert / ImageMagick)
+                png_path = output_dir / "vibe-usage-diagram.png"
+                converted = False
+                try:
+                    import cairosvg
+
+                    cairosvg.svg2png(url=str(vibe_svg), write_to=str(png_path))
+                    converted = True
+                except Exception:
+                    # Try command-line fallbacks
+                    for cmd_tool in (["rsvg-convert", "-o", str(png_path), str(vibe_svg)],
+                                     ["convert", str(vibe_svg), str(png_path)]):
+                        try:
+                            subprocess.run(cmd_tool, check=True, capture_output=True)
+                            converted = True
+                            break
+                        except Exception:
+                            continue
+
+                # If conversion failed, leave the SVG copy in place (still useful)
+                if not converted:
+                    # touch the svg so consumers know an asset exists
+                    target_svg.touch()
+        except Exception:
+            # Non-critical — don't fail the whole export if auxiliary copy fails
+            pass
 
     except Exception:
         # Export is optional, don't fail on errors
