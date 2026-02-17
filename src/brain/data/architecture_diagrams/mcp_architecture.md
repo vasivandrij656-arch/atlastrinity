@@ -1,6 +1,6 @@
 
-<!-- AUTO-UPDATED: 2026-02-18T00:45:39.220849 -->
-<!-- Modified: .agent/docs/mcp_architecture_diagram.md, scripts/convert_vibe_diagram.py, scripts/validate_mermaid.py -->
+<!-- AUTO-UPDATED: 2026-02-18T01:00:05.358813 -->
+<!-- Modified: .agent/docs/mcp_architecture_diagram.md, package.json, src/brain/data/architecture_diagrams/mcp_architecture.md -->
 
 # Architecture Diagram - atlastrinity
 
