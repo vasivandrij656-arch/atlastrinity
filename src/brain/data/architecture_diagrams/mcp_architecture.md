@@ -1,4 +1,8 @@
 
+<!-- AUTO-UPDATED: 2026-02-17T23:31:10.377010 -->
+<!-- Modified: .agent/docs/mcp_architecture_diagram.md, src/brain/data/architecture_diagrams/mcp_architecture.md -->
+
+
 <!-- AUTO-UPDATED: 2026-02-17T23:30:23.503243 -->
 <!-- Modified: .agent/docs/mcp_architecture_diagram.md, src/brain/data/architecture_diagrams/mcp_architecture.md -->
 
@@ -2596,6 +2600,12 @@ flowchart LR
 ```
 
 <!-- END: Vibe mermaid source -->
+
+
+### Vibe (AI agent) — Usage & Integration
+The Vibe usage diagram and inventory are included in project exports.
+
+![](/src/brain/data/architecture_diagrams/exports/vibe-usage-diagram.png)
 
 
 ### Vibe (AI agent) — Usage & Integration

@@ -49,8 +49,7 @@ jobs:
           pytest tests/test_trinity_core.py -v --timeout=120
         env:
           PYTHONPATH: ${{ github.workspace }}/src
-          OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}
-          ANTHROPIC_API_KEY: ${{ secrets.ANTHROPIC_API_KEY }}
+          COPILOT_API_KEY: ${{ secrets.COPILOT_API_KEY }}
 
       - name: Test agent handoff logic
         run: |
@@ -90,7 +89,7 @@ jobs:
         continue-on-error: true # May require API keys
         env:
           PYTHONPATH: ${{ github.workspace }}/src
-          OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}
+          COPILOT_API_KEY: ${{ secrets.COPILOT_API_KEY }}
 
   test-tetyana-agent:
     name: Tetyana (Executor) Tests
@@ -127,7 +126,7 @@ jobs:
         continue-on-error: true
         env:
           PYTHONPATH: ${{ github.workspace }}/src
-          OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}
+          COPILOT_API_KEY: ${{ secrets.COPILOT_API_KEY }}
 
   test-grisha-agent:
     name: Grisha (Critic) Tests
@@ -157,7 +156,7 @@ jobs:
         continue-on-error: true
         env:
           PYTHONPATH: ${{ github.workspace }}/src
-          OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}
+          COPILOT_API_KEY: ${{ secrets.COPILOT_API_KEY }}
 
   # ============================================
   # Scenario-Based Integration Tests
@@ -200,9 +199,9 @@ jobs:
         continue-on-error: true # Scenarios may be flaky
         env:
           PYTHONPATH: ${{ github.workspace }}/src
-          OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}
-          ANTHROPIC_API_KEY: ${{ secrets.ANTHROPIC_API_KEY }}
           COPILOT_API_KEY: ${{ secrets.COPILOT_API_KEY }}
+          WINDSURF_API_KEY: ${{ secrets.WINDSURF_API_KEY }}
+          MISTRAL_API_KEY: ${{ secrets.MISTRAL_API_KEY }}
 
       - name: Upload scenario results
         uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4.6.0
