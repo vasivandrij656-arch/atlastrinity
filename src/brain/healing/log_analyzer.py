@@ -44,8 +44,18 @@ RESOURCE_PATTERNS = [
     (re.compile(r"too many open files", re.IGNORECASE), "resource_bottleneck"),
 ]
 
-# File path extraction pattern
+# Frontend (TypeScript/Vite/Electron) patterns
+FRONTEND_PATTERNS = [
+    (re.compile(r"error TS(\d+):\s*(.+)"), "typescript_error"),
+    (re.compile(r"\[vite\].*?error", re.IGNORECASE), "vite_error"),
+    (re.compile(r"✖.*?lint|biome.*?error", re.IGNORECASE), "lint_error"),
+    (re.compile(r"Cannot find module '([^']+)'"), "missing_module"),
+    (re.compile(r"Module not found.*?'([^']+)'", re.IGNORECASE), "missing_module"),
+]
+
+# File path extraction patterns
 FILE_PATH_PATTERN = re.compile(r'(?:File "([^"]+)", line (\d+))|(\b\w+/[\w/]+\.py\b)')
+TS_FILE_PATH_PATTERN = re.compile(r'([\w./]+\.tsx?)\((\d+),\d+\)')
 
 
 class LogAnalyzer:
@@ -120,13 +130,16 @@ class LogAnalyzer:
                 (SLOW_PATTERNS, "slow_operation"),
                 (WARNING_PATTERNS, "repeated_warning"),
                 (RESOURCE_PATTERNS, "resource_bottleneck"),
+                (FRONTEND_PATTERNS, "frontend"),
             ]:
-                for pattern, _ in patterns:
+                for pattern, cat_override in patterns:
                     match = pattern.search(line)
                     if match:
-                        description = self._clean_description(match.group(0), category)
+                        # Use the specific sub-category from the pattern tuple
+                        actual_category = cat_override
+                        description = self._clean_description(match.group(0), actual_category)
                         note = self._upsert_note(
-                            category=category,
+                            category=actual_category,
                             description=description,
                             source_file=source_file,
                             source_line=source_line,
@@ -204,6 +217,8 @@ class LogAnalyzer:
             self.logs_dir / "vibe_server.log",
             self.logs_dir / "orchestrator.log",
             self.logs_dir / "ci_failure.log",
+            self.logs_dir / "electron.log",
+            self.logs_dir / "dev_server.log",
         ]
 
         for log_file in log_files:
@@ -285,6 +300,10 @@ class LogAnalyzer:
             "slow_operation": HealingPriority.MEDIUM,
             "repeated_warning": HealingPriority.LOW,
             "resource_bottleneck": HealingPriority.HIGH,
+            "typescript_error": HealingPriority.HIGH,
+            "vite_error": HealingPriority.HIGH,
+            "lint_error": HealingPriority.MEDIUM,
+            "missing_module": HealingPriority.HIGH,
         }
         return severity_map.get(category, HealingPriority.MEDIUM)
 
@@ -297,12 +316,19 @@ class LogAnalyzer:
 
     def _extract_file_info(self, line: str) -> tuple[str | None, int | None]:
         """Extract source file and line number from log line."""
+        # Python format: File "path", line N
         match = FILE_PATH_PATTERN.search(line)
         if match:
             if match.group(1):  # File "path", line N
                 return match.group(1), int(match.group(2))
             if match.group(3):  # bare path/to/file.py
                 return match.group(3), None
+
+        # TypeScript format: file.tsx(line,col)
+        ts_match = TS_FILE_PATH_PATTERN.search(line)
+        if ts_match:
+            return ts_match.group(1), int(ts_match.group(2))
+
         return None, None
 
     def _load_notes(self) -> None:

@@ -42,6 +42,14 @@ jobs:
       - name: Linting (Lefthook)
         run: npm run lint:all
 
+      - name: Frontend TypeScript check
+        run: |
+          npx tsc --noEmit -p tsconfig.json
+          npx tsc --noEmit -p tsconfig.main.json
+
+      - name: Frontend Vite build
+        run: npm run build:renderer
+
       - name: E2E Total Integrity Test
         env:
           ATLAS_SYSTEM_PASSWORD: ${{ secrets.ATLAS_SYSTEM_PASSWORD }}

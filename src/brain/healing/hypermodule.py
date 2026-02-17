@@ -25,7 +25,9 @@ Usage:
 """
 
 import logging
+import subprocess
 import time
+from pathlib import Path
 from typing import Any
 
 from src.brain.healing.ci_bridge import CIBridge, ci_bridge
@@ -364,7 +366,39 @@ class SelfHealingHypermodule:
         except Exception as e:
             report.checks["ci_cd"] = {"status": "error", "error": str(e)}
 
-        # 5. Log analyzer stats
+        # 5. Frontend build health
+        try:
+            project_root = Path(__file__).resolve().parent.parent.parent.parent
+            result = subprocess.run(
+                ["npx", "tsc", "--noEmit"],
+                cwd=str(project_root),
+                capture_output=True,
+                text=True,
+                timeout=120,
+            )
+            ts_errors = [line for line in result.stdout.splitlines() if "error TS" in line]
+            report.checks["frontend_build"] = {
+                "status": "ok" if result.returncode == 0 else "error",
+                "ts_errors": len(ts_errors),
+                "first_errors": ts_errors[:5],
+            }
+            if ts_errors:
+                report.issues_found += 1
+        except FileNotFoundError:
+            report.checks["frontend_build"] = {
+                "status": "skipped",
+                "reason": "npx not available",
+            }
+        except subprocess.TimeoutExpired:
+            report.checks["frontend_build"] = {
+                "status": "error",
+                "reason": "TypeScript check timed out",
+            }
+            report.issues_found += 1
+        except Exception as e:
+            report.checks["frontend_build"] = {"status": "error", "error": str(e)}
+
+        # 6. Log analyzer stats
         report.checks["log_analyzer"] = self.log_analyzer.get_stats()
 
         # Determine overall status
@@ -454,6 +488,38 @@ class SelfHealingHypermodule:
                     )
         except Exception as e:
             issues.append(f"CI/CD analysis failed: {e}")
+
+        # 3b. Frontend health check (TypeScript compilation)
+        try:
+            project_root = Path(__file__).resolve().parent.parent.parent.parent
+            result = subprocess.run(
+                ["npx", "tsc", "--noEmit"],
+                cwd=str(project_root),
+                capture_output=True,
+                text=True,
+                timeout=120,
+            )
+            if result.returncode != 0:
+                ts_errors = [
+                    line for line in result.stdout.splitlines() if "error TS" in line
+                ]
+                actions.append(
+                    f"Frontend check: {len(ts_errors)} TypeScript errors detected"
+                )
+                # Feed TS errors into log analyzer for the improvement cycle
+                for error_line in ts_errors[:10]:  # cap at 10 to avoid flooding
+                    self.log_analyzer._upsert_note(
+                        category="typescript_error",
+                        description=error_line.strip(),
+                        source_file=None,
+                        source_line=None,
+                    )
+            else:
+                actions.append("Frontend TypeScript check passed")
+        except FileNotFoundError:
+            pass  # npx not available in CI-less environments
+        except Exception as e:
+            issues.append(f"Frontend check failed: {e}")
 
         # 4. Memory/cache cleanup
         try:
@@ -627,6 +693,12 @@ class SelfHealingHypermodule:
         pending = analyzer.get("pending", 0)
         if pending > 10:
             recs.append(f"Run IMPROVE mode: {pending} improvement notes pending")
+
+        frontend = checks.get("frontend_build", {})
+        if frontend.get("ts_errors", 0) > 0:
+            recs.append(
+                f"Fix {frontend['ts_errors']} TypeScript errors: npx tsc --noEmit"
+            )
 
         return recs
 

@@ -14,7 +14,7 @@ from datetime import datetime
 from pathlib import Path
 from typing import Any
 
-from src.brain.healing.modes import CommitTag, HealingPriority, ImprovementNote
+from src.brain.healing.modes import CommitTag, ErrorDomain, HealingPriority, ImprovementNote
 
 logger = logging.getLogger("brain.healing.ci_bridge")
 
@@ -124,17 +124,156 @@ class CIBridge:
                 ", ".join(j.get("name", "unknown") for j in result.failed_jobs) or "unknown jobs"
             )
 
+            # Classify error domain from failed job names and error logs
+            domain = self.classify_error(f"{result.name} {failed_info} {result.error_logs}")
+
             note = ImprovementNote(
                 id=f"ci_{result.run_id}",
                 category="ci_failure",
-                description=f"CI workflow '{result.name}' failed: {failed_info}",
+                description=f"[{domain.value}] CI workflow '{result.name}' failed: {failed_info}",
                 severity=HealingPriority.HIGH,
                 first_seen=datetime.now(),
                 last_seen=datetime.now(),
             )
             notes.append(note)
-            logger.info(f"[CIBridge] CI failure detected: {result.name}")
+            logger.info(f"[CIBridge] CI failure detected: {result.name} (domain={domain.value})")
 
+            # If logs are available and it's a frontend error, parse further
+            if result.error_logs and domain == ErrorDomain.FRONTEND:
+                frontend_notes = self.analyze_frontend_errors(result.error_logs)
+                notes.extend(frontend_notes)
+
+        return notes
+
+    @staticmethod
+    def classify_error(log_line: str) -> ErrorDomain:
+        """Classify an error line into a domain.
+
+        Uses pattern matching to determine if the error is from frontend,
+        backend, config, test, or build systems.
+        """
+        import re
+
+        line = log_line.lower()
+
+        # Frontend patterns
+        if re.search(
+            r"error ts\d+|ts\d+:|biome|vite|eslint|oxlint|renderer|react|jsx|tsx",
+            line,
+        ):
+            return ErrorDomain.FRONTEND
+
+        # Backend patterns
+        if re.search(
+            r"pytest|importerror|modulenotfounderror|pyrefly|ruff|pyright|python|pip",
+            line,
+        ):
+            return ErrorDomain.BACKEND
+
+        # Config patterns
+        if re.search(r"yaml|json.*config|mcp.*config|\.env|config.*sync", line):
+            return ErrorDomain.CONFIG
+
+        # Test patterns
+        if re.search(r"test.*fail|assert|expect|failed.*test|test.*error", line):
+            return ErrorDomain.TEST
+
+        # Build patterns
+        if re.search(
+            r"electron-builder|swift build|npm run build|build.*fail|dmg|packaging",
+            line,
+        ):
+            return ErrorDomain.BUILD
+
+        # Default to backend for unclassified
+        return ErrorDomain.BACKEND
+
+    def analyze_frontend_errors(self, log_content: str) -> list[ImprovementNote]:
+        """Parse TypeScript/Vite/Lint errors from CI logs into structured notes.
+
+        Extracts file paths, line numbers, and error codes from common
+        frontend tooling output formats.
+
+        Returns:
+            List of ImprovementNote objects with source file information.
+        """
+        import re
+
+        notes: list[ImprovementNote] = []
+        seen: set[str] = set()
+
+        # TypeScript errors: src/renderer/foo.tsx(42,5): error TS2345: ...
+        ts_pattern = re.compile(
+            r"([\w./]+\.tsx?)\((\d+),\d+\):\s*error\s+(TS\d+):\s*(.+)"
+        )
+
+        # Vite errors: [vite] Internal server error: ...
+        vite_pattern = re.compile(
+            r"\[vite\].*?error:?\s*(.+)", re.IGNORECASE
+        )
+
+        # Biome/ESLint: src/renderer/foo.tsx:42:5 lint/rule: message
+        lint_pattern = re.compile(
+            r"([\w./]+\.tsx?):(\d+):\d+\s+(\S+):\s*(.+)"
+        )
+
+        for line in log_content.splitlines():
+            # TypeScript errors
+            ts_match = ts_pattern.search(line)
+            if ts_match:
+                file_path, line_num, error_code, message = ts_match.groups()
+                note_id = f"ts_{error_code}_{file_path}_{line_num}"
+                if note_id not in seen:
+                    seen.add(note_id)
+                    notes.append(ImprovementNote(
+                        id=note_id,
+                        category="typescript_error",
+                        description=f"{error_code}: {message.strip()}",
+                        source_file=file_path,
+                        source_line=int(line_num),
+                        severity=HealingPriority.HIGH,
+                        first_seen=datetime.now(),
+                        last_seen=datetime.now(),
+                    ))
+                continue
+
+            # Lint errors
+            lint_match = lint_pattern.search(line)
+            if lint_match:
+                file_path, line_num, rule, message = lint_match.groups()
+                note_id = f"lint_{rule}_{file_path}_{line_num}"
+                if note_id not in seen:
+                    seen.add(note_id)
+                    notes.append(ImprovementNote(
+                        id=note_id,
+                        category="lint_error",
+                        description=f"{rule}: {message.strip()}",
+                        source_file=file_path,
+                        source_line=int(line_num),
+                        severity=HealingPriority.MEDIUM,
+                        first_seen=datetime.now(),
+                        last_seen=datetime.now(),
+                    ))
+                continue
+
+            # Vite errors
+            vite_match = vite_pattern.search(line)
+            if vite_match:
+                message = vite_match.group(1)
+                note_id = f"vite_{hash(message) & 0xFFFFFF:06x}"
+                if note_id not in seen:
+                    seen.add(note_id)
+                    notes.append(ImprovementNote(
+                        id=note_id,
+                        category="vite_error",
+                        description=f"Vite: {message.strip()}",
+                        severity=HealingPriority.HIGH,
+                        first_seen=datetime.now(),
+                        last_seen=datetime.now(),
+                    ))
+
+        if notes:
+            logger.info(f"[CIBridge] Parsed {len(notes)} frontend errors from logs")
         return notes
 
     async def trigger_auto_fix(self, workflow_name: str = "auto-fix.yml") -> bool:
