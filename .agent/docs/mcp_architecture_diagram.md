@@ -1,6 +1,6 @@
 
-<!-- AUTO-UPDATED: 2026-02-18T00:36:41.405817 -->
-<!-- Modified: .agent/docs/mcp_architecture_diagram.md, src/brain/data/architecture_diagrams/mcp_architecture.md, src/mcp_server/diagram_generator.py -->
+<!-- AUTO-UPDATED: 2026-02-18T00:41:01.629721 -->
+<!-- Modified: .agent/docs/mcp_architecture_diagram.md, requirements.txt, src/brain/data/architecture_diagrams/mcp_architecture.md -->
 
 # Architecture Diagram - atlastrinity
 

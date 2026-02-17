@@ -5,9 +5,9 @@ Usage: python3 scripts/convert_vibe_diagram.py
 This is a best-effort converter: prefers cairosvg, falls back to rsvg-convert/ImageMagick,
 or simply copies the SVG if conversion tools are not available.
 """
-from pathlib import Path
 import shutil
 import subprocess
+from pathlib import Path
 
 ROOT = Path(__file__).resolve().parent.parent
 SRC_SVG = ROOT / "docs" / "vibe-usage-diagram.svg"

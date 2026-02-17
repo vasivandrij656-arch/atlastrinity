@@ -229,7 +229,6 @@ def _generate_atlastrinity_diagram(project_name: str, analysis: dict[str, Any]) 
     # Categorize components
     brain_comps = [c.split(".")[1] for c in components if c.startswith("Brain.")]
     mcp_servers = [c.split(".")[1] for c in components if c.startswith("MCP.")]
-    frontend = any(c.startswith("Frontend") for c in components)
 
     nodes = [
         '    subgraph Frontend["Frontend (Electron)"]',

@@ -125,12 +125,12 @@ class LogAnalyzer:
             source_file, source_line = self._extract_file_info(line)
 
             # Check all pattern categories
-            for patterns, category in [
-                (ERROR_PATTERNS, "error_pattern"),
-                (SLOW_PATTERNS, "slow_operation"),
-                (WARNING_PATTERNS, "repeated_warning"),
-                (RESOURCE_PATTERNS, "resource_bottleneck"),
-                (FRONTEND_PATTERNS, "frontend"),
+            for patterns in [
+                ERROR_PATTERNS,
+                SLOW_PATTERNS,
+                WARNING_PATTERNS,
+                RESOURCE_PATTERNS,
+                FRONTEND_PATTERNS,
             ]:
                 for pattern, cat_override in patterns:
                     match = pattern.search(line)
