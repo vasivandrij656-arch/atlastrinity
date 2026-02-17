@@ -1,4 +1,8 @@
 
+<!-- AUTO-UPDATED: 2026-02-17T23:26:09.101388 -->
+<!-- Modified: .agent/docs/mcp_architecture_diagram.md, .githuworkflows/ci-core.yml, docs/vibe-usage.md -->
+
+
 <!-- AUTO-UPDATED: 2026-02-17T23:20:02.144436 -->
 <!-- Modified: .agent/docs/mcp_architecture_diagram.md, src/brain/data/architecture_diagrams/mcp_architecture.md, src/renderer/components/NeuralCore.tsx -->
 
@@ -2556,6 +2560,12 @@ npm run diagram:update
 **Auto-updates via:** `devtools_update_architecture_diagrams` (MCP tool)  
 **Dual-location sync:** `.agent/docs/` ↔ `src/brain/data/architecture_diagrams/`  
 **Self-healing enabled:** Vibe triggers update post-fix with Grisha verification
+
+
+### Vibe (AI agent) — Usage & Integration
+The Vibe usage diagram and inventory are included in project exports.
+
+![](/src/brain/data/architecture_diagrams/exports/vibe-usage-diagram.png)
 
 
 ### Vibe (AI agent) — Usage & Integration
