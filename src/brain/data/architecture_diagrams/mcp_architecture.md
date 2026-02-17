@@ -1,4 +1,8 @@
 
+<!-- AUTO-UPDATED: 2026-02-17T22:10:56.368122 -->
+<!-- Modified: .agent/docs/mcp_architecture_diagram.md, scripts/windsurf/test_all_models.cjs, src/brain/data/architecture_diagrams/mcp_architecture.md -->
+
+
 <!-- AUTO-UPDATED: 2026-02-17T06:15:20.812951 -->
 <!-- Modified: .agent/docs/mcp_architecture_diagram.md, src/brain/data/architecture_diagrams/mcp_architecture.md, src/maintenance/windsurf_diagnostic.py -->
 

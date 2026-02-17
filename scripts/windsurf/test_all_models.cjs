@@ -1,6 +1,6 @@
-const { spawn } = require('child_process');
-const fs = require('fs');
-const path = require('path');
+const { spawn } = require('node:child_process');
+const fs = require('node:fs');
+const path = require('node:path');
 
 const BINARY_PATH = path.join(
   __dirname,
