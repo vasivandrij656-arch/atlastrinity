@@ -231,7 +231,7 @@ def probe(port: int, csrf: str, api_key: str, install_id: str) -> None:
                             # Try proto decode
                             strings = decode_proto_strings(payload)
                             if strings:
-                                print(f"   Proto strings:")
+                                print("   Proto strings:")
                                 for s in strings[:20]:
                                     print(f"     {s}")
                             else:
@@ -242,7 +242,7 @@ def probe(port: int, csrf: str, api_key: str, install_id: str) -> None:
                     print(f"   Raw: {r.content[:200]}")
 
         except requests.exceptions.Timeout:
-            print(f"   ⏰ Timeout")
+            print("   ⏰ Timeout")
         except Exception as e:
             print(f"   ❌ Error: {e}")
 

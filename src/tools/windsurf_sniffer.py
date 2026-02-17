@@ -39,9 +39,9 @@ from __future__ import annotations
 
 import argparse
 import datetime
+import gzip
 import http.client
 import http.server
-import gzip
 import io
 import json
 import os

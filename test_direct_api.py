@@ -1,9 +1,11 @@
 import asyncio
 import json
+import os
 import subprocess
 import sys
-import os
+
 import requests
+
 
 async def test_direct_api():
     print('🧪 Testing Direct API Mode...')
@@ -68,13 +70,11 @@ async def test_direct_api():
             if os.path.exists('/Users/dev/Documents/GitHub/atlastrinity/test_direct.txt'):
                 print('✅ File created via Direct API!')
                 return True
-            else:
-                print('⚠️ API worked but no file created')
-                return True
-        else:
-            print(f'❌ Direct API Error: {response.status_code}')
-            print(f'📝 Error Response: {response.text}')
-            return False
+            print('⚠️ API worked but no file created')
+            return True
+        print(f'❌ Direct API Error: {response.status_code}')
+        print(f'📝 Error Response: {response.text}')
+        return False
             
     except Exception as e:
         print(f'❌ Exception: {e}')

@@ -4,12 +4,13 @@ Auto-update Windsurf session parameters from IDE
 This script dynamically updates .env with current IDE session info
 """
 
-import sqlite3
 import os
 import re
-from pathlib import Path
+import sqlite3
 import subprocess
 import sys
+from pathlib import Path
+
 
 def get_windsurf_session():
     """Extract current Windsurf IDE session info"""
@@ -67,7 +68,7 @@ def get_windsurf_session():
             'ls_csrf': ls_csrf
         }
         
-        print(f"✅ Extracted session info:")
+        print("✅ Extracted session info:")
         print(f"   API Key: {api_key[:20]}...")
         print(f"   Install ID: {install_id}")
         print(f"   LS Port: {ls_port}")
@@ -144,7 +145,7 @@ def update_env_file(session_info):
         
     try:
         # Read current .env
-        with open(env_file, 'r') as f:
+        with open(env_file) as f:
             content = f.read()
         
         # Update values
@@ -167,7 +168,7 @@ def update_env_file(session_info):
         with open(env_file, 'w') as f:
             f.write('\n'.join(updated_lines))
         
-        print(f"✅ Updated .env file with current session")
+        print("✅ Updated .env file with current session")
         return True
         
     except Exception as e:

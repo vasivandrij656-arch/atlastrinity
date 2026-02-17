@@ -1,5 +1,6 @@
-import requests
 import binascii
+
+import requests
 
 # HEX from line 2 of protobuf.jsonl (truncated to essential part)
 # 00000002470ac404...

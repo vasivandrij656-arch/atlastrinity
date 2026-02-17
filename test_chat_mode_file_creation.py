@@ -1,8 +1,9 @@
 import asyncio
 import json
+import os
 import subprocess
 import sys
-import os
+
 
 async def test_chat_mode_file_creation():
     print('🧪 Testing Chat Mode File Creation...')
@@ -80,18 +81,17 @@ async def test_chat_mode_file_creation():
         file_path = '/Users/dev/Documents/GitHub/atlastrinity/manual_chat_test.txt'
         if os.path.exists(file_path):
             print(f'✅ File created at: {file_path}')
-            with open(file_path, 'r') as f:
+            with open(file_path) as f:
                 content = f.read()
                 print(f'📄 Content: "{content}"')
             return True
-        else:
-            print('❌ File not found')
-            # Check entire project
-            result = subprocess.run(['find', '/Users/dev/Documents/GitHub/atlastrinity', '-name', 'manual_chat_test.txt', '-type', 'f'], capture_output=True, text=True)
-            if result.stdout.strip():
-                print(f'🔍 File found at: {result.stdout.strip()}')
-                return True
-            return False
+        print('❌ File not found')
+        # Check entire project
+        result = subprocess.run(['find', '/Users/dev/Documents/GitHub/atlastrinity', '-name', 'manual_chat_test.txt', '-type', 'f'], capture_output=True, text=True)
+        if result.stdout.strip():
+            print(f'🔍 File found at: {result.stdout.strip()}')
+            return True
+        return False
         
     finally:
         if server_proc.poll() is None:

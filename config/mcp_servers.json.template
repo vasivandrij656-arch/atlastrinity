@@ -5,7 +5,7 @@
       "transport": "stdio",
       "command": "${PROJECT_ROOT}/vendor/mcp-server-windsurf/.build/release/mcp-server-windsurf",
       "connect_timeout": 3600,
-      "description": "Windsurf AI with Cascade Action Phase (16 tools: status, health, models, chat, cascade, switch_model, workspace_list, workspace_switch, workspace_create, system_health, field_experiment, api_version, version_info, compatibility_matrix, migration_path, deprecation_warnings)",
+      "description": "Windsurf AI (winserf) with Cascade Action Phase (16 tools)",
       "env": {
         "WINDSURF_API_KEY": "${WINDSURF_API_KEY}",
         "PYTHONPATH": "${PROJECT_ROOT}",

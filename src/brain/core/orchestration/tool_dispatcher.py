@@ -193,6 +193,17 @@ class ToolDispatcher:
         "logs",
     ]
 
+    WINDSURF_SYNONYMS = [
+        "windsurf",
+        "winserf",
+        "cascade",
+        "action_phase",
+        "chat",
+        "windsurf_chat",
+        "windsurf_cascade",
+        "windsurf_status",
+    ]
+
     CONTEXT7_SYNONYMS = [
         "context7",
         "c7",
@@ -432,6 +443,11 @@ class ToolDispatcher:
         "drag": "macos-use_drag_and_drop_and_traverse",
         "drop": "macos-use_drag_and_drop_and_traverse",
         "drag_and_drop": "macos-use_drag_and_drop_and_traverse",
+        # Windsurf
+        "windsurf": "windsurf_cascade",
+        "winserf": "windsurf_cascade",
+        "cascade": "windsurf_cascade",
+        "action_phase": "windsurf_cascade",
         # Discovery
         "list_tools": "macos-use_list_tools_dynamic",
         "discovery": "macos-use_list_tools_dynamic",

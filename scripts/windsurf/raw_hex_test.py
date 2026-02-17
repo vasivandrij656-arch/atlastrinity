@@ -1,8 +1,9 @@
-import requests
 import binascii
 
+import requests
+
 # Read hex from file to avoid copy-paste errors
-with open("scripts/windsurf/current_payload.hex", "r") as f:
+with open("scripts/windsurf/current_payload.hex") as f:
     hex_payload = f.read().strip()
 
 binary_payload = binascii.unhexlify(hex_payload)

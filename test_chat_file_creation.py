@@ -1,8 +1,9 @@
 import asyncio
 import json
+import os
 import subprocess
 import sys
-import os
+
 
 async def test_chat_file_creation():
     print('🧪 Testing Chat Mode File Creation with Direct API Fallback...')
@@ -102,21 +103,20 @@ Please create this file in the current directory with working Python code.''',
         file_path = '/Users/dev/Documents/GitHub/atlastrinity/chat_test.py'
         if os.path.exists(file_path):
             print(f'✅ File created at: {file_path}')
-            with open(file_path, 'r') as f:
+            with open(file_path) as f:
                 content = f.read()
                 print(f'📄 File content ({len(content)} chars):')
                 print('─' * 40)
                 print(content)
                 print('─' * 40)
             return True
-        else:
-            print('❌ File not found')
-            # Check entire project
-            result = subprocess.run(['find', '/Users/dev/Documents/GitHub/atlastrinity', '-name', 'chat_test.py', '-type', 'f'], capture_output=True, text=True)
-            if result.stdout.strip():
-                print(f'🔍 File found at: {result.stdout.strip()}')
-                return True
-            return False
+        print('❌ File not found')
+        # Check entire project
+        result = subprocess.run(['find', '/Users/dev/Documents/GitHub/atlastrinity', '-name', 'chat_test.py', '-type', 'f'], capture_output=True, text=True)
+        if result.stdout.strip():
+            print(f'🔍 File found at: {result.stdout.strip()}')
+            return True
+        return False
         
     finally:
         if server_proc.poll() is None:

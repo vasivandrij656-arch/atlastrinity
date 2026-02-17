@@ -1,10 +1,11 @@
 #!/usr/bin/env python3
 
 # Test if IDE session authentication works
-import subprocess
 import json
 import os
+import subprocess
 import time
+
 
 def test_ide_session():
     """Test chat with IDE session authentication"""
@@ -16,7 +17,7 @@ def test_ide_session():
     if not api_key:
         # Try to get from .env
         try:
-            with open('/Users/dev/Documents/GitHub/atlastrinity/.env', 'r') as f:
+            with open('/Users/dev/Documents/GitHub/atlastrinity/.env') as f:
                 for line in f:
                     if line.startswith('WINDSURF_API_KEY='):
                         api_key = line.split('=', 1)[1].strip()
@@ -126,13 +127,12 @@ def test_ide_session():
         # Check for file creation
         if os.path.exists('/Users/dev/Documents/GitHub/atlastrinity/ide_test.py'):
             print('✅ File created: ide_test.py')
-            with open('/Users/dev/Documents/GitHub/atlastrinity/ide_test.py', 'r') as f:
+            with open('/Users/dev/Documents/GitHub/atlastrinity/ide_test.py') as f:
                 content = f.read()
                 print(f'📄 Content: {content}')
             return True
-        else:
-            print('❌ File not created')
-            return False
+        print('❌ File not created')
+        return False
             
     except Exception as e:
         print(f'❌ Exception: {e}')

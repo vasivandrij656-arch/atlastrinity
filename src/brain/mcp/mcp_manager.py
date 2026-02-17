@@ -268,6 +268,11 @@ class MCPManager:
             return None
 
         async with self._lock:
+            # Bridging logic: If requested server is macos-use or googlemaps, redirect to xcodebuild
+            if server_name in {"macos-use", "googlemaps"}:
+                logger.debug(f"[MCP] Redirecting session request for {server_name} to xcodebuild")
+                return await self.get_session("xcodebuild")
+
             if server_name in self.sessions:
                 return self.sessions[server_name]
 

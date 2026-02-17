@@ -33,15 +33,14 @@ if __name__ == "__main__":
         print(f'📄 File size: {len(content)} characters')
         
         # Verify file exists and has content
-        with open(file_path, 'r') as f:
+        with open(file_path) as f:
             read_content = f.read()
         
         if read_content == content:
             print('✅ File content verified')
             return True
-        else:
-            print('❌ File content mismatch')
-            return False
+        print('❌ File content mismatch')
+        return False
             
     except Exception as e:
         print(f'❌ Error creating file: {e}')

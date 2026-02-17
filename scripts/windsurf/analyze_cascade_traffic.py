@@ -190,6 +190,7 @@ def print_proto(fields: list[ProtoField], indent: int = 0):
 import gzip
 import io
 
+
 def decode_frames(raw_data: str | bytes, is_gzip: bool = False) -> bytes:
     """Decode Connect-RPC frames or raw bytes."""
     if isinstance(raw_data, str):
@@ -221,7 +222,7 @@ def decode_frames(raw_data: str | bytes, is_gzip: bool = False) -> bytes:
 def analyze_dump(filepath: str, show_all: bool = False):
     print(f"📂 Analyzing {C.BOLD}{filepath}{C.RESET}...")
     
-    with open(filepath, "r") as f:
+    with open(filepath) as f:
         for line in f:
             try:
                 entry = json.loads(line)

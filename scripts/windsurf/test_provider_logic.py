@@ -1,12 +1,14 @@
-import sys
-import os
 import asyncio
+import os
+import sys
+
 from langchain_core.messages import HumanMessage
 
 # Add src to path
 sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), '../../')))
 
 from src.providers.windsurf import WindsurfLLM
+
 
 async def main():
     print("Testing WindsurfLLM (Python Provider)...")

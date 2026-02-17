@@ -1,8 +1,9 @@
 import asyncio
 import json
+import os
 import subprocess
 import sys
-import os
+
 
 async def test_model(model_name, test_name, message):
     print(f'🧪 Testing {model_name} - {test_name}...')
@@ -114,7 +115,7 @@ async def test_dual_models():
     
     for file_path in files_to_check:
         if os.path.exists(file_path):
-            with open(file_path, 'r') as f:
+            with open(file_path) as f:
                 content = f.read()
             print(f'✅ File found: {os.path.basename(file_path)} - "{content}"')
         else:

@@ -113,9 +113,9 @@ def run_mcp_tool(tool_name: str, arguments: dict, timeout: int = 120) -> dict | 
         # Read initialize response
         init_resp = _mcp_read_response(proc.stdout, timeout=15)
         if init_resp:
-            print(f"  ✅ MCP initialized (protocol ok)")
+            print("  ✅ MCP initialized (protocol ok)")
         else:
-            print(f"  ❌ MCP initialization timed out")
+            print("  ❌ MCP initialization timed out")
             # Try to read stderr to see what happened
             proc.terminate()
             try:
@@ -310,14 +310,13 @@ def main():
         if files_created:
             print("\n🎉 Action Phase is working! Files were created successfully!")
             return 0
-        elif cascade_ok:
+        if cascade_ok:
             print(
                 "\n⚠️ Cascade call succeeded but files weren't created in test workspace"
             )
             return 1
-        else:
-            print("\n⚠️ Action Phase needs further refinement")
-            return 1
+        print("\n⚠️ Action Phase needs further refinement")
+        return 1
 
     except Exception as e:
         print(f"❌ Test execution failed: {e}")

@@ -1,9 +1,10 @@
 import asyncio
 import json
+import os
 import subprocess
 import sys
-import os
 import time
+
 
 async def test_cascade_with_detailed_logging():
     print('🧪 Testing Cascade with Detailed Logging...')
@@ -111,7 +112,7 @@ if __name__ == '__main__':
         for location in locations:
             if os.path.exists(location):
                 print(f'✅ File created at: {location}')
-                with open(location, 'r') as f:
+                with open(location) as f:
                     content = f.read()
                     print(f'📄 Content preview: {content[:200]}...')
                 return

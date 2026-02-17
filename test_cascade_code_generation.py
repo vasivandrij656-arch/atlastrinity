@@ -1,8 +1,9 @@
 import asyncio
 import json
+import os
 import subprocess
 import sys
-import os
+
 
 async def test_cascade_with_code_generation_prompt():
     print('🧪 Testing Cascade with Code Generation Prompt...')
@@ -114,7 +115,7 @@ IMPORTANT: Respond with ONLY the markdown code block above. Do not include any e
         for location in locations:
             if os.path.exists(location):
                 print(f'✅ File created at: {location}')
-                with open(location, 'r') as f:
+                with open(location) as f:
                     content = f.read()
                     print(f'📄 Content preview: {content[:200]}...')
                 return

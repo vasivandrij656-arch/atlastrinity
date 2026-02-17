@@ -830,6 +830,29 @@ tool_routing:
       - pattern: '.*documentation.*'
         server: context7
 
+  # Windsurf AI (Native Swift Bridge)
+  windsurf:
+    synonyms:
+      - windsurf
+      - winserf
+      - cascade
+      - action_phase
+      - windsurf_chat
+      - windsurf_cascade
+      - windsurf_status
+    priority_server: windsurf
+    fallback_server: xcodebuild
+    tool_mapping:
+      windsurf: windsurf_cascade
+      winserf: windsurf_cascade
+      cascade: windsurf_cascade
+      chat: windsurf_chat
+    routing_rules:
+      - pattern: 'windsurf_.*'
+        server: windsurf
+      - pattern: '.*winserf.*'
+        server: windsurf
+
   # Thinking & Reasoning
   thinking:
     synonyms:
@@ -1108,9 +1131,9 @@ task_classification:
     priority: tier2
 
   code_tasks:
-    keywords: [code, review, refactor]
-    recommended_servers: [vibe]
-    priority: tier2
+    keywords: [code, review, refactor, windsurf, winserf, cascade]
+    recommended_servers: [windsurf, vibe]
+    priority: tier1
 
   thinking_tasks:
     keywords: [think, reason, complex, decision]

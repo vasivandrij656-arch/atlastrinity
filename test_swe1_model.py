@@ -1,10 +1,11 @@
 #!/usr/bin/env python3
 
 # Test with swe-1 model to see if it bypasses quota issues
-import subprocess
 import json
 import os
+import subprocess
 import time
+
 
 def test_swe1_model():
     """Test chat with swe-1 model"""
@@ -33,7 +34,7 @@ def test_swe1_model():
     
     # Get credentials
     try:
-        with open('/Users/dev/Documents/GitHub/atlastrinity/.env', 'r') as f:
+        with open('/Users/dev/Documents/GitHub/atlastrinity/.env') as f:
             for line in f:
                 if line.startswith('WINDSURF_API_KEY='):
                     api_key = line.split('=', 1)[1].strip()
@@ -118,13 +119,12 @@ def test_swe1_model():
         # Check for file creation
         if os.path.exists('/Users/dev/Documents/GitHub/atlastrinity/swe1_test.py'):
             print('✅ File created: swe1_test.py')
-            with open('/Users/dev/Documents/GitHub/atlastrinity/swe1_test.py', 'r') as f:
+            with open('/Users/dev/Documents/GitHub/atlastrinity/swe1_test.py') as f:
                 content = f.read()
                 print(f'📄 Content: {content}')
             return True
-        else:
-            print('❌ File not created')
-            return False
+        print('❌ File not created')
+        return False
             
     except Exception as e:
         print(f'❌ Exception: {e}')

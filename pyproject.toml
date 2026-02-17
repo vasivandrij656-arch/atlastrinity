@@ -154,10 +154,10 @@ ignore = [
 "src/brain/server.py" = ["E402", "F401", "T20"] # Env load before imports, startup prints
 "fix_*.py" = ["T20"] # Fix scripts use print for status output
 "*_test.py" = ["T20"] # Test scripts use print for output
+"test_*.py" = ["T20", "E402"] # All test_* files in root
 "cascade_flow_test.py" = ["T20"]
 "direct_windsurf_test.py" = ["T20"]
 "standalone_windsurf_test.py" = ["E402", "T20"]
-"test_cascade_flow.py" = ["E402", "T20"]
 
 [tool.ruff.format]
 # Like Black, use double quotes for strings.

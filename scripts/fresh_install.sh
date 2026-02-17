@@ -86,11 +86,11 @@ for server_name, server_config in servers.items():
     
     # Extract tool count from description
     description = server_config.get('description', '')
-    # Match patterns like: (63 tools), (168+ tools), (8 tools), (18 tools)
-    tool_match = re.search(r'\((\d+)\+?\s*tools?\)', description)
+    # Match patterns like: (63 tools), (168+ tools), (16 tools: ...), (8 tools), (18 tools)
+    tool_match = re.search(r'\((\d+)\+?\s*tools?[:)]', description)
     if not tool_match:
         # Try Ukrainian pattern
-        tool_match = re.search(r'\((\d+)\+?\s*інструментів?\)', description)
+        tool_match = re.search(r'\((\d+)\+?\s*інструментів?[:)]', description)
     tool_count = tool_match.group(1) + ('+' if '+' in tool_match.group(0) else '') if tool_match else 'N/A'
     
     # Check status
