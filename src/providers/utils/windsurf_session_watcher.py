@@ -179,7 +179,9 @@ def read_api_key_from_db() -> tuple[str, str]:
         install_id = install_id_match.group(1) if install_id_match else ""
         return api_key, install_id
     except Exception as e:
-        logger.debug("Failed to read state.vscdb: %s", e)
+        logger.debug("Failed to read state.vscdb (possibly encrypted in newer Windsurf versions): %s", e)
+        # Note: Windsurf now encrypts the API key in modern versions.
+        # We should rely on the manually set WINDSURF_API_KEY in .env.
         return "", ""
 
 
@@ -353,6 +355,11 @@ class WindsurfSessionWatcher:
         install_id = os.getenv("WINDSURF_INSTALL_ID", "")
         if not api_key:
             api_key, install_id = read_api_key_from_db()
+        else:
+            # If we have an API key, we might still want to try to get the install_id if missing
+            if not install_id:
+                _, db_install_id = read_api_key_from_db()
+                install_id = db_install_id
 
         new_session = WindsurfSession(port=port, csrf=csrf, api_key=api_key, install_id=install_id)
 
