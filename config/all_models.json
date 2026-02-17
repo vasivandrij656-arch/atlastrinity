@@ -125,6 +125,54 @@
     },
     {
       "capabilities": {
+        "family": "claude",
+        "limits": {
+          "max_context_window_tokens": 200000,
+          "max_output_tokens": 4096
+        },
+        "object": "model_capabilities",
+        "supports": {
+          "streaming": true,
+          "tool_calls": true
+        },
+        "tokenizer": "claude",
+        "type": "chat"
+      },
+      "id": "claude-haiku-4.5",
+      "model_picker_enabled": true,
+      "name": "Claude Haiku 4.5",
+      "object": "model",
+      "preview": false,
+      "tier": "premium",
+      "vendor": "Copilot",
+      "version": "claude-haiku-4.5"
+    },
+    {
+      "capabilities": {
+        "family": "gemini",
+        "limits": {
+          "max_context_window_tokens": 1000000,
+          "max_output_tokens": 8192
+        },
+        "object": "model_capabilities",
+        "supports": {
+          "streaming": true,
+          "tool_calls": true
+        },
+        "tokenizer": "gemini",
+        "type": "chat"
+      },
+      "id": "gemini-flash-3-preview",
+      "model_picker_enabled": true,
+      "name": "Gemini Flash 3 Preview",
+      "object": "model",
+      "preview": true,
+      "tier": "premium",
+      "vendor": "Copilot",
+      "version": "gemini-flash-3-preview"
+    },
+    {
+      "capabilities": {
         "family": "swe",
         "limits": {
           "max_context_window_tokens": 128000,

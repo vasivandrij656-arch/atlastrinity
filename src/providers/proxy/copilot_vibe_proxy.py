@@ -78,6 +78,8 @@ except Exception:
         "gpt-5-mini": "gpt-5-mini",
         "grok-code-fast-1": "grok-code-fast-1",
         "oswe-vscode-secondary": "oswe-vscode-secondary",
+        "claude-haiku-4.5": "claude-haiku-4.5",
+        "gemini-flash-3-preview": "gemini-flash-3-preview",
     }
 
 # ─── Colors ────────────────────────────────────────────────────────────

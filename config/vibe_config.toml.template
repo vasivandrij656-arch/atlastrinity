@@ -13,6 +13,8 @@
 # active_model = "gpt-4.1"           # Latest GPT-4 model
 # active_model = "gpt-4o"            # GPT-4o (multimodal)
 # active_model = "grok-code-fast-1"  # Fast coding analysis
+# active_model = "claude-haiku-4.5"  # 🚀 Premium: Claude Haiku 4.5 (200K context)
+# active_model = "gemini-flash-3-preview" # 🚀 Premium: Gemini Flash 3 (1M context)
 #
 # === FOR WINDSURF PROVIDER ===
 # active_model = "claude-4.6-opus"    # 🚀 NEW: Ultra-Advanced Reasoning
@@ -27,7 +29,8 @@
 # Optimized for Copilot + Windsurf hybrid usage
 # NOTE: This is for VIBE only - NOT system reasoning!
 # System reasoning uses oswe-vscode-secondary from config.yaml
-fallback_chain = ["gpt-4.1", "gpt-4o", "oswe-vscode-secondary", "grok-code-fast-1"]
+# Complexity-aware fallback: premium models first, then standard, then lightweight
+fallback_chain = ["gpt-4.1", "claude-haiku-4.5", "gemini-flash-3-preview", "gpt-4o", "oswe-vscode-secondary", "grok-code-fast-1"]
 
 # Current selection (change based on your provider):
 active_model = "gpt-4.1"            # Latest GPT-4 model (Primary)
@@ -131,6 +134,23 @@ output_price = 0.0
 name = "gpt-4.1"
 provider = "copilot"
 alias = "gpt-4.1"
+temperature = 0.1
+input_price = 0.0
+output_price = 0.0
+
+# --- Premium Copilot Models ---
+[[models]]
+name = "claude-haiku-4.5"
+provider = "copilot"
+alias = "claude-haiku-4.5"
+temperature = 0.1
+input_price = 0.0
+output_price = 0.0
+
+[[models]]
+name = "gemini-flash-3-preview"
+provider = "copilot"
+alias = "gemini-flash-3-preview"
 temperature = 0.1
 input_price = 0.0
 output_price = 0.0

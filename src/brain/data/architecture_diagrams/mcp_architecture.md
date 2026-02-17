@@ -1,6 +1,6 @@
 
-<!-- AUTO-UPDATED: 2026-02-18T01:00:05.358813 -->
-<!-- Modified: .agent/docs/mcp_architecture_diagram.md, package.json, src/brain/data/architecture_diagrams/mcp_architecture.md -->
+<!-- AUTO-UPDATED: 2026-02-18T01:44:09.756143 -->
+<!-- Modified: .agent/docs/mcp_architecture_diagram.md, eslint_output.txt, knip_output.txt -->
 
 # Architecture Diagram - atlastrinity
 

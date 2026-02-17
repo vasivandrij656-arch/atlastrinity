@@ -23,6 +23,8 @@ models:
   #   - gpt-5-mini
   #   - grok-code-fast-1
   #   - oswe-vscode-secondary
+  #   - claude-haiku-4.5          (Premium: Claude Haiku 4.5)
+  #   - gemini-flash-3-preview    (Premium: Gemini Flash 3)
   # - Setup: python scripts/get_copilot_token.py
   #
   # === WINDSURF (Codeium) ===
@@ -67,6 +69,9 @@ models:
   
   # Sandbox model (used by mcp_sandbox.py)
   sandbox: "copilot:gpt-4.1"
+
+  # Vibe error analysis model (used by vibe_analyze_error)
+  vibe_analysis: "copilot:oswe-vscode-secondary"  # Best for deep problem analysis
 
   # Agents inherit from models.default unless overridden
 
