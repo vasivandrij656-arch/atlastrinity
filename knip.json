@@ -8,7 +8,12 @@
     "chrome-devtools-mcp",
     "cloudinary",
     "stripe",
-    "tailwindcss"
+    "tailwindcss",
+    "@eslint/js",
+    "eslint-plugin-react",
+    "eslint-plugin-react-hooks",
+    "typescript-eslint"
   ],
-  "ignoreBinaries": ["unset", "open", "sleep", "jq"]
+  "ignoreBinaries": ["unset", "open", "sleep", "jq"],
+  "eslint": false
 }

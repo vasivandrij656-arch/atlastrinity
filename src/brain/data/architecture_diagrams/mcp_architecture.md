@@ -1,4 +1,8 @@
 
+<!-- AUTO-UPDATED: 2026-02-17T22:33:39.894120 -->
+<!-- Modified: .agent/docs/mcp_architecture_diagram.md, knip.json, scripts/windsurf/test_all_models.cjs -->
+
+
 <!-- AUTO-UPDATED: 2026-02-17T22:10:56.368122 -->
 <!-- Modified: .agent/docs/mcp_architecture_diagram.md, scripts/windsurf/test_all_models.cjs, src/brain/data/architecture_diagrams/mcp_architecture.md -->
 
