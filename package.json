@@ -109,8 +109,15 @@
     "stripe": "^20.1.1"
   },
   "overrides": {
-    "ajv": "^8.18.0",
-    "@modelcontextprotocol/sdk": "$@modelcontextprotocol/sdk",
+    "@modelcontextprotocol/sdk": {
+      "ajv": "^8.18.0"
+    },
+    "@modelcontextprotocol/inspector": {
+      "ajv": "^8.18.0"
+    },
+    "@modelcontextprotocol/inspector-client": {
+      "ajv": "^8.18.0"
+    },
     "lodash-es": "^4.17.21"
   },
   "build": {
