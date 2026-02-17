@@ -678,7 +678,7 @@ class SnifferProxyHandler(http.server.BaseHTTPRequestHandler):
         # Decode response for logging (handle gzip)
         resp_frames: list[dict] = []
         resp_chat: dict = {}
-        
+
         log_body = resp_body
         is_gzip = resp_headers_dict.get("Content-Encoding") == "gzip"
         if is_gzip and log_body:
@@ -698,8 +698,8 @@ class SnifferProxyHandler(http.server.BaseHTTPRequestHandler):
             print_separator("─")
 
         # Write dump
-        # Note: We dump even if skipped from display if dump is enabled? 
-        # Actually usually filtering applies to dump too to keep it clean, 
+        # Note: We dump even if skipped from display if dump is enabled?
+        # Actually usually filtering applies to dump too to keep it clean,
         # but let's respect skip_log for now to avoid massive heartbeats in dumps.
         if self.dump_writer and not skip_log:
             self.dump_writer.write_exchange(

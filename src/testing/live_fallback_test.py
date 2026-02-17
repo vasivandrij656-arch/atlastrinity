@@ -53,18 +53,19 @@ async def simulate_tier3_fallback():
         # Use explicit config instead of calling the mocked function
         mock_config = MagicMock()
         mock_config.get_provider = MagicMock(side_effect=mock_get_provider)
-        
+
         # Explicitly set path properties
         test_workspace = os.path.join(tempfile.gettempdir(), "vibe_test_workspace")
         os.makedirs(test_workspace, exist_ok=True)
         mock_config.workspace = test_workspace
-        
+
         # Mock model lookup (required for vibe_server internal checks)
         def mock_get_model(alias):
             m = MagicMock()
             m.name = alias
             m.alias = alias
             return m
+
         mock_config.get_model_by_alias = MagicMock(side_effect=mock_get_model)
 
         # Verify gpt-4o is there

@@ -343,7 +343,13 @@ def generate_report() -> dict[str, Any]:
             "electron_build": check_electron_build(),
             "package_json": check_package_json(),
         },
-        "summary": {"total_checks": 8, "passed_checks": 0, "failed_checks": 0, "warnings": 0},
+        "summary": {
+            "total_checks": 8,
+            "passed_checks": 0,
+            "failed_checks": 0,
+            "warnings": 0,
+            "status": "INIT",
+        },
     }
 
     # Count passed/failed checks

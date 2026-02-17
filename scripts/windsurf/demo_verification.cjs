@@ -1,6 +1,6 @@
-const { spawn } = require('child_process');
-const path = require('path');
-const fs = require('fs');
+const { spawn } = require('node:child_process');
+const path = require('node:path');
+const fs = require('node:fs');
 
 const BINARY_PATH = path.join(
   __dirname,
@@ -9,7 +9,7 @@ const BINARY_PATH = path.join(
 const DEMO_FILE = path.join(__dirname, '../../demo_verification.txt');
 
 function encodeMessage(msg) {
-  return JSON.stringify(msg) + '\n';
+  return `${JSON.stringify(msg)}\n`;
 }
 
 async function runDemo() {
@@ -48,7 +48,7 @@ async function runDemo() {
         try {
           const msg = JSON.parse(line);
           if (msg.id) responses.set(msg.id, msg);
-        } catch (e) {
+        } catch {
           // Ignore non-json logs
         }
       }
@@ -121,7 +121,7 @@ Timestamp: ${new Date().toISOString()}`,
     const toolResult = await waitResponse(2, 120000);
 
     console.log('\n💬 Model Response Summary:');
-    console.log(toolResult.result.content[0].text.slice(0, 300) + '...');
+    console.log(`${toolResult.result.content[0].text.slice(0, 300)}...`);
 
     // 3. Verify File Creation
     console.log('\n🧐 Verifying filesystem changes...');

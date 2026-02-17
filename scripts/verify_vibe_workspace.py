@@ -26,17 +26,17 @@ async def verify_vibe_workspace():
     # Mocking is_network_available because we only care about the path generation and command building here
     from src.mcp_server import vibe_server
 
-    async def mock_is_network():
+    async def mock_is_network(*args, **kwargs):
         return True
 
-    vibe_server.is_network_available = mock_is_network
+    vibe_server.is_network_available = mock_is_network  # type: ignore[assignment]
 
     # We want to see the command being built, so we'll mock run_vibe_subprocess too
     original_run = vibe_server.run_vibe_subprocess
     captured_argv = []
     captured_cwd = ""
 
-    async def mock_run(argv, cwd, **kwargs):
+    async def mock_run(argv, cwd, timeout_s=0, **kwargs):
         nonlocal captured_argv, captured_cwd
         captured_argv = argv
         captured_cwd = cwd
@@ -44,7 +44,7 @@ async def verify_vibe_workspace():
         print(f"CAPTURED CWD: {cwd}")
         return {"success": True, "stdout": "Mocked success", "stderr": "", "returncode": 0}
 
-    vibe_server.run_vibe_subprocess = mock_run
+    vibe_server.run_vibe_subprocess = mock_run  # type: ignore[assignment]
 
     try:
         result = await vibe_prompt(ctx=mock_ctx, prompt=long_prompt)

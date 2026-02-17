@@ -1007,7 +1007,7 @@ class WindsurfLLM(BaseChatModel):
             # TextOrScopeItem: oneof chunk { f1=text(str) }
             # CascadeConfig.f1=PlannerConfig, PlannerConfig.f34=plan_model_uid, f35=requested_model_uid
             item_proto = _proto_str(1, user_text)
-            
+
             # PlannerConfig
             # 34: plan_model_uid, 35: requested_model_uid
             planner_parts = [
@@ -1027,10 +1027,10 @@ class WindsurfLLM(BaseChatModel):
                 + _proto_int(2, 1)  # enable_file_creation
                 + _proto_int(3, 1)  # enable_file_modification
                 + _proto_int(4, 1)  # enable_workspace_scoped_actions
-                + _proto_int(5, 180) # action_timeout_seconds
+                + _proto_int(5, 180)  # action_timeout_seconds
             )
             planner_parts.append(_proto_msg(20, cortex_config))
-            
+
             planner_proto = b"".join(planner_parts)
             cascade_config = _proto_msg(1, planner_proto)
 
@@ -1584,8 +1584,6 @@ class WindsurfLLM(BaseChatModel):
                 )
 
         return AIMessage(content=f"[WINDSURF ERROR] {last_error}")
-
-
 
     @staticmethod
     def _parse_windsurf_openai_line(

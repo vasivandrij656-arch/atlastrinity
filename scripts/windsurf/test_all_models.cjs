@@ -8,12 +8,14 @@ const BINARY_PATH = path.join(
 );
 const ENV_PATH = '/Users/dev/.config/atlastrinity/.env';
 
+const ENV_LINE_REGEX = /^\s*([\w.-]+)\s*=\s*(.*)?\s*$/;
+
 // Load ENV manually
 function loadEnv() {
   try {
     const content = fs.readFileSync(ENV_PATH, 'utf8');
     content.split('\n').forEach((line) => {
-      const match = line.match(/^\s*([\w.-]+)\s*=\s*(.*)?\s*$/);
+      const match = line.match(ENV_LINE_REGEX);
       if (match) {
         const key = match[1];
         let value = match[2] || '';
@@ -21,7 +23,7 @@ function loadEnv() {
         process.env[key] = value;
       }
     });
-  } catch (e) {
+  } catch {
     console.error('Warning: Failed to load .env from', ENV_PATH);
   }
 }

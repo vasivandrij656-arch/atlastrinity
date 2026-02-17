@@ -3,9 +3,11 @@ def hello_world():
     print("Hello from Manual Test!")
     return "Success!"
 
+
 def add_numbers(a, b):
     """Add two numbers and return the result."""
     return a + b
+
 
 if __name__ == "__main__":
     # Test the functions

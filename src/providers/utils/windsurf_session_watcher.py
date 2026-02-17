@@ -33,7 +33,6 @@ import re
 import sqlite3
 import subprocess
 import threading
-import time
 from collections.abc import Callable
 from dataclasses import dataclass
 from pathlib import Path
@@ -94,9 +93,7 @@ def detect_ls_process() -> tuple[int, str]:
         (port, csrf_token) — port=0 if not detected.
     """
     try:
-        result = subprocess.run(
-            ["ps", "aux"], capture_output=True, text=True, timeout=5
-        )
+        result = subprocess.run(["ps", "aux"], capture_output=True, text=True, timeout=5)
         for line in result.stdout.splitlines():
             if "language_server_macos_arm" not in line or "grep" in line:
                 continue
@@ -167,9 +164,7 @@ def read_api_key_from_db() -> tuple[str, str]:
     try:
         conn = sqlite3.connect(str(STATE_DB_PATH), timeout=3)
         cursor = conn.cursor()
-        cursor.execute(
-            "SELECT value FROM ItemTable WHERE key = 'codeium.accountInfo'"
-        )
+        cursor.execute("SELECT value FROM ItemTable WHERE key = 'codeium.accountInfo'")
         result = cursor.fetchone()
         conn.close()
 
@@ -359,9 +354,7 @@ class WindsurfSessionWatcher:
         if not api_key:
             api_key, install_id = read_api_key_from_db()
 
-        new_session = WindsurfSession(
-            port=port, csrf=csrf, api_key=api_key, install_id=install_id
-        )
+        new_session = WindsurfSession(port=port, csrf=csrf, api_key=api_key, install_id=install_id)
 
         # Step 5: Check for changes
         with self._lock:

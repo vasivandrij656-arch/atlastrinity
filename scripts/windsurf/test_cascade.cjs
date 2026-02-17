@@ -1,6 +1,6 @@
-const { spawn } = require('child_process');
-const path = require('path');
-const fs = require('fs');
+const { spawn } = require('node:child_process');
+const path = require('node:path');
+const fs = require('node:fs');
 
 const BINARY_PATH = path.join(
   __dirname,
@@ -8,7 +8,7 @@ const BINARY_PATH = path.join(
 );
 
 function encodeMessage(msg) {
-  return JSON.stringify(msg) + '\n';
+  return `${JSON.stringify(msg)}\n`;
 }
 
 async function runTest() {
@@ -54,7 +54,7 @@ async function runTest() {
   const initPromise = new Promise((resolve) => (initResolver = resolve));
 
   function handleMessage(msg) {
-    console.log('📩 Received:', JSON.stringify(msg).slice(0, 100) + '...');
+    console.log('📩 Received:', `${JSON.stringify(msg).slice(0, 100)}...`);
     if (msg.id === 1) {
       console.log('✅ Initialize response received');
       initResolver(msg);

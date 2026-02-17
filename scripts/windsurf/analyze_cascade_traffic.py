@@ -16,15 +16,13 @@ Usage:
 """
 
 import argparse
-import base64
 import json
-import re
 import struct
-import sys
 from dataclasses import dataclass
 from typing import Any
 
 # ─── Colors ─────────────────────────────────────────────────────────────────
+
 
 class C:
     HEADER = "\033[95m"
@@ -37,7 +35,9 @@ class C:
     BOLD = "\033[1m"
     DIM = "\033[2m"
 
+
 # ─── Proto Decoder ──────────────────────────────────────────────────────────
+
 
 @dataclass
 class ProtoField:
@@ -46,11 +46,12 @@ class ProtoField:
     value: Any
     sub_fields: list["ProtoField"] | None = None
 
+
 def decode_proto(data: bytes, depth: int = 0) -> list[ProtoField]:
     """Recursively decode protobuf binary data."""
     fields = []
     offset = 0
-    
+
     while offset < len(data):
         # Read tag
         tag = 0
@@ -63,20 +64,20 @@ def decode_proto(data: bytes, depth: int = 0) -> list[ProtoField]:
             shift += 7
             if not (b & 0x80):
                 break
-        
-        if offset > start_offset + 10: # Safety break for bad varints
+
+        if offset > start_offset + 10:  # Safety break for bad varints
             break
-            
+
         field_num = tag >> 3
         wire_type = tag & 0x07
-        
+
         if field_num == 0:
             break
-            
+
         value = None
         sub_fields = None
-        
-        if wire_type == 0: # Varint
+
+        if wire_type == 0:  # Varint
             val = 0
             shift = 0
             while offset < len(data):
@@ -87,19 +88,19 @@ def decode_proto(data: bytes, depth: int = 0) -> list[ProtoField]:
                 if not (b & 0x80):
                     break
             value = val
-            
-        elif wire_type == 1: # 64-bit
+
+        elif wire_type == 1:  # 64-bit
             if offset + 8 <= len(data):
-                val = struct.unpack('<Q', data[offset:offset+8])[0]
+                val = struct.unpack("<Q", data[offset : offset + 8])[0]
                 # Try double
                 try:
-                    dbl = struct.unpack('<d', data[offset:offset+8])[0]
-                    value =f"Int64={val} / Double={dbl}"
+                    dbl = struct.unpack("<d", data[offset : offset + 8])[0]
+                    value = f"Int64={val} / Double={dbl}"
                 except:
                     value = val
                 offset += 8
-                
-        elif wire_type == 2: # Length-delimited
+
+        elif wire_type == 2:  # Length-delimited
             ln = 0
             shift = 0
             while offset < len(data):
@@ -109,11 +110,11 @@ def decode_proto(data: bytes, depth: int = 0) -> list[ProtoField]:
                 shift += 7
                 if not (b & 0x80):
                     break
-            
+
             if offset + ln <= len(data):
-                payload = data[offset:offset+ln]
+                payload = data[offset : offset + ln]
                 offset += ln
-                
+
                 # Heuristic: is it a string?
                 try:
                     text = payload.decode("utf-8")
@@ -141,24 +142,25 @@ def decode_proto(data: bytes, depth: int = 0) -> list[ProtoField]:
                         pass
             else:
                 value = "<truncated>"
-                
-        elif wire_type == 5: # 32-bit
+
+        elif wire_type == 5:  # 32-bit
             if offset + 4 <= len(data):
-                val = struct.unpack('<I', data[offset:offset+4])[0]
+                val = struct.unpack("<I", data[offset : offset + 4])[0]
                 try:
-                    flt = struct.unpack('<f', data[offset:offset+4])[0]
+                    flt = struct.unpack("<f", data[offset : offset + 4])[0]
                     value = f"Int32={val} / Float={flt}"
                 except:
                     value = val
                 offset += 4
-                
+
         else:
             value = f"<unknown wire type {wire_type}>"
-            break # Stop on unknown wire type to avoid garbage
-            
+            break  # Stop on unknown wire type to avoid garbage
+
         fields.append(ProtoField(field_num, wire_type, value, sub_fields))
-        
+
     return fields
+
 
 def print_proto(fields: list[ProtoField], indent: int = 0):
     """Pretty-print decoded proto fields."""
@@ -166,7 +168,7 @@ def print_proto(fields: list[ProtoField], indent: int = 0):
     for f in fields:
         # Highlight interesting fields based on known protocol
         name_hint = ""
-        
+
         # Heuristics for Windsurf protocol
         if f.field_num == 1 and isinstance(f.value, str) and "windsurf" in f.value:
             name_hint = " (ideName?)"
@@ -174,16 +176,18 @@ def print_proto(fields: list[ProtoField], indent: int = 0):
             name_hint = " (apiKey)"
         elif f.field_num == 10 and isinstance(f.value, str) and "user-" in f.value:
             name_hint = " (sessionId?)"
-        
+
+        # We use str(f.value) which is fine
         val_str = str(f.value)
         if len(val_str) > 100:
             val_str = val_str[:100] + "..."
-            
+
         color = C.CYAN if f.sub_fields else C.GREEN
         print(f"{prefix}{color}{f.field_num}{C.RESET}: {val_str}{C.DIM}{name_hint}{C.RESET}")
-        
+
         if f.sub_fields:
             print_proto(f.sub_fields, indent + 1)
+
 
 # ─── Frame Handling ─────────────────────────────────────────────────────────
 
@@ -196,62 +200,64 @@ def decode_frames(raw_data: str | bytes, is_gzip: bool = False) -> bytes:
     if isinstance(raw_data, str):
         # Handle string input (usually not expected for binary/hex logic flow)
         return b""
-        
+
     if is_gzip:
         try:
             with gzip.GzipFile(fileobj=io.BytesIO(raw_data)) as f:
                 raw_data = f.read()
         except Exception:
-            pass # Not gzip or failed
+            pass  # Not gzip or failed
 
     # Check for Connect-RPC envelopes
     # 1 byte flags + 4 bytes length
     if len(raw_data) > 5:
-        flags = raw_data[0]
+        _ = raw_data[0]  # Connect-RPC flags byte (0=compressed, 1=uncompressed, etc.)
         try:
-            length = struct.unpack('>I', raw_data[1:5])[0]
+            length = struct.unpack(">I", raw_data[1:5])[0]
             if 5 + length <= len(raw_data):
-                return raw_data[5:5+length]
+                return raw_data[5 : 5 + length]
         except:
             pass
-            
+
     return raw_data
+
 
 # ─── Analyzer ───────────────────────────────────────────────────────────────
 
+
 def analyze_dump(filepath: str, show_all: bool = False):
     print(f"📂 Analyzing {C.BOLD}{filepath}{C.RESET}...")
-    
+
     with open(filepath) as f:
         for line in f:
             try:
                 entry = json.loads(line)
             except:
                 continue
-                
+
             if entry.get("type") != "exchange":
                 continue
-                
+
             endpoint = entry.get("endpoint", "")
             method = entry.get("method", "")
-            
+
             # Filter logic
             is_interesting = (
-                "Cascade" in endpoint or
-                "ChatClientRequestStream" in endpoint or
-                "Queue" in endpoint
+                "Cascade" in endpoint
+                or "ChatClientRequestStream" in endpoint
+                or "Queue" in endpoint
             )
-            
+
             if not is_interesting and not show_all:
                 continue
-                
+
             print(f"\n{C.YELLOW}═" * 80 + f"{C.RESET}")
             print(f"{C.BOLD}{method} {endpoint}{C.RESET}")
             print(f"{C.DIM}Timestamp: {entry.get('timestamp')}{C.RESET}")
-            
+
             req = entry.get("request", {})
             frames = req.get("frames", [])
-            
+
             if frames:
                 print(f"\n{C.BLUE}Request Payload ({len(frames)} frames):{C.RESET}")
                 for i, frame in enumerate(frames):
@@ -267,14 +273,14 @@ def analyze_dump(filepath: str, show_all: bool = False):
             resp = entry.get("response", {})
             resp_frames = resp.get("frames", [])
             is_gzip = resp.get("headers", {}).get("Content-Encoding") == "gzip"
-            
+
             if resp_frames:
                 print(f"\n{C.GREEN}Response Payload ({len(resp_frames)} frames):{C.RESET}")
                 for i, frame in enumerate(resp_frames):
                     if "hex" in frame:
                         data = bytes.fromhex(frame["hex"])
                         payload = decode_frames(data, is_gzip=is_gzip)
-                        
+
                         # Try JSON decode first (often it's JSON inside gzip)
                         try:
                             json_obj = json.loads(payload)
@@ -282,7 +288,7 @@ def analyze_dump(filepath: str, show_all: bool = False):
                             continue
                         except:
                             pass
-                            
+
                         # Try proto
                         fields = decode_proto(payload)
                         if fields:
@@ -290,17 +296,21 @@ def analyze_dump(filepath: str, show_all: bool = False):
                             print_proto(fields, indent=2)
                         else:
                             print(f"  Frame {i} (Raw, {len(payload)} bytes): {payload[:50]}...")
-                            
+
                     elif "json" in frame:
                         print(f"  Frame {i} (JSON): {json.dumps(frame['json'])[:100]}...")
+
 
 def main():
     parser = argparse.ArgumentParser(description="Analyze Windsurf traffic dumps")
     parser.add_argument("dump_file", help="Path to .ndjson dump file")
-    parser.add_argument("--all", action="store_true", help="Show all endpoints (default: cascade only)")
-    
+    parser.add_argument(
+        "--all", action="store_true", help="Show all endpoints (default: cascade only)"
+    )
+
     args = parser.parse_args()
     analyze_dump(args.dump_file, args.all)
+
 
 if __name__ == "__main__":
     main()

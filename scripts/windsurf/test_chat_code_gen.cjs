@@ -1,6 +1,6 @@
-const { spawn } = require('child_process');
-const path = require('path');
-const fs = require('fs');
+const { spawn } = require('node:child_process');
+const path = require('node:path');
+const fs = require('node:fs');
 
 const BINARY_PATH = path.join(
   __dirname,
@@ -8,7 +8,7 @@ const BINARY_PATH = path.join(
 );
 
 function encodeMessage(msg) {
-  return JSON.stringify(msg) + '\n';
+  return `${JSON.stringify(msg)}\n`;
 }
 
 async function runTest() {
@@ -61,7 +61,7 @@ async function runTest() {
       initResolver(msg);
     } else if (msg.id === 2) {
       console.log('📩 Chat Response:', JSON.stringify(msg.result, null, 2));
-      if (msg.result && msg.result.content && msg.result.content[0].text.includes('```')) {
+      if (msg.result?.content?.[0].text.includes('```')) {
         console.log('✅ Markdown code block detected!');
       } else {
         console.log('⚠️ No markdown code block detected.');

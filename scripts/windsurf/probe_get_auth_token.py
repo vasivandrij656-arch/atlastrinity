@@ -27,6 +27,7 @@ import requests
 # Load env
 try:
     from dotenv import load_dotenv
+
     load_dotenv("/Users/dev/.config/atlastrinity/.env", override=True)
 except ImportError:
     pass
@@ -40,6 +41,7 @@ HEARTBEAT = "/exa.language_server_pb.LanguageServerService/Heartbeat"
 
 # ─── Proto Helpers ──────────────────────────────────────────────────────────
 
+
 def proto_varint(val: int) -> bytes:
     r = b""
     while val > 0x7F:
@@ -48,19 +50,24 @@ def proto_varint(val: int) -> bytes:
     r += bytes([val])
     return r
 
+
 def proto_str(field_num: int, s: str) -> bytes:
     b = s.encode("utf-8")
     return proto_varint((field_num << 3) | 2) + proto_varint(len(b)) + b
 
+
 def proto_msg(field_num: int, inner: bytes) -> bytes:
     return proto_varint((field_num << 3) | 2) + proto_varint(len(inner)) + inner
+
 
 def proto_int(field_num: int, val: int) -> bytes:
     return proto_varint((field_num << 3) | 0) + proto_varint(val)
 
+
 def make_connect_envelope(payload: bytes) -> bytes:
     """Wrap payload in Connect-RPC streaming envelope (1 byte flags + 4 bytes length)."""
-    return b'\x00' + struct.pack('>I', len(payload)) + payload
+    return b"\x00" + struct.pack(">I", len(payload)) + payload
+
 
 def decode_proto_strings(data: bytes, min_len: int = 2) -> list[str]:
     """Extract readable strings from protobuf binary."""
@@ -95,12 +102,12 @@ def decode_proto_strings(data: bytes, min_len: int = 2) -> list[str]:
                 s += 7
                 if not (b & 0x80):
                     break
-            payload = data[offset:offset + ln]
+            payload = data[offset : offset + ln]
             offset += ln
             try:
                 text = payload.decode("utf-8")
                 if len(text) >= min_len and all(32 <= ord(c) < 127 or c in "\n\r\t" for c in text):
-                    results.append(f"  field {fn}: \"{text}\"")
+                    results.append(f'  field {fn}: "{text}"')
             except UnicodeDecodeError:
                 pass
             results.extend([f"  {s}" for s in decode_proto_strings(payload, min_len)])
@@ -115,9 +122,10 @@ def decode_proto_strings(data: bytes, min_len: int = 2) -> list[str]:
 
 # ─── Test Variations ────────────────────────────────────────────────────────
 
+
 def probe(port: int, csrf: str, api_key: str, install_id: str) -> None:
     """Probe GetAuthToken with multiple payload variants."""
-    
+
     base_headers = {
         "x-codeium-csrf-token": csrf,
     }
@@ -144,15 +152,17 @@ def probe(port: int, csrf: str, api_key: str, install_id: str) -> None:
         {
             "name": "JSON with metadata",
             "headers": {**base_headers, "Content-Type": "application/json"},
-            "body": json.dumps({
-                "metadata": {
-                    "ideName": "windsurf",
-                    "ideVersion": "1.107.0",
-                    "extensionVersion": "1.9552.21",
-                    "apiKey": api_key,
-                    "sessionId": f"probe-{os.getpid()}",
+            "body": json.dumps(
+                {
+                    "metadata": {
+                        "ideName": "windsurf",
+                        "ideVersion": "1.107.0",
+                        "extensionVersion": "1.9552.21",
+                        "apiKey": api_key,
+                        "sessionId": f"probe-{os.getpid()}",
+                    }
                 }
-            }).encode(),
+            ).encode(),
         },
         # Test 3: Connect-RPC JSON envelope
         {
@@ -162,14 +172,18 @@ def probe(port: int, csrf: str, api_key: str, install_id: str) -> None:
                 "Content-Type": "application/connect+json",
                 "Connect-Protocol-Version": "1",
             },
-            "body": make_connect_envelope(json.dumps({
-                "metadata": {
-                    "ideName": "windsurf",
-                    "ideVersion": "1.107.0",
-                    "extensionVersion": "1.9552.21",
-                    "apiKey": api_key,
-                }
-            }).encode()),
+            "body": make_connect_envelope(
+                json.dumps(
+                    {
+                        "metadata": {
+                            "ideName": "windsurf",
+                            "ideVersion": "1.107.0",
+                            "extensionVersion": "1.9552.21",
+                            "apiKey": api_key,
+                        }
+                    }
+                ).encode()
+            ),
         },
         # Test 4: gRPC binary with metadata proto
         {
@@ -194,21 +208,21 @@ def probe(port: int, csrf: str, api_key: str, install_id: str) -> None:
     ]
 
     for tc in test_cases:
-        print(f"\n{'='*60}")
+        print(f"\n{'=' * 60}")
         print(f"📡 Test: {tc['name']}")
-        print(f"{'='*60}")
+        print(f"{'=' * 60}")
 
         try:
             r = requests.post(
                 f"http://127.0.0.1:{port}{GET_AUTH_TOKEN}",
-                headers=tc["headers"],
-                data=tc["body"],
+                headers=tc["headers"],  # type: ignore[arg-type]
+                data=tc["body"],  # type: ignore[arg-type]
                 timeout=10,
             )
             print(f"   Status: {r.status_code}")
             print(f"   Content-Type: {r.headers.get('Content-Type', 'N/A')}")
             print(f"   Body length: {len(r.content)} bytes")
-            
+
             if r.content:
                 # Try JSON decode
                 try:
@@ -220,9 +234,9 @@ def probe(port: int, csrf: str, api_key: str, install_id: str) -> None:
                 # Try Connect-RPC envelope decode
                 if len(r.content) >= 5:
                     flags = r.content[0]
-                    frame_len = struct.unpack('>I', r.content[1:5])[0]
+                    frame_len = struct.unpack(">I", r.content[1:5])[0]
                     if len(r.content) >= 5 + frame_len:
-                        payload = r.content[5:5 + frame_len]
+                        payload = r.content[5 : 5 + frame_len]
                         print(f"   Envelope: flags={flags}, payload_len={frame_len}")
                         try:
                             parsed = json.loads(payload)
@@ -248,6 +262,7 @@ def probe(port: int, csrf: str, api_key: str, install_id: str) -> None:
 
 
 # ─── Main ───────────────────────────────────────────────────────────────────
+
 
 def main() -> None:
     print("🔍 Probing Windsurf GetAuthToken endpoint")
@@ -275,7 +290,7 @@ def main() -> None:
 
     probe(port, csrf, api_key, install_id)
 
-    print(f"\n{'='*60}")
+    print(f"\n{'=' * 60}")
     print("✅ Probe complete")
 
 

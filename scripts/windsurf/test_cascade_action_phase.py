@@ -8,7 +8,6 @@ import json
 import os
 import subprocess
 import sys
-import tempfile
 import time
 from pathlib import Path
 
@@ -33,7 +32,6 @@ def _mcp_encode(msg: dict) -> bytes:
 
 def _mcp_read_response(stdout, timeout: float = 120) -> dict | None:
     """Read a Content-Length framed JSON-RPC response from stdout."""
-    import select
     import threading
 
     result = [None]
@@ -79,9 +77,7 @@ def run_mcp_tool(tool_name: str, arguments: dict, timeout: int = 120) -> dict | 
         mcp_binary = mcp_binary.parent.parent / "debug" / "mcp-server-windsurf"
         if not mcp_binary.exists():
             print("❌ MCP server binary not found. Build it first:")
-            print(
-                "   cd vendor/mcp-server-windsurf && swift build --configuration release"
-            )
+            print("   cd vendor/mcp-server-windsurf && swift build --configuration release")
             return None
 
     try:
@@ -107,10 +103,12 @@ def run_mcp_tool(tool_name: str, arguments: dict, timeout: int = 120) -> dict | 
                 "clientInfo": {"name": "test-client", "version": "1.0.0"},
             },
         }
+        assert proc.stdin is not None
         proc.stdin.write(_mcp_encode(init_request))
         proc.stdin.flush()
 
         # Read initialize response
+        assert proc.stdout is not None
         init_resp = _mcp_read_response(proc.stdout, timeout=15)
         if init_resp:
             print("  ✅ MCP initialized (protocol ok)")
@@ -119,6 +117,7 @@ def run_mcp_tool(tool_name: str, arguments: dict, timeout: int = 120) -> dict | 
             # Try to read stderr to see what happened
             proc.terminate()
             try:
+                assert proc.stderr is not None
                 stderr_output = proc.stderr.read()
                 if stderr_output:
                     print(f"  🔴 Server stderr:\n{stderr_output.decode('utf-8', errors='replace')}")
@@ -131,6 +130,7 @@ def run_mcp_tool(tool_name: str, arguments: dict, timeout: int = 120) -> dict | 
             "jsonrpc": "2.0",
             "method": "notifications/initialized",
         }
+        assert proc.stdin is not None
         proc.stdin.write(_mcp_encode(initialized_notif))
         proc.stdin.flush()
 
@@ -145,11 +145,13 @@ def run_mcp_tool(tool_name: str, arguments: dict, timeout: int = 120) -> dict | 
         proc.stdin.flush()
 
         # Read tool response (may take a while for cascade)
+        assert proc.stdout is not None
         tool_resp = _mcp_read_response(proc.stdout, timeout=timeout)
 
         # Check stderr for action phase logs
         proc.kill()
         try:
+            assert proc.stderr is not None
             stderr_data = proc.stderr.read()
             if stderr_data:
                 stderr_text = stderr_data.decode("utf-8", errors="replace")
@@ -175,9 +177,7 @@ def test_cascade_action_phase():
     print("\n📋 Test 1: Simple File Creation")
     test_message = "Create a simple_calc.py file with basic arithmetic functions (add, subtract, multiply, divide)"
 
-    result = run_mcp_tool(
-        "windsurf_cascade", {"message": test_message, "model": "swe-1.5"}
-    )
+    result = run_mcp_tool("windsurf_cascade", {"message": test_message, "model": "swe-1.5"})
 
     if result:
         print("✅ Test 1: MCP response received")
@@ -311,9 +311,7 @@ def main():
             print("\n🎉 Action Phase is working! Files were created successfully!")
             return 0
         if cascade_ok:
-            print(
-                "\n⚠️ Cascade call succeeded but files weren't created in test workspace"
-            )
+            print("\n⚠️ Cascade call succeeded but files weren't created in test workspace")
             return 1
         print("\n⚠️ Action Phase needs further refinement")
         return 1

@@ -4,6 +4,7 @@ import re
 import subprocess
 import time
 from datetime import datetime
+from typing import Any
 
 # Configuration
 LOG_DIR = "/Users/dev/.config/atlastrinity/logs/mikrotik"
@@ -40,7 +41,7 @@ def get_active_log_file():
         i += 1
 
 
-def run_ssh_cmd(command):
+def run_ssh_cmd(command: str) -> str | None:  # Added type hints for command and return
     cmd = [*SSH_CMD, command]
     try:
         result = subprocess.run(cmd, capture_output=True, text=True, timeout=30)
@@ -50,12 +51,15 @@ def run_ssh_cmd(command):
         return None
 
 
-def fetch_logs(last_id=None):
+def fetch_logs(
+    last_id: str | None = None,
+) -> list[dict[str, Any]]:  # Added type hints for last_id and return
     stdout = run_ssh_cmd("/log print detail show-ids without-paging")
     if not stdout:
         return []
     lines = stdout.splitlines()
-    logs, current_log = [], None
+    logs = []
+    current_log: dict[str, Any] | None = None
     for line in lines:
         line = line.strip()
         if not line:
