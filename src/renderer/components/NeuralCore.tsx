@@ -29,11 +29,7 @@ interface NeuralCoreProps {
  * Generate SVG path for a gear with given parameters.
  * Creates a gear shape centered at origin.
  */
-const generateGearPath = (
-  innerRadius: number,
-  outerRadius: number,
-  teeth: number,
-): string => {
+const generateGearPath = (innerRadius: number, outerRadius: number, teeth: number): string => {
   const points: string[] = [];
   const toothAngle = (2 * Math.PI) / teeth;
   const toothWidth = 0.35; // fraction of tooth angle for the top
@@ -58,15 +54,21 @@ const generateGearPath = (
     }
 
     // Inner arc to tooth start
-    points.push(`A ${innerRadius} ${innerRadius} 0 0 1 ${innerRadius * Math.cos(a2)} ${innerRadius * Math.sin(a2)}`);
+    points.push(
+      `A ${innerRadius} ${innerRadius} 0 0 1 ${innerRadius * Math.cos(a2)} ${innerRadius * Math.sin(a2)}`,
+    );
     // Rise to outer
     points.push(`L ${outerRadius * Math.cos(a3)} ${outerRadius * Math.sin(a3)}`);
     // Outer arc (tooth top)
-    points.push(`A ${outerRadius} ${outerRadius} 0 0 1 ${outerRadius * Math.cos(a4)} ${outerRadius * Math.sin(a4)}`);
+    points.push(
+      `A ${outerRadius} ${outerRadius} 0 0 1 ${outerRadius * Math.cos(a4)} ${outerRadius * Math.sin(a4)}`,
+    );
     // Fall to inner
     points.push(`L ${innerRadius * Math.cos(a5)} ${innerRadius * Math.sin(a5)}`);
     // Inner arc to next tooth
-    points.push(`A ${innerRadius} ${innerRadius} 0 0 1 ${innerRadius * Math.cos(a6)} ${innerRadius * Math.sin(a6)}`);
+    points.push(
+      `A ${innerRadius} ${innerRadius} 0 0 1 ${innerRadius * Math.cos(a6)} ${innerRadius * Math.sin(a6)}`,
+    );
   }
 
   points.push('Z');
@@ -226,18 +228,44 @@ const NeuralCore: React.FC<NeuralCoreProps> = ({ state, activeAgent, minimized =
             opacity={isActive ? 0.35 : 0.15}
           />
           {/* Inner ring of the outer gear (hub) */}
-          <circle
-            r="275"
-            fill="none"
+          <circle r="275" fill="none" stroke="currentColor" strokeWidth="0.5" opacity="0.08" />
+          {/* Spoke markings every 90° */}
+          <line
+            x1="275"
+            y1="0"
+            x2="310"
+            y2="0"
             stroke="currentColor"
             strokeWidth="0.5"
-            opacity="0.08"
+            opacity="0.12"
           />
-          {/* Spoke markings every 90° */}
-          <line x1="275" y1="0" x2="310" y2="0" stroke="currentColor" strokeWidth="0.5" opacity="0.12" />
-          <line x1="-275" y1="0" x2="-310" y2="0" stroke="currentColor" strokeWidth="0.5" opacity="0.12" />
-          <line x1="0" y1="275" x2="0" y2="310" stroke="currentColor" strokeWidth="0.5" opacity="0.12" />
-          <line x1="0" y1="-275" x2="0" y2="-310" stroke="currentColor" strokeWidth="0.5" opacity="0.12" />
+          <line
+            x1="-275"
+            y1="0"
+            x2="-310"
+            y2="0"
+            stroke="currentColor"
+            strokeWidth="0.5"
+            opacity="0.12"
+          />
+          <line
+            x1="0"
+            y1="275"
+            x2="0"
+            y2="310"
+            stroke="currentColor"
+            strokeWidth="0.5"
+            opacity="0.12"
+          />
+          <line
+            x1="0"
+            y1="-275"
+            x2="0"
+            y2="-310"
+            stroke="currentColor"
+            strokeWidth="0.5"
+            opacity="0.12"
+          />
         </g>
 
         {/* --- MIDDLE GEAR (20 teeth) — Medium CCW rotation --- */}
@@ -256,13 +284,7 @@ const NeuralCore: React.FC<NeuralCoreProps> = ({ state, activeAgent, minimized =
             opacity={isActive ? 0.45 : 0.2}
           />
           {/* Inner ring of middle gear */}
-          <circle
-            r="200"
-            fill="none"
-            stroke="currentColor"
-            strokeWidth="0.5"
-            opacity="0.1"
-          />
+          <circle r="200" fill="none" stroke="currentColor" strokeWidth="0.5" opacity="0.1" />
           {/* Accent dots on gear face */}
           <circle cx="215" cy="0" r="2" fill="currentColor" opacity={isActive ? 0.5 : 0.15} />
           <circle cx="-215" cy="0" r="2" fill="currentColor" opacity={isActive ? 0.5 : 0.15} />
@@ -290,13 +312,7 @@ const NeuralCore: React.FC<NeuralCoreProps> = ({ state, activeAgent, minimized =
             opacity={isActive ? 0.55 : 0.25}
           />
           {/* Hub ring */}
-          <circle
-            r="125"
-            fill="none"
-            stroke="currentColor"
-            strokeWidth="0.8"
-            opacity="0.12"
-          />
+          <circle r="125" fill="none" stroke="currentColor" strokeWidth="0.8" opacity="0.12" />
           {/* Energy pulse on inner gear when active */}
           {isActive && (
             <circle
