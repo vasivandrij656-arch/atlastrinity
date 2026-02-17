@@ -1,4 +1,8 @@
 
+<!-- AUTO-UPDATED: 2026-02-17T23:56:14.917973 -->
+<!-- Modified: .agent/docs/mcp_architecture_diagram.md, .githuworkflows/ci-core.yml, .githuworkflows/total-integrity.yml -->
+
+
 <!-- AUTO-UPDATED: 2026-02-17T23:53:35.464101 -->
 <!-- Modified: .agent/docs/mcp_architecture_diagram.md, .githuworkflows/test-trinity.yml, docs/vibe-usage-diagram.svg -->
 
@@ -2603,6 +2607,12 @@ flowchart LR
 ```
 
 <!-- END: Vibe mermaid source -->
+
+
+### Vibe (AI agent) — Usage & Integration
+The Vibe usage diagram and inventory are included in project exports.
+
+![](/src/brain/data/architecture_diagrams/exports/vibe-usage-diagram.png)
 
 
 ### Vibe (AI agent) — Usage & Integration

@@ -7,18 +7,17 @@
 ```mermaid
 flowchart LR
   UI["User / UI (Electron / CLI)"] --> MCP["MCP Manager / API"]
-  MCP --> VSERVER["`src/mcp_server/vibe_server.py`\n(MCP wrapper)"]
-  VSERVER --> VCONFIG["`src/mcp_server/vibe_config.py`\n(config models & loader)"]
+  MCP --> VSERVER["src/mcp_server/vibe_server.py<br/>(MCP wrapper)"]
+  VSERVER --> VCONFIG["src/mcp_server/vibe_config.py<br/>(config models & loader)"]
   VSERVER --> VCLI["Vibe CLI binary / VIBE_HOME (runtime)"]
-  VCLI --> PROVIDERS["LLM providers\n(mistral / copilot / windsurf)"]
-  PROVIDERS --> PROXIES["Provider proxies\n(`copilot_vibe_proxy.py`, `vibe_windsurf_proxy.py`)"]
-  VSERVER --> WORKSPACE["`vibe_workspace`\n(instructions, logs, sessions)"]
+  VCLI --> PROVIDERS["LLM providers<br/>(mistral / copilot / windsurf)"]
+  PROVIDERS --> PROXIES["Provider proxies<br/>(copilot_vibe_proxy.py, vibe_windsurf_proxy.py)"]
+  VSERVER --> WORKSPACE["vibe_workspace<br/>(instructions, logs, sessions)"]
   VSERVER --> SESSIONS["~/.vibe/logs/session (session persistence)"]
   VSERVER --> DB["AtlasTrinity DB / logs"]
-  VSERVER --> TOOLS["MCP tools: `vibe_prompt`, `vibe_ask`,\n`vibe_analyze_error`, `vibe_implement_feature`, ..."]
+  VSERVER --> TOOLS["MCP tools: vibe_prompt, vibe_ask,<br/>vibe_analyze_error, vibe_implement_feature, ..."]
   DOCS["Docs & Templates (.docs/, docs/, .agent/docs/)"] --> VSERVER
   SCRIPTS["Scripts & Tests (src/testing/, scripts/, src/maintenance/)"] --> VSERVER
-  note_right of VSERVER: "Token-exchange (Copilot), VIBE_HOME overrides,\nqueueing, retries & fallback chain"
 ```
 
 ---
