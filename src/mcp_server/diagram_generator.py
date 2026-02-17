@@ -247,12 +247,17 @@ def _generate_atlastrinity_diagram(project_name: str, analysis: dict[str, Any]) 
 
     # Add Brain components
     for i, comp in enumerate(brain_comps):
-        if comp not in ["Orchestrator", "Context", "Tools", "Mcp_Server"]:  # Skip if already added or special
+        if comp not in [
+            "Orchestrator",
+            "Context",
+            "Tools",
+            "Mcp_Server",
+        ]:  # Skip if already added or special
             nodes.append(f"        Tools --> BrainComp{i}[{comp}]")
-    
+
     nodes.append("    end")
     nodes.append("")
-    
+
     nodes.append('    subgraph MCP["MCP Servers"]')
     for i, server in enumerate(mcp_servers):
         nodes.append(f"        Tools <--> MCP{i}[{server}]")
@@ -280,4 +285,3 @@ flowchart TD
     style MCP fill:#f0f7e6,stroke:#4caf50
     style Data fill:#f5f5f5,stroke:#666
 ```"""
-

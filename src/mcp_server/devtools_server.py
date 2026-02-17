@@ -1212,7 +1212,7 @@ def devtools_update_architecture_diagrams(
             # Create clean header
             update_notice = f"\n<!-- AUTO-UPDATED: {datetime.now().isoformat()} -->\n"
             update_notice += f"<!-- Modified: {', '.join(modified_files[:3])} -->\n\n"
-            
+
             updated_diagram = update_notice + diagram_content
 
             # If a Vibe usage doc/diagram exists, append a reference so it's
@@ -1222,7 +1222,9 @@ def devtools_update_architecture_diagrams(
                 vibe_svg = PROJECT_ROOT / "docs" / "vibe-usage-diagram.svg"
                 if vibe_svg.exists() or vibe_doc.exists():
                     vibe_section = "\n\n### Vibe (AI agent) — Usage & Integration\n"
-                    vibe_section += "The Vibe usage diagram and inventory are included in project exports.\n\n"
+                    vibe_section += (
+                        "The Vibe usage diagram and inventory are included in project exports.\n\n"
+                    )
                     # Prefer PNG (exported into exports/) then fallback to svg
                     vibe_section += "![](/src/brain/data/architecture_diagrams/exports/vibe-usage-diagram.png)\n"
                     updated_diagram = updated_diagram + vibe_section
@@ -1395,8 +1397,10 @@ def _export_diagrams(target_mode: str, project_path: Path) -> None:
                     converted = True
                 except Exception:
                     # Try command-line fallbacks
-                    for cmd_tool in (["rsvg-convert", "-o", str(png_path), str(vibe_svg)],
-                                     ["convert", str(vibe_svg), str(png_path)]):
+                    for cmd_tool in (
+                        ["rsvg-convert", "-o", str(png_path), str(vibe_svg)],
+                        ["convert", str(vibe_svg), str(png_path)],
+                    ):
                         try:
                             subprocess.run(cmd_tool, check=True, capture_output=True)
                             converted = True

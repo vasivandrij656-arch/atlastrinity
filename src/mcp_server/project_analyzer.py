@@ -221,7 +221,6 @@ def _analyze_generic_project(project_path: Path) -> dict[str, Any]:
     return info
 
 
-
 def _analyze_atlastrinity_project(project_path: Path) -> dict[str, Any]:
     """Analyze AtlasTrinity specific structure."""
     info: dict[str, Any] = {
@@ -256,7 +255,7 @@ def _analyze_atlastrinity_project(project_path: Path) -> dict[str, Any]:
             elif item.is_dir() and (item / "server.py").exists():
                 server_name = item.name.title()
                 valid_server = True
-            
+
             if valid_server:
                 info["components"].append(f"MCP.{server_name}")
                 info["directories"]["mcp_server"].append(item.name)

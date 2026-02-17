@@ -500,12 +500,8 @@ class SelfHealingHypermodule:
                 timeout=120,
             )
             if result.returncode != 0:
-                ts_errors = [
-                    line for line in result.stdout.splitlines() if "error TS" in line
-                ]
-                actions.append(
-                    f"Frontend check: {len(ts_errors)} TypeScript errors detected"
-                )
+                ts_errors = [line for line in result.stdout.splitlines() if "error TS" in line]
+                actions.append(f"Frontend check: {len(ts_errors)} TypeScript errors detected")
                 # Feed TS errors into log analyzer for the improvement cycle
                 for error_line in ts_errors[:10]:  # cap at 10 to avoid flooding
                     self.log_analyzer._upsert_note(
@@ -696,9 +692,7 @@ class SelfHealingHypermodule:
 
         frontend = checks.get("frontend_build", {})
         if frontend.get("ts_errors", 0) > 0:
-            recs.append(
-                f"Fix {frontend['ts_errors']} TypeScript errors: npx tsc --noEmit"
-            )
+            recs.append(f"Fix {frontend['ts_errors']} TypeScript errors: npx tsc --noEmit")
 
         return recs
 

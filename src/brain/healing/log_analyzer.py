@@ -55,7 +55,7 @@ FRONTEND_PATTERNS = [
 
 # File path extraction patterns
 FILE_PATH_PATTERN = re.compile(r'(?:File "([^"]+)", line (\d+))|(\b\w+/[\w/]+\.py\b)')
-TS_FILE_PATH_PATTERN = re.compile(r'([\w./]+\.tsx?)\((\d+),\d+\)')
+TS_FILE_PATH_PATTERN = re.compile(r"([\w./]+\.tsx?)\((\d+),\d+\)")
 
 
 class LogAnalyzer:

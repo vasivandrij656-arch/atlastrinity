@@ -9,6 +9,7 @@ Run locally:
     python scripts/validate_mermaid.py
 
 """
+
 from __future__ import annotations
 
 import re

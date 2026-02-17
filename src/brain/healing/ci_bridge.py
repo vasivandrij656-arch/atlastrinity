@@ -203,19 +203,13 @@ class CIBridge:
         seen: set[str] = set()
 
         # TypeScript errors: src/renderer/foo.tsx(42,5): error TS2345: ...
-        ts_pattern = re.compile(
-            r"([\w./]+\.tsx?)\((\d+),\d+\):\s*error\s+(TS\d+):\s*(.+)"
-        )
+        ts_pattern = re.compile(r"([\w./]+\.tsx?)\((\d+),\d+\):\s*error\s+(TS\d+):\s*(.+)")
 
         # Vite errors: [vite] Internal server error: ...
-        vite_pattern = re.compile(
-            r"\[vite\].*?error:?\s*(.+)", re.IGNORECASE
-        )
+        vite_pattern = re.compile(r"\[vite\].*?error:?\s*(.+)", re.IGNORECASE)
 
         # Biome/ESLint: src/renderer/foo.tsx:42:5 lint/rule: message
-        lint_pattern = re.compile(
-            r"([\w./]+\.tsx?):(\d+):\d+\s+(\S+):\s*(.+)"
-        )
+        lint_pattern = re.compile(r"([\w./]+\.tsx?):(\d+):\d+\s+(\S+):\s*(.+)")
 
         for line in log_content.splitlines():
             # TypeScript errors
@@ -225,16 +219,18 @@ class CIBridge:
                 note_id = f"ts_{error_code}_{file_path}_{line_num}"
                 if note_id not in seen:
                     seen.add(note_id)
-                    notes.append(ImprovementNote(
-                        id=note_id,
-                        category="typescript_error",
-                        description=f"{error_code}: {message.strip()}",
-                        source_file=file_path,
-                        source_line=int(line_num),
-                        severity=HealingPriority.HIGH,
-                        first_seen=datetime.now(),
-                        last_seen=datetime.now(),
-                    ))
+                    notes.append(
+                        ImprovementNote(
+                            id=note_id,
+                            category="typescript_error",
+                            description=f"{error_code}: {message.strip()}",
+                            source_file=file_path,
+                            source_line=int(line_num),
+                            severity=HealingPriority.HIGH,
+                            first_seen=datetime.now(),
+                            last_seen=datetime.now(),
+                        )
+                    )
                 continue
 
             # Lint errors
@@ -244,16 +240,18 @@ class CIBridge:
                 note_id = f"lint_{rule}_{file_path}_{line_num}"
                 if note_id not in seen:
                     seen.add(note_id)
-                    notes.append(ImprovementNote(
-                        id=note_id,
-                        category="lint_error",
-                        description=f"{rule}: {message.strip()}",
-                        source_file=file_path,
-                        source_line=int(line_num),
-                        severity=HealingPriority.MEDIUM,
-                        first_seen=datetime.now(),
-                        last_seen=datetime.now(),
-                    ))
+                    notes.append(
+                        ImprovementNote(
+                            id=note_id,
+                            category="lint_error",
+                            description=f"{rule}: {message.strip()}",
+                            source_file=file_path,
+                            source_line=int(line_num),
+                            severity=HealingPriority.MEDIUM,
+                            first_seen=datetime.now(),
+                            last_seen=datetime.now(),
+                        )
+                    )
                 continue
 
             # Vite errors
@@ -263,14 +261,16 @@ class CIBridge:
                 note_id = f"vite_{hash(message) & 0xFFFFFF:06x}"
                 if note_id not in seen:
                     seen.add(note_id)
-                    notes.append(ImprovementNote(
-                        id=note_id,
-                        category="vite_error",
-                        description=f"Vite: {message.strip()}",
-                        severity=HealingPriority.HIGH,
-                        first_seen=datetime.now(),
-                        last_seen=datetime.now(),
-                    ))
+                    notes.append(
+                        ImprovementNote(
+                            id=note_id,
+                            category="vite_error",
+                            description=f"Vite: {message.strip()}",
+                            severity=HealingPriority.HIGH,
+                            first_seen=datetime.now(),
+                            last_seen=datetime.now(),
+                        )
+                    )
 
         if notes:
             logger.info(f"[CIBridge] Parsed {len(notes)} frontend errors from logs")

@@ -5,6 +5,7 @@ Usage: python3 scripts/convert_vibe_diagram.py
 This is a best-effort converter: prefers cairosvg, falls back to rsvg-convert/ImageMagick,
 or simply copies the SVG if conversion tools are not available.
 """
+
 import shutil
 import subprocess
 from pathlib import Path
@@ -44,8 +45,10 @@ def main() -> int:
 
     if not converted:
         # Try CLI fallbacks (rsvg-convert or ImageMagick `convert`)
-        for cmd in (["rsvg-convert", "-o", str(OUT_PNG), str(SRC_SVG)],
-                    ["convert", str(SRC_SVG), str(OUT_PNG)]):
+        for cmd in (
+            ["rsvg-convert", "-o", str(OUT_PNG), str(SRC_SVG)],
+            ["convert", str(SRC_SVG), str(OUT_PNG)],
+        ):
             try:
                 subprocess.run(cmd, check=True, capture_output=True)
                 converted = True
@@ -60,5 +63,5 @@ def main() -> int:
     return 0
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     raise SystemExit(main())
