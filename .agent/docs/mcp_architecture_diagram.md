@@ -1,6 +1,6 @@
 
-<!-- AUTO-UPDATED: 2026-02-18T21:37:40.946565 -->
-<!-- Modified: .agent/docs/mcp_architecture_diagram.md, .trigger_ci, src/brain/data/architecture_diagrams/mcp_architecture.md -->
+<!-- AUTO-UPDATED: 2026-02-18T21:51:38.647167 -->
+<!-- Modified: .agent/docs/mcp_architecture_diagram.md, src/brain/data/architecture_diagrams/mcp_architecture.md, src/renderer/components/ClockworkBackground.tsx -->
 
 # Architecture Diagram - atlastrinity
 
