@@ -10,6 +10,11 @@ This document defines the protocol for AI agents (Windsurf, VS Code, Cursor) and
 
 To ensure every code change is stable and integrated, follow this loop:
 
+### 0. Synchronization (Mandatory)
+
+BEFORE making any changes, synchronize your local environment with the latest remote state:
+`git pull --rebase origin main`
+
 ### 1. Development Phase
 
 As an agent, you make changes to the code or configurations.
@@ -58,3 +63,4 @@ Once pushed, the GitHub Actions pipeline (`ci-core.yml`) takes over.
 
 - If `agent_preflight.py` fails with an import error, ensure you are in the project root and the virtual environment is activated.
 - If GITHUB_TOKEN is missing, CI/CD status checks will be skipped.
+- **Identity Mandate**: All GitHub operations must use the `GITHUB_TOKEN @[.env]` synchronized with the **Solomiya Gurma** (`solagurma`) account.
