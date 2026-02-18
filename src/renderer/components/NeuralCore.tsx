@@ -1,11 +1,12 @@
 /**
  * NeuralCore - Central Orbital Visualization
- * Gear Mechanism Edition — Reducer/Gearbox viewed from shaft side
- * Trinity agent spheres surrounded by rotating gears
+ * Clockwork Edition — Static gear mechanism as background,
+ * Trinity agent spheres rendered on top.
  */
 
 import type React from 'react';
 import { useEffect, useRef, useState } from 'react';
+import ClockworkBackground from './ClockworkBackground';
 
 type AgentName = 'ATLAS' | 'TETYANA' | 'GRISHA' | 'SYSTEM' | 'USER';
 type SystemState =
@@ -25,55 +26,7 @@ interface NeuralCoreProps {
   minimized?: boolean;
 }
 
-/**
- * Generate SVG path for a gear with given parameters.
- * Creates a gear shape centered at origin.
- */
-const generateGearPath = (innerRadius: number, outerRadius: number, teeth: number): string => {
-  const points: string[] = [];
-  const toothAngle = (2 * Math.PI) / teeth;
-  const toothWidth = 0.35; // fraction of tooth angle for the top
 
-  for (let i = 0; i < teeth; i++) {
-    const startAngle = i * toothAngle;
-    // Inner arc start
-    const a1 = startAngle;
-    // Tooth rise
-    const a2 = startAngle + toothAngle * (0.5 - toothWidth / 2);
-    // Tooth top start
-    const a3 = startAngle + toothAngle * (0.5 - toothWidth / 2);
-    // Tooth top end
-    const a4 = startAngle + toothAngle * (0.5 + toothWidth / 2);
-    // Tooth fall
-    const a5 = startAngle + toothAngle * (0.5 + toothWidth / 2);
-    // Inner arc end
-    const a6 = (i + 1) * toothAngle;
-
-    if (i === 0) {
-      points.push(`M ${innerRadius * Math.cos(a1)} ${innerRadius * Math.sin(a1)}`);
-    }
-
-    // Inner arc to tooth start
-    points.push(
-      `A ${innerRadius} ${innerRadius} 0 0 1 ${innerRadius * Math.cos(a2)} ${innerRadius * Math.sin(a2)}`,
-    );
-    // Rise to outer
-    points.push(`L ${outerRadius * Math.cos(a3)} ${outerRadius * Math.sin(a3)}`);
-    // Outer arc (tooth top)
-    points.push(
-      `A ${outerRadius} ${outerRadius} 0 0 1 ${outerRadius * Math.cos(a4)} ${outerRadius * Math.sin(a4)}`,
-    );
-    // Fall to inner
-    points.push(`L ${innerRadius * Math.cos(a5)} ${innerRadius * Math.sin(a5)}`);
-    // Inner arc to next tooth
-    points.push(
-      `A ${innerRadius} ${innerRadius} 0 0 1 ${innerRadius * Math.cos(a6)} ${innerRadius * Math.sin(a6)}`,
-    );
-  }
-
-  points.push('Z');
-  return points.join(' ');
-};
 
 const NeuralCore: React.FC<NeuralCoreProps> = ({ state, activeAgent, minimized = false }) => {
   const [prevState, setPrevState] = useState<SystemState>(state);
@@ -146,15 +99,8 @@ const NeuralCore: React.FC<NeuralCoreProps> = ({ state, activeAgent, minimized =
     }
   };
 
-  // Dynamic speed multiplier based on state
+  // Dynamic state flags
   const isActive = !['IDLE', 'COMPLETED'].includes(state);
-  const isError = state === 'ERROR';
-  const speedFactor = isActive ? (isError ? 0.5 : 2.0) : 1.0;
-
-  // Generate gear paths
-  const outerGearPath = generateGearPath(280, 310, 28);
-  const middleGearPath = generateGearPath(205, 230, 20);
-  const innerGearPath = generateGearPath(130, 150, 14);
 
   const containerStyle = {
     color: getStateColor(),
@@ -165,6 +111,9 @@ const NeuralCore: React.FC<NeuralCoreProps> = ({ state, activeAgent, minimized =
       className={`neural-core transition-colors-slow ${minimized ? 'minimized' : ''}`}
       style={containerStyle}
     >
+      {/* Clockwork mechanism — rendered behind agent layers */}
+      <ClockworkBackground />
+
       <svg viewBox="-400 -400 800 800" className="orbital-svg">
         <defs>
           <filter id="glow-core">
@@ -207,137 +156,7 @@ const NeuralCore: React.FC<NeuralCoreProps> = ({ state, activeAgent, minimized =
           className="state-ripple"
         />
 
-        {/* ═══════════════════════════════════════════════
-            GEAR MECHANISM — Reducer viewed from shaft side
-            Three concentric gears rotating in alternating directions
-            ═══════════════════════════════════════════════ */}
 
-        {/* --- OUTER GEAR (28 teeth) — Slow CW rotation --- */}
-        <g
-          style={{
-            animation: `rotate-cw ${40 / speedFactor}s linear infinite`,
-            transformOrigin: 'center',
-          }}
-          filter="url(#glow-gear)"
-        >
-          <path
-            d={outerGearPath}
-            fill="none"
-            stroke="currentColor"
-            strokeWidth="1.5"
-            opacity={isActive ? 0.35 : 0.15}
-          />
-          {/* Inner ring of the outer gear (hub) */}
-          <circle r="275" fill="none" stroke="currentColor" strokeWidth="0.5" opacity="0.08" />
-          {/* Spoke markings every 90° */}
-          <line
-            x1="275"
-            y1="0"
-            x2="310"
-            y2="0"
-            stroke="currentColor"
-            strokeWidth="0.5"
-            opacity="0.12"
-          />
-          <line
-            x1="-275"
-            y1="0"
-            x2="-310"
-            y2="0"
-            stroke="currentColor"
-            strokeWidth="0.5"
-            opacity="0.12"
-          />
-          <line
-            x1="0"
-            y1="275"
-            x2="0"
-            y2="310"
-            stroke="currentColor"
-            strokeWidth="0.5"
-            opacity="0.12"
-          />
-          <line
-            x1="0"
-            y1="-275"
-            x2="0"
-            y2="-310"
-            stroke="currentColor"
-            strokeWidth="0.5"
-            opacity="0.12"
-          />
-        </g>
-
-        {/* --- MIDDLE GEAR (20 teeth) — Medium CCW rotation --- */}
-        <g
-          style={{
-            animation: `rotate-ccw ${22 / speedFactor}s linear infinite`,
-            transformOrigin: 'center',
-          }}
-          filter="url(#glow-gear)"
-        >
-          <path
-            d={middleGearPath}
-            fill="none"
-            stroke="currentColor"
-            strokeWidth="1.8"
-            opacity={isActive ? 0.45 : 0.2}
-          />
-          {/* Inner ring of middle gear */}
-          <circle r="200" fill="none" stroke="currentColor" strokeWidth="0.5" opacity="0.1" />
-          {/* Accent dots on gear face */}
-          <circle cx="215" cy="0" r="2" fill="currentColor" opacity={isActive ? 0.5 : 0.15} />
-          <circle cx="-215" cy="0" r="2" fill="currentColor" opacity={isActive ? 0.5 : 0.15} />
-          <circle cx="0" cy="215" r="2" fill="currentColor" opacity={isActive ? 0.5 : 0.15} />
-          <circle cx="0" cy="-215" r="2" fill="currentColor" opacity={isActive ? 0.5 : 0.15} />
-          <circle cx="152" cy="152" r="1.5" fill="currentColor" opacity={isActive ? 0.4 : 0.1} />
-          <circle cx="-152" cy="152" r="1.5" fill="currentColor" opacity={isActive ? 0.4 : 0.1} />
-          <circle cx="152" cy="-152" r="1.5" fill="currentColor" opacity={isActive ? 0.4 : 0.1} />
-          <circle cx="-152" cy="-152" r="1.5" fill="currentColor" opacity={isActive ? 0.4 : 0.1} />
-        </g>
-
-        {/* --- INNER GEAR (14 teeth) — Fast CW rotation --- */}
-        <g
-          style={{
-            animation: `rotate-cw ${12 / speedFactor}s linear infinite`,
-            transformOrigin: 'center',
-          }}
-          filter="url(#glow-gear)"
-        >
-          <path
-            d={innerGearPath}
-            fill="none"
-            stroke="currentColor"
-            strokeWidth="2"
-            opacity={isActive ? 0.55 : 0.25}
-          />
-          {/* Hub ring */}
-          <circle r="125" fill="none" stroke="currentColor" strokeWidth="0.8" opacity="0.12" />
-          {/* Energy pulse on inner gear when active */}
-          {isActive && (
-            <circle
-              r="140"
-              fill="none"
-              stroke="currentColor"
-              strokeWidth="3"
-              strokeDasharray="15 800"
-              opacity="0.6"
-            >
-              <animateTransform
-                attributeName="transform"
-                type="rotate"
-                from="0"
-                to="360"
-                dur="2s"
-                repeatCount="indefinite"
-              />
-            </circle>
-          )}
-        </g>
-
-        {/* --- Thin accent ring between gears --- */}
-        <circle r="260" fill="none" stroke="currentColor" strokeWidth="0.3" opacity="0.06" />
-        <circle r="170" fill="none" stroke="currentColor" strokeWidth="0.3" opacity="0.06" />
 
         {/* --- CENTRAL CORE --- */}
         <g className="core-group" filter={isActive ? 'url(#glow-strong)' : 'url(#glow-core)'}>
@@ -605,6 +424,8 @@ const NeuralCore: React.FC<NeuralCoreProps> = ({ state, activeAgent, minimized =
           filter: blur(2px);
         }
         .orbital-svg {
+          position: relative;
+          z-index: 1;
           width: 480px;
           height: 480px;
           max-width: 90%;
