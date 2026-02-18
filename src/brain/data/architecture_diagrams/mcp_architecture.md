@@ -1,6 +1,6 @@
 
-<!-- AUTO-UPDATED: 2026-02-18T21:06:37.182710 -->
-<!-- Modified: .agent/docs/mcp_architecture_diagram.md, .gitignore, package-lock.json -->
+<!-- AUTO-UPDATED: 2026-02-18T21:08:23.467610 -->
+<!-- Modified: .agent/docs/mcp_architecture_diagram.md, src/brain/data/architecture_diagrams/mcp_architecture.md, vendor/XcodeBuildMCP/package-lock.json -->
 
 # Architecture Diagram - atlastrinity
 
