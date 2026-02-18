@@ -37,7 +37,7 @@ if ! gh api user --jq '.login' &> /dev/null; then
 fi
 
 # Exclude GITHUB_TOKEN (used for auth) and other common non-secret env vars if any
-EXCLUDE_LIST=("GITHUB_TOKEN" "PATH" "PWD" "HOME")
+EXCLUDE_LIST=("GITHUB_TOKEN" "GITHUB_TOKEN_ACTION" "PATH" "PWD" "HOME")
 
 echo "🎬 Starting secrets synchronization for $(basename $(pwd))..."
 

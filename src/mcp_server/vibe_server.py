@@ -843,6 +843,17 @@ def _prepare_vibe_env(env: dict[str, str] | None) -> dict[str, str]:
 
     process_env = os.environ.copy()
 
+    # Propagate GitHub tokens for git operations
+    action_token = os.getenv("GITHUB_TOKEN_ACTION")
+    main_token = os.getenv("GITHUB_TOKEN")
+
+    if action_token:
+        process_env["GITHUB_TOKEN_ACTION"] = action_token
+        # Prioritize action token for GITHUB_TOKEN if specified
+        process_env["GITHUB_TOKEN"] = action_token
+    elif main_token:
+        process_env["GITHUB_TOKEN"] = main_token
+
     # Ensure MISTRAL_API_KEY and COPILOT_API_KEY are explicitly propagated
     for key in ["MISTRAL_API_KEY", "COPILOT_API_KEY", "OPENROUTER_API_KEY"]:
         if key in os.environ:
