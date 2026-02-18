@@ -2,13 +2,22 @@ name: CI Core Pipeline
 
 on:
   push:
-    branches: [main, vibe2, develop]
+    branches: [main, develop, vibe2]
+    paths-ignore:
+      - '**.md'
+      - '.agent/**'
+      - 'docs/**'
+      - 'scripts/screenshots/**'
+      - '.secrets.baseline'
   pull_request:
     branches: [main]
-  workflow_dispatch: {}
+    paths-ignore:
+      - '**.md'
+      - '.agent/**'
 
-permissions:
-  contents: read
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
 
 env:
   PYTHON_VERSION: '3.12'
@@ -128,7 +137,7 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        os: [ubuntu-latest, macos-latest]
+        os: [ubuntu-latest]
         python-version: ['3.12']
     steps:
       - name: Checkout

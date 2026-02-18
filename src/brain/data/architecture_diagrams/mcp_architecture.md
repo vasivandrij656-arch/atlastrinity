@@ -1,6 +1,6 @@
 
-<!-- AUTO-UPDATED: 2026-02-18T19:30:33.345323 -->
-<!-- Modified: .agent/docs/mcp_architecture_diagram.md, .githuworkflows/auto-commit-secrets.yml.disabled, .githuworkflows/auto-fix.yml.disabled -->
+<!-- AUTO-UPDATED: 2026-02-18T19:50:52.302624 -->
+<!-- Modified: .agent/docs/mcp_architecture_diagram.md, .githuworkflows/ci-core.yml, .githuworkflows/test-trinity.yml -->
 
 # Architecture Diagram - atlastrinity
 

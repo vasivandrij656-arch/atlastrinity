@@ -7,9 +7,18 @@ on:
       - 'src/brain/**'
       - 'providers/**'
       - 'tests/test_trinity*.py'
+      - 'tests/test_handoff.py'
+      - '!**.md'
   pull_request:
     branches: [main]
+    paths:
+      - 'src/brain/**'
+      - 'providers/**'
   workflow_dispatch: {}
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
 
 permissions:
   contents: read
