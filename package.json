@@ -111,7 +111,6 @@
   },
   "overrides": {
     "ajv": "8.17.1",
-    "@modelcontextprotocol/sdk": "1.26.0",
     "eslint": {
       "ajv": "^6.12.6"
     },
