@@ -1,6 +1,6 @@
 
-<!-- AUTO-UPDATED: 2026-02-18T04:06:32.756116 -->
-<!-- Modified: .agent/docs/mcp_architecture_diagram.md, src/brain/data/architecture_diagrams/mcp_architecture.md, src/brain/healing/improvement_engine.py -->
+<!-- AUTO-UPDATED: 2026-02-18T04:10:30.220829 -->
+<!-- Modified: .agent/docs/mcp_architecture_diagram.md, .githuworkflows/auto-fix.yml, .githuworkflows/build-macos.yml -->
 
 # Architecture Diagram - atlastrinity
 

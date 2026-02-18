@@ -32,7 +32,7 @@ jobs:
     runs-on: macos-latest
     steps:
       - name: Checkout
-        uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
+        uses: actions/checkout@v4
         with:
           submodules: recursive
           persist-credentials: false
@@ -63,7 +63,7 @@ jobs:
           lipo -info vendor/mcp-server-macos-use/.build/release/mcp-server-macos-use
 
       - name: Upload Swift binary
-        uses: actions/upload-artifact@6f3803623bb19a96e95b0fe638efcda9540e53a2 # v4.6.0
+        uses: actions/upload-artifact@v4
         with:
           name: mcp-server-macos-use-binary
           path: vendor/mcp-server-macos-use/.build/release/mcp-server-macos-use
@@ -78,13 +78,13 @@ jobs:
     runs-on: macos-latest
     steps:
       - name: Checkout
-        uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
+        uses: actions/checkout@v4
         with:
           submodules: recursive
           persist-credentials: false
 
       - name: Setup Python
-        uses: actions/setup-python@42375524e23c412d93fb67b49958b49160d8f3a5 # v5.4.0
+        uses: actions/setup-python@v5
 
         with:
           python-version: ${{ env.PYTHON_VERSION }}
@@ -112,7 +112,7 @@ jobs:
           tar -czf dist_venv.tar.gz dist_venv/
 
       - name: Upload Python venv
-        uses: actions/upload-artifact@6f3803623bb19a96e95b0fe638efcda9540e53a2 # v4.6.0
+        uses: actions/upload-artifact@v4
         with:
           name: python-venv
           path: dist_venv.tar.gz
@@ -128,19 +128,19 @@ jobs:
     needs: [build-swift-binary, build-python-venv]
     steps:
       - name: Checkout
-        uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
+        uses: actions/checkout@v4
         with:
           submodules: recursive
           persist-credentials: false
 
       - name: Setup Node
-        uses: actions/setup-node@2a2fe955e1c034a742831f24d77bb457e5d8ff7a # v4.2.0
+        uses: actions/setup-node@v4
         with:
           node-version: ${{ env.NODE_VERSION }}
           cache: 'npm'
 
       - name: Setup Python
-        uses: actions/setup-python@42375524e23c412d93fb67b49958b49160d8f3a5 # v5.4.0
+        uses: actions/setup-python@v5
 
         with:
           python-version: ${{ env.PYTHON_VERSION }}
@@ -212,7 +212,7 @@ jobs:
           fi
 
       - name: Upload DMG artifact
-        uses: actions/upload-artifact@6f3803623bb19a96e95b0fe638efcda9540e53a2 # v4.6.0
+        uses: actions/upload-artifact@v4
 
         with:
           name: AtlasTrinity-macOS-${{ github.sha }}
@@ -220,7 +220,7 @@ jobs:
           retention-days: 30
 
       - name: Upload build logs
-        uses: actions/upload-artifact@6f3803623bb19a96e95b0fe638efcda9540e53a2 # v4.6.0
+        uses: actions/upload-artifact@v4
 
         if: failure()
         with:
