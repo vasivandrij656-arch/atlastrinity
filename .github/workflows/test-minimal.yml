@@ -1,0 +1,12 @@
+name: Minimal Test
+on:
+  push:
+    branches: [main]
+  workflow_dispatch:
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    steps:
+      - name: HelloWorld
+        run: echo "Hello Atlas Trinity"
