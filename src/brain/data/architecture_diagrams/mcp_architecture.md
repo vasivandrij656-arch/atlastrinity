@@ -1,6 +1,6 @@
 
-<!-- AUTO-UPDATED: 2026-02-18T18:50:33.386739 -->
-<!-- Modified: .agent/docs/mcp_architecture_diagram.md, .secrets.baseline, src/brain/data/architecture_diagrams/mcp_architecture.md -->
+<!-- AUTO-UPDATED: 2026-02-18T18:54:06.958590 -->
+<!-- Modified: .agent/docs/mcp_architecture_diagram.md, src/brain/data/architecture_diagrams/mcp_architecture.md, src/brain/mcp/data/protocols/mikrotik_network_protocol.md -->
 
 # Architecture Diagram - atlastrinity
 

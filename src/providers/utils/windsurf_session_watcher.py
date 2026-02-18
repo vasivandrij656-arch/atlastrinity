@@ -39,6 +39,7 @@ from pathlib import Path
 from typing import Any
 
 import requests
+from src.brain.config import CONFIG_ROOT
 
 logger = logging.getLogger("windsurf.session_watcher")
 
@@ -55,7 +56,7 @@ STATE_DB_PATH = (
     / "globalStorage"
     / "state.vscdb"
 )
-from src.brain.config import CONFIG_ROOT
+
 
 ENV_FILE_PATH = Path(CONFIG_ROOT) / ".env"
 
