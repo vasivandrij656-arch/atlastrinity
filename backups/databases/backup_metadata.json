@@ -1,5 +1,5 @@
 {
-  "timestamp": "1771285957.1083064",
+  "timestamp": "1771388889.299994",
   "encrypted_files": [
     "atlastrinity.db.encrypted",
     "monitoring.db.encrypted",
@@ -7,6 +7,6 @@
     "golden_fund.db.encrypted",
     "golden_fund_index.db.encrypted"
   ],
-  "key_hash": "9f7ebe04c9483204cd0dc3b08e37db70c81ffd60e50e4b7bb27170101aee9c8a",
+  "key_hash": "4e527ea92c8faeed132f5db4a0bb20973a406d2736bfbc6b7e51403bed7d8e1c",
   "total_files": 9
 }
