@@ -4,50 +4,27 @@ description: Configure Git user identity for commits
 
 To ensure you can commit changes in this repository, run the appropriate setup command.
 
-### 1. Automatic Setup (Recommended)
+### 1. Token-based Remote Setup (Mandatory)
 
 // turbo
 
 ```zsh
-export GITHUB_TOKEN=$(grep GITHUB_TOKEN .env | cut -d'=' -f2) && \
+export GITHUB_TOKEN=$(grep GITHUB_TOKEN .env | cut -d'=' -f2 | tr -d '\r\n') && \
 git remote set-url origin https://$GITHUB_TOKEN@github.com/solagurma/atlastrinity.git && \
 echo "✅ Git remote configured with token from .env"
 ```
 
-### 2. Developer Identity (Kizyma Oleg)
+### 2. Set Identity
 
-// turbo
+Configure your Git identity (name/email). If you are using an agent, use the agent's identity.
 
-```zsh
-git config user.name "Kizyma Oleg"
-git config user.email "oleg1203@gmail.com"
-```
-
-### 3. Solomiya Gurma Identity (Repository Owner)
-
-// turbo
-
-```zsh
-git config user.name "Solomiya Gurma"
-git config user.email "solomiyagurma@gmail.com"
-```
-
-### 3. Antigravity Agent Identity
+#### Antigravity Agent Identity
 
 // turbo
 
 ```zsh
 git config user.name "Antigravity AI"
 git config user.email "antigravity-bot@google.com"
-```
-
-### 4. Windsurf Agent Identity
-
-// turbo
-
-```zsh
-git config user.name "Windsurf AI"
-git config user.email "windsurf-bot@codeium.com"
 ```
 
 ### 5. (Optional) Verify configuration

@@ -1,6 +1,6 @@
 
-<!-- AUTO-UPDATED: 2026-02-18T05:00:46.301715 -->
-<!-- Modified: .agent/docs/mcp_architecture_diagram.md, .githuworkflows/ci-core.yml, .githuworkflows/test-trinity.yml -->
+<!-- AUTO-UPDATED: 2026-02-18T05:17:12.427634 -->
+<!-- Modified: .agent/docs/mcp_architecture_diagram.md, .agent/workflows/agent_interaction.md, .agent/workflows/git-setup.md -->
 
 # Architecture Diagram - atlastrinity
 

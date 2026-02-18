@@ -63,4 +63,4 @@ Once pushed, the GitHub Actions pipeline (`ci-core.yml`) takes over.
 
 - If `agent_preflight.py` fails with an import error, ensure you are in the project root and the virtual environment is activated.
 - If GITHUB_TOKEN is missing, CI/CD status checks will be skipped.
-- **Identity Mandate**: All GitHub operations must use the `GITHUB_TOKEN @[.env]` synchronized with the **Solomiya Gurma** (`solagurma`) account.
+- **Identity Mandate**: All GitHub operations must use the `GITHUB_TOKEN @[.env]`. Access level and identity are derived from the current token.

@@ -15,7 +15,7 @@ You must strictly adhere to the following operational rules and architectural co
 - **Python Version**: ALWAYS use **Python 3.12**. This version is mandatory for all core logic, scripts, and environment configurations. Ensure all dependency management and runtime checks adhere to this version.
 - **Agent-Trinity Interaction**: After EVERY code change, ALWAYS run `scripts/agent_preflight.py --autofix` to verify local integrity. Ensure that CI/CD workflows are brought to a "green" state by investigating failures and applying automatic or manual fixes.
 - **Pre-Work Synchronization**: BEFORE starting any task or code changes, ALWAYS synchronize the local repository with the remote (git pull --rebase) to ensure work starts from the latest state.
-- **GitHub Identity & Authentication**: ALWAYS use the `GITHUB_TOKEN` from the global `.env` file for all repository operations (gh commands, git push/pull). The repository owner is **Solomiya Gurma** (`solagurma`). Never use local credentials or other tokens.
+- **GitHub Identity & Authentication**: ALWAYS use the `GITHUB_TOKEN` from the global `.env` file for all repository operations (gh commands, git push/pull). The identity and permissions are determined exclusively by the provided token. Never use local credentials or other tokens.
 
 ## Model Suite (Copilot Provider Only)
 
