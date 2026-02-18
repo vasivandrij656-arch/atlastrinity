@@ -4,6 +4,7 @@
   "project": ["src/**/*.{ts,tsx}"],
   "ignore": ["dist/**", "node_modules/**"],
   "ignoreDependencies": [
+    "ajv",
     "@modelcontextprotocol/*",
     "chrome-devtools-mcp",
     "cloudinary",
