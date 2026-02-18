@@ -1,9 +1,11 @@
 import json
+import os
 import subprocess
 import time
 from typing import Any
+
 from src.brain.config import PROJECT_ROOT
-import os
+
 
 def call_mcp_tool(tool_name, arguments):
     binary = f"{PROJECT_ROOT}/vendor/mcp-server-windsurf/.build/release/mcp-server-windsurf"

@@ -3,8 +3,7 @@ import json
 import sys
 from pathlib import Path
 
-# Add project root and src to path for imports
-PROJECT_ROOT = Path("/Users/dev/Documents/GitHub/atlastrinity")
+from src.brain.config import PROJECT_ROOT
 SRC_ROOT = PROJECT_ROOT / "src"
 sys.path.insert(0, str(PROJECT_ROOT))
 sys.path.insert(0, str(SRC_ROOT))
@@ -23,7 +22,7 @@ async def test_mcp_tool(tool_name: str, arguments: dict | None = None):
     if arguments is None:
         arguments = {}
 
-    binary_path = "/Users/dev/Documents/GitHub/atlastrinity/vendor/mcp-server-windsurf/.build/release/mcp-server-windsurf"
+    binary_path = f"{PROJECT_ROOT}/vendor/mcp-server-windsurf/.build/release/mcp-server-windsurf"
 
     # Construct JSON-RPC request
     request = {

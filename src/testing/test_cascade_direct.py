@@ -19,7 +19,7 @@ async def test_cascade_tool():
 
     messages = [
         HumanMessage(
-            content="Create a file named /Users/dev/Desktop/cascade_test.txt with content 'Hello from Cascade!'"
+            content="Create a file named ~/Desktop/cascade_test.txt with content 'Hello from Cascade!'"
         )
     ]
 

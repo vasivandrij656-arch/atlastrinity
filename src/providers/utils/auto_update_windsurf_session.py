@@ -134,7 +134,8 @@ def detect_language_server():
 def update_env_file(session_info):
     """Update .env file with current session info"""
 
-    env_file = Path("/Users/dev/Documents/GitHub/atlastrinity/.env")
+    from src.brain.config import PROJECT_ROOT
+    env_file = PROJECT_ROOT / ".env"
 
     if not env_file.exists():
         print("❌ .env file not found")

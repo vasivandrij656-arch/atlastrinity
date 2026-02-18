@@ -39,8 +39,9 @@ except ImportError:
 ContentItem = str | dict[str, Any]
 
 try:
-    from src.brain.config import CONFIG_ROOT
     from dotenv import load_dotenv
+
+    from src.brain.config import CONFIG_ROOT
 
     load_dotenv(f"{CONFIG_ROOT}/.env", override=True)
 except ImportError:

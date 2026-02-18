@@ -55,7 +55,8 @@ STATE_DB_PATH = (
     / "globalStorage"
     / "state.vscdb"
 )
-ENV_FILE_PATH = Path("/Users/dev/.config/atlastrinity/.env")
+from src.brain.config import CONFIG_ROOT
+ENV_FILE_PATH = Path(CONFIG_ROOT) / ".env"
 
 
 # ─── Session Data ──────────────────────────────────────────────────────────────

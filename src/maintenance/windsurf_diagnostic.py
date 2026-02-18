@@ -2,9 +2,9 @@ import asyncio
 import os
 import sys
 from pathlib import Path
+from src.brain.config import PROJECT_ROOT
 
 # Add project root and src to path for imports
-PROJECT_ROOT = Path("/Users/dev/Documents/GitHub/atlastrinity")
 SRC_ROOT = PROJECT_ROOT / "src"
 sys.path.insert(0, str(PROJECT_ROOT))
 sys.path.insert(0, str(SRC_ROOT))
