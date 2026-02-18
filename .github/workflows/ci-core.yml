@@ -122,7 +122,7 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        os: [ubuntu-latest, ubuntu-latest]
+        os: [ubuntu-latest]
         python-version: ['3.12']
     steps:
       - name: Checkout

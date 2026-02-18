@@ -1,0 +1,107 @@
+name: Auto-Fix Reactive Healing
+
+on:
+  workflow_run: # zizmor: ignore[dangerous-triggers]
+    workflows: ['Test Trinity Core', 'CI Core', 'Lint & Static Analysis']
+
+    types:
+      - completed
+    branches:
+      - main
+
+permissions:
+  contents: read
+
+jobs:
+  analyze-and-fix:
+    permissions:
+      contents: write
+      actions: read
+      pull-requests: write
+
+    if: >
+      github.event.workflow_run.conclusion == 'failure' &&
+      github.event.workflow_run.head_repository.full_name == github.repository
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
+        with:
+          token: ${{ secrets.GITHUB_TOKEN }}
+          fetch-depth: 0
+          persist-credentials: false
+
+      - name: Setup Python
+        uses: actions/setup-python@f271371b8c96bc3893fb67b49958b49160d8f3a5 # v5.4.0
+        with:
+          python-version: '3.12'
+          cache: pip
+
+      - name: Install dependencies
+        run: |
+          python -m pip install --upgrade pip
+          pip install -r requirements.txt 2>/dev/null || true
+
+      - name: Download Failure Logs
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          RUN_ID: ${{ github.event.workflow_run.id }}
+        run: |
+          mkdir -p ~/.config/atlastrinity/logs
+          gh run view "$RUN_ID" --log > ~/.config/atlastrinity/logs/ci_failure.log || echo "Failed to download logs"
+
+      - name: Create Auto-Fix Branch
+        id: branch
+        env:
+          RUN_ID: ${{ github.event.workflow_run.id }}
+        run: |
+          git config user.name "Atlas Auto-Fix"
+          git config user.email "atlas-fix@atlastrinity.local"
+          BRANCH_NAME="auto-fix/run-$RUN_ID"
+          git checkout -b "$BRANCH_NAME"
+          echo "name=$BRANCH_NAME" >> "$GITHUB_OUTPUT"
+
+      - name: Run Reactive Healing (IMPROVE Mode)
+        env:
+          PYTHONPATH: ${{ github.workspace }}
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          MODE: improve
+        run: |
+          python -c "
+          import asyncio
+          from src.brain.healing import healing_hypermodule, HealingMode
+
+          async def main():
+              print('Running reactive healing based on CI logs...')
+              # The hypermodule will analyze ci_failure.log via LogAnalyzer
+              result = await healing_hypermodule.run(HealingMode.IMPROVE)
+              print(f'Result: {result.message}')
+              if result.details:
+                  import json
+                  print(json.dumps(result.details, indent=2, default=str))
+
+          asyncio.run(main())
+          "
+
+      - name: Push Fixes & Create PR
+        if: success()
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          BRANCH_NAME: ${{ steps.branch.outputs.name }}
+          RUN_ID: ${{ github.event.workflow_run.id }}
+        run: |
+          git add -A
+          if git diff --staged --quiet; then
+            echo "No fixes applied."
+          else
+            git commit -m "[Auto-Fix] Applied fixes for run #$RUN_ID"
+            git push "https://x-access-token:${GH_TOKEN}@github.com/${{ github.repository }}.git" "HEAD:$BRANCH_NAME"
+
+            
+            # Create PR
+            PR_TITLE="[Auto-Fix] Fixes for workflow failure #$RUN_ID"
+            PR_BODY="Automatically generated fixes based on log analysis of failing workflow run."
+            gh pr create --title "$PR_TITLE" --body "$PR_BODY" --base main --head "$BRANCH_NAME"
+          fi
