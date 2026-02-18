@@ -39,6 +39,7 @@ from pathlib import Path
 from typing import Any
 
 import requests
+
 from src.brain.config import CONFIG_ROOT
 
 logger = logging.getLogger("windsurf.session_watcher")

@@ -1,6 +1,6 @@
 
-<!-- AUTO-UPDATED: 2026-02-18T18:54:06.958590 -->
-<!-- Modified: .agent/docs/mcp_architecture_diagram.md, src/brain/data/architecture_diagrams/mcp_architecture.md, src/brain/mcp/data/protocols/mikrotik_network_protocol.md -->
+<!-- AUTO-UPDATED: 2026-02-18T18:58:18.931181 -->
+<!-- Modified: .agent/docs/mcp_architecture_diagram.md, src/brain/data/architecture_diagrams/mcp_architecture.md, src/providers/utils/windsurf_session_watcher.py -->
 
 # Architecture Diagram - atlastrinity
 

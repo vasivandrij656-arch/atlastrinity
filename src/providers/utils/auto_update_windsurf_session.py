@@ -135,6 +135,7 @@ def update_env_file(session_info):
     """Update .env file with current session info"""
 
     from src.brain.config import PROJECT_ROOT
+
     env_file = PROJECT_ROOT / ".env"
 
     if not env_file.exists():
