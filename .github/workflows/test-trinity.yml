@@ -33,7 +33,7 @@ jobs:
           persist-credentials: false
 
       - name: Setup Python
-        uses: actions/setup-python@f271371b8c96bc3893fb67b49958b49160d8f3a5 # v5.4.0
+        uses: actions/setup-python@42375524e23c412d11ac727c8d92ee4d7bc41b83 # v5.4.0
         with:
           python-version: ${{ env.PYTHON_VERSION }}
           cache: 'pip'
@@ -75,7 +75,7 @@ jobs:
           persist-credentials: false
 
       - name: Setup Python
-        uses: actions/setup-python@f271371b8c96bc3893fb67b49958b49160d8f3a5 # v5.4.0
+        uses: actions/setup-python@42375524e23c412d11ac727c8d92ee4d7bc41b83 # v5.4.0
         with:
           python-version: ${{ env.PYTHON_VERSION }}
           cache: 'pip'
@@ -108,7 +108,7 @@ jobs:
           persist-credentials: false
 
       - name: Setup Python
-        uses: actions/setup-python@f271371b8c96bc3893fb67b49958b49160d8f3a5 # v5.4.0
+        uses: actions/setup-python@42375524e23c412d11ac727c8d92ee4d7bc41b83 # v5.4.0
         with:
           python-version: ${{ env.PYTHON_VERSION }}
           cache: 'pip'
@@ -148,7 +148,7 @@ jobs:
           persist-credentials: false
 
       - name: Setup Python
-        uses: actions/setup-python@f271371b8c96bc3893fb67b49958b49160d8f3a5 # v5.4.0
+        uses: actions/setup-python@42375524e23c412d11ac727c8d92ee4d7bc41b83 # v5.4.0
         with:
           python-version: ${{ env.PYTHON_VERSION }}
           cache: 'pip'
@@ -187,7 +187,7 @@ jobs:
           persist-credentials: false
 
       - name: Setup Python
-        uses: actions/setup-python@f271371b8c96bc3893fb67b49958b49160d8f3a5 # v5.4.0
+        uses: actions/setup-python@42375524e23c412d11ac727c8d92ee4d7bc41b83 # v5.4.0
         with:
           python-version: ${{ env.PYTHON_VERSION }}
           cache: 'pip'
@@ -266,7 +266,7 @@ jobs:
           persist-credentials: false
 
       - name: Setup Python
-        uses: actions/setup-python@f271371b8c96bc3893fb67b49958b49160d8f3a5 # v5.4.0
+        uses: actions/setup-python@42375524e23c412d11ac727c8d92ee4d7bc41b83 # v5.4.0
 
         with:
           python-version: ${{ env.PYTHON_VERSION }}
