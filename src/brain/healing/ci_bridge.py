@@ -138,10 +138,15 @@ class CIBridge:
             notes.append(note)
             logger.info(f"[CIBridge] CI failure detected: {result.name} (domain={domain.value})")
 
-            # If logs are available and it's a frontend error, parse further
-            if result.error_logs and domain == ErrorDomain.FRONTEND:
-                frontend_notes = self.analyze_frontend_errors(result.error_logs)
-                notes.extend(frontend_notes)
+            
+            # If logs are available, parse further
+            if result.error_logs:
+                if domain == ErrorDomain.FRONTEND:
+                    frontend_notes = self.analyze_frontend_errors(result.error_logs)
+                    notes.extend(frontend_notes)
+                elif domain == ErrorDomain.CONFIG:
+                    workflow_notes = self.analyze_workflow_errors(result.error_logs)
+                    notes.extend(workflow_notes)
 
         return notes
 
@@ -184,6 +189,10 @@ class CIBridge:
             line,
         ):
             return ErrorDomain.BUILD
+
+        # GitHub Workflow specific structural errors
+        if re.search(r"invalid workflow|workflow.*not valid|failed to parse.*yml", line):
+            return ErrorDomain.CONFIG
 
         # Default to backend for unclassified
         return ErrorDomain.BACKEND
@@ -274,6 +283,54 @@ class CIBridge:
 
         if notes:
             logger.info(f"[CIBridge] Parsed {len(notes)} frontend errors from logs")
+        return notes
+
+    def analyze_workflow_errors(self, log_content: str) -> list[ImprovementNote]:
+        """Parse GitHub Actions workflow structural errors.
+
+        Detects issues like missing secrets, invalid runners, or syntax errors.
+        """
+        import re
+
+        notes: list[ImprovementNote] = []
+        seen: set[str] = set()
+
+        # Missing secret: Secret 'FOO' is not defined
+        secret_match = re.search(r"Secret '(\w+)' is not defined", log_content)
+        if secret_match:
+            secret_name = secret_match.group(1)
+            note_id = f"workflow_missing_secret_{secret_name}"
+            notes.append(
+                ImprovementNote(
+                    id=note_id,
+                    category="workflow_error",
+                    description=f"Missing GitHub Secret: {secret_name}",
+                    severity=HealingPriority.HIGH,
+                    first_seen=datetime.now(),
+                    last_seen=datetime.now(),
+                )
+            )
+
+        # Syntax error: .github/workflows/foo.yml (Line: 12, Col: 5): ...
+        syntax_pattern = re.compile(r"(.github/workflows/[\w.-]+\.ya?ml)\s*\(Line:\s*(\d+),\s*Col:\s*(\d+)\):\s*(.+)")
+        for match in syntax_pattern.finditer(log_content):
+            file_path, line, col, msg = match.groups()
+            note_id = f"workflow_syntax_{file_path}_{line}"
+            if note_id not in seen:
+                seen.add(note_id)
+                notes.append(
+                    ImprovementNote(
+                        id=note_id,
+                        category="workflow_error",
+                        description=f"Workflow syntax error: {msg}",
+                        source_file=file_path,
+                        source_line=int(line),
+                        severity=HealingPriority.CRITICAL,
+                        first_seen=datetime.now(),
+                        last_seen=datetime.now(),
+                    )
+                )
+
         return notes
 
     async def trigger_auto_fix(self, workflow_name: str = "auto-fix.yml") -> bool:

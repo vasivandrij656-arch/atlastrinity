@@ -1,6 +1,6 @@
 
-<!-- AUTO-UPDATED: 2026-02-18T02:33:22.575028 -->
-<!-- Modified: .agent/docs/mcp_architecture_diagram.md, lefthook.yml, src/brain/data/architecture_diagrams/mcp_architecture.md -->
+<!-- AUTO-UPDATED: 2026-02-18T03:10:23.530133 -->
+<!-- Modified: .agent/docs/mcp_architecture_diagram.md, knip.json, src/brain/data/architecture_diagrams/mcp_architecture.md -->
 
 # Architecture Diagram - atlastrinity
 

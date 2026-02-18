@@ -1,3 +1,4 @@
+import asyncio
 import json
 import os
 import re
@@ -23,6 +24,12 @@ from .git_manager import (
 )
 from .project_analyzer import analyze_project_structure, detect_changed_components
 from .trace_analyzer import analyze_log_file
+
+try:
+    from src.brain.healing.hypermodule import healing_hypermodule, HealingMode
+except ImportError:
+    healing_hypermodule = None
+    HealingMode = None
 
 server = FastMCP("devtools-server")
 
@@ -1761,3 +1768,76 @@ def devtools_get_github_job_logs(
         return fetch_github_workflow_jobs(PROJECT_ROOT, run_id)
 
     return {"error": "Must provide either run_id or job_id"}
+
+
+@server.tool()
+async def devtools_trigger_preflight() -> dict[str, Any]:
+    """Trigger the Agent Pre-flight verification locally.
+
+    Runs synchronization, delta-linting, MCP integrity checks, and diagnostics.
+    """
+    preflight_script = PROJECT_ROOT / "scripts" / "agent_preflight.py"
+    if not preflight_script.exists():
+        return {"success": False, "message": f"Pre-flight script not found at {preflight_script}"}
+
+    try:
+        # We run it as a subprocess to capture its rich output and ensure clean environment
+        process = await asyncio.create_subprocess_exec(
+            sys.executable,
+            str(preflight_script),
+            stdout=subprocess.PIPE,
+            stderr=subprocess.PIPE,
+            cwd=str(PROJECT_ROOT),
+        )
+        stdout, stderr = await process.communicate()
+
+        return {
+            "success": process.returncode == 0,
+            "message": "Pre-flight completed",
+            "output": stdout.decode().strip(),
+            "errors": stderr.decode().strip(),
+        }
+    except Exception as e:
+        return {"success": False, "message": f"Failed to run pre-flight: {e}"}
+
+
+@server.tool()
+async def devtools_get_self_healing_status() -> dict[str, Any]:
+    """Get the current status and pending notes from the Self-Healing Hypermodule."""
+    if not healing_hypermodule:
+        return {"success": False, "message": "Self-healing system not available"}
+
+    try:
+        status = healing_hypermodule.get_status()
+        pending_notes = healing_hypermodule.log_analyzer.get_pending_notes()
+
+        return {
+            "success": True,
+            "status": status,
+            "pending_notes_count": len(pending_notes),
+            "top_notes": [n.to_dict() for n in pending_notes[:5]],
+        }
+    except Exception as e:
+        return {"success": False, "message": f"Failed to get status: {e}"}
+
+
+@server.tool()
+async def devtools_apply_localized_fix(file_path: str) -> dict[str, Any]:
+    """Apply a localized self-healing fix to a specific file based on pending notes.
+
+    Args:
+        file_path: Path to the file requiring improvement/fix.
+    """
+    if not healing_hypermodule or not HealingMode:
+        return {"success": False, "message": "Self-healing system not available"}
+
+    try:
+        # Run IMPROVE mode with focus on the specific file
+        result = await healing_hypermodule.run(
+            HealingMode.IMPROVE, context={"focus_areas": None, "max_improvements": 1}
+        )
+
+        return result.to_dict()
+    except Exception as e:
+        return {"success": False, "message": f"Failed to apply localized fix: {e}"}
+
