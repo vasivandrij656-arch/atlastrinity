@@ -149,7 +149,7 @@ except Exception:
         return default
 
     VIBE_BINARY = "vibe"
-    DEFAULT_TIMEOUT_S = 600.0
+    DEFAULT_TIMEOUT_S = 1800.0
     MAX_OUTPUT_CHARS = 500000
     CONFIG_ROOT = Path.home() / ".config" / "atlastrinity"
     PROJECT_ROOT = Path(__file__).parent.parent.parent
@@ -1828,7 +1828,7 @@ async def vibe_implement_feature(
     context_files: list[str] | None = None,
     constraints: str | None = None,
     cwd: str | None = None,
-    timeout_s: float | None = 1200,
+    timeout_s: float | None = 3600,
     session_id: str | None = None,
     # Enhanced options for software development
     quality_checks: bool = True,
@@ -1987,7 +1987,7 @@ EXECUTE NOW
             ctx=ctx,
             prompt=prompt,
             cwd=cwd,
-            timeout_s=timeout_s or 1200,
+            timeout_s=timeout_s or 3600,
             model=model or _current_model or AGENT_MODEL_OVERRIDE,
             mode="auto-approve",
             session_id=session_id,
