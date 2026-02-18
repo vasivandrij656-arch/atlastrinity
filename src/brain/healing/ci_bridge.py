@@ -315,7 +315,7 @@ class CIBridge:
             r"(.github/workflows/[\w.-]+\.ya?ml)\s*\(Line:\s*(\d+),\s*Col:\s*(\d+)\):\s*(.+)"
         )
         for match in syntax_pattern.finditer(log_content):
-            file_path, line, col, msg = match.groups()
+            file_path, line, _col, msg = match.groups()
             note_id = f"workflow_syntax_{file_path}_{line}"
             if note_id not in seen:
                 seen.add(note_id)

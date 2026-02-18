@@ -40,4 +40,4 @@ We use a single custom provider: **Copilot**. We only use the following 5 native
 
 ## Mandatory CI/CD Verification
 
-It is MANDATORY to achieve and maintain a "green" (passing) status for all CI/CD workflows. Every push MUST trigger verification, and failures must be fixed immediately. Deployment configurations MUST be platform-agnostic, using dynamic path resolution.
+It is MANDATORY to achieve and maintain a "green" (passing) status for all CI/CD workflows. Every push MUST trigger verification, and failures—including linting warnings like unused imports or variables—must be fixed immediately. Deployment configurations MUST be platform-agnostic, using dynamic path resolution.
