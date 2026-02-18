@@ -272,7 +272,7 @@ class VibeConfig(BaseModel):
     # Execution limits
     max_turns: int = Field(10, ge=1, le=1000, description="Default max turns")
     max_price: float | None = Field(None, ge=0.0, description="Max cost per conversation (USD)")
-    timeout_s: float = Field(600.0, ge=10.0, description="Default timeout in seconds")
+    timeout_s: float = Field(1800.0, ge=10.0, description="Default timeout in seconds")
     confirmation_timeout_s: float = Field(
         20.0, ge=0.0, description="Default timeout for auto-approving 'ask' permissions"
     )
@@ -437,7 +437,7 @@ class VibeConfig(BaseModel):
             textual_theme=None,
             max_turns=10,
             max_price=None,
-            timeout_s=600.0,
+            timeout_s=1800.0,
             vibe_home=None,
             agents_dir=None,
             prompts_dir=None,

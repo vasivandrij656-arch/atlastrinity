@@ -317,12 +317,12 @@ class ConfigurationManager {
             }
         }
         
-        if config.general.timeoutDuration < 10 || config.general.timeoutDuration > 600 {
+        if config.general.timeoutDuration < 10 || config.general.timeoutDuration > 3600 {
             errors.append(.invalidTimeout)
         }
         
         // Validate cascade settings
-        if config.cascade.actionTimeout < 30 || config.cascade.actionTimeout > 600 {
+        if config.cascade.actionTimeout < 30 || config.cascade.actionTimeout > 3600 {
             errors.append(.invalidActionTimeout)
         }
         
@@ -351,9 +351,9 @@ class ConfigurationManager {
             case .invalidAPIKey:
                 return "API key must be in format 'sk-ws-...' and be longer than 20 characters"
             case .invalidTimeout:
-                return "Timeout must be between 10 and 600 seconds"
+                return "Timeout must be between 10 and 3600 seconds"
             case .invalidActionTimeout:
-                return "Action timeout must be between 30 and 600 seconds"
+                return "Action timeout must be between 30 and 3600 seconds"
             case .invalidCacheSize:
                 return "Cache size must be between 10 and 1000 entries"
             case .invalidLogFileSize:
