@@ -1,6 +1,6 @@
 
-<!-- AUTO-UPDATED: 2026-02-18T20:12:05.000708 -->
-<!-- Modified: .agent/docs/mcp_architecture_diagram.md, .env.example, scripts/sync_secrets.sh -->
+<!-- AUTO-UPDATED: 2026-02-18T20:30:48.048489 -->
+<!-- Modified: .agent/docs/mcp_architecture_diagram.md, .env.example, .githuworkflows/ci-core.yml -->
 
 # Architecture Diagram - atlastrinity
 
