@@ -1,6 +1,6 @@
 
-<!-- AUTO-UPDATED: 2026-02-18T19:15:24.852764 -->
-<!-- Modified: .agent/docs/mcp_architecture_diagram.md, src/brain/data/architecture_diagrams/mcp_architecture.md, src/providers/utils/auto_update_windsurf_session.py -->
+<!-- AUTO-UPDATED: 2026-02-18T19:16:39.707246 -->
+<!-- Modified: .agent/docs/mcp_architecture_diagram.md, .agent/workflows/rules.md, scripts/agent_preflight.py -->
 
 # Architecture Diagram - atlastrinity
 
