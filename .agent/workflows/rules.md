@@ -13,6 +13,7 @@ You must strictly adhere to the following operational rules and architectural co
 - **Git Protocol**: After successfully completing a work phase or fixing a bug, always propose a git commit with a clear and descriptive message summarizing the changes.
 - **Templates First**: Apply configuration changes ONLY to templates in the `Configuration Templates` directory. Verify that they are synchronized to the corresponding files in the `Active Configurations` folder.
 - **Python Version**: ALWAYS use **Python 3.12**. This version is mandatory for all core logic, scripts, and environment configurations. Ensure all dependency management and runtime checks adhere to this version.
+- **Agent-Trinity Interaction**: After EVERY code change, ALWAYS run `scripts/agent_preflight.py --autofix` to verify local integrity. Ensure that CI/CD workflows are brought to a "green" state by investigating failures and applying automatic or manual fixes.
 
 ## Model Suite (Copilot Provider Only)
 

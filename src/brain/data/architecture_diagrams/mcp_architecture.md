@@ -1,6 +1,6 @@
 
-<!-- AUTO-UPDATED: 2026-02-18T04:10:30.220829 -->
-<!-- Modified: .agent/docs/mcp_architecture_diagram.md, .githuworkflows/auto-fix.yml, .githuworkflows/build-macos.yml -->
+<!-- AUTO-UPDATED: 2026-02-18T04:13:02.272481 -->
+<!-- Modified: .agent/docs/mcp_architecture_diagram.md, .githuworkflows/auto-commit-secrets.yml, .githuworkflows/auto-fix.yml -->
 
 # Architecture Diagram - atlastrinity
 
