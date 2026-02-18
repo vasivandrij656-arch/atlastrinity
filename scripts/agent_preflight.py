@@ -1,6 +1,5 @@
 import argparse
 import asyncio
-import json
 import os
 import subprocess
 import sys
@@ -26,8 +25,35 @@ class Colors:
 async def run_preflight(autofix: bool = False):
     print(f"{Colors.BOLD}{Colors.CYAN}--- Atlas Trinity Agent Pre-flight ---{Colors.ENDC}\n")
 
+    # 0. Repository Synchronization Check (Mandatory)
+    print(f"{Colors.BOLD}[0/5] Verifying repository synchronization...{Colors.ENDC}")
+    try:
+        # Check if we are behind origin
+        subprocess.run(["git", "fetch", "origin"], check=True, capture_output=True)
+        status_proc = subprocess.run(
+            ["git", "status", "-uno"], capture_output=True, text=True, check=True
+        )
+        if "Your branch is behind" in status_proc.stdout:
+            print(f"{Colors.RED}✗ Local branch is behind origin.{Colors.ENDC}")
+            if autofix:
+                print(
+                    f"{Colors.CYAN}Auto-fix: Synchronizing with 'git pull --rebase'...{Colors.ENDC}"
+                )
+                subprocess.run(["git", "pull", "--rebase", "origin", "main"], check=True)
+                print(f"{Colors.GREEN}✓ Synchronized successfully.{Colors.ENDC}")
+            else:
+                print(
+                    f"{Colors.YELLOW}! Please run 'git pull --rebase' before proceeding.{Colors.ENDC}"
+                )
+        else:
+            print(f"{Colors.GREEN}✓ Branch is up to date.{Colors.ENDC}")
+    except Exception as e:
+        print(
+            f"{Colors.YELLOW}! Sync check failed (possibly offline or no remote): {e}{Colors.ENDC}"
+        )
+
     # 1. Delta-Sync Config Templates
-    print(f"{Colors.BOLD}[1/4] Synchronizing configuration templates...{Colors.ENDC}")
+    print(f"\n{Colors.BOLD}[1/5] Synchronizing configuration templates...{Colors.ENDC}")
     try:
         from src.maintenance.config_sync import main as sync_configs
 
@@ -37,7 +63,7 @@ async def run_preflight(autofix: bool = False):
         print(f"{Colors.RED}✗ Config sync failed: {e}{Colors.ENDC}")
 
     # 2. Verify Changed Files (Lefthook)
-    print(f"\n{Colors.BOLD}[2/4] Running delta-linting on changed files...{Colors.ENDC}")
+    print(f"\n{Colors.BOLD}[2/5] Running delta-linting on changed files...{Colors.ENDC}")
     try:
         # Check for changed files using git
         diff_proc = subprocess.run(
@@ -69,7 +95,7 @@ async def run_preflight(autofix: bool = False):
         print(f"{Colors.RED}✗ Git/Lefthook error: {e}{Colors.ENDC}")
 
     # 3. MCP Integrity Check
-    print(f"\n{Colors.BOLD}[3/4] Verifying MCP Server Integrity...{Colors.ENDC}")
+    print(f"\n{Colors.BOLD}[3/5] Verifying MCP Server Integrity...{Colors.ENDC}")
     try:
         from src.testing.verify_mcp_integrity import verify_integrity
 
@@ -83,7 +109,7 @@ async def run_preflight(autofix: bool = False):
             await healing_hypermodule.run(HealingMode.DIAGNOSE, context={"targets": ["mcp_config"]})
 
     # 4. System Diagnostics (Hypermodule)
-    print(f"\n{Colors.BOLD}[4/4] Running System Diagnostics...{Colors.ENDC}")
+    print(f"\n{Colors.BOLD}[4/5] Running System Diagnostics...{Colors.ENDC}")
     try:
         result = await healing_hypermodule.run(HealingMode.DIAGNOSE)
         if result.success:

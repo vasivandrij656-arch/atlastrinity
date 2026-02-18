@@ -1,6 +1,6 @@
 
-<!-- AUTO-UPDATED: 2026-02-18T05:17:12.427634 -->
-<!-- Modified: .agent/docs/mcp_architecture_diagram.md, .agent/workflows/agent_interaction.md, .agent/workflows/git-setup.md -->
+<!-- AUTO-UPDATED: 2026-02-18T05:39:47.190165 -->
+<!-- Modified: .agent/docs/mcp_architecture_diagram.md, scripts/agent_preflight.py, src/brain/data/architecture_diagrams/mcp_architecture.md -->
 
 # Architecture Diagram - atlastrinity
 
