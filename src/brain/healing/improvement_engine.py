@@ -70,6 +70,7 @@ class ImprovementEngine:
                 "repeated_warning": "code_quality",
                 "resource_bottleneck": "performance",
                 "ci_failure": "code_quality",
+                "workflow_error": "config",
             }
 
             description = (

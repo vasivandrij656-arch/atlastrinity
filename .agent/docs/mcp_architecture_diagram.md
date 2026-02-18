@@ -1,5 +1,5 @@
 
-<!-- AUTO-UPDATED: 2026-02-18T03:15:16.229567 -->
+<!-- AUTO-UPDATED: 2026-02-18T03:17:51.855962 -->
 <!-- Modified: .agent/docs/mcp_architecture_diagram.md, .agent/workflows/agent_interaction.md, scripts/agent_preflight.py -->
 
 # Architecture Diagram - atlastrinity
