@@ -4,6 +4,7 @@ import sys
 from pathlib import Path
 
 from src.brain.config import PROJECT_ROOT
+
 SRC_ROOT = PROJECT_ROOT / "src"
 sys.path.insert(0, str(PROJECT_ROOT))
 sys.path.insert(0, str(SRC_ROOT))

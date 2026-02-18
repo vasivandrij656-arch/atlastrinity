@@ -2,6 +2,7 @@ import asyncio
 import os
 import sys
 from pathlib import Path
+
 from src.brain.config import PROJECT_ROOT
 
 # Add project root and src to path for imports

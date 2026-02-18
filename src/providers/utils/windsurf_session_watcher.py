@@ -56,6 +56,7 @@ STATE_DB_PATH = (
     / "state.vscdb"
 )
 from src.brain.config import CONFIG_ROOT
+
 ENV_FILE_PATH = Path(CONFIG_ROOT) / ".env"
 
 

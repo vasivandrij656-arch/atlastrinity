@@ -1,5 +1,5 @@
 
-<!-- AUTO-UPDATED: 2026-02-18T18:48:03.355040 -->
+<!-- AUTO-UPDATED: 2026-02-18T18:49:37.681344 -->
 <!-- Modified: .agent/docs/mcp_architecture_diagram.md, .secrets.baseline, src/brain/data/architecture_diagrams/mcp_architecture.md -->
 
 # Architecture Diagram - atlastrinity
