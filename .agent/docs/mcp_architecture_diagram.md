@@ -1,6 +1,6 @@
 
-<!-- AUTO-UPDATED: 2026-02-18T04:28:45.645453 -->
-<!-- Modified: .agent/docs/mcp_architecture_diagram.md, .githuworkflows/ci-core.yml, .githuworkflows/self-healing.yml.disabled -->
+<!-- AUTO-UPDATED: 2026-02-18T04:31:36.532435 -->
+<!-- Modified: .agent/docs/mcp_architecture_diagram.md, .githuworkflows/self-healing.yml.disabled, .githuworkflows/test-mcp-servers.yml.disabled -->
 
 # Architecture Diagram - atlastrinity
 
