@@ -1,6 +1,6 @@
 
-<!-- AUTO-UPDATED: 2026-02-18T03:10:23.530133 -->
-<!-- Modified: .agent/docs/mcp_architecture_diagram.md, knip.json, src/brain/data/architecture_diagrams/mcp_architecture.md -->
+<!-- AUTO-UPDATED: 2026-02-18T03:15:16.229567 -->
+<!-- Modified: .agent/docs/mcp_architecture_diagram.md, .agent/workflows/agent_interaction.md, scripts/agent_preflight.py -->
 
 # Architecture Diagram - atlastrinity
 

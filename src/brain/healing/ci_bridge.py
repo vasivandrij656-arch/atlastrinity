@@ -138,7 +138,6 @@ class CIBridge:
             notes.append(note)
             logger.info(f"[CIBridge] CI failure detected: {result.name} (domain={domain.value})")
 
-            
             # If logs are available, parse further
             if result.error_logs:
                 if domain == ErrorDomain.FRONTEND:
@@ -312,7 +311,9 @@ class CIBridge:
             )
 
         # Syntax error: .github/workflows/foo.yml (Line: 12, Col: 5): ...
-        syntax_pattern = re.compile(r"(.github/workflows/[\w.-]+\.ya?ml)\s*\(Line:\s*(\d+),\s*Col:\s*(\d+)\):\s*(.+)")
+        syntax_pattern = re.compile(
+            r"(.github/workflows/[\w.-]+\.ya?ml)\s*\(Line:\s*(\d+),\s*Col:\s*(\d+)\):\s*(.+)"
+        )
         for match in syntax_pattern.finditer(log_content):
             file_path, line, col, msg = match.groups()
             note_id = f"workflow_syntax_{file_path}_{line}"

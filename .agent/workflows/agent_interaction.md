@@ -23,7 +23,11 @@ Before committing or pushing, run the **Agent Pre-flight**. This synchronizes co
 
 // turbo
 **Command:** `python3 scripts/agent_preflight.py`
-**MCP Tool:** `devtools_server.devtools_trigger_preflight()`
+**With Auto-fix:** `python3 scripts/agent_preflight.py --autofix`
+**MCP Tool:** `devtools_server.devtools_trigger_preflight(autofix=True)`
+
+> [!TIP]
+> Use the `--autofix` flag to automatically resolve linting errors, configuration mismatches, and system degradations detected during the check.
 
 ### 3. Review and Resolve
 

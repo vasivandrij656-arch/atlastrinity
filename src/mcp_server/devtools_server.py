@@ -26,7 +26,7 @@ from .project_analyzer import analyze_project_structure, detect_changed_componen
 from .trace_analyzer import analyze_log_file
 
 try:
-    from src.brain.healing.hypermodule import healing_hypermodule, HealingMode
+    from src.brain.healing.hypermodule import HealingMode, healing_hypermodule
 except ImportError:
     healing_hypermodule = None
     HealingMode = None
@@ -1771,20 +1771,24 @@ def devtools_get_github_job_logs(
 
 
 @server.tool()
-async def devtools_trigger_preflight() -> dict[str, Any]:
+async def devtools_trigger_preflight(autofix: bool = False) -> dict[str, Any]:
     """Trigger the Agent Pre-flight verification locally.
 
     Runs synchronization, delta-linting, MCP integrity checks, and diagnostics.
+    If autofix is True, attempts to automatically resolve detected issues.
     """
     preflight_script = PROJECT_ROOT / "scripts" / "agent_preflight.py"
     if not preflight_script.exists():
         return {"success": False, "message": f"Pre-flight script not found at {preflight_script}"}
 
     try:
+        args = [sys.executable, str(preflight_script)]
+        if autofix:
+            args.append("--autofix")
+
         # We run it as a subprocess to capture its rich output and ensure clean environment
         process = await asyncio.create_subprocess_exec(
-            sys.executable,
-            str(preflight_script),
+            *args,
             stdout=subprocess.PIPE,
             stderr=subprocess.PIPE,
             cwd=str(PROJECT_ROOT),
@@ -1840,4 +1844,3 @@ async def devtools_apply_localized_fix(file_path: str) -> dict[str, Any]:
         return result.to_dict()
     except Exception as e:
         return {"success": False, "message": f"Failed to apply localized fix: {e}"}
-
