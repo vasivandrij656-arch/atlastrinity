@@ -2,12 +2,13 @@ import json
 import subprocess
 import time
 from typing import Any
-
+from src.brain.config import PROJECT_ROOT
+import os
 
 def call_mcp_tool(tool_name, arguments):
-    binary = "/Users/dev/Documents/GitHub/atlastrinity/vendor/mcp-server-windsurf/.build/release/mcp-server-windsurf"
+    binary = f"{PROJECT_ROOT}/vendor/mcp-server-windsurf/.build/release/mcp-server-windsurf"
     env = {
-        "WINDSURF_API_KEY": "sk-ws-01-3vQio5CLce8beK1OqKX1zvWmP-nTjOV3JpO3O5v3tI6Yy7SIRWJyanWHnCpjDnCKIOd1JVKFww8DKfmu5yRqVqGbazlrug",
+        "WINDSURF_API_KEY": os.getenv("WINDSURF_API_KEY", ""),
         "PATH": "/usr/bin:/bin:/usr/sbin:/sbin:/usr/local/bin",
     }
 

@@ -38,11 +38,11 @@ except ImportError:
 # Type aliases
 ContentItem = str | dict[str, Any]
 
-# Load environment variables from global .env
 try:
+    from src.brain.config import CONFIG_ROOT
     from dotenv import load_dotenv
 
-    load_dotenv("/Users/dev/.config/atlastrinity/.env", override=True)
+    load_dotenv(f"{CONFIG_ROOT}/.env", override=True)
 except ImportError:
     pass  # dotenv not available, use system env vars
 
