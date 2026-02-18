@@ -26,8 +26,6 @@ interface NeuralCoreProps {
   minimized?: boolean;
 }
 
-
-
 const NeuralCore: React.FC<NeuralCoreProps> = ({ state, activeAgent, minimized = false }) => {
   const [prevState, setPrevState] = useState<SystemState>(state);
   const [pulseKey, setPulseKey] = useState(0);
@@ -155,8 +153,6 @@ const NeuralCore: React.FC<NeuralCoreProps> = ({ state, activeAgent, minimized =
           strokeWidth="2"
           className="state-ripple"
         />
-
-
 
         {/* --- CENTRAL CORE --- */}
         <g className="core-group" filter={isActive ? 'url(#glow-strong)' : 'url(#glow-core)'}>

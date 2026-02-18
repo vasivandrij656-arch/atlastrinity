@@ -41,8 +41,8 @@ interface GearDef {
   teeth: number;
   color: string;
   opacity: number;
-  speed: number;   // seconds per revolution
-  cw: boolean;     // clockwise?
+  speed: number; // seconds per revolution
+  cw: boolean; // clockwise?
   glowColor: string;
 }
 
@@ -53,27 +53,192 @@ interface GearDef {
  */
 const GEARS: GearDef[] = [
   // ── Large hero gears ──
-  { cx: -120, cy: -80,  innerR: 80,  outerR: 100, teeth: 24, color: 'var(--atlas-blue)',    opacity: 0.12, speed: 60, cw: true,  glowColor: 'rgba(0,163,255,0.25)' },
-  { cx: 80,   cy: 60,   innerR: 70,  outerR: 88,  teeth: 20, color: 'var(--tetyana-green)', opacity: 0.10, speed: 52, cw: false, glowColor: 'rgba(0,255,65,0.22)' },
-  { cx: 160,  cy: -140, innerR: 60,  outerR: 76,  teeth: 18, color: 'var(--grisha-orange)', opacity: 0.11, speed: 48, cw: true,  glowColor: 'rgba(255,140,0,0.22)' },
+  {
+    cx: -120,
+    cy: -80,
+    innerR: 80,
+    outerR: 100,
+    teeth: 24,
+    color: 'var(--atlas-blue)',
+    opacity: 0.12,
+    speed: 60,
+    cw: true,
+    glowColor: 'rgba(0,163,255,0.25)',
+  },
+  {
+    cx: 80,
+    cy: 60,
+    innerR: 70,
+    outerR: 88,
+    teeth: 20,
+    color: 'var(--tetyana-green)',
+    opacity: 0.1,
+    speed: 52,
+    cw: false,
+    glowColor: 'rgba(0,255,65,0.22)',
+  },
+  {
+    cx: 160,
+    cy: -140,
+    innerR: 60,
+    outerR: 76,
+    teeth: 18,
+    color: 'var(--grisha-orange)',
+    opacity: 0.11,
+    speed: 48,
+    cw: true,
+    glowColor: 'rgba(255,140,0,0.22)',
+  },
 
   // ── Medium gears ──
-  { cx: -220, cy: 70,   innerR: 50,  outerR: 64,  teeth: 16, color: 'var(--atlas-blue)',    opacity: 0.09, speed: 40, cw: false, glowColor: 'rgba(0,163,255,0.18)' },
-  { cx: 0,    cy: -200, innerR: 45,  outerR: 58,  teeth: 14, color: 'var(--tetyana-green)', opacity: 0.10, speed: 36, cw: true,  glowColor: 'rgba(0,255,65,0.18)' },
-  { cx: 250,  cy: 30,   innerR: 48,  outerR: 62,  teeth: 15, color: 'var(--grisha-orange)', opacity: 0.08, speed: 38, cw: false, glowColor: 'rgba(255,140,0,0.16)' },
-  { cx: -50,  cy: 190,  innerR: 55,  outerR: 70,  teeth: 16, color: 'var(--atlas-blue)',    opacity: 0.09, speed: 44, cw: true,  glowColor: 'rgba(0,163,255,0.18)' },
+  {
+    cx: -220,
+    cy: 70,
+    innerR: 50,
+    outerR: 64,
+    teeth: 16,
+    color: 'var(--atlas-blue)',
+    opacity: 0.09,
+    speed: 40,
+    cw: false,
+    glowColor: 'rgba(0,163,255,0.18)',
+  },
+  {
+    cx: 0,
+    cy: -200,
+    innerR: 45,
+    outerR: 58,
+    teeth: 14,
+    color: 'var(--tetyana-green)',
+    opacity: 0.1,
+    speed: 36,
+    cw: true,
+    glowColor: 'rgba(0,255,65,0.18)',
+  },
+  {
+    cx: 250,
+    cy: 30,
+    innerR: 48,
+    outerR: 62,
+    teeth: 15,
+    color: 'var(--grisha-orange)',
+    opacity: 0.08,
+    speed: 38,
+    cw: false,
+    glowColor: 'rgba(255,140,0,0.16)',
+  },
+  {
+    cx: -50,
+    cy: 190,
+    innerR: 55,
+    outerR: 70,
+    teeth: 16,
+    color: 'var(--atlas-blue)',
+    opacity: 0.09,
+    speed: 44,
+    cw: true,
+    glowColor: 'rgba(0,163,255,0.18)',
+  },
 
   // ── Small accent gears ──
-  { cx: -280, cy: -170, innerR: 28,  outerR: 38,  teeth: 10, color: 'var(--grisha-orange)', opacity: 0.07, speed: 24, cw: false, glowColor: 'rgba(255,140,0,0.14)' },
-  { cx: 290,  cy: -60,  innerR: 25,  outerR: 34,  teeth: 9,  color: 'var(--tetyana-green)', opacity: 0.08, speed: 22, cw: true,  glowColor: 'rgba(0,255,65,0.14)' },
-  { cx: -160, cy: 230,  innerR: 30,  outerR: 40,  teeth: 10, color: 'var(--grisha-orange)', opacity: 0.07, speed: 26, cw: true,  glowColor: 'rgba(255,140,0,0.12)' },
-  { cx: 200,  cy: 200,  innerR: 22,  outerR: 30,  teeth: 8,  color: 'var(--atlas-blue)',    opacity: 0.08, speed: 20, cw: false, glowColor: 'rgba(0,163,255,0.14)' },
+  {
+    cx: -280,
+    cy: -170,
+    innerR: 28,
+    outerR: 38,
+    teeth: 10,
+    color: 'var(--grisha-orange)',
+    opacity: 0.07,
+    speed: 24,
+    cw: false,
+    glowColor: 'rgba(255,140,0,0.14)',
+  },
+  {
+    cx: 290,
+    cy: -60,
+    innerR: 25,
+    outerR: 34,
+    teeth: 9,
+    color: 'var(--tetyana-green)',
+    opacity: 0.08,
+    speed: 22,
+    cw: true,
+    glowColor: 'rgba(0,255,65,0.14)',
+  },
+  {
+    cx: -160,
+    cy: 230,
+    innerR: 30,
+    outerR: 40,
+    teeth: 10,
+    color: 'var(--grisha-orange)',
+    opacity: 0.07,
+    speed: 26,
+    cw: true,
+    glowColor: 'rgba(255,140,0,0.12)',
+  },
+  {
+    cx: 200,
+    cy: 200,
+    innerR: 22,
+    outerR: 30,
+    teeth: 8,
+    color: 'var(--atlas-blue)',
+    opacity: 0.08,
+    speed: 20,
+    cw: false,
+    glowColor: 'rgba(0,163,255,0.14)',
+  },
 
   // ── Tiny connector gears ──
-  { cx: -30,  cy: -110, innerR: 18,  outerR: 26,  teeth: 8,  color: 'var(--tetyana-green)', opacity: 0.06, speed: 16, cw: false, glowColor: 'rgba(0,255,65,0.10)' },
-  { cx: 140,  cy: 170,  innerR: 16,  outerR: 22,  teeth: 7,  color: 'var(--grisha-orange)', opacity: 0.06, speed: 14, cw: true,  glowColor: 'rgba(255,140,0,0.10)' },
-  { cx: -260, cy: -30,  innerR: 20,  outerR: 28,  teeth: 8,  color: 'var(--atlas-blue)',    opacity: 0.06, speed: 18, cw: true,  glowColor: 'rgba(0,163,255,0.10)' },
-  { cx: 310,  cy: 170,  innerR: 18,  outerR: 25,  teeth: 7,  color: 'var(--tetyana-green)', opacity: 0.05, speed: 15, cw: false, glowColor: 'rgba(0,255,65,0.08)' },
+  {
+    cx: -30,
+    cy: -110,
+    innerR: 18,
+    outerR: 26,
+    teeth: 8,
+    color: 'var(--tetyana-green)',
+    opacity: 0.06,
+    speed: 16,
+    cw: false,
+    glowColor: 'rgba(0,255,65,0.10)',
+  },
+  {
+    cx: 140,
+    cy: 170,
+    innerR: 16,
+    outerR: 22,
+    teeth: 7,
+    color: 'var(--grisha-orange)',
+    opacity: 0.06,
+    speed: 14,
+    cw: true,
+    glowColor: 'rgba(255,140,0,0.10)',
+  },
+  {
+    cx: -260,
+    cy: -30,
+    innerR: 20,
+    outerR: 28,
+    teeth: 8,
+    color: 'var(--atlas-blue)',
+    opacity: 0.06,
+    speed: 18,
+    cw: true,
+    glowColor: 'rgba(0,163,255,0.10)',
+  },
+  {
+    cx: 310,
+    cy: 170,
+    innerR: 18,
+    outerR: 25,
+    teeth: 7,
+    color: 'var(--tetyana-green)',
+    opacity: 0.05,
+    speed: 15,
+    cw: false,
+    glowColor: 'rgba(0,255,65,0.08)',
+  },
 ];
 
 const ClockworkBackground: React.FC = () => {
@@ -121,7 +286,7 @@ const ClockworkBackground: React.FC = () => {
         </defs>
 
         {/* Ambient glow circles behind each major gear group */}
-        {GEARS.filter(g => g.outerR >= 60).map((g, i) => (
+        {GEARS.filter((g) => g.outerR >= 60).map((g, i) => (
           <circle
             key={`amb-${i}`}
             cx={g.cx}
@@ -170,32 +335,50 @@ const ClockworkBackground: React.FC = () => {
                   opacity={g.opacity * 0.6}
                 />
                 {/* Center axle */}
-                <circle
-                  r={g.innerR * 0.15}
-                  fill={g.color}
-                  opacity={g.opacity * 0.8}
-                />
+                <circle r={g.innerR * 0.15} fill={g.color} opacity={g.opacity * 0.8} />
                 {/* Spokes for larger gears */}
                 {g.outerR >= 50 && (
                   <>
-                    <line x1={0} y1={-g.innerR * 0.55} x2={0} y2={g.innerR * 0.55}
-                      stroke={g.color} strokeWidth={0.5} opacity={g.opacity * 0.4} />
-                    <line x1={-g.innerR * 0.55} y1={0} x2={g.innerR * 0.55} y2={0}
-                      stroke={g.color} strokeWidth={0.5} opacity={g.opacity * 0.4} />
+                    <line
+                      x1={0}
+                      y1={-g.innerR * 0.55}
+                      x2={0}
+                      y2={g.innerR * 0.55}
+                      stroke={g.color}
+                      strokeWidth={0.5}
+                      opacity={g.opacity * 0.4}
+                    />
+                    <line
+                      x1={-g.innerR * 0.55}
+                      y1={0}
+                      x2={g.innerR * 0.55}
+                      y2={0}
+                      stroke={g.color}
+                      strokeWidth={0.5}
+                      opacity={g.opacity * 0.4}
+                    />
                   </>
                 )}
                 {/* Diagonal spokes for large gears */}
                 {g.outerR >= 70 && (
                   <>
                     <line
-                      x1={-g.innerR * 0.39} y1={-g.innerR * 0.39}
-                      x2={g.innerR * 0.39} y2={g.innerR * 0.39}
-                      stroke={g.color} strokeWidth={0.4} opacity={g.opacity * 0.3}
+                      x1={-g.innerR * 0.39}
+                      y1={-g.innerR * 0.39}
+                      x2={g.innerR * 0.39}
+                      y2={g.innerR * 0.39}
+                      stroke={g.color}
+                      strokeWidth={0.4}
+                      opacity={g.opacity * 0.3}
                     />
                     <line
-                      x1={g.innerR * 0.39} y1={-g.innerR * 0.39}
-                      x2={-g.innerR * 0.39} y2={g.innerR * 0.39}
-                      stroke={g.color} strokeWidth={0.4} opacity={g.opacity * 0.3}
+                      x1={g.innerR * 0.39}
+                      y1={-g.innerR * 0.39}
+                      x2={-g.innerR * 0.39}
+                      y2={g.innerR * 0.39}
+                      stroke={g.color}
+                      strokeWidth={0.4}
+                      opacity={g.opacity * 0.3}
                     />
                   </>
                 )}
