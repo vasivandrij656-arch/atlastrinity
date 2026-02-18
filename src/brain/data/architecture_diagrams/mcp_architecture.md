@@ -1,6 +1,6 @@
 
-<!-- AUTO-UPDATED: 2026-02-18T18:30:18.299823 -->
-<!-- Modified: .agent/docs/mcp_architecture_diagram.md, config/vibe_config.toml.template, src/brain/data/architecture_diagrams/mcp_architecture.md -->
+<!-- AUTO-UPDATED: 2026-02-18T18:38:54.617592 -->
+<!-- Modified: .agent/docs/mcp_architecture_diagram.md, .agent/workflows/rules.md, src/brain/data/architecture_diagrams/mcp_architecture.md -->
 
 # Architecture Diagram - atlastrinity
 

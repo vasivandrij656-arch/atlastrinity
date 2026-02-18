@@ -44,6 +44,9 @@ jobs:
           pip install -r requirements.txt
           pip install pytest pytest-asyncio pytest-timeout
 
+      - name: Sync Configuration
+        run: python src/maintenance/config_sync.py
+
       - name: Test Trinity orchestration
         run: |
           pytest tests/test_trinity_core.py -v --timeout=120
@@ -83,6 +86,9 @@ jobs:
           pip install -r requirements.txt
           pip install pytest pytest-asyncio
 
+      - name: Sync Configuration
+        run: python src/maintenance/config_sync.py
+
       - name: Test Atlas planning capabilities
         run: |
           pytest tests/ -k atlas -v --timeout=90
@@ -120,6 +126,9 @@ jobs:
           pip install pytest pytest-asyncio
           npm ci
 
+      - name: Sync Configuration
+        run: python src/maintenance/config_sync.py
+
       - name: Test Tetyana tool execution
         run: |
           pytest tests/ -k tetyana -v --timeout=90
@@ -149,6 +158,9 @@ jobs:
           python -m pip install --upgrade pip
           pip install -r requirements.txt
           pip install pytest pytest-asyncio
+
+      - name: Sync Configuration
+        run: python src/maintenance/config_sync.py
 
       - name: Test Grisha verification logic
         run: |
@@ -192,6 +204,9 @@ jobs:
           pip install -r requirements.txt
           pip install pytest pytest-asyncio pytest-timeout
           npm ci
+
+      - name: Sync Configuration
+        run: python src/maintenance/config_sync.py
 
       - name: Run Trinity scenario tests
         run: |
@@ -262,6 +277,9 @@ jobs:
           python -m pip install --upgrade pip
           pip install -r requirements.txt
           pip install pytest pytest-asyncio
+
+      - name: Sync Configuration
+        run: python src/maintenance/config_sync.py
 
       - name: Initialize test database
         run: |

@@ -57,6 +57,9 @@ jobs:
       - name: Install Node Dependencies
         run: npm ci
 
+      - name: Sync Configuration
+        run: .venv/bin/python src/maintenance/config_sync.py
+
       - name: Run Unified Linting (Lefthook)
         run: npx lefthook run lint:all
 
@@ -96,6 +99,9 @@ jobs:
         run: |
           python -m pip install --upgrade pip
           pip install -r requirements.txt
+
+      - name: Sync Configuration
+        run: python src/maintenance/config_sync.py
 
       - name: Run MCP Sandbox Test
         env:
@@ -145,6 +151,9 @@ jobs:
           # Install optional dev dependencies required for docs/diagram exports (cairosvg)
           pip install -r requirements-dev.txt || true
           pip install pytest pytest-cov pytest-asyncio pytest-timeout
+
+      - name: Sync Configuration
+        run: python src/maintenance/config_sync.py
 
       - name: Run unit tests with coverage
         run: |
@@ -263,6 +272,14 @@ jobs:
 
         with:
           python-version: ${{ env.PYTHON_VERSION }}
+
+      - name: Install Dependencies for Validation
+        run: |
+          python -m pip install --upgrade pip
+          pip install PyYAML toml
+
+      - name: Sync Configuration
+        run: python src/maintenance/config_sync.py
 
       - name: Validate MCP configuration
         run: python src/testing/ci/validate_mcp_config.py

@@ -27,11 +27,17 @@ We use a single custom provider: **Copilot**. We only use the following 5 native
 4. **`grok-code-fast-1`** (Швидке кодування від xAI)
 5. **`gpt-4.1`** (Глибокі міркування / Reasoning)
 
-## System Paths
+## System Paths & Variables
 
-- **Logs & Error Reports**: `/Users/dev/.config/atlastrinity/logs/`
-- **Session Memory**: `/Users/dev/.config/atlastrinity/memory/`
-- **Screenshots & Verification**: `/Users/dev/.config/atlastrinity/screenshots/`
-- **Vibe Workspace**: `/Users/dev/.config/atlastrinity/vibe_workspace/`
-- **Active Configurations**: `/Users/dev/.config/atlastrinity/`
-- **Configuration Templates**: `/Users/dev/Documents/GitHub/atlastrinity/config/`
+- **Project Root**: Always use `${PROJECT_ROOT}` or relative paths from the repository root.
+- **Config Root**: Always use `${CONFIG_ROOT}` (defaults to `~/.config/atlastrinity/`).
+- **Logs**: `${CONFIG_ROOT}/logs/`
+- **Session Memory**: `${CONFIG_ROOT}/memory/`
+- **Screenshots**: `${CONFIG_ROOT}/screenshots/`
+- **Vibe Workspace**: `${CONFIG_ROOT}/vibe_workspace/`
+- **Active Configurations**: `${CONFIG_ROOT}/`
+- **Configuration Templates**: `${PROJECT_ROOT}/config/`
+
+## Mandatory CI/CD Verification
+
+It is MANDATORY to achieve and maintain a "green" (passing) status for all CI/CD workflows. Every push MUST trigger verification, and failures must be fixed immediately. Deployment configurations MUST be platform-agnostic, using dynamic path resolution.
