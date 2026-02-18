@@ -2,7 +2,7 @@
 # Run all linters: npx lefthook run lint:all
 
 lint:all:
-  parallel: true
+  parallel: false
   commands:
     # === TypeScript / JavaScript ===
     01-biome:

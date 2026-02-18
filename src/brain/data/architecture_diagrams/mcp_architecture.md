@@ -1,6 +1,6 @@
 
-<!-- AUTO-UPDATED: 2026-02-18T01:53:30.395136 -->
-<!-- Modified: .agent/docs/mcp_architecture_diagram.md, config/all_models.json, config/config.yaml.template -->
+<!-- AUTO-UPDATED: 2026-02-18T02:10:32.110071 -->
+<!-- Modified: .agent/docs/mcp_architecture_diagram.md, .secrets.baseline, src/brain/data/architecture_diagrams/mcp_architecture.md -->
 
 # Architecture Diagram - atlastrinity
 
