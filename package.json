@@ -96,11 +96,12 @@
     "vite": "^7.3.1"
   },
   "dependencies": {
-    "@modelcontextprotocol/sdk": "1.26.0",
+    "@modelcontextprotocol/sdk": "^1.26.0",
     "@modelcontextprotocol/server-filesystem": "^2025.12.18",
     "@modelcontextprotocol/server-github": "^2025.4.8",
     "@modelcontextprotocol/server-memory": "^2025.11.25",
     "@modelcontextprotocol/server-puppeteer": "^2025.5.12",
+    "@modelcontextprotocol/server-sequential-thinking": "^2025.12.18",
     "ajv": "8.17.1",
     "chrome-devtools-mcp": "^0.12.1",
     "cloudinary": "^2.8.0",
