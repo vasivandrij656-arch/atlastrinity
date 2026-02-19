@@ -1325,6 +1325,16 @@ class Trinity(TourMixin, VoiceOrchestrationMixin):
             shared_context.available_mcp_catalog = await mcp_manager.get_mcp_catalog()
             await self._speak("atlas", analysis.get("voice_response") or "Аналізую запит...")
 
+            # 3. Intent-based Routing for Tasks
+            if intent in ["task", "subtask", "follow_up"]:
+                self.state["system_state"] = SystemState.PLANNING.value
+                preamble = analysis.get("initial_response")
+                if preamble:
+                    await self._speak("atlas", preamble)
+
+                # Return plan from planning loop
+                return await self._planning_loop(analysis, user_request, is_subtask, history)
+
             plan = await self._planning_loop(analysis, user_request, is_subtask, history)
             if plan:
                 await self._create_db_task(user_request, plan)
@@ -1709,6 +1719,17 @@ class Trinity(TourMixin, VoiceOrchestrationMixin):
                         await db_sess.commit()
             except Exception as e:
                 logger.error(f"Failed to store summary in DB: {e}")
+
+            # D. Update Chat History with Summary (Visible to user)
+            try:
+                msg = AIMessage(content=summary, name="ATLAS")
+                msg.additional_kwargs["timestamp"] = time.time()
+                if "messages" in self.state:
+                    cast("list[BaseMessage]", self.state["messages"]).append(msg)
+                
+                await self._save_chat_message("ai", summary, "ATLAS")
+            except Exception as e:
+                logger.error(f"Failed to update chat history with summary: {e}")
 
             # C. Add entities to Knowledge Graph (Background)
             for ent_name in entities:

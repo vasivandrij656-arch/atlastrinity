@@ -294,7 +294,7 @@ def run(port: int = DEFAULT_PORT) -> None:
     api_key = os.getenv("COPILOT_API_KEY")
     if not api_key:
         error("COPILOT_API_KEY environment variable not set!")
-        error("Run: python -m src.providers.get_copilot_token --method vscode --update-env")
+        error("Run: python -m src.providers.get_copilot_token --method vscode")
         sys.exit(1)
 
     # Mask key for display

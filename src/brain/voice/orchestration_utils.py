@@ -83,6 +83,9 @@ class VoiceOrchestrationMixin:
         print(f"[{agent_id.upper()}] Speaking: {final_text[:100]}", file=sys.stderr)
 
         try:
+            if hasattr(self, "handle_chat_log"):
+                await self.handle_chat_log(agent_id, final_text)
+
             if hasattr(self, "voice"):
                 await self.voice.speak(agent_id, final_text)
         except asyncio.CancelledError:

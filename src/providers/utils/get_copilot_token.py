@@ -39,6 +39,7 @@ COPILOT_CLIENT_ID = "Iv1.b507a08c87ecfe98"
 GITHUB_DEVICE_CODE_URL = "https://github.com/login/device/code"
 GITHUB_ACCESS_TOKEN_URL = "https://github.com/login/oauth/access_token"
 COPILOT_TOKEN_URL = "https://api.github.com/copilot_internal/v2/token"
+COPILOT_TOKEN_URL_V1 = "https://api.github.com/copilot_internal/v1/token"
 
 # Editor headers that Copilot API expects
 COPILOT_HEADERS = {
@@ -48,7 +49,7 @@ COPILOT_HEADERS = {
 }
 
 # Paths — providers/utils/ is inside project root
-PROJECT_ROOT = Path(__file__).parent.parent.parent
+PROJECT_ROOT = Path(__file__).parent.parent.parent.parent
 GLOBAL_ENV = Path.home() / ".config" / "atlastrinity" / ".env"
 PROJECT_ENV = PROJECT_ROOT / ".env"
 
@@ -88,19 +89,19 @@ class C:
 
 
 def info(msg: str) -> None:
-    pass
+    print(f"{C.CYAN}INFO{C.RESET}  {msg}")
 
 
 def warn(msg: str) -> None:
-    pass
+    print(f"{C.YELLOW}WARN{C.RESET}  {msg}")
 
 
 def error(msg: str) -> None:
-    pass
+    print(f"{C.RED}ERROR{C.RESET} {msg}")
 
 
 def step(msg: str) -> None:
-    pass
+    print(f"\n{C.BOLD}{C.GREEN}==>{C.RESET} {C.BOLD}{msg}{C.RESET}")
 
 
 # ─── HTTP Helpers ────────────────────────────────────────────────────────────
@@ -134,6 +135,16 @@ def verify_token(token: str) -> dict | None:
         return data
     except requests.exceptions.HTTPError as e:
         status_code = e.response.status_code if e.response else None
+
+        # Fallback to v1 if v2 is not found or fails with certain errors
+        if status_code in (404, 403):
+            try:
+                info("Trying fallback to Copilot Token V1 API...")
+                data = _get_json(COPILOT_TOKEN_URL_V1, headers)
+                return data
+            except Exception:
+                pass  # Fall through to original error handling
+
         if status_code == 403:
             try:
                 body = e.response.json() if e.response else {}
@@ -193,12 +204,15 @@ def get_token_oauth_device_flow() -> str | None:
         return None
 
     device_code = device_data["device_code"]
-    device_data["user_code"]
+    user_code = device_data["user_code"]
     verification_uri = device_data["verification_uri"]
     expires_in = device_data["expires_in"]
     interval = device_data.get("interval", 5)
 
     # Step 2: Show user code and open browser
+    print(f"\n{C.BOLD}ПЕРЕЙДІТЬ ЗА ПОСИЛАННЯМ:{C.RESET} {C.CYAN}{verification_uri}{C.RESET}")
+    print(f"{C.BOLD}ВВЕДІТЬ КОД:{C.RESET} {C.YELLOW}{C.BOLD}{user_code}{C.RESET}")
+    print(f"{C.DIM}(Код діє {expires_in // 60} хв.){C.RESET}\n")
 
     # Try to open browser automatically
     try:
@@ -286,12 +300,16 @@ def _search_db_for_ghu_token(db_path: Path, ide_name: str) -> str | None:
         # Search ALL values for ghu_ tokens (including terminal history, settings, etc.)
         found_tokens: list[str] = []
         cursor.execute("SELECT key, value FROM ItemTable")
-        for _, value in cursor.fetchall():
+        rows = cursor.fetchall()
+        info(f"Знайдено {len(rows)} рядків у DB. Шукаю токени...")
+        for _, value in rows:
             if isinstance(value, str) and "ghu_" in value:
                 for match in re.finditer(r"ghu_[A-Za-z0-9]{36}", value):
                     token = match.group(0)
                     if token not in found_tokens:
                         found_tokens.append(token)
+
+        info(f"Знайдено {len(found_tokens)} потенційних токенів.")
 
         # Check for encrypted GitHub auth secrets
         cursor.execute("""SELECT key FROM ItemTable WHERE key LIKE '%secret%github%auth%'""")
@@ -460,7 +478,7 @@ def main() -> None:
   %(prog)s --method vscode        # OAuth device flow
   %(prog)s --method windsurf      # Витягнути з Windsurf
   %(prog)s --test                 # Перевірити поточний токен
-  %(prog)s --method vscode --update-env  # Отримати + оновити .env
+    %(prog)s --method vscode  # Отримати + (за замовчуванням) оновити .env
         """,
     )
     parser.add_argument(
@@ -473,6 +491,11 @@ def main() -> None:
         "--update-env",
         action="store_true",
         help="Автоматично оновити .env файли після отримання токена",
+    )
+    parser.add_argument(
+        "--no-update-env",
+        action="store_true",
+        help="Не оновлювати .env файли автоматично (перевизує --update-env)",
     )
     parser.add_argument(
         "--test",
@@ -488,7 +511,7 @@ def main() -> None:
     args = parser.parse_args()
 
     if not args.quiet:
-        pass
+        print(f"{C.BOLD}--- Copilot Token Retriever Started ---{C.RESET}")
 
     # Test mode
     if args.test:
@@ -560,11 +583,13 @@ def main() -> None:
     else:
         pass
 
-    # Auto-update .env (always when not in quiet mode, or when --update-env)
-    if args.update_env:
-        update_all_env(token)
-    elif not args.quiet:
-        pass
+    # Auto-update .env by default (this updates both COPILOT_API_KEY and
+    # VISION_API_KEY). Use --no-update-env to opt out.
+    if not getattr(args, "no_update_env", False):
+        try:
+            update_all_env(token)
+        except Exception:
+            warn("Не вдалося оновити .env автоматично")
 
 
 # Export main function for module imports

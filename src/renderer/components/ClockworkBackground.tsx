@@ -184,7 +184,7 @@ const ClockworkBackground: React.FC<ClockworkProps> = ({ activeAgent }) => {
               surfaceScale="3"
               specularConstant="1.2"
               specularExponent="30"
-              lighting-color="white"
+              lightingColor="white"
               result="specOut"
             >
               <fePointLight x="-5000" y="-10000" z="20000" />

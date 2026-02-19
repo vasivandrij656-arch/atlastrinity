@@ -2,6 +2,7 @@ from __future__ import annotations
 
 import os
 import re
+import shutil
 import time
 from pathlib import Path
 from typing import TYPE_CHECKING, Any
@@ -208,6 +209,10 @@ def main():
     ensure_github_remote_setup()
 
     if args.sync_only:
+        # Also sync .env if it exists
+        env_file = PROJECT_ROOT / ".env"
+        if env_file.exists():
+            shutil.copy2(env_file, CONFIG_DST_ROOT / ".env")
         return
 
     if Observer is None:
@@ -228,6 +233,8 @@ def main():
             def on_modified(self, event):
                 if event.src_path == str(env_file):
                     load_env()
+                    # Sync .env itself to global config
+                    shutil.copy2(env_file, CONFIG_DST_ROOT / ".env")
                     for tpl, dst in MAPPINGS.items():
                         process_template(CONFIG_SRC / tpl, CONFIG_DST_ROOT / dst)
 

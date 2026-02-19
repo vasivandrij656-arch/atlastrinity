@@ -914,10 +914,14 @@ class ToolDispatcher:
     ) -> list[str]:
         """Try to auto-fill common missing arguments with sensible defaults."""
         for req in missing:
-            if req == "query" and "question" in validated:
+            # Handle business_registry_search specific mapping
+            if req == "company_name" and "query" in validated and "business_registry_search" in tool_name:
+                validated[req] = validated["query"]
+                logger.info(f"[DISPATCHER] Auto-filled '{req}' from 'query' for {tool_name}")
+            elif req == "query" and "question" in validated and req not in validated:
                 validated[req] = validated["question"]
                 logger.info(f"[DISPATCHER] Auto-filled '{req}' from 'question' for {tool_name}")
-            elif req == "prompt" and "query" in validated:
+            elif req == "prompt" and "query" in validated and req not in validated:
                 validated[req] = validated["query"]
                 logger.info(f"[DISPATCHER] Auto-filled '{req}' from 'query' for {tool_name}")
 

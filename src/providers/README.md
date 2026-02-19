@@ -25,8 +25,8 @@ providers/
 ## Швидкий старт
 
 ```bash
-# 1. Отримати токен Copilot (ghu_)
-python -m providers token copilot --method vscode --update-env
+# 1. Отримати токен Copilot (ghu_) — автоматично оновлює `.env`
+python -m providers token copilot --method vscode
 
 # 2. Отримати токен Windsurf (sk-ws-)
 python -m providers token windsurf
@@ -165,8 +165,10 @@ Copilot надає доступ до моделей через `api.githubcopilo
 # Інтерактивний режим
 python -m providers.get_copilot_token
 
-# OAuth Device Flow (найнадійніший)
-python -m providers.get_copilot_token --method vscode --update-env
+# OAuth Device Flow (найнадійніший) — за замовчуванням **авто-оновлює** `.env`
+python -m providers.get_copilot_token --method vscode
+# Щоб НЕ оновлювати `.env`, додайте прапорець:
+python -m providers.get_copilot_token --method vscode --no-update-env
 
 # Перевірити поточний токен
 python -m providers.get_copilot_token --test
@@ -365,12 +367,12 @@ llm = create_llm(model_name="swe-1.5", provider="windsurf")
 ### Copilot: 403 Forbidden
 
 - **Причина:** Заблокований білінг або протермінована підписка
-- **Рішення:** Оновіть підписку на GitHub, потім: `python -m providers.get_copilot_token --method vscode --update-env`
+- **Рішення:** Оновіть підписку на GitHub, потім: `python -m providers.get_copilot_token --method vscode` (авто-оновлення `.env`)
 
 ### Copilot: 401 Unauthorized
 
 - **Причина:** Токен протермінувався
-- **Рішення:** `python -m providers.get_copilot_token --method vscode --update-env`
+- **Рішення:** `python -m providers.get_copilot_token --method vscode` (авто-оновлення `.env`)
 
 ### Copilot: 404 Not Found
 

@@ -214,7 +214,7 @@ python -m providers switch windsurf
 python -m providers status
 
 # Отримання токенів
-python -m providers token copilot --method vscode --update-env
+python -m providers token copilot --method vscode
 python -m providers token windsurf
 ```
 
