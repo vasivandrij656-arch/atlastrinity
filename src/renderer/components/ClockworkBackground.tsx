@@ -286,9 +286,9 @@ const ClockworkBackground: React.FC = () => {
         </defs>
 
         {/* Ambient glow circles behind each major gear group */}
-        {GEARS.filter((g) => g.outerR >= 60).map((g, i) => (
+        {GEARS.filter((g) => g.outerR >= 60).map((g) => (
           <circle
-            key={`amb-${i}`}
+            key={`amb-${g.cx}-${g.cy}`}
             cx={g.cx}
             cy={g.cy}
             r={g.outerR * 1.4}
@@ -299,7 +299,7 @@ const ClockworkBackground: React.FC = () => {
         ))}
 
         {/* Render all gears */}
-        {GEARS.map((g, i) => {
+        {GEARS.map((g) => {
           const filterId = g.color.includes('blue')
             ? 'cw-glow-blue'
             : g.color.includes('green')
@@ -310,7 +310,7 @@ const ClockworkBackground: React.FC = () => {
           const animDir = g.cw ? 'rotate-cw' : 'rotate-ccw';
 
           return (
-            <g key={`gear-${i}`} transform={`translate(${g.cx}, ${g.cy})`}>
+            <g key={`${g.cx}-${g.cy}`} transform={`translate(${g.cx}, ${g.cy})`}>
               {/* Gear body */}
               <g
                 style={{
