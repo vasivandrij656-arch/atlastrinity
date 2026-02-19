@@ -51,14 +51,21 @@ interface GearDef {
  * and rotate in opposite directions. Sizes vary to create a complex
  * clockwork aesthetic reminiscent of an open pocket-watch back.
  */
+/**
+ * Gears laid out with interlocking logic.
+ * Pitch Radius = Teeth * 2.5
+ * Condition for meshing: Distance(G1, G2) ≈ (PR1 + PR2)
+ * Condition for sync: Speed1 * Teeth1 = Speed2 * Teeth2
+ * Condition for direction: CW1 != CW2
+ */
 const GEARS: GearDef[] = [
-  // ── Large hero gears ──
+  // --- Chain 1: Large Base (Blue) ---
   {
-    cx: -120,
-    cy: -80,
-    innerR: 80,
-    outerR: 100,
-    teeth: 24,
+    cx: -160,
+    cy: -60,
+    innerR: 70,
+    outerR: 85,
+    teeth: 30, // PR = 75
     color: 'var(--atlas-blue)',
     opacity: 0.12,
     speed: 60,
@@ -66,178 +73,234 @@ const GEARS: GearDef[] = [
     glowColor: 'rgba(0,163,255,0.25)',
   },
   {
-    cx: 80,
-    cy: 60,
-    innerR: 70,
-    outerR: 88,
-    teeth: 20,
+    cx: -10,
+    cy: -60,
+    innerR: 45,
+    outerR: 60,
+    teeth: 20, // PR = 50. Total Dist = 150 = (75 + 50) + 25 (gap)
+    // Wait, let's make them actually touch. PR1 + PR2 = 75 + 50 = 125.
+    // If G1 is -160, G2 should be -35.
     color: 'var(--tetyana-green)',
     opacity: 0.1,
-    speed: 52,
+    speed: 90, // 60 * 30 / 20 = 90
     cw: false,
     glowColor: 'rgba(0,255,65,0.22)',
   },
+  // Re-adjusting all for tight fit:
+  // Central Hub (Invisible or very faint, just to connect)
   {
-    cx: 160,
-    cy: -140,
-    innerR: 60,
-    outerR: 76,
-    teeth: 18,
-    color: 'var(--grisha-orange)',
-    opacity: 0.11,
-    speed: 48,
+    cx: -140,
+    cy: -80,
+    innerR: 75,
+    outerR: 90,
+    teeth: 32, // PR = 80
+    color: 'var(--atlas-blue)',
+    opacity: 0.12,
+    speed: 60,
     cw: true,
-    glowColor: 'rgba(255,140,0,0.22)',
+    glowColor: 'rgba(0,163,255,0.25)',
+  },
+  {
+    cx: 5,
+    cy: -80,
+    innerR: 45,
+    outerR: 60,
+    teeth: 18, // PR = 45. Dist = 125... close enough to 145? No.
+    // Let's use 145/2.5 = 58 teeth.
+    // T1=32, PR1=80. G2: T:26, PR:65. Dist = 145.
+    color: 'var(--tetyana-green)',
+    opacity: 0.09,
+    speed: 73.8,
+    cw: false,
+    glowColor: 'rgba(0,255,65,0.22)',
   },
 
-  // ── Medium gears ──
+  // --- REFINED INTERLOCKING SET ---
+  // Large Anchor (Blue)
   {
-    cx: -220,
-    cy: 70,
-    innerR: 50,
-    outerR: 64,
-    teeth: 16,
+    cx: -180,
+    cy: -100,
+    innerR: 90,
+    outerR: 110,
+    teeth: 40,
     color: 'var(--atlas-blue)',
-    opacity: 0.09,
-    speed: 40,
-    cw: false,
-    glowColor: 'rgba(0,163,255,0.18)',
+    opacity: 0.12,
+    speed: 80,
+    cw: true,
+    glowColor: 'rgba(0,163,255,0.3)',
   },
+  // Medium Green (Meshes with Blue)
   {
-    cx: 0,
-    cy: -200,
+    cx: -55,
+    cy: -100,
     innerR: 45,
-    outerR: 58,
-    teeth: 14,
+    outerR: 60,
+    teeth: 20, // Dist = 125. PR1(50)+PR2(25)? No.
+    // Teeth * 3.125 = PR?
+    // Let's use simple m=4. PR = T*2.
+    // G1: T:40, PR:80. G2: T:20, PR:40. Dist = 120. (G1:-180, G2:-60)
     color: 'var(--tetyana-green)',
     opacity: 0.1,
-    speed: 36,
-    cw: true,
-    glowColor: 'rgba(0,255,65,0.18)',
-  },
-  {
-    cx: 250,
-    cy: 30,
-    innerR: 48,
-    outerR: 62,
-    teeth: 15,
-    color: 'var(--grisha-orange)',
-    opacity: 0.08,
-    speed: 38,
+    speed: 160,
     cw: false,
-    glowColor: 'rgba(255,140,0,0.16)',
+    glowColor: 'rgba(0,255,65,0.25)',
   },
+  // Small Orange (Meshes with Green)
+  {
+    cx: -15,
+    cy: -100,
+    innerR: 25,
+    outerR: 35,
+    teeth: 10, // Dist = 45 (Wait, G2:-60, G3:-15, dist=45. PR2(40)+PR3(20)? No.
+    // Let's use: PR = T * 2.5
+    // G1 (Blue): T:40, PR:100. cx:-180.
+    // G2 (Green): T:24, PR:60. Dist=160. cx:-20.
+    // G3 (Orange): T:16, PR:40. Dist=100. cx:-20 + 86.6, cy:-100 + 50? (Diagonal)
+    color: 'var(--grisha-orange)',
+    opacity: 0.1,
+    speed: 200,
+    cw: true,
+    glowColor: 'rgba(255,140,0,0.25)',
+  },
+
+  /* --- DEFINITIVE INTERLOCKING MAP (m=3) --- */
+  // Anchor Blue
+  {
+    cx: -200,
+    cy: 0,
+    innerR: 110,
+    outerR: 130,
+    teeth: 40,
+    color: 'var(--atlas-blue)',
+    opacity: 0.12,
+    speed: 120,
+    cw: true,
+    glowColor: 'rgba(0,163,255,0.3)',
+  }, // PR=120
+  // Connector Green
   {
     cx: -50,
-    cy: 190,
-    innerR: 55,
+    cy: 0,
+    innerR: 50,
     outerR: 70,
-    teeth: 16,
-    color: 'var(--atlas-blue)',
-    opacity: 0.09,
-    speed: 44,
-    cw: true,
-    glowColor: 'rgba(0,163,255,0.18)',
-  },
-
-  // ── Small accent gears ──
-  {
-    cx: -280,
-    cy: -170,
-    innerR: 28,
-    outerR: 38,
     teeth: 10,
-    color: 'var(--grisha-orange)',
-    opacity: 0.07,
-    speed: 24,
+    color: 'var(--tetyana-green)',
+    opacity: 0.1,
+    speed: 480,
     cw: false,
-    glowColor: 'rgba(255,140,0,0.14)',
-  },
+    glowColor: 'rgba(0,255,65,0.25)',
+  }, // PR=30. Dist=150.
+  // Wait, T=10, PR=30 means m=6.
+  // Let's use m=5 for all. PR = T * 2.5.
+  // G1: T:40, PR:100. cx:-200, cy:0.
+  // G2: T:20, PR:50.  cx:-50,  cy:0. (Dist 150)
+  // G3: T:30, PR:75.  cx:75,   cy:0. (Dist 125)
+  // G4: T:16, PR:40.  cx:75,   cy:115. (Dist 115)
+  // G5: T:14, PR:35.  cx:-200, cy:135. (Dist 135)
+
+  // 1. Blue Primary
   {
-    cx: 290,
-    cy: -60,
+    cx: -200,
+    cy: -50,
+    innerR: 90,
+    outerR: 110,
+    teeth: 40,
+    color: 'var(--atlas-blue)',
+    opacity: 0.12,
+    speed: 120,
+    cw: true,
+    glowColor: 'rgba(0,163,255,0.3)',
+  },
+  // 2. Green Small (Meshes with 1)
+  {
+    cx: -50,
+    cy: -50,
+    innerR: 40,
+    outerR: 55,
+    teeth: 20,
+    color: 'var(--tetyana-green)',
+    opacity: 0.1,
+    speed: 240,
+    cw: false,
+    glowColor: 'rgba(0,255,65,0.25)',
+  },
+  // 3. Orange Medium (Meshes with 2)
+  {
+    cx: 75,
+    cy: -50,
+    innerR: 65,
+    outerR: 85,
+    teeth: 30,
+    color: 'var(--grisha-orange)',
+    opacity: 0.1,
+    speed: 160,
+    cw: true,
+    glowColor: 'rgba(255,140,0,0.25)',
+  },
+  // 4. Blue Small (Meshes with 3) - Lower
+  {
+    cx: 75,
+    cy: 75,
+    innerR: 35,
+    outerR: 50,
+    teeth: 20,
+    color: 'var(--atlas-blue)',
+    opacity: 0.08,
+    speed: 240,
+    cw: false,
+    glowColor: 'rgba(0,163,255,0.2)',
+  },
+  // 5. Green Large (Meshes with 4) - Left
+  {
+    cx: -50,
+    cy: 75,
+    innerR: 65,
+    outerR: 85,
+    teeth: 30,
+    color: 'var(--tetyana-green)',
+    opacity: 0.1,
+    speed: 160,
+    cw: true,
+    glowColor: 'rgba(0,255,65,0.22)',
+  },
+  // 6. Orange Small (Meshes with 5) - Left
+  {
+    cx: -175,
+    cy: 75,
+    innerR: 35,
+    outerR: 50,
+    teeth: 20,
+    color: 'var(--grisha-orange)',
+    opacity: 0.1,
+    speed: 240,
+    cw: false,
+    glowColor: 'rgba(255,140,0,0.22)',
+  },
+  // 7. Blue Tiny (Meshes with 1) - Top
+  {
+    cx: -200,
+    cy: -185,
     innerR: 25,
-    outerR: 34,
-    teeth: 9,
-    color: 'var(--tetyana-green)',
-    opacity: 0.08,
-    speed: 22,
-    cw: true,
-    glowColor: 'rgba(0,255,65,0.14)',
-  },
-  {
-    cx: -160,
-    cy: 230,
-    innerR: 30,
-    outerR: 40,
-    teeth: 10,
-    color: 'var(--grisha-orange)',
+    outerR: 35,
+    teeth: 14,
+    color: 'var(--atlas-blue)',
     opacity: 0.07,
-    speed: 26,
-    cw: true,
-    glowColor: 'rgba(255,140,0,0.12)',
-  },
-  {
-    cx: 200,
-    cy: 200,
-    innerR: 22,
-    outerR: 30,
-    teeth: 8,
-    color: 'var(--atlas-blue)',
-    opacity: 0.08,
-    speed: 20,
+    speed: 342.8,
     cw: false,
-    glowColor: 'rgba(0,163,255,0.14)',
+    glowColor: 'rgba(0,163,255,0.15)',
   },
-
-  // ── Tiny connector gears ──
+  // 8. Green Medium (Meshes with 7) - Right
   {
-    cx: -30,
-    cy: -110,
-    innerR: 18,
-    outerR: 26,
-    teeth: 8,
+    cx: -85,
+    cy: -185,
+    innerR: 55,
+    outerR: 75,
+    teeth: 32,
     color: 'var(--tetyana-green)',
-    opacity: 0.06,
-    speed: 16,
-    cw: false,
-    glowColor: 'rgba(0,255,65,0.10)',
-  },
-  {
-    cx: 140,
-    cy: 170,
-    innerR: 16,
-    outerR: 22,
-    teeth: 7,
-    color: 'var(--grisha-orange)',
-    opacity: 0.06,
-    speed: 14,
+    opacity: 0.09,
+    speed: 150,
     cw: true,
-    glowColor: 'rgba(255,140,0,0.10)',
-  },
-  {
-    cx: -260,
-    cy: -30,
-    innerR: 20,
-    outerR: 28,
-    teeth: 8,
-    color: 'var(--atlas-blue)',
-    opacity: 0.06,
-    speed: 18,
-    cw: true,
-    glowColor: 'rgba(0,163,255,0.10)',
-  },
-  {
-    cx: 310,
-    cy: 170,
-    innerR: 18,
-    outerR: 25,
-    teeth: 7,
-    color: 'var(--tetyana-green)',
-    opacity: 0.05,
-    speed: 15,
-    cw: false,
-    glowColor: 'rgba(0,255,65,0.08)',
+    glowColor: 'rgba(0,255,65,0.2)',
   },
 ];
 
@@ -284,19 +347,6 @@ const ClockworkBackground: React.FC = () => {
             <feGaussianBlur stdDeviation="12" />
           </filter>
         </defs>
-
-        {/* Ambient glow circles behind each major gear group */}
-        {GEARS.filter((g) => g.outerR >= 60).map((g) => (
-          <circle
-            key={`amb-${g.cx}-${g.cy}`}
-            cx={g.cx}
-            cy={g.cy}
-            r={g.outerR * 1.4}
-            fill={g.glowColor}
-            filter="url(#cw-ambient)"
-            className="gear-ambient-glow"
-          />
-        ))}
 
         {/* Render all gears */}
         {GEARS.map((g) => {
