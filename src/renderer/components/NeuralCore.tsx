@@ -97,9 +97,6 @@ const NeuralCore: React.FC<NeuralCoreProps> = ({ state, activeAgent, minimized =
     }
   };
 
-  // Dynamic state flags
-  const isActive = !['IDLE', 'COMPLETED'].includes(state);
-
   const containerStyle = {
     color: getStateColor(),
   } as React.CSSProperties;
@@ -150,52 +147,6 @@ const NeuralCore: React.FC<NeuralCoreProps> = ({ state, activeAgent, minimized =
           strokeWidth="2"
           className="state-ripple"
         />
-
-        {/* --- CENTRAL CORE --- */}
-        <g className="core-group" filter={isActive ? 'url(#glow-strong)' : 'url(#glow-core)'}>
-          {/* Multi-layered pulse */}
-          <circle r="60" fill="url(#grad-core)" className="animate-pulse" />
-          {/* Breathing ring */}
-          <circle r="45" fill="none" stroke="currentColor" strokeWidth="0.3" opacity="0.15">
-            <animate attributeName="r" values="42;48;42" dur="4s" repeatCount="indefinite" />
-            <animate
-              attributeName="opacity"
-              values="0.1;0.25;0.1"
-              dur="4s"
-              repeatCount="indefinite"
-            />
-          </circle>
-
-          <circle
-            r="35"
-            fill="none"
-            stroke="currentColor"
-            strokeWidth="0.5"
-            className="animate-pulse-slow"
-          />
-          <circle r="15" fill="currentColor" className="animate-pulse-fast" />
-          <circle r="5" fill="#fff" opacity="0.9" />
-
-          {/* Core Crosshair */}
-          <line
-            x1="-20"
-            y1="0"
-            x2="20"
-            y2="0"
-            stroke="currentColor"
-            strokeWidth="0.5"
-            opacity="0.5"
-          />
-          <line
-            x1="0"
-            y1="-20"
-            x2="0"
-            y2="20"
-            stroke="currentColor"
-            strokeWidth="0.5"
-            opacity="0.5"
-          />
-        </g>
 
         {/* --- AGENT NODES --- */}
         {/* ATLAS */}
@@ -390,7 +341,7 @@ const NeuralCore: React.FC<NeuralCoreProps> = ({ state, activeAgent, minimized =
       </svg>
 
       {/* Clockwork mechanism — rendered ON TOP of agent layers (as requested) */}
-      <ClockworkBackground />
+      <ClockworkBackground activeAgent={activeAgent} />
 
       {/* --- RECTANGULAR STATUS INDICATOR --- */}
       {!minimized && (

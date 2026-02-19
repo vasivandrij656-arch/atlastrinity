@@ -46,6 +46,10 @@ interface GearDef {
   glowColor: string;
 }
 
+interface ClockworkProps {
+  activeAgent?: string | null;
+}
+
 /**
  * Gears laid out to interlock — adjacent gears share tangent edges
  * and rotate in opposite directions. Sizes vary to create a complex
@@ -67,7 +71,7 @@ const GEARS: GearDef[] = [
     opacity: 0.35,
     speed: 120,
     cw: true,
-    glowColor: 'rgba(0,163,255,0.4)',
+    glowColor: 'rgba(0,132,255,0.4)',
   },
   // 2. Green Small (Meshes with 1)
   {
@@ -104,9 +108,9 @@ const GEARS: GearDef[] = [
     teeth: 20,
     color: 'var(--atlas-blue)',
     opacity: 0.25,
-    speed: 135,
+    speed: 60,
     cw: false,
-    glowColor: 'rgba(0,163,255,0.3)',
+    glowColor: 'rgba(0,132,255,0.3)',
   },
   // 5. Green Large (Meshes with 4) - Left
   {
@@ -121,16 +125,16 @@ const GEARS: GearDef[] = [
     cw: true,
     glowColor: 'rgba(0,255,65,0.3)',
   },
-  // 6. Orange Small (Meshes with 5) - Left
+  // 6. Orange Small (Meshes with 5) - Down/Left to avoid G1 overlap
   {
-    cx: -175,
-    cy: 75,
+    cx: -170,
+    cy: 110,
     innerR: 35,
     outerR: 50,
     teeth: 20,
     color: 'var(--grisha-orange)',
     opacity: 0.3,
-    speed: 135,
+    speed: 60,
     cw: false,
     glowColor: 'rgba(255,140,0,0.3)',
   },
@@ -143,9 +147,9 @@ const GEARS: GearDef[] = [
     teeth: 14,
     color: 'var(--atlas-blue)',
     opacity: 0.25,
-    speed: 342.8,
+    speed: 42,
     cw: false,
-    glowColor: 'rgba(0,163,255,0.25)',
+    glowColor: 'rgba(0,132,255,0.25)',
   },
   // 8. Green Medium (Meshes with 7) - Right
   {
@@ -156,13 +160,13 @@ const GEARS: GearDef[] = [
     teeth: 32,
     color: 'var(--tetyana-green)',
     opacity: 0.28,
-    speed: 150,
+    speed: 96,
     cw: true,
     glowColor: 'rgba(0,255,65,0.3)',
   },
 ];
 
-const ClockworkBackground: React.FC = () => {
+const ClockworkBackground: React.FC<ClockworkProps> = ({ activeAgent }) => {
   return (
     <div className="clockwork-bg" aria-hidden="true">
       <svg
@@ -219,7 +223,7 @@ const ClockworkBackground: React.FC = () => {
           {/* Per-gear glow filters */}
           <filter id="cw-glow-blue" x="-50%" y="-50%" width="200%" height="200%">
             <feGaussianBlur stdDeviation="6" result="b" />
-            <feFlood floodColor="rgba(0,163,255,0.35)" result="fc" />
+            <feFlood floodColor="rgba(0,132,255,0.35)" result="fc" />
             <feComposite in="fc" in2="b" operator="in" result="glow" />
             <feMerge>
               <feMergeNode in="glow" />
@@ -262,6 +266,17 @@ const ClockworkBackground: React.FC = () => {
           const filterId = `cw-glow-${gearColorTag}`;
           const gradId = `grad-${gearColorTag}`;
 
+          // Dimming logic if agent is active
+          let currentOpacity = g.opacity;
+          if (activeAgent) {
+            const isMatch =
+              (activeAgent === 'ATLAS' && gearColorTag === 'blue') ||
+              (activeAgent === 'TETYANA' && gearColorTag === 'green') ||
+              (activeAgent === 'GRISHA' && gearColorTag === 'orange');
+            if (!isMatch) currentOpacity *= 0.25;
+            else currentOpacity *= 1.5; // Make active agent's gears pop
+          }
+
           const path = gearPath(g.innerR, g.outerR, g.teeth);
           const animDir = g.cw ? 'rotate-cw' : 'rotate-ccw';
 
@@ -280,7 +295,7 @@ const ClockworkBackground: React.FC = () => {
                   fillOpacity={g.opacity * 0.4}
                   stroke={g.color}
                   strokeWidth={g.outerR > 60 ? 1.8 : 1.2}
-                  opacity={g.opacity}
+                  opacity={currentOpacity}
                 />
                 {/* Hub circle */}
                 <circle
@@ -288,10 +303,10 @@ const ClockworkBackground: React.FC = () => {
                   fill="none"
                   stroke={g.color}
                   strokeWidth={0.8}
-                  opacity={g.opacity * 0.6}
+                  opacity={currentOpacity * 0.6}
                 />
                 {/* Center axle */}
-                <circle r={g.innerR * 0.15} fill={g.color} opacity={g.opacity * 0.8} />
+                <circle r={g.innerR * 0.15} fill={g.color} opacity={currentOpacity * 0.8} />
                 {/* Spokes for larger gears */}
                 {g.outerR >= 50 && (
                   <>
@@ -302,7 +317,7 @@ const ClockworkBackground: React.FC = () => {
                       y2={g.innerR * 0.55}
                       stroke={g.color}
                       strokeWidth={0.5}
-                      opacity={g.opacity * 0.4}
+                      opacity={currentOpacity * 0.4}
                     />
                     <line
                       x1={-g.innerR * 0.55}
@@ -311,7 +326,7 @@ const ClockworkBackground: React.FC = () => {
                       y2={0}
                       stroke={g.color}
                       strokeWidth={0.5}
-                      opacity={g.opacity * 0.4}
+                      opacity={currentOpacity * 0.4}
                     />
                   </>
                 )}
@@ -325,7 +340,7 @@ const ClockworkBackground: React.FC = () => {
                       y2={g.innerR * 0.39}
                       stroke={g.color}
                       strokeWidth={0.4}
-                      opacity={g.opacity * 0.3}
+                      opacity={currentOpacity * 0.3}
                     />
                     <line
                       x1={g.innerR * 0.39}
@@ -334,7 +349,7 @@ const ClockworkBackground: React.FC = () => {
                       y2={g.innerR * 0.39}
                       stroke={g.color}
                       strokeWidth={0.4}
-                      opacity={g.opacity * 0.3}
+                      opacity={currentOpacity * 0.3}
                     />
                   </>
                 )}
@@ -349,7 +364,7 @@ const ClockworkBackground: React.FC = () => {
           <line x1="-50" y1="-50" x2="75" y2="-50" />
           <line x1="75" y1="-50" x2="75" y2="75" />
           <line x1="75" y1="75" x2="-50" y2="75" />
-          <line x1="-50" y1="75" x2="-175" y2="75" />
+          <line x1="-50" y1="75" x2="-170" y2="110" />
           <line x1="-200" y1="-50" x2="-200" y2="-185" />
           <line x1="-200" y1="-185" x2="-85" y2="-185" />
         </g>
