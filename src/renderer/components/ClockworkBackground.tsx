@@ -52,153 +52,11 @@ interface GearDef {
  * clockwork aesthetic reminiscent of an open pocket-watch back.
  */
 /**
- * Gears laid out with interlocking logic.
- * Pitch Radius = Teeth * 2.5
- * Condition for meshing: Distance(G1, G2) ≈ (PR1 + PR2)
- * Condition for sync: Speed1 * Teeth1 = Speed2 * Teeth2
- * Condition for direction: CW1 != CW2
+ * Definitive Interlocking Map (m=5)
+ * PR = T * 2.5
  */
 const GEARS: GearDef[] = [
-  // --- Chain 1: Large Base (Blue) ---
-  {
-    cx: -160,
-    cy: -60,
-    innerR: 70,
-    outerR: 85,
-    teeth: 30, // PR = 75
-    color: 'var(--atlas-blue)',
-    opacity: 0.12,
-    speed: 60,
-    cw: true,
-    glowColor: 'rgba(0,163,255,0.25)',
-  },
-  {
-    cx: -10,
-    cy: -60,
-    innerR: 45,
-    outerR: 60,
-    teeth: 20, // PR = 50. Total Dist = 150 = (75 + 50) + 25 (gap)
-    // Wait, let's make them actually touch. PR1 + PR2 = 75 + 50 = 125.
-    // If G1 is -160, G2 should be -35.
-    color: 'var(--tetyana-green)',
-    opacity: 0.1,
-    speed: 90, // 60 * 30 / 20 = 90
-    cw: false,
-    glowColor: 'rgba(0,255,65,0.22)',
-  },
-  // Re-adjusting all for tight fit:
-  // Central Hub (Invisible or very faint, just to connect)
-  {
-    cx: -140,
-    cy: -80,
-    innerR: 75,
-    outerR: 90,
-    teeth: 32, // PR = 80
-    color: 'var(--atlas-blue)',
-    opacity: 0.12,
-    speed: 60,
-    cw: true,
-    glowColor: 'rgba(0,163,255,0.25)',
-  },
-  {
-    cx: 5,
-    cy: -80,
-    innerR: 45,
-    outerR: 60,
-    teeth: 18, // PR = 45. Dist = 125... close enough to 145? No.
-    // Let's use 145/2.5 = 58 teeth.
-    // T1=32, PR1=80. G2: T:26, PR:65. Dist = 145.
-    color: 'var(--tetyana-green)',
-    opacity: 0.09,
-    speed: 73.8,
-    cw: false,
-    glowColor: 'rgba(0,255,65,0.22)',
-  },
-
-  // --- REFINED INTERLOCKING SET ---
-  // Large Anchor (Blue)
-  {
-    cx: -180,
-    cy: -100,
-    innerR: 90,
-    outerR: 110,
-    teeth: 40,
-    color: 'var(--atlas-blue)',
-    opacity: 0.12,
-    speed: 80,
-    cw: true,
-    glowColor: 'rgba(0,163,255,0.3)',
-  },
-  // Medium Green (Meshes with Blue)
-  {
-    cx: -55,
-    cy: -100,
-    innerR: 45,
-    outerR: 60,
-    teeth: 20, // Dist = 125. PR1(50)+PR2(25)? No.
-    // Teeth * 3.125 = PR?
-    // Let's use simple m=4. PR = T*2.
-    // G1: T:40, PR:80. G2: T:20, PR:40. Dist = 120. (G1:-180, G2:-60)
-    color: 'var(--tetyana-green)',
-    opacity: 0.1,
-    speed: 160,
-    cw: false,
-    glowColor: 'rgba(0,255,65,0.25)',
-  },
-  // Small Orange (Meshes with Green)
-  {
-    cx: -15,
-    cy: -100,
-    innerR: 25,
-    outerR: 35,
-    teeth: 10, // Dist = 45 (Wait, G2:-60, G3:-15, dist=45. PR2(40)+PR3(20)? No.
-    // Let's use: PR = T * 2.5
-    // G1 (Blue): T:40, PR:100. cx:-180.
-    // G2 (Green): T:24, PR:60. Dist=160. cx:-20.
-    // G3 (Orange): T:16, PR:40. Dist=100. cx:-20 + 86.6, cy:-100 + 50? (Diagonal)
-    color: 'var(--grisha-orange)',
-    opacity: 0.1,
-    speed: 200,
-    cw: true,
-    glowColor: 'rgba(255,140,0,0.25)',
-  },
-
-  /* --- DEFINITIVE INTERLOCKING MAP (m=3) --- */
-  // Anchor Blue
-  {
-    cx: -200,
-    cy: 0,
-    innerR: 110,
-    outerR: 130,
-    teeth: 40,
-    color: 'var(--atlas-blue)',
-    opacity: 0.12,
-    speed: 120,
-    cw: true,
-    glowColor: 'rgba(0,163,255,0.3)',
-  }, // PR=120
-  // Connector Green
-  {
-    cx: -50,
-    cy: 0,
-    innerR: 50,
-    outerR: 70,
-    teeth: 10,
-    color: 'var(--tetyana-green)',
-    opacity: 0.1,
-    speed: 480,
-    cw: false,
-    glowColor: 'rgba(0,255,65,0.25)',
-  }, // PR=30. Dist=150.
-  // Wait, T=10, PR=30 means m=6.
-  // Let's use m=5 for all. PR = T * 2.5.
-  // G1: T:40, PR:100. cx:-200, cy:0.
-  // G2: T:20, PR:50.  cx:-50,  cy:0. (Dist 150)
-  // G3: T:30, PR:75.  cx:75,   cy:0. (Dist 125)
-  // G4: T:16, PR:40.  cx:75,   cy:115. (Dist 115)
-  // G5: T:14, PR:35.  cx:-200, cy:135. (Dist 135)
-
-  // 1. Blue Primary
+  // 1. Blue Primary (Anchor)
   {
     cx: -200,
     cy: -50,
@@ -220,7 +78,7 @@ const GEARS: GearDef[] = [
     teeth: 20,
     color: 'var(--tetyana-green)',
     opacity: 0.1,
-    speed: 240,
+    speed: 60,
     cw: false,
     glowColor: 'rgba(0,255,65,0.25)',
   },
@@ -233,7 +91,7 @@ const GEARS: GearDef[] = [
     teeth: 30,
     color: 'var(--grisha-orange)',
     opacity: 0.1,
-    speed: 160,
+    speed: 90,
     cw: true,
     glowColor: 'rgba(255,140,0,0.25)',
   },
@@ -246,7 +104,7 @@ const GEARS: GearDef[] = [
     teeth: 20,
     color: 'var(--atlas-blue)',
     opacity: 0.08,
-    speed: 240,
+    speed: 135,
     cw: false,
     glowColor: 'rgba(0,163,255,0.2)',
   },
@@ -259,7 +117,7 @@ const GEARS: GearDef[] = [
     teeth: 30,
     color: 'var(--tetyana-green)',
     opacity: 0.1,
-    speed: 160,
+    speed: 90,
     cw: true,
     glowColor: 'rgba(0,255,65,0.22)',
   },
@@ -272,7 +130,7 @@ const GEARS: GearDef[] = [
     teeth: 20,
     color: 'var(--grisha-orange)',
     opacity: 0.1,
-    speed: 240,
+    speed: 135,
     cw: false,
     glowColor: 'rgba(255,140,0,0.22)',
   },
@@ -361,11 +219,10 @@ const ClockworkBackground: React.FC = () => {
 
           return (
             <g key={`${g.cx}-${g.cy}`} transform={`translate(${g.cx}, ${g.cy})`}>
-              {/* Gear body */}
+              {/* Gear body - IMPORTANT: remove transformOrigin center to prevent orbiting (flying) */}
               <g
                 style={{
                   animation: `${animDir} ${g.speed}s linear infinite`,
-                  transformOrigin: 'center',
                 }}
                 filter={`url(#${filterId})`}
               >
@@ -437,15 +294,15 @@ const ClockworkBackground: React.FC = () => {
           );
         })}
 
-        {/* Decorative connection lines between nearby gears */}
-        <g opacity="0.03" stroke="var(--atlas-blue)" strokeWidth="0.5" strokeDasharray="4 6">
-          <line x1="-120" y1="-80" x2="-30" y2="-110" />
-          <line x1="-30" y1="-110" x2="0" y2="-200" />
-          <line x1="80" y1="60" x2="140" y2="170" />
-          <line x1="160" y1="-140" x2="290" y2="-60" />
-          <line x1="-220" y1="70" x2="-260" y2="-30" />
-          <line x1="-50" y1="190" x2="-160" y2="230" />
-          <line x1="250" y1="30" x2="310" y2="170" />
+        {/* Decorative connection lines refreshed for new positions */}
+        <g opacity="0.04" stroke="var(--atlas-blue)" strokeWidth="0.5" strokeDasharray="4 6">
+          <line x1="-200" y1="-50" x2="-50" y2="-50" />
+          <line x1="-50" y1="-50" x2="75" y2="-50" />
+          <line x1="75" y1="-50" x2="75" y2="75" />
+          <line x1="75" y1="75" x2="-50" y2="75" />
+          <line x1="-50" y1="75" x2="-175" y2="75" />
+          <line x1="-200" y1="-50" x2="-200" y2="-185" />
+          <line x1="-200" y1="-185" x2="-85" y2="-185" />
         </g>
       </svg>
 
@@ -460,14 +317,6 @@ const ClockworkBackground: React.FC = () => {
         .clockwork-svg {
           width: 100%;
           height: 100%;
-        }
-        .gear-ambient-glow {
-          animation: gear-pulse 6s ease-in-out infinite alternate;
-        }
-        @keyframes gear-pulse {
-          0%   { opacity: 0.6; }
-          50%  { opacity: 1;   }
-          100% { opacity: 0.6; }
         }
       `}</style>
     </div>
