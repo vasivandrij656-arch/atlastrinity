@@ -1,6 +1,6 @@
 
-<!-- AUTO-UPDATED: 2026-02-19T02:32:07.398984 -->
-<!-- Modified: .agent/docs/mcp_architecture_diagram.md, src/brain/data/architecture_diagrams/mcp_architecture.md, src/renderer/components/ClockworkBackground.tsx -->
+<!-- AUTO-UPDATED: 2026-02-19T03:07:41.700903 -->
+<!-- Modified: .agent/docs/mcp_architecture_diagram.md, .githuworkflows/ci-core.yml, .githuworkflows/test-trinity.yml -->
 
 # Architecture Diagram - atlastrinity
 

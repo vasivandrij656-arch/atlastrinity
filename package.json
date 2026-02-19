@@ -83,11 +83,9 @@
     "concurrently": "^8.2.2",
     "electron": "^40.1.0",
     "electron-builder": "^21.1.4",
-    "eslint": "^4.1.1",
+    "eslint": "^9.17.0",
     "eslint-plugin-react": "^7.37.5",
     "eslint-plugin-react-hooks": "^5.2.0",
-    "external-editor": "^3.1.0",
-    "inquirer": "^13.2.5",
     "knip": "^5.82.1",
     "lefthook": "^2.0.16",
     "oxlint": "^1.43.0",
@@ -113,6 +111,7 @@
   },
   "overrides": {
     "ajv": "8.17.1",
+    "minimatch": "^3.1.2",
     "eslint": {
       "ajv": "^6.12.6"
     },
