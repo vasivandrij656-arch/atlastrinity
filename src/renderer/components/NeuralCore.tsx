@@ -109,9 +109,6 @@ const NeuralCore: React.FC<NeuralCoreProps> = ({ state, activeAgent, minimized =
       className={`neural-core transition-colors-slow ${minimized ? 'minimized' : ''}`}
       style={containerStyle}
     >
-      {/* Clockwork mechanism — rendered behind agent layers */}
-      <ClockworkBackground />
-
       <svg viewBox="-400 -400 800 800" className="orbital-svg">
         <defs>
           <filter id="glow-core">
@@ -392,6 +389,9 @@ const NeuralCore: React.FC<NeuralCoreProps> = ({ state, activeAgent, minimized =
         </g>
       </svg>
 
+      {/* Clockwork mechanism — rendered ON TOP of agent layers (as requested) */}
+      <ClockworkBackground />
+
       {/* --- RECTANGULAR STATUS INDICATOR --- */}
       {!minimized && (
         <div className="status-indicator">
@@ -410,7 +410,7 @@ const NeuralCore: React.FC<NeuralCoreProps> = ({ state, activeAgent, minimized =
           display: flex;
           align-items: center;
           justify-content: center;
-          overflow: visible;
+          overflow: hidden; /* Enforce clipping to center area */
           transition: all 0.8s cubic-bezier(0.16, 1, 0.3, 1);
         }
         .neural-core.minimized {

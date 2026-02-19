@@ -64,10 +64,10 @@ const GEARS: GearDef[] = [
     outerR: 110,
     teeth: 40,
     color: 'var(--atlas-blue)',
-    opacity: 0.12,
+    opacity: 0.35,
     speed: 120,
     cw: true,
-    glowColor: 'rgba(0,163,255,0.3)',
+    glowColor: 'rgba(0,163,255,0.4)',
   },
   // 2. Green Small (Meshes with 1)
   {
@@ -77,10 +77,10 @@ const GEARS: GearDef[] = [
     outerR: 55,
     teeth: 20,
     color: 'var(--tetyana-green)',
-    opacity: 0.1,
+    opacity: 0.35,
     speed: 60,
     cw: false,
-    glowColor: 'rgba(0,255,65,0.25)',
+    glowColor: 'rgba(0,255,65,0.35)',
   },
   // 3. Orange Medium (Meshes with 2)
   {
@@ -90,10 +90,10 @@ const GEARS: GearDef[] = [
     outerR: 85,
     teeth: 30,
     color: 'var(--grisha-orange)',
-    opacity: 0.1,
+    opacity: 0.3,
     speed: 90,
     cw: true,
-    glowColor: 'rgba(255,140,0,0.25)',
+    glowColor: 'rgba(255,140,0,0.35)',
   },
   // 4. Blue Small (Meshes with 3) - Lower
   {
@@ -103,10 +103,10 @@ const GEARS: GearDef[] = [
     outerR: 50,
     teeth: 20,
     color: 'var(--atlas-blue)',
-    opacity: 0.08,
+    opacity: 0.25,
     speed: 135,
     cw: false,
-    glowColor: 'rgba(0,163,255,0.2)',
+    glowColor: 'rgba(0,163,255,0.3)',
   },
   // 5. Green Large (Meshes with 4) - Left
   {
@@ -116,10 +116,10 @@ const GEARS: GearDef[] = [
     outerR: 85,
     teeth: 30,
     color: 'var(--tetyana-green)',
-    opacity: 0.1,
+    opacity: 0.3,
     speed: 90,
     cw: true,
-    glowColor: 'rgba(0,255,65,0.22)',
+    glowColor: 'rgba(0,255,65,0.3)',
   },
   // 6. Orange Small (Meshes with 5) - Left
   {
@@ -129,10 +129,10 @@ const GEARS: GearDef[] = [
     outerR: 50,
     teeth: 20,
     color: 'var(--grisha-orange)',
-    opacity: 0.1,
+    opacity: 0.3,
     speed: 135,
     cw: false,
-    glowColor: 'rgba(255,140,0,0.22)',
+    glowColor: 'rgba(255,140,0,0.3)',
   },
   // 7. Blue Tiny (Meshes with 1) - Top
   {
@@ -142,10 +142,10 @@ const GEARS: GearDef[] = [
     outerR: 35,
     teeth: 14,
     color: 'var(--atlas-blue)',
-    opacity: 0.07,
+    opacity: 0.25,
     speed: 342.8,
     cw: false,
-    glowColor: 'rgba(0,163,255,0.15)',
+    glowColor: 'rgba(0,163,255,0.25)',
   },
   // 8. Green Medium (Meshes with 7) - Right
   {
@@ -155,10 +155,10 @@ const GEARS: GearDef[] = [
     outerR: 75,
     teeth: 32,
     color: 'var(--tetyana-green)',
-    opacity: 0.09,
+    opacity: 0.28,
     speed: 150,
     cw: true,
-    glowColor: 'rgba(0,255,65,0.2)',
+    glowColor: 'rgba(0,255,65,0.3)',
   },
 ];
 
@@ -167,10 +167,55 @@ const ClockworkBackground: React.FC = () => {
     <div className="clockwork-bg" aria-hidden="true">
       <svg
         viewBox="-400 -320 800 640"
-        preserveAspectRatio="xMidYMid slice"
+        preserveAspectRatio="xMidYMid meet"
         className="clockwork-svg"
       >
         <defs>
+          {/* 3D Gear Bevel/Lighting Filter */}
+          <filter id="gear-3d" x="-50%" y="-50%" width="200%" height="200%">
+            <feGaussianBlur in="SourceAlpha" stdDeviation="1.5" result="blur" />
+            <feOffset in="blur" dx="1" dy="1" result="offsetBlur" />
+            <feSpecularLighting
+              in="blur"
+              surfaceScale="3"
+              specularConstant="1.2"
+              specularExponent="30"
+              lighting-color="white"
+              result="specOut"
+            >
+              <fePointLight x="-5000" y="-10000" z="20000" />
+            </feSpecularLighting>
+            <feComposite in="specOut" in2="SourceAlpha" operator="in" result="specOut" />
+            <feComposite
+              in="SourceGraphic"
+              in2="specOut"
+              operator="arithmetic"
+              k1="0"
+              k2="1"
+              k3="1"
+              k4="0"
+              result="litGraphic"
+            />
+            <feMerge>
+              <feMergeNode in="offsetBlur" />
+              <feMergeNode in="litGraphic" />
+            </feMerge>
+          </filter>
+
+          {/* Per-color inner gradients for depth */}
+          <linearGradient id="grad-blue" x1="0%" y1="0%" x2="100%" y2="100%">
+            <stop offset="0%" stopColor="var(--atlas-blue)" stopOpacity="1" />
+            <stop offset="100%" stopColor="#003a5c" stopOpacity="1" />
+          </linearGradient>
+          <linearGradient id="grad-green" x1="0%" y1="0%" x2="100%" y2="100%">
+            <stop offset="0%" stopColor="var(--tetyana-green)" stopOpacity="1" />
+            <stop offset="100%" stopColor="green" stopOpacity="1" />
+          </linearGradient>
+          <linearGradient id="grad-orange" x1="0%" y1="0%" x2="100%" y2="100%">
+            <stop offset="0%" stopColor="var(--grisha-orange)" stopOpacity="1" />
+            <stop offset="100%" stopColor="#804600" stopOpacity="1" />
+          </linearGradient>
+
           {/* Per-gear glow filters */}
           <filter id="cw-glow-blue" x="-50%" y="-50%" width="200%" height="200%">
             <feGaussianBlur stdDeviation="6" result="b" />
@@ -208,11 +253,14 @@ const ClockworkBackground: React.FC = () => {
 
         {/* Render all gears */}
         {GEARS.map((g) => {
-          const filterId = g.color.includes('blue')
-            ? 'cw-glow-blue'
+          const gearColorTag = g.color.includes('blue')
+            ? 'blue'
             : g.color.includes('green')
-              ? 'cw-glow-green'
-              : 'cw-glow-orange';
+              ? 'green'
+              : 'orange';
+
+          const filterId = `cw-glow-${gearColorTag}`;
+          const gradId = `grad-${gearColorTag}`;
 
           const path = gearPath(g.innerR, g.outerR, g.teeth);
           const animDir = g.cw ? 'rotate-cw' : 'rotate-ccw';
@@ -224,13 +272,14 @@ const ClockworkBackground: React.FC = () => {
                 style={{
                   animation: `${animDir} ${g.speed}s linear infinite`,
                 }}
-                filter={`url(#${filterId})`}
+                filter={`url(#gear-3d) url(#${filterId})`}
               >
                 <path
                   d={path}
-                  fill="none"
+                  fill={`url(#${gradId})`}
+                  fillOpacity={g.opacity * 0.4}
                   stroke={g.color}
-                  strokeWidth={g.outerR > 60 ? 1.5 : 1}
+                  strokeWidth={g.outerR > 60 ? 1.8 : 1.2}
                   opacity={g.opacity}
                 />
                 {/* Hub circle */}
@@ -310,9 +359,10 @@ const ClockworkBackground: React.FC = () => {
         .clockwork-bg {
           position: absolute;
           inset: 0;
-          z-index: 0;
+          z-index: 100;
           pointer-events: none;
           overflow: hidden;
+          mix-blend-mode: plus-lighter;
         }
         .clockwork-svg {
           width: 100%;
