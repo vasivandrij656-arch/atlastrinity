@@ -71,7 +71,7 @@ const GEARS: GearDef[] = [
     opacity: 0.35,
     speed: 120,
     cw: true,
-    glowColor: 'rgba(0,132,255,0.4)',
+    glowColor: 'rgba(0,212,255,0.4)',
   },
   // 2. Green Small (Meshes with 1)
   {
@@ -110,7 +110,7 @@ const GEARS: GearDef[] = [
     opacity: 0.25,
     speed: 60,
     cw: false,
-    glowColor: 'rgba(0,132,255,0.3)',
+    glowColor: 'rgba(0,212,255,0.3)',
   },
   // 5. Green Large (Meshes with 4) - Left
   {
@@ -149,7 +149,7 @@ const GEARS: GearDef[] = [
     opacity: 0.25,
     speed: 42,
     cw: false,
-    glowColor: 'rgba(0,132,255,0.25)',
+    glowColor: 'rgba(0,212,255,0.25)',
   },
   // 8. Green Medium (Meshes with 7) - Right
   {
@@ -223,7 +223,7 @@ const ClockworkBackground: React.FC<ClockworkProps> = ({ activeAgent }) => {
           {/* Per-gear glow filters */}
           <filter id="cw-glow-blue" x="-50%" y="-50%" width="200%" height="200%">
             <feGaussianBlur stdDeviation="6" result="b" />
-            <feFlood floodColor="rgba(0,132,255,0.35)" result="fc" />
+            <feFlood floodColor="rgba(0,212,255,0.35)" result="fc" />
             <feComposite in="fc" in2="b" operator="in" result="glow" />
             <feMerge>
               <feMergeNode in="glow" />
