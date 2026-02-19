@@ -1,6 +1,6 @@
 
-<!-- AUTO-UPDATED: 2026-02-19T04:01:05.779451 -->
-<!-- Modified: .agent/docs/mcp_architecture_diagram.md, package-lock.json, src/brain/data/architecture_diagrams/mcp_architecture.md -->
+<!-- AUTO-UPDATED: 2026-02-19T04:55:07.862858 -->
+<!-- Modified: .agent/docs/mcp_architecture_diagram.md, package-lock.json, package.json -->
 
 # Architecture Diagram - atlastrinity
 
