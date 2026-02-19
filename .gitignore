@@ -84,3 +84,7 @@ backups/databases/*.sqlite3
 pytest-results.xml
 .recovery_state.json
 test_audio.wav
+
+# Vibe
+.vibe/
+src/.vibe/

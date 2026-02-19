@@ -1816,9 +1816,11 @@ Explain in English (Technical) but keep it brief (2-3 sentences).
             # JSON extraction - robust logic
             start = content.find("{")
             end = content.rfind("}") + 1
-            
+
             if start == -1 or end == 0:
-                logger.warning(f"[ATLAS] No JSON found in summarization response: {content[:100]}...")
+                logger.warning(
+                    f"[ATLAS] No JSON found in summarization response: {content[:100]}..."
+                )
                 # Try to parse the whole content just in case or return fallback
                 try:
                     return json.loads(content)

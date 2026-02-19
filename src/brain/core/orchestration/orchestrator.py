@@ -1726,7 +1726,7 @@ class Trinity(TourMixin, VoiceOrchestrationMixin):
                 msg.additional_kwargs["timestamp"] = time.time()
                 if "messages" in self.state:
                     cast("list[BaseMessage]", self.state["messages"]).append(msg)
-                
+
                 await self._save_chat_message("ai", summary, "ATLAS")
             except Exception as e:
                 logger.error(f"Failed to update chat history with summary: {e}")

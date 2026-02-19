@@ -915,7 +915,11 @@ class ToolDispatcher:
         """Try to auto-fill common missing arguments with sensible defaults."""
         for req in missing:
             # Handle business_registry_search specific mapping
-            if req == "company_name" and "query" in validated and "business_registry_search" in tool_name:
+            if (
+                req == "company_name"
+                and "query" in validated
+                and "business_registry_search" in tool_name
+            ):
                 validated[req] = validated["query"]
                 logger.info(f"[DISPATCHER] Auto-filled '{req}' from 'query' for {tool_name}")
             elif req == "query" and "question" in validated and req not in validated:
