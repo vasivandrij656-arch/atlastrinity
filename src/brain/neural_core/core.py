@@ -4,7 +4,7 @@ Unifies all cognitive sub-systems into a single sentient hub.
 """
 
 import logging
-from typing import Any, Optional
+from typing import List
 
 from src.brain.neural_core.chronicle import kyiv_chronicle
 from src.brain.neural_core.evolution.engine import evolution_engine

@@ -1,6 +1,6 @@
 
-<!-- AUTO-UPDATED: 2026-02-22T23:59:13.565764 -->
-<!-- Modified: .agent/docs/mcp_architecture_diagram.md, .githuworkflows/ci-core.yml, src/brain/data/architecture_diagrams/mcp_architecture.md -->
+<!-- AUTO-UPDATED: 2026-02-23T00:02:19.727272 -->
+<!-- Modified: .agent/docs/mcp_architecture_diagram.md, src/brain/data/architecture_diagrams/mcp_architecture.md, src/brain/neural_core/memory/graph.py -->
 
 # Architecture Diagram - atlastrinity
 

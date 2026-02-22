@@ -8,7 +8,7 @@ import logging
 import os
 from pathlib import Path
 
-from src.brain.config import CONFIG_ROOT, PROJECT_ROOT
+from src.brain.config import CONFIG_ROOT
 from src.brain.neural_core.memory.graph import cognitive_graph
 
 logger = logging.getLogger("brain.neural_core.observer")

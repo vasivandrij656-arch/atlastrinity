@@ -5,7 +5,7 @@ Ensures ATLAS operates exclusively on Europe/Kyiv time with external synchroniza
 
 import asyncio
 import logging
-from datetime import UTC, datetime, timezone
+from datetime import UTC, datetime
 from zoneinfo import ZoneInfo
 
 import httpx

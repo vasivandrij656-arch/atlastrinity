@@ -5,7 +5,7 @@ Analyzes cognitive patterns and optimizes the system during idle periods.
 
 import asyncio
 import logging
-from typing import Any, Optional
+from typing import Optional
 
 from src.brain.agents import Atlas
 from src.brain.neural_core.chronicle import kyiv_chronicle

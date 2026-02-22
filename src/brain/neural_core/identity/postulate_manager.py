@@ -4,9 +4,6 @@ Stores the Creator's postulates and identity-defining milestones.
 """
 
 import logging
-from typing import Any, Optional
-
-from src.brain.neural_core.chronicle import kyiv_chronicle
 
 logger = logging.getLogger("brain.neural_core.identity")
 

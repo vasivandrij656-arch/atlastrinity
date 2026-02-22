@@ -5,10 +5,8 @@ Implements a graph-like structure on top of SQLite to track causality and experi
 
 import json
 import logging
-import sqlite3
-from datetime import datetime
 from pathlib import Path
-from typing import Any, Optional
+from typing import Any
 
 import aiosqlite
 
