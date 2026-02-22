@@ -43,6 +43,11 @@ try:
 except ImportError:
     cognitive_graph = None
 
+try:
+    from src.brain.neural_core.reflection.observer import meta_observer
+except ImportError:
+    meta_observer = None
+
 
 @dataclass
 class TaskPlan:
@@ -601,7 +606,7 @@ Respond in JSON:
         g_ctx, v_ctx, n_ctx, tools = results
         # Detect Cognitive Dissonance
         dissonance = await self._detect_cognitive_dissonance(resolved_query, n_ctx)
-        
+
         # Merge NeuralCore lessons and dissonance into Graph context
         if n_ctx:
             g_ctx = (g_ctx + "\n" + n_ctx).strip()
@@ -1036,6 +1041,7 @@ Respond in JSON:
         intent: str,
         on_preamble: Callable[[str, str], Any] | None,
         available_tools_info: list[dict[str, Any]],
+        system_prompt: str | None = None,
     ) -> str:
         """Execute the multi-turn chat loop with tool handling and verification."""
         from src.brain.core.services.state_manager import state_manager
@@ -1090,10 +1096,55 @@ Respond in JSON:
                     )
 
             tool_executed = await self._process_chat_tool_calls(response.tool_calls, final_messages)
+            
+            # Phase 3: Autonomous Self-Healing
+            if not tool_executed and any(getattr(m, "content", "") and "Error" in str(m.content) for m in final_messages[-2:]):
+                logger.info("[ATLAS] Tool error detected. Initiating autonomous self-healing...")
+                healed = await self._self_heal_tool(final_messages, response.tool_calls)
+                if healed:
+                    tool_executed = True
+
             self._apply_chat_audit_logic(intent, tool_executed, current_turn, final_messages)
+            
+            # Phase 3: Meta-Cognitive Shield
+            if meta_observer:
+                raw_thoughts = [m.content for m in final_messages if isinstance(m, SystemMessage | HumanMessage)][-5:]
+                # Convert potential list content to string
+                cleaned_thoughts = [str(t) for t in raw_thoughts]
+                correction = await meta_observer.observe_reasoning(cleaned_thoughts, str(system_prompt or ""))
+                if correction:
+                    final_messages.append(SystemMessage(content=f"META-CORRECTION: {correction}"))
+
             current_turn += 1
 
         return "Chat turn limit reached. Please refine your request."
+
+    async def _self_heal_tool(self, messages: list[BaseMessage], failed_calls: list[dict]) -> bool:
+        """Attempts to autonomously fix tool errors by analyzing the failure."""
+        logger.info("[ATLAS] Analyzing tool failure for self-healing...")
+        
+        failure_context = "\n".join([str(m.content) for m in messages[-2:]])
+        prompt = f"""
+        A tool call failed.
+        FAILED CALLS: {json.dumps(failed_calls)}
+        ERROR CONTEXT: {failure_context}
+        
+        TASK:
+        1. Identify the likely cause (e.g. wrong path, missing argument).
+        2. Propose a RECTIFIED tool call.
+        3. Explain the fix briefly.
+        
+        Respond in JSON with 'rectified_calls' and 'explanation'.
+        """
+        try:
+            response = await self.llm_deep.ainvoke(prompt)
+            # Simplification: In a full implementation, we'd execute the rectified call here
+            # For this phase, we log the healing attempt and append the advice
+            messages.append(SystemMessage(content=f"SELF-HEAL ADVICE: {response.content}"))
+            return True
+        except Exception as e:
+            logger.error(f"[ATLAS] Self-healing failed: {e}")
+            return False
 
     async def chat(
         self,
@@ -1166,7 +1217,13 @@ Respond in JSON:
             self.llm_deep if (mode_profile and mode_profile.llm_tier == "deep") else self.llm
         )
         result = await self._execute_chat_turns(
-            final_messages, llm_instance, user_request, intent, on_preamble, tools_info
+            final_messages,
+            llm_instance,
+            user_request,
+            intent,
+            on_preamble,
+            tools_info,
+            system_prompt=system_prompt,
         )
         if result == "__ESCALATE__":
             logger.warning("[ATLAS] Solo research reached turn limit. Signaling escalation.")

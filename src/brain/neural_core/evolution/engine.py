@@ -4,6 +4,7 @@ Analyzes cognitive patterns and optimizes the system during idle periods.
 """
 
 import asyncio
+import json
 import logging
 from typing import Optional
 
@@ -28,6 +29,7 @@ class EvolutionEngine:
         2. Analyzes recent cognitive patterns or follows a specific direction.
         3. Proposes evolutionary patches or prompt migrations.
         4. If deep_dive is True, performs a thorough research cycle.
+        5. Executes Entropy Manifesto (Associative Link Search).
         """
         logger.info(
             f"[EVOLUTION] Starting growth cycle (Direction: {direction or 'Autonomous'}, DeepDive: {deep_dive})..."
@@ -75,22 +77,73 @@ class EvolutionEngine:
             if not direction or "prompt" in direction.lower():
                 proposal = await prompt_tuner.analyze_and_propose()
                 if proposal:
-                    # Save proposal as a system-generated artifact or log
                     logger.info("[EVOLUTION] Prompt tuning proposal generated. Review required.")
-                    # In a real scenario, this would create a file for user review
 
             # 4. Deep Dive (AKI)
             if deep_dive:
                 await self._perform_deep_dive(insight)
 
+            # 5. Entropy Manifesto
+            await self._run_entropy_manifesto()
+
+            # 6. Dynamic Protocol Adaptation
+            if "protocol" in str(insight).lower():
+                await self.propose_dynamic_protocol(insight)
+
         except Exception as e:
             logger.error(f"[EVOLUTION] Growth cycle failed: {e}")
+
+    async def _run_entropy_manifesto(self):
+        """Associative Memory Link Search: Finding non-obvious causal links."""
+        logger.info("[EVOLUTION] Running Entropy Manifesto...")
+        # Randomly select a few nodes and find commonalities or missing links
+        nodes = await cognitive_graph.search_nodes(limit=30)
+        if len(nodes) < 2:
+            return
+
+        prompt = f"""
+        ENTROPY MANIFESTO: Phase Associative Link.
+        Identify hidden patterns or non-obvious causal links between these cognitive nodes:
+        {json.dumps([{'id': n['id'], 'label': n['label']} for n in nodes[:5]])}
+        
+        Extract one 'Associative Insight' that could simplify complex task orchestration.
+        """
+        try:
+            response = await self.optimizer.llm.ainvoke(prompt)
+            await cognitive_graph.add_node(
+                f"entropy_{kyiv_chronicle.get_iso_now()}",
+                "insight",
+                "Entropy Associative Insight",
+                {"text": response.content},
+            )
+        except Exception as e:
+            logger.error(f"[EVOLUTION] Entropy Manifesto failed: {e}")
 
     async def _perform_deep_dive(self, context: str):
         """AKI: Autonomous Knowledge Ingestion."""
         logger.info("[EVOLUTION] Performing AKI Deep Dive...")
         # Placeholder for complex tool-driven research (e.g. searching docs, analyzing new repos)
         # This will be fully implemented as specific research tasks are identified.
+
+    async def propose_dynamic_protocol(self, insight: str):
+        """Generates proposals for new or updated MCP tool schemas."""
+        logger.info("[EVOLUTION] Analyzing Dynamic Protocol Adaptation...")
+        prompt = f"""
+        Based on this Evolutionary Insight: {insight}
+        Propose a new or updated MCP tool schema (JSON) that would improve system efficiency.
+        Respond with ONLY the schema or 'None'.
+        """
+        try:
+            response = await self.optimizer.llm.ainvoke(prompt)
+            if "none" not in response.content.lower():
+                await cognitive_graph.add_node(
+                    f"protocol_{kyiv_chronicle.get_iso_now()}",
+                    "protocol",
+                    "Dynamic Protocol Proposal",
+                    {"schema": response.content},
+                )
+        except Exception as e:
+            logger.error(f"[EVOLUTION] Protocol adaptation failed: {e}")
 
     async def propose_system_patch(self, issue_description: str) -> str:
         """Generates a Vibe-targeted patch for a system issue."""
