@@ -1,6 +1,6 @@
 
-<!-- AUTO-UPDATED: 2026-02-23T00:44:28.386859 -->
-<!-- Modified: .secrets.baseline, backups/databases/atlastrinity.db.encrypted, backups/databases/backup_metadata.json -->
+<!-- AUTO-UPDATED: 2026-02-23T00:45:08.829984 -->
+<!-- Modified: .agent/docs/mcp_architecture_diagram.md, src/brain/agents/atlas.py, src/brain/core/orchestration/request_segmenter.py -->
 
 # Architecture Diagram - atlastrinity
 
