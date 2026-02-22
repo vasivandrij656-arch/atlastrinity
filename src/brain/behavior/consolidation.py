@@ -157,11 +157,12 @@ class ConsolidationModule:
         {history}
 
         Respond in JSON:
-        {{
+        {
             "error": "The core technical reason for failure (English)",
             "rule": "Generalized rule or best practice to avoid this next time (English)",
-            "analysis": "Technical analysis in English"
-        }}
+            "analysis": "Technical analysis in English",
+            "identity_resonance": "Brief reflection on how ATLAS's persona or worldview evolved during this task (English)"
+        }
         """
 
         try:

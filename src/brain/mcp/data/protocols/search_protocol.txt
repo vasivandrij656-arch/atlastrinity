@@ -52,16 +52,20 @@ SEARCH PROTOCOL (v1.1)
 {
   "search_rules": {
     "business": {
-      "operator": "(site:youcontrol.com.ua OR site:opendatabot.ua OR site:clarity-project.info) \"{query}\"",
-      "priority_domains": ["youcontrol.com.ua", "opendatabot.ua", "clarity-project.info"]
+      "operator": "(site:opendatabot.ua OR site:youcontrol.com.ua OR site:clarity-project.info) \"{query}\"",
+      "priority_domains": ["opendatabot.ua", "youcontrol.com.ua"]
+    },
+    "court": {
+      "operator": "(site:reyestr.court.gov.ua OR site:opendatabot.ua/court OR site:court.gov.ua) \"{query}\"",
+      "priority_domains": ["reyestr.court.gov.ua", "court.gov.ua"]
     },
     "open_data": {
-      "operator": "site:data.gov.ua \"{query}\" (2020 OR 2021 OR 2022 OR 2023 OR 2024 OR 2025 OR 2026) filetype:csv OR filetype:xlsx OR filetype:json",
+      "operator": "site:data.gov.ua \"{query}\"",
       "priority_domains": ["data.gov.ua"]
     },
     "structured_data": {
-      "operator": "site:data.gov.ua \"{query}\" (2020 OR 2021 OR 2022 OR 2023 OR 2024 OR 2025 OR 2026) filetype:csv OR filetype:xlsx OR filetype:json",
-      "priority_domains": ["data.gov.ua"]
+      "operator": "\"{query}\" (filetype:csv OR filetype:xlsx OR filetype:json)",
+      "priority_domains": []
     },
     "cadastral": {
       "operator": "(site:e.land.gov.ua OR site:data.gov.ua) \"{query}\" filetype:geojson OR filetype:shp OR tags:кадастр",

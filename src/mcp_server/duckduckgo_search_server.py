@@ -61,29 +61,42 @@ def _execute_protocol_search(rule_name: str, query_val: str, provider_name: str)
     try:
         results = _search_ddg(query=expanded_query, max_results=10, timeout_s=15.0)
 
-        # Tiered Deepening if insufficient results and it's a structural rule
-        if len(results) < 3 and rule_name in ["open_data", "structured_data", "court"]:
-            primary_years = horizon.get("primary_range", [2024, 2026])
-            deep_years = horizon.get("deep_range", [2020, 2023])
-
-            logger.info("Insufficient results for primary query. Initiating tiered deepening.")
-
-            # Deepen to primary range first (if not already covered)
-            for year in range(primary_years[1], primary_years[0] - 1, -1):
+        # Infinite / Deep Deepening Protocol
+        min_results = 5
+        results_count = len(results)
+        
+        if results_count < min_results and rule_name in ["open_data", "structured_data", "court"]:
+            primary_range = horizon.get("primary_range", [2024, 2026])
+            floor = horizon.get("deepening_floor", 2010)
+            is_unbound = horizon.get("unbound_mode", False)
+            
+            logger.info(f"Insufficient results ({results_count}). Initiating Deep Deepening.")
+            
+            # 1. Primary range (if not already fully covered)
+            for year in range(primary_range[1], primary_range[0] - 1, -1):
+                if len(results) >= 10: break
                 year_query = f"{query_val.strip()} {year}"
-                logger.info(f"Deepening search for year: {year}")
-                results += _search_ddg(query=year_query, max_results=5, timeout_s=10.0)
-                if len(results) >= 10:
-                    break
-
-            # If still low, go to deep range
-            if len(results) < 5:
-                for year in range(deep_years[1], deep_years[0] - 1, -1):
-                    year_query = f"{query_val.strip()} {year}"
-                    logger.info(f"Deepening search for year (deep): {year}")
-                    results += _search_ddg(query=year_query, max_results=5, timeout_s=10.0)
-                    if len(results) >= 10:
+                logger.info(f"Probing year: {year}")
+                new_results = _search_ddg(query=year_query, max_results=5, timeout_s=10.0)
+                results += new_results
+            
+            # 2. Sequential Deepening (Infinite/Unbound)
+            if len(results) < min_results:
+                current_probe = primary_range[0] - 1
+                while current_probe >= floor or is_unbound:
+                    if len(results) >= 10: break
+                    if not is_unbound and current_probe < floor: break
+                    
+                    year_query = f"{query_val.strip()} {current_probe}"
+                    logger.info(f"Extending horizon back to: {current_probe}")
+                    new_results = _search_ddg(query=year_query, max_results=5, timeout_s=10.0)
+                    results += new_results
+                    
+                    if len(new_results) == 0 and current_probe < 2015:
+                        # Safety stop if very few results historically
                         break
+                    
+                    current_probe -= 1
 
         prioritized = []
         others = []
@@ -102,7 +115,7 @@ def _execute_protocol_search(rule_name: str, query_val: str, provider_name: str)
         seeds = set()
         curiosity_config = config.get("organic_curiosity", {})
         anchors = curiosity_config.get("semantic_anchors", [])
-        
+
         # Simple regex-based anchor detection in snippets
         for r in prioritized + others:
             text = f"{r['title']} {r.get('snippet', '')}"
@@ -111,12 +124,12 @@ def _execute_protocol_search(rule_name: str, query_val: str, provider_name: str)
             edrpou_match = re.search(r"\b\d{8}\b", text)
             if edrpou_match:
                 seeds.add(f"ЄДРПОУ: {edrpou_match.group(0)}")
-            
+
             # Court Case No (e.g. 757/12345/21-ц)
             case_match = re.search(r"\b\d{3}/\d+/\d+[-а-яієґ]*\b", text)
             if case_match:
                 seeds.add(f"No справи: {case_match.group(0)}")
-                
+
             # Generic anchors from config
             for anchor in anchors:
                 if anchor in text and anchor not in query_val:
@@ -133,7 +146,7 @@ def _execute_protocol_search(rule_name: str, query_val: str, provider_name: str)
             "provider": provider_name,
             "temporal_horizon": horizon,
             "semantic_echoes": sorted(list(seeds)) if seeds else [],
-            "curiosity_note": curiosity_config.get("behavior_note", "")
+            "curiosity_note": curiosity_config.get("behavior_note", ""),
         }
     except Exception as e:
         return {"error": str(e)}
