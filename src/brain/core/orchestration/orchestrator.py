@@ -1325,7 +1325,9 @@ class Trinity(TourMixin, VoiceOrchestrationMixin):
 
             shared_context.available_mcp_catalog = await mcp_manager.get_mcp_catalog()
             # Internal status message — speak but don't show in chat panel
-            await self._speak("atlas", analysis.get("voice_response") or "Аналізую запит...", chat_visible=False)
+            await self._speak(
+                "atlas", analysis.get("voice_response") or "Аналізую запит...", chat_visible=False
+            )
 
             # 3. Intent-based Routing for Tasks
             if intent in ["task", "subtask", "follow_up"]:
@@ -1722,16 +1724,12 @@ class Trinity(TourMixin, VoiceOrchestrationMixin):
             except Exception as e:
                 logger.error(f"Failed to store summary in DB: {e}")
 
-            # D. Update Chat History with Summary (Visible to user)
+            # D. Persist summary to DB only (NOT to chat state).
+            #    Adding to state["messages"] leaks English analytical text into the chat panel.
             try:
-                msg = AIMessage(content=summary, name="ATLAS")
-                msg.additional_kwargs["timestamp"] = time.time()
-                if "messages" in self.state:
-                    cast("list[BaseMessage]", self.state["messages"]).append(msg)
-
                 await self._save_chat_message("ai", summary, "ATLAS")
             except Exception as e:
-                logger.error(f"Failed to update chat history with summary: {e}")
+                logger.error(f"Failed to persist summary to DB: {e}")
 
             # C. Add entities to Knowledge Graph (Background)
             for ent_name in entities:
