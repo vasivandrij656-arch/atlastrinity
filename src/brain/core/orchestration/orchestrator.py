@@ -3430,21 +3430,22 @@ class Trinity(TourMixin, VoiceOrchestrationMixin):
                         target_id=f"tool:{t_name}",
                         relation="USED",
                     )
-                
+
                 # 2. Update NeuralCore CognitiveGraph
                 if t_name:
                     from src.brain.neural_core.core import neural_core
+
                     await neural_core.graph.add_node(
                         f"tool:{t_name}",
                         "tool",
                         t_name,
-                        {"last_result": "success" if result.success else "failure"}
+                        {"last_result": "success" if result.success else "failure"},
                     )
                     await neural_core.graph.add_edge(
                         f"task:{self.state.get('db_task_id', 'unknown')}",
                         f"tool:{t_name}",
                         "invoked",
-                        {"success": result.success, "step_id": step_id}
+                        {"success": result.success, "step_id": step_id},
                     )
             except Exception as e:
                 logger.warning(f"[ORCHESTRATOR] NeuralCore graph update failed: {e}")
@@ -3566,6 +3567,7 @@ class Trinity(TourMixin, VoiceOrchestrationMixin):
         audit_atlas = Atlas(model_name="atlas-deep")  # High complexity model for audit
 
         from src.brain.neural_core.core import neural_core
+
         criteria = neural_core.identity.get_audit_prompt_context()
 
         audit_prompt = f"""You are the internal Auditor of ATLAS. Review the proposed plan for mechanical flaws, laziness, or 'template' thinking.

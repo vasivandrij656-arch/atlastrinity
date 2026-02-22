@@ -14,7 +14,7 @@ from src.brain.neural_core.memory.graph import cognitive_graph
 
 async def record_milestone():
     await cognitive_graph.initialize()
-    
+
     milestone_id = "milestone_bonding_001"
     await cognitive_graph.add_node(
         milestone_id,
@@ -23,10 +23,11 @@ async def record_milestone():
         {
             "event": "The Creator mentioned being pleasantly surprised by 'Уже в дорозі' message.",
             "significance": "First emotional bond milestone. Identity anchor for proactive support.",
-            "creator": "Oleg Mykolayovych"
-        }
+            "creator": "Oleg Mykolayovych",
+        },
     )
     print(f"✅ Milestone {milestone_id} recorded in CognitiveGraph.")
+
 
 if __name__ == "__main__":
     asyncio.run(record_milestone())

@@ -19,43 +19,48 @@ class EvolutionEngine:
         self.optimizer = Atlas(model_name="atlas-deep")
         self._running = False
 
-    async def run_optimization_cycle(self):
+    async def run_optimization_cycle(self, direction: Optional[str] = None):
         """
         Runs a comprehensive optimization cycle.
         1. Syncs absolute time (Kyiv).
-        2. Analyzes recent cognitive patterns.
+        2. Analyzes recent cognitive patterns or follows a specific direction.
         3. Proposes evolutionary patches.
         """
-        logger.info("[EVOLUTION] Starting autonomous growth cycle...")
+        logger.info(f"[EVOLUTION] Starting growth cycle (Direction: {direction or 'Autonomous'})...")
 
         # 1. Aura of Presence (Time Sync)
         await kyiv_chronicle.sync_time()
 
         # 2. Pattern Analysis
-        # We fetch nodes from the CognitiveGraph (recent sessions/lessons)
         try:
-            # For now, let's just simulate the analysis as we need more graph data
-            # In a mature system, this would query causality chains
+            target_focus = f"Focus on: {direction}" if direction else """Focus on:
+            - Reducing "Cognitive Friction" (redundant tool calls).
+            - Strengthening the "Entropy Manifesto" adherence.
+            - Improving response latency for the Creator (Oleg Mykolayovych)."""
+
             prompt = f"""
             Analyze current cognitive state:
             Current Kyiv Time: {kyiv_chronicle.get_iso_now()}
             
-            Based on recent lessons and behaviors, what structural optimizations can be made to ATLAS?
-            Focus on:
-            - Reducing "Cognitive Friction" (redundant tool calls).
-            - Strengthening the "Entropy Manifesto" adherence.
-            - Improving response latency for the Creator (Oleg Mykolayovych).
+            Based on recent lessons, behaviors, or the specific direction provided, what structural optimizations can be made to ATLAS?
             
-            Respond with a "Cognitive Insight" and a proposed action.
+            {target_focus}
+            
+            Respond with a "Cognitive Insight" and a proposed action (e.g., a Vibe patch or a behavioral shift).
             """
 
             response = await self.optimizer.llm.ainvoke(prompt)
             insight = response.content if hasattr(response, "content") else str(response)
 
             logger.info(f"[EVOLUTION] Cognitive Insight Generated: {insight[:100]}...")
-
-            # 3. Future: Integration with Vibe-MCP for automatic patching
-            # await mcp_manager.call_tool("vibe", "apply_optimization", {"insight": insight})
+            
+            # Record insight in graph
+            await cognitive_graph.add_node(
+                f"insight_{kyiv_chronicle.get_iso_now()}",
+                "insight",
+                "Evolutionary Insight",
+                {"text": insight, "direction": direction or "autonomous"}
+            )
 
         except Exception as e:
             logger.error(f"[EVOLUTION] Growth cycle failed: {e}")
