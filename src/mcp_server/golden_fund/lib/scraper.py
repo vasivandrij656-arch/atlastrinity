@@ -199,11 +199,20 @@ class DataScraper:
             return ScrapeResult(False, error=f"Unexpected error scraping tables: {e!s}")
 
     def save_data(
-        self, data: Any, file_path: str | Path, format: ScrapeFormat = ScrapeFormat.JSON
+        self, data: Any, file_path: str | Path, format: ScrapeFormat | None = None
     ) -> ScrapeResult:
         file_path = Path(file_path)
         try:
             file_path.parent.mkdir(parents=True, exist_ok=True)
+            
+            if format is None:
+                ext = file_path.suffix.lower()
+                if ext == ".csv":
+                    format = ScrapeFormat.CSV
+                elif ext == ".xml":
+                    format = ScrapeFormat.XML
+                else:
+                    format = ScrapeFormat.JSON
 
             if isinstance(data, bytes):
                 with open(file_path, "wb") as f:

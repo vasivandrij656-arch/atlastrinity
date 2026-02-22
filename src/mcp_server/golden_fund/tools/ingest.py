@@ -131,11 +131,17 @@ async def ingest_dataset(
         val_msg = _perform_validation(parsed_df, run_id, validator)
         summary_parts.append(val_msg)
 
-    if "extract_entities" in process_pipeline and text_content_for_extraction:
-        ent_msg = _perform_entity_storage(
-            text_content_for_extraction, url, run_id, entity_extractor, vector_storage
-        )
-        summary_parts.append(ent_msg)
+    if "extract_entities" in process_pipeline:
+        if not text_content_for_extraction and parsed_df is not None:
+            # If we don't have text yet but have a dataset, synthesize some text from the first 50 rows
+            sample_df = parsed_df.head(50)
+            text_content_for_extraction = sample_df.to_json(orient="records", force_ascii=False)
+
+        if text_content_for_extraction:
+            ent_msg = _perform_entity_storage(
+                text_content_for_extraction, url, run_id, entity_extractor, vector_storage
+            )
+            summary_parts.append(ent_msg)
 
     return " ".join(summary_parts)
 
@@ -173,21 +179,46 @@ def _perform_sql_storage(df: pd.DataFrame, run_id: str, url: str, sql_storage: S
 def _perform_vector_storage(
     df: pd.DataFrame, run_id: str, url: str, ext: str, vector_storage: VectorStorage
 ) -> str:
-    """Helper to store dataset metadata in vector database."""
+    """Helper to store dataset metadata and up to 500 records in vector database."""
     cols = ", ".join(df.columns[:10])
-    desc = f"Dataset from {url} ({type}). Columns: {cols}. Rows: {len(df)}."
+    desc = f"Dataset from {url} ({ext}). Columns: {cols}. Rows: {len(df)}."
     table_name = f"dataset_{run_id}"
-    vector_data = {
-        "name": table_name,
-        "type": "dataset",
-        "content": desc,
-        "source_url": url,
-        "format": ext,
-        "sql_table": table_name,
-    }
+
+    vector_data = [
+        {
+            "name": table_name,
+            "type": "dataset_metadata",
+            "content": desc,
+            "source_url": url,
+            "format": ext,
+            "sql_table": table_name,
+        }
+    ]
+
+    # Also vectorize up to 500 individual records for semantic search
+    limit = min(len(df), 500)
+    for i, row in df.head(limit).iterrows():
+        row_dict = row.to_dict()
+        row_text = " | ".join([f"{k}: {v}" for k, v in row_dict.items() if pd.notna(v)])
+
+        # Prepare metadata (only simple types for ChromaDB)
+        meta = {str(k): v for k, v in row_dict.items() if isinstance(v, (str, int, float, bool))}
+        meta["source_url"] = url
+        meta["format"] = ext
+        meta["sql_table"] = table_name
+
+        vector_data.append(
+            {
+                "name": f"{table_name}_record_{i}",
+                "type": "dataset_record",
+                "content": row_text,
+                **meta,
+            }
+        )
+
     vec_res = vector_storage.store(vector_data)
     if vec_res.success:
-        return "Indexed for semantic search."
+        return f"Indexed metadata and {limit} records for semantic search."
     return f"Vector indexing failed: {vec_res.error}"
 
 
