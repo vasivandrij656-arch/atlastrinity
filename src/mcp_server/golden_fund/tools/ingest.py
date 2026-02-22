@@ -241,7 +241,7 @@ def _perform_vector_storage(
         row_text = " | ".join([f"{k}: {v}" for k, v in row_dict.items() if pd.notna(v)])
 
         # Prepare metadata (only simple types for ChromaDB)
-        meta = {str(k): v for k, v in row_dict.items() if isinstance(v, (str, int, float, bool))}
+        meta = {str(k): v for k, v in row_dict.items() if isinstance(v, str | int | float | bool)}
         meta["source_url"] = url
         meta["format"] = ext
         meta["sql_table"] = table_name

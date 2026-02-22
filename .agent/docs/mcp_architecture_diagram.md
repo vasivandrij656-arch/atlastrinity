@@ -1,6 +1,6 @@
 
-<!-- AUTO-UPDATED: 2026-02-23T00:02:19.727272 -->
-<!-- Modified: .agent/docs/mcp_architecture_diagram.md, src/brain/data/architecture_diagrams/mcp_architecture.md, src/brain/neural_core/memory/graph.py -->
+<!-- AUTO-UPDATED: 2026-02-23T00:22:42.478919 -->
+<!-- Modified: .agent/docs/mcp_architecture_diagram.md, src/brain/data/architecture_diagrams/mcp_architecture.md, src/brain/neural_core/chronicle.py -->
 
 # Architecture Diagram - atlastrinity
 
