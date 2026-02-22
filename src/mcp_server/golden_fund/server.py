@@ -87,16 +87,24 @@ async def retrieve_blob(filename: str) -> str:
 
 
 @mcp.tool()
-async def ingest_dataset(url: str, type: str, process_pipeline: list[str] | None = None) -> str:
+async def ingest_dataset(
+    url: str,
+    type: str,
+    process_pipeline: list[str] | None = None,
+    offset: int = 0,
+    limit: int = 500,
+) -> str:
     """
     Ingest a dataset into the Golden Fund.
 
     Args:
         url: URL of the dataset or API endpoint.
-        type: Type of data source (e.g., 'api', 'web_page', 'csv_url').
-        process_pipeline: List of processing steps.
+        type: Type of data source (e.g., 'api', 'web_page', 'csv').
+        process_pipeline: List of processing steps ('parse', 'store_sql', 'keyword_index', 'vectorize', 'extract_entities').
+        offset: Starting record index (for large datasets).
+        limit: Max records to index in this step.
     """
-    return await ingest_impl(url, type, process_pipeline)
+    return await ingest_impl(url, type, process_pipeline, offset=offset, limit=limit)
 
 
 @mcp.tool()

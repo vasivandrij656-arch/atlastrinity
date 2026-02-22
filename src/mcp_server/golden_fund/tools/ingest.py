@@ -55,9 +55,22 @@ def _parse_raw_data(raw_file: Path, ext: str, type: str, parser: DataParser):
 
 
 async def ingest_dataset(
-    url: str, type: str = "web_page", process_pipeline: list[str] | None = None
+    url: str,
+    type: str = "web_page",
+    process_pipeline: list[str] | None = None,
+    offset: int = 0,
+    limit: int = 500,
 ) -> str:
-    """Ingest a dataset from a URL."""
+    """
+    Ingest a dataset from a URL.
+
+    Args:
+        url: Source URL.
+        type: Source type (api, web_page, csv, etc).
+        process_pipeline: Processing stages.
+        offset: Starting record index.
+        limit: Number of records to process in this step.
+    """
     scraper = DataScraper()
     parser = DataParser()
     validator = DataValidator()
@@ -115,33 +128,53 @@ async def ingest_dataset(
         parsed_df, parse_msg = _perform_parsing(raw_file, ext, type, parser)
         summary_parts.append(parse_msg)
 
-    if "store_sql" in process_pipeline and parsed_df is not None:
-        sql_msg = _perform_sql_storage(parsed_df, run_id, url, sql_storage)
-        summary_parts.append(sql_msg)
+    if parsed_df is not None:
+        total_records = len(parsed_df)
+        # Applying offset/limit slicing
+        chunk_df = parsed_df.iloc[offset : offset + limit]
+        actual_limit = len(chunk_df)
+        summary_parts.append(f"Processing chunk: records {offset} to {offset + actual_limit} of {total_records}.")
 
-    if "vectorize" in process_pipeline and parsed_df is not None:
-        vec_msg = _perform_vector_storage(parsed_df, run_id, url, ext, vector_storage)
-        summary_parts.append(vec_msg)
+        if "store_sql" in process_pipeline and offset == 0:
+            # Only store in SQL once (from the first chunk call or full parse)
+            # Note: We store the ENTIRE parsed_df in SQL for structured queries
+            sql_msg = _perform_sql_storage(parsed_df, run_id, url, sql_storage)
+            summary_parts.append(sql_msg)
 
-    if "keyword_index" in process_pipeline and parsed_df is not None:
-        search_msg = _perform_keyword_storage(parsed_df, run_id, search_storage)
-        summary_parts.append(search_msg)
+        if "vectorize" in process_pipeline:
+            # Vectorize the sliced chunk
+            vec_msg = _perform_vector_storage(chunk_df, run_id, url, ext, vector_storage, offset=offset)
+            summary_parts.append(vec_msg)
 
-    if "validate" in process_pipeline and parsed_df is not None:
-        val_msg = _perform_validation(parsed_df, run_id, validator)
-        summary_parts.append(val_msg)
+        if "keyword_index" in process_pipeline:
+            # Keyword index the sliced chunk
+            search_msg = _perform_keyword_storage(chunk_df, run_id, search_storage, offset=offset)
+            summary_parts.append(search_msg)
 
-    if "extract_entities" in process_pipeline:
-        if not text_content_for_extraction and parsed_df is not None:
-            # If we don't have text yet but have a dataset, synthesize some text from the first 50 rows
-            sample_df = parsed_df.head(50)
-            text_content_for_extraction = sample_df.to_json(orient="records", force_ascii=False)
+        if "validate" in process_pipeline:
+            val_msg = _perform_validation(chunk_df, run_id, validator)
+            summary_parts.append(val_msg)
 
-        if text_content_for_extraction:
-            ent_msg = _perform_entity_storage(
-                text_content_for_extraction, url, run_id, entity_extractor, vector_storage
+        if "extract_entities" in process_pipeline and offset == 0:
+            # Entity extraction usually summarizes the whole doc, or first 50 rows
+            # We skip it for continuation chunks to save time
+            if not text_content_for_extraction:
+                sample_df = parsed_df.head(50)
+                text_content_for_extraction = sample_df.to_json(orient="records", force_ascii=False)
+
+            if text_content_for_extraction:
+                ent_msg = _perform_entity_storage(
+                    text_content_for_extraction, url, run_id, entity_extractor, vector_storage
+                )
+                summary_parts.append(ent_msg)
+
+        # Continuation Protocol
+        if offset + actual_limit < total_records:
+            next_offset = offset + actual_limit
+            summary_parts.append(
+                f"\n[CONTINUATION REQUIRED] Dataset has {total_records} records. "
+                f"To continue, call: ingest_dataset(url='{url}', type='{type}', offset={next_offset}, limit={limit})"
             )
-            summary_parts.append(ent_msg)
 
     return " ".join(summary_parts)
 
@@ -177,9 +210,14 @@ def _perform_sql_storage(df: pd.DataFrame, run_id: str, url: str, sql_storage: S
 
 
 def _perform_vector_storage(
-    df: pd.DataFrame, run_id: str, url: str, ext: str, vector_storage: VectorStorage
+    df: pd.DataFrame,
+    run_id: str,
+    url: str,
+    ext: str,
+    vector_storage: VectorStorage,
+    offset: int = 0,
 ) -> str:
-    """Helper to store dataset metadata and up to 500 records in vector database."""
+    """Helper to store dataset metadata and sliced records in vector database."""
     cols = ", ".join(df.columns[:10])
     desc = f"Dataset from {url} ({ext}). Columns: {cols}. Rows: {len(df)}."
     table_name = f"dataset_{run_id}"
@@ -195,9 +233,9 @@ def _perform_vector_storage(
         }
     ]
 
-    # Also vectorize up to 500 individual records for semantic search
-    limit = min(len(df), 500)
-    for i, row in df.head(limit).iterrows():
+    # Vectorize individual records in this chunk
+    for i, row in df.iterrows():
+        global_index = offset + i if isinstance(i, int) else i  # Handle non-integer index if any
         row_dict = row.to_dict()
         row_text = " | ".join([f"{k}: {v}" for k, v in row_dict.items() if pd.notna(v)])
 
@@ -208,7 +246,7 @@ def _perform_vector_storage(
         meta["sql_table"] = table_name
 
         record_data: dict[str, Any] = {
-            "name": f"{table_name}_record_{i}",
+            "name": f"{table_name}_record_{global_index}",
             "type": "dataset_record",
             "content": row_text,
             "source_url": url,
@@ -221,7 +259,7 @@ def _perform_vector_storage(
 
     vec_res = vector_storage.store(vector_data)
     if vec_res.success:
-        return f"Indexed metadata and {limit} records for semantic search."
+        return f"Indexed {len(df)} records for semantic search."
     return f"Vector indexing failed: {vec_res.error}"
 
 
@@ -234,16 +272,19 @@ def _perform_validation(df: pd.DataFrame, run_id: str, validator: DataValidator)
     return f"Validation warning: {validation_res.error}"
 
 
-def _perform_keyword_storage(df: pd.DataFrame, run_id: str, search_storage: SearchStorage) -> str:
-    """Helper to index all rows for keyword search."""
+def _perform_keyword_storage(
+    df: pd.DataFrame, run_id: str, search_storage: SearchStorage, offset: int = 0
+) -> str:
+    """Helper to index a slice of rows for keyword search."""
     records = df.to_dict(orient="records")
     # Add some descriptive fields for FTS5
     indexed_records: list[dict[str, Any]] = []
     for i, rec in enumerate(records):
+        global_index = offset + i
         str_rec = {str(k): v for k, v in rec.items()}
         indexed_records.append(
             {
-                "id": f"{run_id}_{i}",
+                "id": f"{run_id}_{global_index}",
                 "title": str(str_rec.get("name") or str_rec.get("title") or f"Record {i}"),
                 "content": " ".join([f"{k}:{v}" for k, v in str_rec.items()]),
                 "description": f"Part of dataset {run_id}",
