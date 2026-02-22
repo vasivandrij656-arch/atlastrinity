@@ -1,6 +1,6 @@
 
-<!-- AUTO-UPDATED: 2026-02-22T21:24:57.639474 -->
-<!-- Modified: backups/databases/atlastrinity.db.encrypted, backups/databases/backup_metadata.json, backups/databases/golden_fund.db.encrypted -->
+<!-- AUTO-UPDATED: 2026-02-22T21:28:12.219416 -->
+<!-- Modified: .agent/docs/mcp_architecture_diagram.md, src/brain/data/architecture_diagrams/mcp_architecture.md, src/mcp_server/golden_fund/server.py -->
 
 # Architecture Diagram - atlastrinity
 

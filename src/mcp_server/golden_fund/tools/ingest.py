@@ -133,7 +133,9 @@ async def ingest_dataset(
         # Applying offset/limit slicing
         chunk_df = parsed_df.iloc[offset : offset + limit]
         actual_limit = len(chunk_df)
-        summary_parts.append(f"Processing chunk: records {offset} to {offset + actual_limit} of {total_records}.")
+        summary_parts.append(
+            f"Processing chunk: records {offset} to {offset + actual_limit} of {total_records}."
+        )
 
         if "store_sql" in process_pipeline and offset == 0:
             # Only store in SQL once (from the first chunk call or full parse)
@@ -143,7 +145,9 @@ async def ingest_dataset(
 
         if "vectorize" in process_pipeline:
             # Vectorize the sliced chunk
-            vec_msg = _perform_vector_storage(chunk_df, run_id, url, ext, vector_storage, offset=offset)
+            vec_msg = _perform_vector_storage(
+                chunk_df, run_id, url, ext, vector_storage, offset=offset
+            )
             summary_parts.append(vec_msg)
 
         if "keyword_index" in process_pipeline:
