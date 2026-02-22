@@ -642,8 +642,11 @@ class ToolDispatcher:
             tool_name = parts[1]
         else:
             explicit_server = self._normalize_server_prefix(tool_name, explicit_server)
-            if explicit_server and tool_name.startswith(f"{explicit_server.replace('-', '_')}_"):
-                tool_name = tool_name[len(explicit_server) + 1 :].removeprefix("_")
+            if explicit_server:
+                for p in [f"{explicit_server}_", f"{explicit_server.replace('-', '_')}_"]:
+                    if tool_name.startswith(p):
+                        tool_name = tool_name[len(p):]
+                        break
 
         if explicit_server:
             return self._resolve_tool_and_args(tool_name, args, explicit_server)
@@ -1190,6 +1193,8 @@ class ToolDispatcher:
             return self._handle_browser(tool_name, args)
         if tool_name in self.VIBE_SYNONYMS:
             return self._handle_vibe(tool_name, args)
+        if tool_name in self.DUCKDUCKGO_SYNONYMS:
+            return "duckduckgo-search", "duckduckgo_search", args
 
         # Specialized Tools
         if tool_name in ["sequential-thinking", "sequentialthinking", "think"]:
