@@ -1,6 +1,6 @@
 
-<!-- AUTO-UPDATED: 2026-02-22T22:10:39.951891 -->
-<!-- Modified: .agent/docs/mcp_architecture_diagram.md, src/brain/data/architecture_diagrams/mcp_architecture.md, src/mcp_server/golden_fund/tools/ingest.py -->
+<!-- AUTO-UPDATED: 2026-02-22T22:13:09.737429 -->
+<!-- Modified: .agent/docs/mcp_architecture_diagram.md, src/brain/data/architecture_diagrams/mcp_architecture.md, src/mcp_server/golden_fund/lischema_intelligence.py -->
 
 # Architecture Diagram - atlastrinity
 

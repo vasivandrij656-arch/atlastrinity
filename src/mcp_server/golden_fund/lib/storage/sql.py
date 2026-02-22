@@ -106,6 +106,9 @@ class SQLStorage:
                             conn.execute(create_stmt)
                             created_smart = True
 
+                            # Add traceability metadata to the rows
+                            df["_gf_ingestion_id"] = dataset_name
+                            
                             # Append data to the smart table
                             df.to_sql(table_name, conn, if_exists="append", index=False)
 
@@ -113,6 +116,8 @@ class SQLStorage:
                             self._persist_schema_to_file(table_name, conn)
 
                     if not created_smart:
+                        # Add traceability metadata to the rows
+                        df["_gf_ingestion_id"] = dataset_name
                         # Fallback to pandas default
                         df.to_sql(table_name, conn, if_exists=if_exists, index=False)
 
