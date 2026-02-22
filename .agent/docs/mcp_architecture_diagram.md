@@ -1,6 +1,6 @@
 
-<!-- AUTO-UPDATED: 2026-02-22T19:59:01.887138 -->
-<!-- Modified: backups/databases/atlastrinity.db.encrypted, backups/databases/backup_metadata.json, backups/databases/golden_fund.db.encrypted -->
+<!-- AUTO-UPDATED: 2026-02-22T20:15:22.359949 -->
+<!-- Modified: src/brain/core/orchestration/tool_dispatcher.py -->
 
 # Architecture Diagram - atlastrinity
 

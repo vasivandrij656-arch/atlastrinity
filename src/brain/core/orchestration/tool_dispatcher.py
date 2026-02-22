@@ -645,7 +645,7 @@ class ToolDispatcher:
             if explicit_server:
                 for p in [f"{explicit_server}_", f"{explicit_server.replace('-', '_')}_"]:
                     if tool_name.startswith(p):
-                        tool_name = tool_name[len(p):]
+                        tool_name = tool_name[len(p) :]
                         break
 
         if explicit_server:
