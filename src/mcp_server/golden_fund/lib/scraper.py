@@ -204,7 +204,7 @@ class DataScraper:
         file_path = Path(file_path)
         try:
             file_path.parent.mkdir(parents=True, exist_ok=True)
-            
+
             if format is None:
                 ext = file_path.suffix.lower()
                 if ext == ".csv":
