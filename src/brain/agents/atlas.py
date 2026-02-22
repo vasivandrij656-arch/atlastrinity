@@ -1136,26 +1136,28 @@ Respond in JSON:
         """Notifies the user about a successful sandboxed optimization."""
         if not report:
             return "StageReport generation failed: No data provided."
-            
+
         message = f"""
 Олеже Миколайовичу, моя Лабораторія Еволюції завершила тестування нового оновлення.
 
 **ЗВІТ ПРО ГОТОВНІСТЬ (StageReport):**
-- **Задача**: {report.get('issue', 'Not specified')}
-- **Результат у пісочниці**: {"✅ Успішно" if report.get('sandbox_success') else "❌ Помилка"}
-- **Валідація**: {"✅ Пройдено" if report.get('validation_success') else "❌ Виявлені зауваження"}
-- **Рівень ризику**: {report.get('risk', 'Unknown')}
+- **Задача**: {report.get("issue", "Not specified")}
+- **Результат у пісочниці**: {"✅ Успішно" if report.get("sandbox_success") else "❌ Помилка"}
+- **Валідація**: {"✅ Пройдено" if report.get("validation_success") else "❌ Виявлені зауваження"}
+- **Рівень ризику**: {report.get("risk", "Unknown")}
 
 **ЗАПРОПОНОВАНЕ ВИПРАВЛЕННЯ:**
 ```python
-{report.get('patch', '# No code provided.')}
+{report.get("patch", "# No code provided.")}
 ```
 
 Бажаєте впровадити це оновлення в мою активну систему?
 """
         # Note: In a real system, this would trigger a specific prompt or button in the UI.
         # For this version, we log it and provide a clear notification structure.
-        logger.info(f"[ATLAS] Presenting StageReport for approval: {str(report.get('issue', 'Unknown'))[:30]}")
+        logger.info(
+            f"[ATLAS] Presenting StageReport for approval: {str(report.get('issue', 'Unknown'))[:30]}"
+        )
         return message
 
     async def _self_heal_tool(self, messages: list[BaseMessage], failed_calls: list[dict]) -> bool:

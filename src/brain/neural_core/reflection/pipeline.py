@@ -5,10 +5,9 @@ Analyzes sessions to extract lessons, patterns, and causal connections.
 
 import json
 import logging
-from typing import Any, Optional
+from typing import Any
 
 from src.brain.agents import Atlas
-from src.brain.neural_core.chronicle import kyiv_chronicle
 from src.brain.neural_core.memory.graph import cognitive_graph
 
 logger = logging.getLogger("brain.neural_core.reflection")

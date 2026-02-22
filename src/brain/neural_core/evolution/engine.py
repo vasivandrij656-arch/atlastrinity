@@ -201,10 +201,10 @@ class EvolutionEngine:
         4. Generate StageReport.
         """
         logger.info(f"[EVOLUTION] Starting sandboxed optimization for: {issue_description}")
-        
+
         # 1. Generate Patch
         patch_description = await self.propose_system_patch(issue_description)
-        
+
         # 2. Setup Sandbox
         sandbox = get_sandbox(base_dir="/Users/dev/Documents/GitHub/atlastrinity")
         try:
@@ -215,7 +215,7 @@ class EvolutionEngine:
             # 3. Apply and Verify
             # (Note: In this version, we simulate the 'apply' part for the sandbox)
             verification = await sandbox.run_verification()
-            
+
             # 4. Use Validator for static checks
             # (Simulated check of the patch_description content)
             validation = validator.validate_patch(patch_description, issue_description)
@@ -227,20 +227,22 @@ class EvolutionEngine:
                 "sandbox_success": verification["success"],
                 "validation_success": validation["valid"],
                 "risk": validation["risk_level"],
-                "lint_report": verification["lint_report"]
+                "lint_report": verification["lint_report"],
             }
-            
+
             # Record report as a node
             await cognitive_graph.add_node(
                 f"report_{int(time.time())}",
                 "report",
                 f"StageReport: {issue_description[:30]}",
-                report
+                report,
             )
-            
-            logger.info(f"[EVOLUTION] Sandboxed optimization complete. Risk: {validation['risk_level']}")
+
+            logger.info(
+                f"[EVOLUTION] Sandboxed optimization complete. Risk: {validation['risk_level']}"
+            )
             return report
-            
+
         finally:
             await sandbox.cleanup()
 
