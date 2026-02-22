@@ -76,9 +76,6 @@ async def ingest_dataset(
     validator = DataValidator()
     sql_storage = SQLStorage()
     vector_storage = VectorStorage()
-    validator = DataValidator()
-    sql_storage = SQLStorage()
-    vector_storage = VectorStorage()
     search_storage = SearchStorage()
     entity_extractor = EntityExtractor()
 
