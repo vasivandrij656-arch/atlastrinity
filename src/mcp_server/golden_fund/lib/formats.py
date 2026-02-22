@@ -58,7 +58,10 @@ class CSVParser:
                     for alternative_sep in [";", "\t"]:
                         try:
                             df_alt = pd.read_csv(
-                                file_path, encoding=encoding, on_bad_lines="skip", sep=alternative_sep
+                                file_path,
+                                encoding=encoding,
+                                on_bad_lines="skip",
+                                sep=alternative_sep,
                             )
                             if len(df_alt.columns) > 1:
                                 df = df_alt
