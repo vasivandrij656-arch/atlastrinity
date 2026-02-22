@@ -1,5 +1,5 @@
 
-<!-- AUTO-UPDATED: 2026-02-22T22:51:56.885743 -->
+<!-- AUTO-UPDATED: 2026-02-22T23:01:40.216530 -->
 <!-- Modified: .agent/docs/mcp_architecture_diagram.md, src/brain/data/architecture_diagrams/mcp_architecture.md, src/brain/prompts/atlas_chat.py -->
 
 # Architecture Diagram - atlastrinity

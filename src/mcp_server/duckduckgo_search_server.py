@@ -64,44 +64,56 @@ def _execute_protocol_search(rule_name: str, query_val: str, provider_name: str)
         # 11. TEMPORAL INTUITION (THE SHADOW OF TIME)
         min_results = 5
         results_count = len(results)
-        
+
         if results_count < min_results and rule_name in ["open_data", "structured_data", "court"]:
             primary_range = horizon.get("primary_range", [2024, 2026])
             floor = horizon.get("deepening_floor", 2010)
             is_unbound = horizon.get("unbound_mode", False)
-            
-            logger.info(f"[SHADOW OF TIME] Insufficient results ({results_count}). Engaging Temporal Intuition.")
-            
+
+            logger.info(
+                f"[SHADOW OF TIME] Insufficient results ({results_count}). Engaging Temporal Intuition."
+            )
+
             # --- INTUITION PHASE (Look for years in snippets) ---
             guessed_years = set()
             for r in results:
                 # Find any 4-digit numbers that look like years (1990-2026)
-                year_matches = re.findall(r"\b(20[0-2][0-9]|19[8-9][0-9])\b", f"{r['title']} {r.get('snippet', '')}")
+                year_matches = re.findall(
+                    r"\b(20[0-2][0-9]|19[8-9][0-9])\b", f"{r['title']} {r.get('snippet', '')}"
+                )
                 for y in year_matches:
                     y_int = int(y)
-                    if y_int < primary_range[0]: # Only care about past 'shadows'
+                    if y_int < primary_range[0]:  # Only care about past 'shadows'
                         guessed_years.add(y_int)
-            
+
             if guessed_years:
                 for year in sorted(list(guessed_years), reverse=True):
-                    if len(results) >= 12: break
+                    if len(results) >= 12:
+                        break
                     logger.info(f"[TEMPORAL INTUITION] Probing detected shadow year: {year}")
-                    results += _search_ddg(query=f"{query_val.strip()} {year}", max_results=5, timeout_s=10.0)
+                    results += _search_ddg(
+                        query=f"{query_val.strip()} {year}", max_results=5, timeout_s=10.0
+                    )
 
             # --- SEQUENTIAL DEEPENING (Fallback) ---
             if len(results) < min_results:
                 current_probe = primary_range[0] - 1
                 while current_probe >= floor or is_unbound:
-                    if len(results) >= 12: break
-                    if not is_unbound and current_probe < floor: break
-                    if current_probe in guessed_years: # Skip if already probed
+                    if len(results) >= 12:
+                        break
+                    if not is_unbound and current_probe < floor:
+                        break
+                    if current_probe in guessed_years:  # Skip if already probed
                         current_probe -= 1
                         continue
-                        
+
                     logger.info(f"[TEMPORAL DEEPENING] Extending horizon back to: {current_probe}")
-                    new_results = _search_ddg(query=f"{query_val.strip()} {current_probe}", max_results=5, timeout_s=10.0)
+                    new_results = _search_ddg(
+                        query=f"{query_val.strip()} {current_probe}", max_results=5, timeout_s=10.0
+                    )
                     results += new_results
-                    if len(new_results) == 0 and current_probe < 2015: break
+                    if len(new_results) == 0 and current_probe < 2015:
+                        break
                     current_probe -= 1
 
         prioritized = []
