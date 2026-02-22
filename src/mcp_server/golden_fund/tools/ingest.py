@@ -207,14 +207,17 @@ def _perform_vector_storage(
         meta["format"] = ext
         meta["sql_table"] = table_name
 
-        vector_data.append(
-            {
-                "name": f"{table_name}_record_{i}",
-                "type": "dataset_record",
-                "content": row_text,
-                **meta,
-            }
-        )
+        record_data: dict[str, Any] = {
+            "name": f"{table_name}_record_{i}",
+            "type": "dataset_record",
+            "content": row_text,
+            "source_url": url,
+            "format": ext,
+            "sql_table": table_name,
+        }
+        # Add the meta fields
+        record_data.update(meta)
+        vector_data.append(record_data)
 
     vec_res = vector_storage.store(vector_data)
     if vec_res.success:
