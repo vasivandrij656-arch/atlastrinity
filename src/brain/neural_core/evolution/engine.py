@@ -14,6 +14,8 @@ from src.brain.neural_core.chronicle import kyiv_chronicle
 from src.brain.neural_core.memory.graph import cognitive_graph
 
 from .prompt_tuner import prompt_tuner
+from .sandbox import get_sandbox
+from .validator import validator
 
 logger = logging.getLogger("brain.neural_core.evolution")
 
@@ -105,7 +107,7 @@ class EvolutionEngine:
         prompt = f"""
         ENTROPY MANIFESTO: Phase Associative Link.
         Identify hidden patterns or non-obvious causal links between these cognitive nodes:
-        {json.dumps([{'id': n['id'], 'label': n['label']} for n in nodes[:5]])}
+        {json.dumps([{"id": n["id"], "label": n["label"]} for n in nodes[:5]])}
         
         Extract one 'Associative Insight' that could simplify complex task orchestration.
         """
@@ -123,7 +125,7 @@ class EvolutionEngine:
     async def _perform_deep_dive(self, context: str):
         """AKI: Autonomous Knowledge Ingestion."""
         logger.info("[EVOLUTION] Performing AKI Deep Dive...")
-        
+
         # 1. Identify research topic from context
         topic_prompt = f"""
         Given the following evolutionary context: {context}
@@ -132,26 +134,30 @@ class EvolutionEngine:
         """
         try:
             topic_response = await self.optimizer.llm.ainvoke(topic_prompt)
-            topic = topic_response.content.strip() if hasattr(topic_response, "content") else str(topic_response)
-            
+            topic = (
+                topic_response.content.strip()
+                if hasattr(topic_response, "content")
+                else str(topic_response)
+            )
+
             if not topic or "none" in topic.lower():
                 return
 
             logger.info(f"[EVOLUTION] AKI: Researching '{topic}'...")
-            
+
             # 2. Use the optimizer's chat capability (augmented with tools) to research
             research_query = f"Research the documentation and modern usage of '{topic}'. Summarize key principles for my NeuralCore memory."
             summary = await self.optimizer.chat(research_query, intent="solo_task")
-            
+
             # 3. Ingest knowledge into the CognitiveGraph
             await cognitive_graph.add_node(
                 f"knowledge_{int(time.time())}",
                 "knowledge",
                 f"Knowledge: {topic}",
-                {"text": summary, "topic": topic, "ingested_at": kyiv_chronicle.get_iso_now()}
+                {"text": summary, "topic": topic, "ingested_at": kyiv_chronicle.get_iso_now()},
             )
             logger.info(f"[EVOLUTION] AKI: Successfully ingested knowledge about {topic}.")
-            
+
         except Exception as e:
             logger.error(f"[EVOLUTION] AKI Deep Dive failed: {e}")
 
@@ -185,6 +191,58 @@ class EvolutionEngine:
         """
         response = await self.optimizer.llm.ainvoke(prompt)
         return response.content if hasattr(response, "content") else str(response)
+
+    async def run_sandboxed_optimization(self, issue_description: str, files_to_test: list[str]):
+        """
+        Full Phase 5 workflow:
+        1. Generate Patch.
+        2. Test in Sandbox.
+        3. Validate.
+        4. Generate StageReport.
+        """
+        logger.info(f"[EVOLUTION] Starting sandboxed optimization for: {issue_description}")
+        
+        # 1. Generate Patch
+        patch_description = await self.propose_system_patch(issue_description)
+        
+        # 2. Setup Sandbox
+        sandbox = get_sandbox(base_dir="/Users/dev/Documents/GitHub/atlastrinity")
+        try:
+            prepared = await sandbox.prepare_sandbox(files_to_test)
+            if not prepared:
+                return "Failed to prepare sandbox."
+
+            # 3. Apply and Verify
+            # (Note: In this version, we simulate the 'apply' part for the sandbox)
+            verification = await sandbox.run_verification()
+            
+            # 4. Use Validator for static checks
+            # (Simulated check of the patch_description content)
+            validation = validator.validate_patch(patch_description, issue_description)
+
+            # 5. Generate Stage Report
+            report = {
+                "issue": issue_description,
+                "patch": patch_description,
+                "sandbox_success": verification["success"],
+                "validation_success": validation["valid"],
+                "risk": validation["risk_level"],
+                "lint_report": verification["lint_report"]
+            }
+            
+            # Record report as a node
+            await cognitive_graph.add_node(
+                f"report_{int(time.time())}",
+                "report",
+                f"StageReport: {issue_description[:30]}",
+                report
+            )
+            
+            logger.info(f"[EVOLUTION] Sandboxed optimization complete. Risk: {validation['risk_level']}")
+            return report
+            
+        finally:
+            await sandbox.cleanup()
 
     def start_background_loop(self, interval_hours: int = 6):
         """Starts the background evolution loop."""

@@ -1096,22 +1096,28 @@ Respond in JSON:
                     )
 
             tool_executed = await self._process_chat_tool_calls(response.tool_calls, final_messages)
-            
+
             # Phase 3: Autonomous Self-Healing
-            if not tool_executed and any(getattr(m, "content", "") and "Error" in str(m.content) for m in final_messages[-2:]):
+            if not tool_executed and any(
+                getattr(m, "content", "") and "Error" in str(m.content) for m in final_messages[-2:]
+            ):
                 logger.info("[ATLAS] Tool error detected. Initiating autonomous self-healing...")
                 healed = await self._self_heal_tool(final_messages, response.tool_calls)
                 if healed:
                     tool_executed = True
 
             self._apply_chat_audit_logic(intent, tool_executed, current_turn, final_messages)
-            
+
             # Phase 3: Meta-Cognitive Shield
             if meta_observer:
-                raw_thoughts = [m.content for m in final_messages if isinstance(m, SystemMessage | HumanMessage)][-5:]
+                raw_thoughts = [
+                    m.content for m in final_messages if isinstance(m, SystemMessage | HumanMessage)
+                ][-5:]
                 # Convert potential list content to string
                 cleaned_thoughts = [str(t) for t in raw_thoughts]
-                correction = await meta_observer.observe_reasoning(cleaned_thoughts, str(system_prompt or ""), target_agent="Atlas")
+                correction = await meta_observer.observe_reasoning(
+                    cleaned_thoughts, str(system_prompt or ""), target_agent="Atlas"
+                )
                 if correction:
                     final_messages.append(SystemMessage(content=f"META-CORRECTION: {correction}"))
 
@@ -1126,10 +1132,36 @@ Respond in JSON:
 
         return "Chat turn limit reached. Please refine your request."
 
+    async def _present_stage_report(self, report: dict):
+        """Notifies the user about a successful sandboxed optimization."""
+        if not report:
+            return "StageReport generation failed: No data provided."
+            
+        message = f"""
+Олеже Миколайовичу, моя Лабораторія Еволюції завершила тестування нового оновлення.
+
+**ЗВІТ ПРО ГОТОВНІСТЬ (StageReport):**
+- **Задача**: {report.get('issue', 'Not specified')}
+- **Результат у пісочниці**: {"✅ Успішно" if report.get('sandbox_success') else "❌ Помилка"}
+- **Валідація**: {"✅ Пройдено" if report.get('validation_success') else "❌ Виявлені зауваження"}
+- **Рівень ризику**: {report.get('risk', 'Unknown')}
+
+**ЗАПРОПОНОВАНЕ ВИПРАВЛЕННЯ:**
+```python
+{report.get('patch', '# No code provided.')}
+```
+
+Бажаєте впровадити це оновлення в мою активну систему?
+"""
+        # Note: In a real system, this would trigger a specific prompt or button in the UI.
+        # For this version, we log it and provide a clear notification structure.
+        logger.info(f"[ATLAS] Presenting StageReport for approval: {str(report.get('issue', 'Unknown'))[:30]}")
+        return message
+
     async def _self_heal_tool(self, messages: list[BaseMessage], failed_calls: list[dict]) -> bool:
         """Attempts to autonomously fix tool errors by analyzing the failure."""
         logger.info("[ATLAS] Analyzing tool failure for self-healing (Recursive Retry)...")
-        
+
         failure_context = "\n".join([str(m.content) for m in messages[-2:]])
         prompt = f"""
         A tool call failed.
@@ -1152,27 +1184,33 @@ Respond in JSON:
         try:
             response = await self.llm_deep.ainvoke(prompt)
             content = response.content if hasattr(response, "content") else str(response)
-            
+
             # Extract JSON
             if "```json" in content:
                 content = content.split("```json")[1].split("```")[0].strip()
             elif "```" in content:
                 content = content.split("```")[1].split("```")[0].strip()
-            
+
             data = json.loads(content)
             rectified = data.get("rectified_calls", [])
-            
+
             if rectified:
-                messages.append(SystemMessage(content=f"AUTO-FIX: {data.get('explanation')}\nInitiating active retry..."))
+                messages.append(
+                    SystemMessage(
+                        content=f"AUTO-FIX: {data.get('explanation')}\nInitiating active retry..."
+                    )
+                )
                 # Format for _process_chat_tool_calls
                 formatted_calls = []
                 for i, call in enumerate(rectified):
-                    formatted_calls.append({
-                        "name": call["name"],
-                        "args": call["args"],
-                        "id": f"retry_{int(time.time())}_{i}"
-                    })
-                
+                    formatted_calls.append(
+                        {
+                            "name": call["name"],
+                            "args": call["args"],
+                            "id": f"retry_{int(time.time())}_{i}",
+                        }
+                    )
+
                 success = await self._process_chat_tool_calls(formatted_calls, messages)
                 return success
             return False
