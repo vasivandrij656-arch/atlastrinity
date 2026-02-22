@@ -132,3 +132,25 @@ class ParquetParser:
             return ParseResult(True, data=df)
         except Exception as e:
             return ParseResult(False, error=f"Parquet parse error: {e}")
+
+
+class HTMLParser:
+    """Parser for HTML tables using pandas.read_html."""
+
+    def parse(self, file_path: Path, **kwargs) -> ParseResult:
+        try:
+            # read_html returns a list of DataFrames
+            dfs = pd.read_html(str(file_path), **kwargs)
+            if not dfs:
+                return ParseResult(False, error="No tables found in HTML")
+
+            # Combine all tables if multiple, or just take the largest one
+            if len(dfs) > 1:
+                # Heuristic: largest table is likely the data
+                df = max(dfs, key=len)
+            else:
+                df = dfs[0]
+
+            return ParseResult(True, data=df)
+        except Exception as e:
+            return ParseResult(False, error=f"HTML table parse error: {e}")

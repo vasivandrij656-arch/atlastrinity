@@ -8,6 +8,7 @@ from pathlib import Path
 from .formats import (
     CSVParser,
     ExcelParser,
+    HTMLParser,
     JSONParser,
     ParquetParser,
     ParseResult,
@@ -18,7 +19,7 @@ from .formats import (
 class DataParser:
     def __init__(self) -> None:
         self._parsers: dict[
-            str, JSONParser | CSVParser | XMLParser | ExcelParser | ParquetParser
+            str, JSONParser | CSVParser | XMLParser | ExcelParser | ParquetParser | HTMLParser
         ] = {
             "json": JSONParser(),
             "csv": CSVParser(),
@@ -26,6 +27,8 @@ class DataParser:
             "xlsx": ExcelParser(),
             "xls": ExcelParser(),
             "parquet": ParquetParser(),
+            "html": HTMLParser(),
+            "htm": HTMLParser(),
         }
 
     def parse(self, file_path: str | Path, format_hint: str | None = None) -> ParseResult:
