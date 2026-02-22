@@ -1111,9 +1111,16 @@ Respond in JSON:
                 raw_thoughts = [m.content for m in final_messages if isinstance(m, SystemMessage | HumanMessage)][-5:]
                 # Convert potential list content to string
                 cleaned_thoughts = [str(t) for t in raw_thoughts]
-                correction = await meta_observer.observe_reasoning(cleaned_thoughts, str(system_prompt or ""))
+                correction = await meta_observer.observe_reasoning(cleaned_thoughts, str(system_prompt or ""), target_agent="Atlas")
                 if correction:
                     final_messages.append(SystemMessage(content=f"META-CORRECTION: {correction}"))
+
+            # Phase 4: Dynamic Resource Management (Complexity Escalation)
+            if current_turn >= 2 and llm_instance != self.llm_deep:
+                logger.info("[ATLAS] Reasoning complexity increasing. Escalating to deep LLM tier.")
+                llm_instance = self.llm_deep
+                if available_tools_info:
+                    llm_instance = llm_instance.bind_tools(available_tools_info)
 
             current_turn += 1
 
@@ -1121,7 +1128,7 @@ Respond in JSON:
 
     async def _self_heal_tool(self, messages: list[BaseMessage], failed_calls: list[dict]) -> bool:
         """Attempts to autonomously fix tool errors by analyzing the failure."""
-        logger.info("[ATLAS] Analyzing tool failure for self-healing...")
+        logger.info("[ATLAS] Analyzing tool failure for self-healing (Recursive Retry)...")
         
         failure_context = "\n".join([str(m.content) for m in messages[-2:]])
         prompt = f"""
@@ -1131,17 +1138,44 @@ Respond in JSON:
         
         TASK:
         1. Identify the likely cause (e.g. wrong path, missing argument).
-        2. Propose a RECTIFIED tool call.
+        2. Propose a RECTIFIED tool call that replaces the failed one.
         3. Explain the fix briefly.
         
-        Respond in JSON with 'rectified_calls' and 'explanation'.
+        Respond in JSON format:
+        {{
+            "rectified_calls": [
+                {{"name": "tool_name", "args": {{...}}}}
+            ],
+            "explanation": "..."
+        }}
         """
         try:
             response = await self.llm_deep.ainvoke(prompt)
-            # Simplification: In a full implementation, we'd execute the rectified call here
-            # For this phase, we log the healing attempt and append the advice
-            messages.append(SystemMessage(content=f"SELF-HEAL ADVICE: {response.content}"))
-            return True
+            content = response.content if hasattr(response, "content") else str(response)
+            
+            # Extract JSON
+            if "```json" in content:
+                content = content.split("```json")[1].split("```")[0].strip()
+            elif "```" in content:
+                content = content.split("```")[1].split("```")[0].strip()
+            
+            data = json.loads(content)
+            rectified = data.get("rectified_calls", [])
+            
+            if rectified:
+                messages.append(SystemMessage(content=f"AUTO-FIX: {data.get('explanation')}\nInitiating active retry..."))
+                # Format for _process_chat_tool_calls
+                formatted_calls = []
+                for i, call in enumerate(rectified):
+                    formatted_calls.append({
+                        "name": call["name"],
+                        "args": call["args"],
+                        "id": f"retry_{int(time.time())}_{i}"
+                    })
+                
+                success = await self._process_chat_tool_calls(formatted_calls, messages)
+                return success
+            return False
         except Exception as e:
             logger.error(f"[ATLAS] Self-healing failed: {e}")
             return False

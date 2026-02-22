@@ -6,6 +6,7 @@ Analyzes cognitive patterns and optimizes the system during idle periods.
 import asyncio
 import json
 import logging
+import time
 from typing import Optional
 
 from src.brain.agents import Atlas
@@ -122,8 +123,37 @@ class EvolutionEngine:
     async def _perform_deep_dive(self, context: str):
         """AKI: Autonomous Knowledge Ingestion."""
         logger.info("[EVOLUTION] Performing AKI Deep Dive...")
-        # Placeholder for complex tool-driven research (e.g. searching docs, analyzing new repos)
-        # This will be fully implemented as specific research tasks are identified.
+        
+        # 1. Identify research topic from context
+        topic_prompt = f"""
+        Given the following evolutionary context: {context}
+        Identify one specific technical topic or library that ATLAS should research to improve its autonomy or technical depth.
+        Respond with ONLY the topic name.
+        """
+        try:
+            topic_response = await self.optimizer.llm.ainvoke(topic_prompt)
+            topic = topic_response.content.strip() if hasattr(topic_response, "content") else str(topic_response)
+            
+            if not topic or "none" in topic.lower():
+                return
+
+            logger.info(f"[EVOLUTION] AKI: Researching '{topic}'...")
+            
+            # 2. Use the optimizer's chat capability (augmented with tools) to research
+            research_query = f"Research the documentation and modern usage of '{topic}'. Summarize key principles for my NeuralCore memory."
+            summary = await self.optimizer.chat(research_query, intent="solo_task")
+            
+            # 3. Ingest knowledge into the CognitiveGraph
+            await cognitive_graph.add_node(
+                f"knowledge_{int(time.time())}",
+                "knowledge",
+                f"Knowledge: {topic}",
+                {"text": summary, "topic": topic, "ingested_at": kyiv_chronicle.get_iso_now()}
+            )
+            logger.info(f"[EVOLUTION] AKI: Successfully ingested knowledge about {topic}.")
+            
+        except Exception as e:
+            logger.error(f"[EVOLUTION] AKI Deep Dive failed: {e}")
 
     async def propose_dynamic_protocol(self, insight: str):
         """Generates proposals for new or updated MCP tool schemas."""

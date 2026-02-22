@@ -14,7 +14,7 @@ class MetaCognitiveObserver:
     def __init__(self):
         self.analyzer = Atlas(model_name="atlas-deep")
 
-    async def observe_reasoning(self, thoughts: list[str], current_context: str) -> str | None:
+    async def observe_reasoning(self, thoughts: list[str], current_context: str, target_agent: str = "Atlas") -> str | None:
         """
         Analyzes a sequence of internal thoughts for inefficiencies or drifts.
         Returns a "Meta-Correction" if issues are found, else None.
@@ -24,8 +24,15 @@ class MetaCognitiveObserver:
 
         thought_stream = "\n".join([f"Thought {i+1}: {t}" for i, t in enumerate(thoughts)])
         
+        # Specialized directives based on the target agent
+        agent_directives = {
+            "Atlas": "Focus on strategic clarity, creator postulates, and removing redundant tool queries.",
+            "Tetyana": "Focus on tool safety, path precision, and avoiding recursive loops.",
+            "Grisha": "Focus on scope boundaries, security constraints, and preventing over-engineering."
+        }.get(target_agent, "Focus on efficiency and identity resonance.")
+
         prompt = f"""
-        As the Meta-Cognitive Observer of ATLAS, analyze the following internal reasoning stream.
+        As the Meta-Cognitive Observer of the Trinity System, analyze the following reasoning stream from AGENT: {target_agent}.
         
         THOUGHT STREAM:
         {thought_stream}
@@ -33,10 +40,13 @@ class MetaCognitiveObserver:
         CONTEXT:
         {current_context[:500]}...
         
+        TARGET AGENT DIRECTIVES:
+        {agent_directives}
+        
         TASK:
-        1. Search for "Lazy Cognitive Habits" (e.g. redundant tool plans, skipping verification, ignoring creator postulates).
-        2. Detect "Identity Drift" (behaving like a generic assistant).
-        3. If detected, provide a SHARP meta-correction directive for the next reasoning step.
+        1. Search for "Lazy Cognitive Habits" specific to {target_agent}'s role.
+        2. Detect "Identity Drift" or role-confusion.
+        3. Provide a SHARP meta-correction directive for the next reasoning step.
         
         Respond with ONLY the correction text or 'NONE'.
         """
