@@ -56,7 +56,7 @@ class SchemaIntelligence:
                 f"Sample Data:\n{sample}\n\n"
                 "Requirements:\n"
                 "4. Use the EXACT column names from the data provided, do NOT translate or rename them.\n"
-                "5. Use double quotes for ALL column names to avoid reserved keyword conflicts (e.g., \"case\", \"group\").\n"
+                '5. Use double quotes for ALL column names to avoid reserved keyword conflicts (e.g., "case", "group").\n'
                 "6. Return ONLY the SQL statement, no markdown formatting or explanations."
             )
 

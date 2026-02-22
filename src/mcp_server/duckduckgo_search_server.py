@@ -64,7 +64,7 @@ def _execute_protocol_search(rule_name: str, query_val: str, provider_name: str)
             primary_years = horizon.get("primary_range", [2024, 2026])
             deep_years = horizon.get("deep_range", [2020, 2023])
             
-            logger.info(f"Insufficient results for primary query. Initiating tiered deepening.")
+            logger.info("Insufficient results for primary query. Initiating tiered deepening.")
             
             # Deepen to primary range first (if not already covered)
             for year in range(primary_years[1], primary_years[0] - 1, -1):

@@ -77,6 +77,9 @@ class SQLStorage:
                 existing_schema = cursor.fetchone()
 
                 if existing_schema and if_exists == "append":
+                    # Add traceability metadata to the rows before evolution/append
+                    df["_gf_ingestion_id"] = dataset_name
+
                     # Smart Evolution
                     if schema_intel:
                         alter_stmts = schema_intel.evolve_schema(df, table_name, existing_schema[0])
@@ -95,6 +98,9 @@ class SQLStorage:
                 elif not existing_schema or if_exists == "replace":
                     # Smart Creation
                     created_smart = False
+                    # Add traceability metadata to the rows before generation
+                    df["_gf_ingestion_id"] = dataset_name
+
                     if schema_intel:
                         create_stmt = schema_intel.generate_schema(
                             df, table_name, context=f"Dataset: {dataset_name}"
@@ -106,9 +112,6 @@ class SQLStorage:
                             conn.execute(create_stmt)
                             created_smart = True
 
-                            # Add traceability metadata to the rows
-                            df["_gf_ingestion_id"] = dataset_name
-                            
                             # Append data to the smart table
                             df.to_sql(table_name, conn, if_exists="append", index=False)
 
@@ -116,8 +119,6 @@ class SQLStorage:
                             self._persist_schema_to_file(table_name, conn)
 
                     if not created_smart:
-                        # Add traceability metadata to the rows
-                        df["_gf_ingestion_id"] = dataset_name
                         # Fallback to pandas default
                         df.to_sql(table_name, conn, if_exists=if_exists, index=False)
 

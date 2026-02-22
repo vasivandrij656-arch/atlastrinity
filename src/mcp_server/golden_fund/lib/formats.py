@@ -54,15 +54,17 @@ class CSVParser:
 
                 # If only 1 column, maybe wrong separator?
                 if len(df.columns) == 1 and sep == ",":
-                    # Try semicolon
-                    try:
-                        df_semi = pd.read_csv(
-                            file_path, encoding=encoding, on_bad_lines="skip", sep=";"
-                        )
-                        if len(df_semi.columns) > 1:
-                            df = df_semi
-                    except:
-                        pass
+                    # Try semicolon and tab
+                    for alternative_sep in [";", "\t"]:
+                        try:
+                            df_alt = pd.read_csv(
+                                file_path, encoding=encoding, on_bad_lines="skip", sep=alternative_sep
+                            )
+                            if len(df_alt.columns) > 1:
+                                df = df_alt
+                                break
+                        except:
+                            pass
 
                 return ParseResult(True, data=df)
             except UnicodeDecodeError:
