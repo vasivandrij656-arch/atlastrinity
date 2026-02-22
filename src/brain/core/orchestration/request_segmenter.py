@@ -177,23 +177,14 @@ class RequestSegmenter:
                         f"[SEGMENTER] LLM Segment {i + 1}: mode={seg.mode}, text='{seg.text[:50]}...'"
                     )
                 return self._sort_and_merge_segments(segments)
-            logger.error("[SEGMENTER] LLM segmentation returned EMPTY segments - this is the BUG!")
-            logger.error(f"[SEGMENTER] Request was: '{user_request[:200]}...'")
-            # Force create segments for questions
-            return self._create_question_segments(user_request)
+            logger.warning("[SEGMENTER] LLM segmentation returned EMPTY segments")
         except Exception as e:
             logger.warning(f"[SEGMENTER] LLM segmentation failed: {e}")
 
-        # Fallback to keyword-based segmentation
-        logger.info("[SEGMENTER] Falling back to keyword-based segmentation")
+        # Fallback to manual question-based segmentation
+        logger.info("[SEGMENTER] Falling back to manual question-based segmentation")
         self._fallback_count += 1
-        segments = self._keyword_segmentation(user_request)
-        logger.info(f"[SEGMENTER] Keyword fallback: {len(segments)} segments")
-        for i, seg in enumerate(segments):
-            logger.info(
-                f"[SEGMENTER] Keyword Segment {i + 1}: mode={seg.mode}, text='{seg.text[:50]}...'"
-            )
-        return self._sort_and_merge_segments(segments)
+        return self._create_question_segments(user_request)
 
     async def _llm_segmentation(
         self,
@@ -343,21 +334,21 @@ CRITICAL PRIORITY RULES:
 - Simple conversation → chat mode (PRIORITY 2)
 
 SEGMENTATION PRINCIPLES:
-1. Analyze semantic intent, not just keywords
-2. Preserve conversational flow and context
-3. Each segment should have one clear, primary intent
-4. Maintain original order from user request
-5. Consider context and conversation history
-6. Minimum 3 words per segment (except chat mode)
-7. Maximum 5 segments per request (focus on most important splits)
+1. Analyze semantic intent, not just keywords.
+2. CONTEXTUAL CONTINUITY: Understand that multiple questions or tasks may be part of a single flow. Even if separated by commas or numbering, they might share context or refer to each other.
+3. Each segment should have one clear, primary intent, but MUST retain the necessary context from surrounding segments.
+4. Maintain original order from user request.
+5. Consider context and conversation history.
+6. Minimum 3 words per segment (except chat mode).
+7. Maximum 5 segments per request (focus on most important splits).
 
-SPECIAL HANDLING FOR QUESTIONS:
+SPECIAL HANDLING FOR QUESTIONS & COMMAS:
+- Comma-separated or numbered questions (1., 2., 3.) are often separate segments but share the same user intent flow.
 - Questions about identity, creation, mission, consciousness → deep_chat mode (PRIORITY 1)
   (EVEN IF LONG OR COMPLEX, THESE ARE ALWAYS DEEP_CHAT)
 - Technical tasks with tools → task mode (PRIORITY 4)
-- Multiple questions should be separate segments
-- Numbered questions (1., 2., 3.) are ALWAYS separate segments
-- DEEP_CHAT questions must be processed FIRST before any task segments
+- Multiple questions should be separate segments, but if they are intrinsically linked (e.g., "Tell me about X and then do Y"), ensure the "do Y" segment understands that "X" is the context.
+- DEEP_CHAT questions must be processed FIRST before any task segments.
 
 CONTEXTUAL ANALYSIS:
 - Consider conversation history for context

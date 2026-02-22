@@ -38,6 +38,11 @@ from src.brain.prompts.atlas_chat import (
 )
 from src.providers.factory import create_llm
 
+try:
+    from src.brain.neural_core.memory.graph import cognitive_graph
+except ImportError:
+    cognitive_graph = None
+
 
 @dataclass
 class TaskPlan:
@@ -457,6 +462,24 @@ Respond in JSON:
                 pass
             return v_ctx
 
+        async def get_neural_lessons():
+            """Fetch recent lessons from NeuralCore."""
+            if not cognitive_graph:
+                return ""
+            try:
+                # Initialize graph if needed (usually handled at system start, but safe here)
+                await cognitive_graph.initialize()
+                lessons = await cognitive_graph.search_nodes(node_type="lesson", limit=3)
+                if lessons:
+                    lines = ["\nRecent Neural Lessons (Self-Reflection):"]
+                    for l in lessons:
+                        text = l.get("properties", {}).get("text", "No text")
+                        lines.append(f"- {text}")
+                    return "\n".join(lines)
+            except Exception as e:
+                logger.warning(f"[ATLAS] NeuralCore lesson retrieval failed: {e}")
+            return ""
+
         async def get_tools():
             import time
 
@@ -571,9 +594,16 @@ Respond in JSON:
         results = await asyncio.gather(
             get_graph(),
             get_vector(),
+            get_neural_lessons(),
             get_tools(),
         )
-        return cast("tuple[str, str, list[dict[str, Any]]]", tuple(results))
+
+        g_ctx, v_ctx, n_ctx, tools = results
+        # Merge NeuralCore lessons into Graph context
+        if n_ctx:
+            g_ctx = (g_ctx + "\n" + n_ctx).strip()
+
+        return g_ctx, v_ctx, tools
 
     async def _get_solo_tools(
         self, mode_profile: ModeProfile | None = None
