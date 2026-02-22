@@ -51,9 +51,11 @@ class NeuralCore:
         """Absolute Europe/Kyiv time."""
         return self.chronicle.get_iso_now()
 
-    async def evolve(self, direction: Optional[str] = None):
+    async def evolve(self, direction: str | None = None):
         """Triggers a manual evolution cycle with an optional direction."""
-        logger.info(f"[NEURAL CORE] Manual evolution triggered. Direction: {direction or 'General improvement'}")
+        logger.info(
+            f"[NEURAL CORE] Manual evolution triggered. Direction: {direction or 'General improvement'}"
+        )
         await self.evolution.run_optimization_cycle(direction=direction)
 
 
