@@ -1,6 +1,6 @@
 
-<!-- AUTO-UPDATED: 2026-02-23T01:47:53.964051 -->
-<!-- Modified: .agent/docs/mcp_architecture_diagram.md, src/brain/data/architecture_diagrams/mcp_architecture.md, src/brain/neural_core/evolution/prompt_tuner.py -->
+<!-- AUTO-UPDATED: 2026-02-23T01:48:57.061623 -->
+<!-- Modified: .agent/docs/mcp_architecture_diagram.md, src/brain/agents/atlas.py, src/brain/data/architecture_diagrams/mcp_architecture.md -->
 
 # Architecture Diagram - atlastrinity
 
