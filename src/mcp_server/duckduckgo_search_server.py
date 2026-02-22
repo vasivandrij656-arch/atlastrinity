@@ -98,12 +98,42 @@ def _execute_protocol_search(rule_name: str, query_val: str, provider_name: str)
             else:
                 others.append(r)
 
+        # Semantic Echo (The Living Note)
+        seeds = set()
+        curiosity_config = config.get("organic_curiosity", {})
+        anchors = curiosity_config.get("semantic_anchors", [])
+        
+        # Simple regex-based anchor detection in snippets
+        for r in prioritized + others:
+            text = f"{r['title']} {r.get('snippet', '')}"
+            # Let's detect some common Ukrainian patterns if not explicitly in anchors
+            # ЄДРПОУ (8 digits)
+            edrpou_match = re.search(r"\b\d{8}\b", text)
+            if edrpou_match:
+                seeds.add(f"ЄДРПОУ: {edrpou_match.group(0)}")
+            
+            # Court Case No (e.g. 757/12345/21-ц)
+            case_match = re.search(r"\b\d{3}/\d+/\d+[-а-яієґ]*\b", text)
+            if case_match:
+                seeds.add(f"No справи: {case_match.group(0)}")
+                
+            # Generic anchors from config
+            for anchor in anchors:
+                if anchor in text and anchor not in query_val:
+                    # Try to extract the value after the anchor
+                    pattern = re.escape(anchor) + r"[:\s]*([^\s,;)]+)"
+                    val_match = re.search(pattern, text)
+                    if val_match:
+                        seeds.add(f"{anchor}: {val_match.group(1)}")
+
         return {
             "success": True,
             "query": expanded_query,
             "results": prioritized + others,
             "provider": provider_name,
             "temporal_horizon": horizon,
+            "semantic_echoes": sorted(list(seeds)) if seeds else [],
+            "curiosity_note": curiosity_config.get("behavior_note", "")
         }
     except Exception as e:
         return {"error": str(e)}

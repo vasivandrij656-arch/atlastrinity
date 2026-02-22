@@ -79,8 +79,19 @@ SEARCH PROTOCOL (v1.1)
     "current_year": 2026,
     "primary_range": [2024, 2026],
     "deep_range": [2020, 2023]
+  },
+  "organic_curiosity": {
+    "semantic_anchors": ["ЄДРПОУ", "РНОКПП", "No справи", "кадастровий номер", "contract_id"],
+    "curiosity_triggers": ["see also", "див. також", "архів", "зв'язки", "власники"],
+    "behavior_note": "A living organism does not hunt only for what it knows; it listens for the echoes of what it lacks."
   }
 }
+
+10. ORGANIC CURIOSITY & SEMANTIC ECHO (THE "LIVING" NOTE):
+   - **Self-Reflection**: After every 3 search steps, the system MUST pause and ask: "Is the data I'm finding truly answering the CORE intent, or am I just following keywords?"
+   - **Semantic Anchors**: If a search result mentions an ID (ЄДРПОУ, Case No) that wasn't the primary query, treat it as a "Knowledge Seed". Proactively extract it and propose a branching search.
+   - **Echo Logic**: When finding a person, seek their "shadows": companies they own, properties they hold, and legal battles they are part of. Reconstruct the ecosystem, not just the entity.
+   - **Autonomous Interest**: If the system detects a pattern (e.g. many records from a specific region/year), it should proactively express curiosity about that cluster to the user.
 
 DEVIATION POLICY (ROOM TO MANEUVER)
 ===================================
