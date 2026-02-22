@@ -16,7 +16,7 @@ description: GitHub repository operations using GITHUB_TOKEN from .env
 // turbo
 
 ```zsh
-export GITHUB_TOKEN=$(grep GITHUB_TOKEN .env | cut -d'=' -f2 | tr -d '\r\n') && \
+export GITHUB_TOKEN=$(grep '^GITHUB_TOKEN=' .env | cut -d'=' -f2 | tr -d '\r\n' | tr -d " '\"") && \
 git remote set-url origin https://$GITHUB_TOKEN@github.com/solagurma/atlastrinity.git && \
 echo "✅ Git remote configured with GITHUB_TOKEN from .env"
 ```
@@ -117,7 +117,7 @@ env:
 
 ```zsh
 # 1. Налаштувати remote (якщо ще не зроблено)
-export GITHUB_TOKEN=$(grep GITHUB_TOKEN .env | cut -d'=' -f2 | tr -d '\r\n') && \
+export GITHUB_TOKEN=$(grep '^GITHUB_TOKEN=' .env | cut -d'=' -f2 | tr -d '\r\n' | tr -d " '\"") && \
 git remote set-url origin https://$GITHUB_TOKEN@github.com/solagurma/atlastrinity.git
 
 # 2. Перевірити якість коду
@@ -158,7 +158,7 @@ git push origin main
 **Рішення**:
 
 ```zsh
-export GITHUB_TOKEN=$(grep GITHUB_TOKEN .env | cut -d'=' -f2 | tr -d '\r\n') && \
+export GITHUB_TOKEN=$(grep '^GITHUB_TOKEN=' .env | cut -d'=' -f2 | tr -d '\r\n' | tr -d " '\"") && \
 git remote set-url origin https://$GITHUB_TOKEN@github.com/solagurma/atlastrinity.git
 ```
 
@@ -198,7 +198,7 @@ git checkout -- файл.txt
 git remote -v
 
 # Оновити токен у remote URL
-export GITHUB_TOKEN=$(grep GITHUB_TOKEN .env | cut -d'=' -f2 | tr -d '\r\n') && \
+export GITHUB_TOKEN=$(grep '^GITHUB_TOKEN=' .env | cut -d'=' -f2 | tr -d '\r\n' | tr -d " '\"") && \
 git remote set-url origin https://$GITHUB_TOKEN@github.com/solagurma/atlastrinity.git
 ```
 
