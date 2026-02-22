@@ -599,11 +599,41 @@ Respond in JSON:
         )
 
         g_ctx, v_ctx, n_ctx, tools = results
-        # Merge NeuralCore lessons into Graph context
+        # Detect Cognitive Dissonance
+        dissonance = await self._detect_cognitive_dissonance(resolved_query, n_ctx)
+        
+        # Merge NeuralCore lessons and dissonance into Graph context
         if n_ctx:
             g_ctx = (g_ctx + "\n" + n_ctx).strip()
+        if dissonance:
+            g_ctx = (dissonance + "\n" + g_ctx).strip()
 
         return g_ctx, v_ctx, tools
+
+    async def _detect_cognitive_dissonance(self, user_request: str, lessons_text: str) -> str:
+        """Detects if the user request conflicts with recent neural lessons."""
+        if not lessons_text:
+            return ""
+
+        prompt = f"""
+        Analyze the USER REQUEST against the RECENT NEURAL LESSONS.
+        Does the request conflict with any established principles or lessons? 
+        If yes, provide a brief 'Neural Insight' warning describing the conflict.
+        
+        USER REQUEST: {user_request}
+        RECENT NEURAL LESSONS: {lessons_text}
+        
+        Respond with ONLY the warning text or 'None'.
+        """
+        try:
+            # Use current model for resonance check
+            response = await self.llm.ainvoke(prompt)
+            content = response.content if hasattr(response, "content") else str(response)
+            if "none" in content.lower() and len(content) < 10:
+                return ""
+            return f"⚠️ COGNITIVE DISSONANCE DETECTED: {content.strip()}"
+        except Exception:
+            return ""
 
     async def _get_solo_tools(
         self, mode_profile: ModeProfile | None = None

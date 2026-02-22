@@ -80,15 +80,18 @@ class CognitiveGraph:
     async def search_nodes(
         self, node_type: str | None = None, limit: int = 10
     ) -> list[dict[str, Any]]:
-        """Searches for nodes by type."""
+        """Searches for nodes by type, ordered by most recent."""
         async with aiosqlite.connect(self.db_path) as db:
             db.row_factory = aiosqlite.Row
             if node_type:
                 cursor = await db.execute(
-                    "SELECT * FROM nodes WHERE type = ? LIMIT ?", (node_type, limit)
+                    "SELECT * FROM nodes WHERE type = ? ORDER BY kyiv_timestamp DESC LIMIT ?",
+                    (node_type, limit),
                 )
             else:
-                cursor = await db.execute("SELECT * FROM nodes LIMIT ?", (limit,))
+                cursor = await db.execute(
+                    "SELECT * FROM nodes ORDER BY kyiv_timestamp DESC LIMIT ?", (limit,)
+                )
             rows = await cursor.fetchall()
             results = []
             for row in rows:
@@ -96,6 +99,10 @@ class CognitiveGraph:
                 node["properties"] = json.loads(node["properties"])
                 results.append(node)
             return results
+
+    async def get_recent_lessons(self, limit: int = 5) -> list[dict[str, Any]]:
+        """Fast retrieval of recent neural lessons for agent context."""
+        return await self.search_nodes(node_type="lesson", limit=limit)
 
     async def add_edge(
         self,
