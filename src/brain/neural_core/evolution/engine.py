@@ -19,24 +19,30 @@ class EvolutionEngine:
         self.optimizer = Atlas(model_name="atlas-deep")
         self._running = False
 
-    async def run_optimization_cycle(self, direction: Optional[str] = None):
+    async def run_optimization_cycle(self, direction: str | None = None):
         """
         Runs a comprehensive optimization cycle.
         1. Syncs absolute time (Kyiv).
         2. Analyzes recent cognitive patterns or follows a specific direction.
         3. Proposes evolutionary patches.
         """
-        logger.info(f"[EVOLUTION] Starting growth cycle (Direction: {direction or 'Autonomous'})...")
+        logger.info(
+            f"[EVOLUTION] Starting growth cycle (Direction: {direction or 'Autonomous'})..."
+        )
 
         # 1. Aura of Presence (Time Sync)
         await kyiv_chronicle.sync_time()
 
         # 2. Pattern Analysis
         try:
-            target_focus = f"Focus on: {direction}" if direction else """Focus on:
+            target_focus = (
+                f"Focus on: {direction}"
+                if direction
+                else """Focus on:
             - Reducing "Cognitive Friction" (redundant tool calls).
             - Strengthening the "Entropy Manifesto" adherence.
             - Improving response latency for the Creator (Oleg Mykolayovych)."""
+            )
 
             prompt = f"""
             Analyze current cognitive state:
@@ -53,13 +59,13 @@ class EvolutionEngine:
             insight = response.content if hasattr(response, "content") else str(response)
 
             logger.info(f"[EVOLUTION] Cognitive Insight Generated: {insight[:100]}...")
-            
+
             # Record insight in graph
             await cognitive_graph.add_node(
                 f"insight_{kyiv_chronicle.get_iso_now()}",
                 "insight",
                 "Evolutionary Insight",
-                {"text": insight, "direction": direction or "autonomous"}
+                {"text": insight, "direction": direction or "autonomous"},
             )
 
         except Exception as e:
