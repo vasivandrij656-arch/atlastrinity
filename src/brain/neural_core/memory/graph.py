@@ -67,7 +67,7 @@ class CognitiveGraph:
             )
             await db.commit()
 
-    async def get_node(self, node_id: str) -> Optional[dict[str, Any]]:
+    async def get_node(self, node_id: str) -> dict[str, Any] | None:
         """Retrieves a node by its ID."""
         async with aiosqlite.connect(self.db_path) as db:
             db.row_factory = aiosqlite.Row
@@ -79,12 +79,16 @@ class CognitiveGraph:
                 return node
         return None
 
-    async def search_nodes(self, node_type: Optional[str] = None, limit: int = 10) -> list[dict[str, Any]]:
+    async def search_nodes(
+        self, node_type: str | None = None, limit: int = 10
+    ) -> list[dict[str, Any]]:
         """Searches for nodes by type."""
         async with aiosqlite.connect(self.db_path) as db:
             db.row_factory = aiosqlite.Row
             if node_type:
-                cursor = await db.execute("SELECT * FROM nodes WHERE type = ? LIMIT ?", (node_type, limit))
+                cursor = await db.execute(
+                    "SELECT * FROM nodes WHERE type = ? LIMIT ?", (node_type, limit)
+                )
             else:
                 cursor = await db.execute("SELECT * FROM nodes LIMIT ?", (limit,))
             rows = await cursor.fetchall()
