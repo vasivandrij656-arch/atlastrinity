@@ -63,7 +63,7 @@ class ConsolidationModule:
                 atlas = Atlas(model_name=consolidation_model)
                 llm = atlas.llm
 
-            # Extract Lessons from failures
+            # 2. LLM Analysis for Failures
             lessons_added = 0
             for task in [t for t in tasks_data if t["status"] == "FAILED"]:
                 lesson = await self._distill_lesson_via_llm(llm, task)
@@ -75,10 +75,20 @@ class ConsolidationModule:
                 ):
                     lessons_added += 1
 
-            # 3. Consolidate successes into Best Practices
-            # (Simplification: just register them if golden_path is true,
-            # we've already done this in orchestrator, so here we might group them)
-            # For now, let's just log stats
+            # 3. SUCCESS SYNTHESIS (HOCE Upgrade)
+            strategies_added = 0
+            successful_tasks = [t for t in tasks_data if t["status"] == "COMPLETED"]
+            if len(successful_tasks) >= 3:
+                # Group by similar goals to find patterns
+                new_strategies = await self._synthesize_strategies_via_llm(llm, successful_tasks)
+                for strategy in new_strategies:
+                    if long_term_memory.remember_strategy(
+                        task=strategy["goal_pattern"],
+                        plan_steps=strategy["steps"],
+                        outcome=strategy["impact"],
+                        success=True,
+                    ):
+                        strategies_added += 1
 
             self.last_consolidation = datetime.now(UTC)
 
@@ -86,11 +96,12 @@ class ConsolidationModule:
                 "timestamp": self.last_consolidation.isoformat(),
                 "tasks_processed": len(tasks_data),
                 "lessons_added": lessons_added,
+                "strategies_synthesized": strategies_added,
                 "memory_stats": long_term_memory.get_stats(),
             }
 
             logger.info(
-                f"[CONSOLIDATION] Complete: {lessons_added} new lessons derived from failures.",
+                f"[CONSOLIDATION] Complete: {lessons_added} lessons, {strategies_added} strategies synthesized.",
             )
             return stats
 
@@ -135,6 +146,50 @@ class ConsolidationModule:
                     },
                 )
         return results
+
+    async def _synthesize_strategies_via_llm(
+        self,
+        llm,
+        successful_tasks: list[dict[str, Any]],
+    ) -> list[dict[str, Any]]:
+        """Uses LLM to find common patterns in successful tasks and create reusable strategies."""
+        import json
+
+        from langchain_core.messages import HumanMessage, SystemMessage
+
+        task_summaries = "\n".join(
+            [f"- {t['goal']}: {len(t['steps'])} steps taken" for t in successful_tasks]
+        )
+
+        prompt = f"""Review these successful tasks and identify 1-2 'High-Level Strategies' (sequences of actions) that can be generalized.
+        
+        SUCCESSFUL TASKS:
+        {task_summaries}
+
+        Respond in JSON (a list of objects):
+        [
+            {{
+                "goal_pattern": "Generalized description of the task type (English)",
+                "steps": ["Step 1 description", "Step 2 description"],
+                "impact": "Why this sequence is efficient (English)"
+            }}
+        ]
+        """
+
+        try:
+            response = await llm.ainvoke(
+                [
+                    SystemMessage(content="You are a Strategy Synthesis Expert for ATLAS."),
+                    HumanMessage(content=prompt),
+                ],
+            )
+            content = response.content if hasattr(response, "content") else str(response)
+            start = content.find("[")
+            end = content.rfind("]") + 1
+            return cast("list[dict[str, Any]]", json.loads(content[start:end]))
+        except Exception as e:
+            logger.warning(f"Strategy synthesis failed: {e}")
+            return []
 
     async def _distill_lesson_via_llm(
         self,

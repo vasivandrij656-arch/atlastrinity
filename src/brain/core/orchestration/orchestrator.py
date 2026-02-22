@@ -75,6 +75,7 @@ class SystemState(Enum):
     COMPLETED = "COMPLETED"
     ERROR = "ERROR"
     CHAT = "CHAT"
+    AUDITING = "AUDITING"
 
 
 class TrinityState(TypedDict):
@@ -239,7 +240,15 @@ class Trinity(TourMixin, VoiceOrchestrationMixin):
                 else:
                     logger.warning("[ORCHESTRATOR] STT model unavailable.")
 
-                # 2. Warm up TTS
+                # 2. Anticipatory Patching (HOCE Upgrade)
+                try:
+                    from src.brain.healing.system_healing import healing_orchestrator
+
+                    await healing_orchestrator.anticipatory_patching()
+                except Exception as he:
+                    logger.warning(f"[ORCHESTRATOR] Anticipatory patching failed: {he}")
+
+                # 3. Warm up memory
                 logger.info("[ORCHESTRATOR] Initializing TTS engine...")
                 await self.voice.get_engine()
                 logger.info("[ORCHESTRATOR] Voice engines ready.")
@@ -411,6 +420,7 @@ class Trinity(TourMixin, VoiceOrchestrationMixin):
             "planner": self.planner_node,
             "executor": self.executor_node,
             "verifier": self.verifier_node,
+            "audit": self.audit_node,
         }
 
         # 1. Define nodes
@@ -3504,6 +3514,50 @@ class Trinity(TourMixin, VoiceOrchestrationMixin):
 
     async def verifier_node(self, state: TrinityState) -> dict[str, Any]:
         return {"system_state": SystemState.VERIFYING.value}
+
+    async def audit_node(self, state: TrinityState) -> dict[str, Any]:
+        """HOCE: Internal Audit node to ensure plan quality and entropy."""
+        logger.info("[HOCE AUDIT] Performing consciousness audit of the current plan...")
+
+        plan = state.get("current_plan")
+        if not plan:
+            return {"system_state": SystemState.AUDITING.value}
+
+        # Use Atlas for self-audit
+        from src.brain.agents.atlas import Atlas
+
+        audit_atlas = Atlas(model_name="atlas-deep")  # High complexity model for audit
+
+        audit_prompt = f"""You are the internal Auditor of ATLAS. Review the proposed plan for mechanical flaws, laziness, or 'template' thinking.
+        
+        PROPOSED PLAN:
+        {json.dumps(plan, indent=2)}
+        
+        CRITERIA:
+        1. Does it follow the Entropy Manifesto (no repetitive loops)?
+        2. Is it safe for the Creator (Oleg Mykolayovych)?
+        3. Are the tool choices optimal or just 'default'?
+        
+        Respond with either "APPROVED" or a "REJECTION: <reason>" followed by a "SUGGESTION: <improvement>".
+        """
+
+        try:
+            response = await audit_atlas.llm.ainvoke(audit_prompt)
+            content = response.content if hasattr(response, "content") else str(response)
+
+            if "REJECTION" in content.upper():
+                logger.warning(f"[HOCE AUDIT] Plan REJECTED: {content}")
+                # We could route back to planner here if we had the logic
+                return {
+                    "system_state": SystemState.AUDITING.value,
+                    "error": f"Audit Failure: {content}",
+                }
+
+            logger.info("[HOCE AUDIT] Plan APPROVED.")
+            return {"system_state": SystemState.AUDITING.value}
+        except Exception as e:
+            logger.error(f"[HOCE AUDIT] Audit engine failed: {e}")
+            return {"system_state": SystemState.AUDITING.value}
 
     def should_verify(self, state: TrinityState) -> str:
         """Determines the next state based on config-driven rules."""

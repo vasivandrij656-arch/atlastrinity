@@ -2335,6 +2335,9 @@ orchestration_flow:
   nodes:
     - name: "atlas_planning"
       type: "planner"
+      next: "atlas_audit"
+    - name: "atlas_audit"
+      type: "audit"
       next: "tetyana_execution"
     - name: "tetyana_execution"
       type: "executor"

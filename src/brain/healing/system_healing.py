@@ -183,6 +183,36 @@ class HealingOrchestrator:
         self.strategy_engine = StrategyEngine()
         self._active_tasks = {}
 
+    async def anticipatory_patching(self):
+        """HOCE: Proactively check system health and apply pre-emptive patches.
+
+        This logic runs during orchestrator warmup to ensure a clean execution environment.
+        """
+        logger.info("[HOCE HEALING] Engaging Anticipatory Patching...")
+
+        try:
+            # 1. Check MCP Health for all available servers
+            unhealthy_servers = []
+
+            # Check currently connected ones first
+            connected = mcp_manager.get_connected_servers()
+            for server in connected:
+                if not await mcp_manager.health_check(server):
+                    unhealthy_servers.append(server)
+
+            if unhealthy_servers:
+                logger.warning(
+                    f"[HOCE HEALING] Found {len(unhealthy_servers)} unhealthy servers: {unhealthy_servers}"
+                )
+                for server in unhealthy_servers:
+                    logger.info(f"[HOCE HEALING] Proactively restarting {server}...")
+                    await mcp_manager.restart_server(server)
+            else:
+                logger.info("[HOCE HEALING] All active servers are healthy.")
+
+        except Exception as e:
+            logger.error(f"[HOCE HEALING] Anticipatory patching failed: {e}")
+
     async def handle_error(
         self, step_id: str, error: str, context: dict[str, Any], log_context: str
     ):

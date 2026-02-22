@@ -750,6 +750,54 @@ class LongTermMemory:
             logger.error(f"[MEMORY] Delete failed in {collection_name}: {e}")
             return 0
 
+    async def prune_low_resonance_memories(self, threshold: float = 0.1) -> dict[str, int]:
+        """Periodically remove near-duplicate or obsolete fragments to maintain clarity.
+
+        This implements the HOCE 'Semantic Hygiene' directive.
+        """
+        if not self.available:
+            return {}
+
+        results = {}
+        for collection_name in ["lessons", "strategies", "conversations"]:
+            collection = getattr(self, collection_name)
+            count_before = collection.count()
+            if count_before < 10:
+                continue
+
+            # Find near-duplicates by querying the collection against itself
+            all_docs = collection.get(include=["documents", "metadatas"])
+            if not all_docs["ids"]:
+                continue
+
+            ids_to_remove = set()
+            for i, doc in enumerate(all_docs["documents"]):
+                if all_docs["ids"][i] in ids_to_remove:
+                    continue
+
+                similars = collection.query(
+                    query_texts=[doc],
+                    n_results=5,
+                    where={"timestamp": {"$ne": all_docs["metadatas"][i]["timestamp"]}}
+                    if all_docs["metadatas"][i].get("timestamp")
+                    else None,
+                )
+
+                if similars["distances"]:
+                    for j, dist in enumerate(similars["distances"][0]):
+                        if dist < threshold:  # Extremely similar
+                            # Keep the newer one, mark older for removal
+                            ids_to_remove.add(similars["ids"][0][j])
+
+            if ids_to_remove:
+                collection.delete(ids=list(ids_to_remove))
+                results[collection_name] = len(ids_to_remove)
+                logger.info(
+                    f"[MEMORY PRUNING] Pruned {len(ids_to_remove)} near-duplicates from {collection_name}"
+                )
+
+        return results
+
 
 # Singleton instance
 long_term_memory = LongTermMemory()
