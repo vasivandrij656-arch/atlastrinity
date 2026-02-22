@@ -143,6 +143,14 @@ class Trinity(TourMixin, VoiceOrchestrationMixin):
                 "[ORCHESTRATOR] Startup workflow failed or partial. Proceeding with caution.",
             )
 
+        # [NEURAL CORE] Initialize the Living Brain
+        try:
+            from src.brain.neural_core.core import neural_core
+
+            await neural_core.initialize()
+        except Exception as ne:
+            logger.error(f"[ORCHESTRATOR] NeuralCore awakening failed: {ne}")
+
         if not self.state:
             self.state = {
                 "messages": [],
@@ -1607,6 +1615,21 @@ class Trinity(TourMixin, VoiceOrchestrationMixin):
         # Async tasks for summary and background operations
         if not is_subtask and msg_count > 2:
             asyncio.create_task(self._persist_session_summary(session_id))
+
+            # [NEURAL CORE] Trigger deep reflection
+            try:
+                from src.brain.neural_core.reflection.pipeline import reflex_pipe
+
+                asyncio.create_task(
+                    reflex_pipe.analyze_session(
+                        session_id=session_id,
+                        logs=cast("list[dict[str, Any]]", self.state.get("logs", [])),
+                        request=user_request,
+                        results=cast("list[Any]", self.state.get("step_results", [])),
+                    )
+                )
+            except Exception as re:
+                logger.warning(f"[ORCHESTRATOR] NeuralCore ReflexPipe failed to trigger: {re}")
 
         await self._notify_task_finished(session_id)
         self._trigger_backups()

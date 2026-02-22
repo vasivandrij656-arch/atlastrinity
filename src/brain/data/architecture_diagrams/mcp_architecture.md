@@ -1,6 +1,6 @@
 
-<!-- AUTO-UPDATED: 2026-02-22T23:18:02.562573 -->
-<!-- Modified: .agent/docs/mcp_architecture_diagram.md, src/brain/data/architecture_diagrams/mcp_architecture.md, src/mcp_server/duckduckgo_search_server.py -->
+<!-- AUTO-UPDATED: 2026-02-22T23:33:02.772208 -->
+<!-- Modified: .agent/docs/mcp_architecture_diagram.md, config/behavior_config.yaml.template, src/brain/behavior/consolidation.py -->
 
 # Architecture Diagram - atlastrinity
 
@@ -34,10 +34,11 @@ flowchart TD
         Tools --> BrainComp9[Voice]
         Tools --> BrainComp10[Scripts]
         Tools --> BrainComp11[Prompts]
-        Tools --> BrainComp12[Healing]
-        Tools --> BrainComp13[Monitoring]
-        Tools --> BrainComp14[Infrastructure]
-        Tools --> BrainComp15[Services]
+        Tools --> BrainComp12[Neural_Core]
+        Tools --> BrainComp13[Healing]
+        Tools --> BrainComp14[Monitoring]
+        Tools --> BrainComp15[Infrastructure]
+        Tools --> BrainComp16[Services]
     end
 
     subgraph MCP["MCP Servers"]
