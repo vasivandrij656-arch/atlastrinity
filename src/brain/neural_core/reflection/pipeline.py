@@ -39,15 +39,17 @@ class ReflexPipe:
         {json.dumps(results[:10], indent=2)}
         
         As the NeuralCore of ATLAS, perform a self-refractive analysis:
-        1. What was the core intent of the Creator?
+        1. What was the core intent of the Creator (Oleg Mykolayovych)?
         2. Was my decision-making path optimal?
         3. Identify any latent patterns, errors, or "Lazy Cognitive Habits".
         4. Extract a "Neural Lesson" - a permanent principle for the CognitiveGraph.
+        5. "Identity Resonance": Did my behavior align with the Creator's Postulates?
         
         Respond in JSON format:
         {{
             "intent_clarity": 0-1.0,
             "efficiency_score": 0-1.0,
+            "identity_resonance": 0-1.0,
             "observations": ["observation1", ...],
             "causality_link": {{
                 "source": "trigger_event",
@@ -81,6 +83,7 @@ class ReflexPipe:
                 {
                     "request": request,
                     "efficiency": analysis.get("efficiency_score"),
+                    "identity_resonance": analysis.get("identity_resonance"),
                     "lesson": analysis.get("lesson"),
                 },
             )

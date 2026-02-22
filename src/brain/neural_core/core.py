@@ -8,6 +8,8 @@ from typing import Any, Optional
 
 from src.brain.neural_core.chronicle import kyiv_chronicle
 from src.brain.neural_core.evolution.engine import evolution_engine
+from src.brain.neural_core.evolution.observer import environment_observer
+from src.brain.neural_core.identity.postulate_manager import postulate_manager
 from src.brain.neural_core.memory.graph import cognitive_graph
 from src.brain.neural_core.reflection.pipeline import reflex_pipe
 
@@ -20,6 +22,7 @@ class NeuralCore:
         self.graph = cognitive_graph
         self.reflex = reflex_pipe
         self.evolution = evolution_engine
+        self.identity = postulate_manager
         self._initialized = False
 
     async def initialize(self):
@@ -37,6 +40,9 @@ class NeuralCore:
 
         # 3. Start Evolution Loop (6-hour cycle)
         self.evolution.start_background_loop(interval_hours=6)
+
+        # 4. Start Environment Observation (12-hour cycle)
+        environment_observer.start_background_scanning(interval_hours=12)
 
         self._initialized = True
         logger.info("[NEURAL CORE] Awakening complete. Cognitive systems operational.")

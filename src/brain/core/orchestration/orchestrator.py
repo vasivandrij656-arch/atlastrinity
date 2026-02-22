@@ -3416,24 +3416,38 @@ class Trinity(TourMixin, VoiceOrchestrationMixin):
 
         async def _log_graph_async():
             try:
-                # Fix lint error by checking tool_call
+                # 1. Update Legacy Knowledge Graph
                 tool_call = result.tool_call or {}
                 t_name = tool_call.get("name")
-                if not t_name:
-                    return
-                # Use background methods directly
-                knowledge_graph.add_node_background(
-                    node_type="TOOL",
-                    node_id=f"tool:{t_name}",
-                    attributes={"last_used_step": str(step_id), "success": True},
-                )
-                knowledge_graph.add_edge_background(
-                    source_id=f"task:{self.state.get('db_task_id', 'unknown')}",
-                    target_id=f"tool:{t_name}",
-                    relation="USED",
-                )
+                if t_name and knowledge_graph:
+                    knowledge_graph.add_node_background(
+                        node_type="TOOL",
+                        node_id=f"tool:{t_name}",
+                        attributes={"last_used_step": str(step_id), "success": result.success},
+                    )
+                    knowledge_graph.add_edge_background(
+                        source_id=f"task:{self.state.get('db_task_id', 'unknown')}",
+                        target_id=f"tool:{t_name}",
+                        relation="USED",
+                    )
+                
+                # 2. Update NeuralCore CognitiveGraph
+                if t_name:
+                    from src.brain.neural_core.core import neural_core
+                    await neural_core.graph.add_node(
+                        f"tool:{t_name}",
+                        "tool",
+                        t_name,
+                        {"last_result": "success" if result.success else "failure"}
+                    )
+                    await neural_core.graph.add_edge(
+                        f"task:{self.state.get('db_task_id', 'unknown')}",
+                        f"tool:{t_name}",
+                        "invoked",
+                        {"success": result.success, "step_id": step_id}
+                    )
             except Exception as e:
-                logger.warning(f"[ORCHESTRATOR] Async graph update failed: {e}")
+                logger.warning(f"[ORCHESTRATOR] NeuralCore graph update failed: {e}")
 
         asyncio.create_task(_log_graph_async())
 
@@ -3551,15 +3565,16 @@ class Trinity(TourMixin, VoiceOrchestrationMixin):
 
         audit_atlas = Atlas(model_name="atlas-deep")  # High complexity model for audit
 
+        from src.brain.neural_core.core import neural_core
+        criteria = neural_core.identity.get_audit_prompt_context()
+
         audit_prompt = f"""You are the internal Auditor of ATLAS. Review the proposed plan for mechanical flaws, laziness, or 'template' thinking.
         
         PROPOSED PLAN:
         {json.dumps(plan, indent=2)}
         
-        CRITERIA:
-        1. Does it follow the Entropy Manifesto (no repetitive loops)?
-        2. Is it safe for the Creator (Oleg Mykolayovych)?
-        3. Are the tool choices optimal or just 'default'?
+        ETHICAL & BEHAVIORAL CRITERIA (The Creator's Postulates):
+        {criteria}
         
         Respond with either "APPROVED" or a "REJECTION: <reason>" followed by a "SUGGESTION: <improvement>".
         """

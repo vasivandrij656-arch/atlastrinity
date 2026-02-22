@@ -1,6 +1,6 @@
 
-<!-- AUTO-UPDATED: 2026-02-22T23:33:02.772208 -->
-<!-- Modified: .agent/docs/mcp_architecture_diagram.md, config/behavior_config.yaml.template, src/brain/behavior/consolidation.py -->
+<!-- AUTO-UPDATED: 2026-02-22T23:42:49.281160 -->
+<!-- Modified: .agent/docs/mcp_architecture_diagram.md, src/brain/core/orchestration/orchestrator.py, src/brain/data/architecture_diagrams/mcp_architecture.md -->
 
 # Architecture Diagram - atlastrinity
 
