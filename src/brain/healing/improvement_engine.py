@@ -126,8 +126,10 @@ class ImprovementEngine:
             prompt = self._build_improvement_prompt(hotspot)
 
             for attempt in range(max_retries):
-                logger.info(f"[ImprovementEngine] Attempt {attempt + 1}/{max_retries} for {hotspot.file_path}")
-                
+                logger.info(
+                    f"[ImprovementEngine] Attempt {attempt + 1}/{max_retries} for {hotspot.file_path}"
+                )
+
                 # Call Vibe for the fix
                 vibe_result = await mcp_manager.call_tool(
                     "vibe",
@@ -150,7 +152,9 @@ class ImprovementEngine:
                     lint_result = await mcp_manager.call_tool(
                         "devtools", "devtools_run_global_lint", {}
                     )
-                    lint_ok = isinstance(lint_result, dict) and lint_result.get("overall_status") in (
+                    lint_ok = isinstance(lint_result, dict) and lint_result.get(
+                        "overall_status"
+                    ) in (
                         "clean",
                         "pass",
                         True,
@@ -164,14 +168,13 @@ class ImprovementEngine:
                             lint_errors_str = str(lint_result.get("errors", lint_result))[:1000]
                             prompt += f"\n\n--- PREVIOUS ATTEMPT FAILED ---\nLinting failed with the following errors:\n{lint_errors_str}\n\nPlease fix these errors and try again. Make sure your changes are syntactically valid."
                             continue
-                        else:
-                            return HealingResult(
-                                mode=HealingMode.IMPROVE,
-                                success=False,
-                                message=f"Lint failed after {max_retries} attempts applying improvement to {hotspot.file_path}",
-                                details={"lint_result": str(lint_result)[:200]},
-                            )
-                
+                        return HealingResult(
+                            mode=HealingMode.IMPROVE,
+                            success=False,
+                            message=f"Lint failed after {max_retries} attempts applying improvement to {hotspot.file_path}",
+                            details={"lint_result": str(lint_result)[:200]},
+                        )
+
                 # If we get here, it succeeded
                 logger.info(f"[ImprovementEngine] Successfully improved {hotspot.file_path}")
                 return HealingResult(
@@ -192,7 +195,7 @@ class ImprovementEngine:
         return HealingResult(
             mode=HealingMode.IMPROVE,
             success=False,
-            message="Improvement failed: reached end of function"
+            message="Improvement failed: reached end of function",
         )
 
     async def run_improvement_cycle(
