@@ -23,6 +23,11 @@ class KyivChronicle:
             cls._instance = super().__new__(cls)
         return cls._instance
 
+    @property
+    def last_sync(self) -> float:
+        """Returns the drift found during last sync."""
+        return self._last_sync_drift
+
     def get_now(self) -> datetime:
         """Returns current time in Europe/Kyiv, adjusted for drift."""
         # Note: In this version, we return the local time forced to Kyiv TZ.

@@ -67,6 +67,34 @@ class CognitiveGraph:
             )
             await db.commit()
 
+    async def get_node(self, node_id: str) -> Optional[dict[str, Any]]:
+        """Retrieves a node by its ID."""
+        async with aiosqlite.connect(self.db_path) as db:
+            db.row_factory = aiosqlite.Row
+            cursor = await db.execute("SELECT * FROM nodes WHERE id = ?", (node_id,))
+            row = await cursor.fetchone()
+            if row:
+                node = dict(row)
+                node["properties"] = json.loads(node["properties"])
+                return node
+        return None
+
+    async def search_nodes(self, node_type: Optional[str] = None, limit: int = 10) -> list[dict[str, Any]]:
+        """Searches for nodes by type."""
+        async with aiosqlite.connect(self.db_path) as db:
+            db.row_factory = aiosqlite.Row
+            if node_type:
+                cursor = await db.execute("SELECT * FROM nodes WHERE type = ? LIMIT ?", (node_type, limit))
+            else:
+                cursor = await db.execute("SELECT * FROM nodes LIMIT ?", (limit,))
+            rows = await cursor.fetchall()
+            results = []
+            for row in rows:
+                node = dict(row)
+                node["properties"] = json.loads(node["properties"])
+                results.append(node)
+            return results
+
     async def add_edge(
         self,
         source_id: str,
