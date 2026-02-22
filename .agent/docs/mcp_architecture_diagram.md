@@ -1,6 +1,6 @@
 
-<!-- AUTO-UPDATED: 2026-02-22T22:41:25.305753 -->
-<!-- Modified: .agent/docs/mcp_architecture_diagram.md, src/brain/data/architecture_diagrams/mcp_architecture.md, src/brain/mcp/data/protocols/search_protocol.txt -->
+<!-- AUTO-UPDATED: 2026-02-22T22:50:14.201233 -->
+<!-- Modified: .agent/docs/mcp_architecture_diagram.md, src/brain/behavior/consolidation.py, src/brain/data/architecture_diagrams/mcp_architecture.md -->
 
 # Architecture Diagram - atlastrinity
 
