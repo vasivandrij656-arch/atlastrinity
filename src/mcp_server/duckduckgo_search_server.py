@@ -507,6 +507,28 @@ def structured_data_search(query: str, step_id: str | None = None) -> dict[str, 
     return result
 
 
+@server.tool()
+def court_cases_search(query: str, step_id: str | None = None) -> dict[str, Any]:
+    """Search for court cases and legal proceedings in Ukrainian registries.
+    Rules and targets are defined in search_protocol.txt.
+
+    Args:
+        query: The name of the person or company, or a case number.
+
+    """
+    if not query or not query.strip():
+        logger.warning("Court cases search request received with empty query")
+        return {"error": "query is required"}
+
+    logger.info(f"Executing court cases search: query='{query.strip()}'")
+    result = _execute_protocol_search("court", query, "DuckDuckGo (Court Registry Search)")
+    if result.get("success"):
+        logger.info(f"Court cases search completed: found {len(result.get('results', []))} results")
+    else:
+        logger.warning(f"Court cases search failed: {result.get('error', 'unknown error')}")
+    return result
+
+
 if __name__ == "__main__":
     logger.info("Starting DuckDuckGo Search Server")
     logger.info(f"Loading search protocol from: {PROTOCOL_PATH}")

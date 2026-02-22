@@ -63,6 +63,10 @@ SEARCH PROTOCOL (v1.1)
       "api_endpoints": ["https://e.land.gov.ua/api/", "http://map.land.gov.ua/geowebcache/service/wms"],
       "oauth_required": ["e.land.gov.ua"],
       "rate_limits": "100-500 requests/minute depending on tariff"
+    },
+    "court": {
+      "operator": "(site:reyestr.court.gov.ua OR site:opendatabot.ua/court OR site:court.gov.ua) \"{query}\"",
+      "priority_domains": ["reyestr.court.gov.ua", "opendatabot.ua", "court.gov.ua"]
     }
   }
 }
