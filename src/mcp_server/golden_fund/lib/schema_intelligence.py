@@ -55,10 +55,9 @@ class SchemaIntelligence:
                 f"Data Types:\n{dtypes}\n\n"
                 f"Sample Data:\n{sample}\n\n"
                 "Requirements:\n"
-                "1. Use appropriate SQLite data types (TEXT, INTEGER, REAL, BLOB).\n"
-                "2. Add PRIMARY KEY if an 'id' column exists, otherwise suggest one.\n"
-                "3. Add meaningful column constraints (NOT NULL) where appropriate based on sample.\n"
-                "4. Return ONLY the SQL statement, no markdown formatting or explanations."
+                "4. Use the EXACT column names from the data provided, do NOT translate or rename them.\n"
+                "5. Use double quotes for ALL column names to avoid reserved keyword conflicts (e.g., \"case\", \"group\").\n"
+                "6. Return ONLY the SQL statement, no markdown formatting or explanations."
             )
 
             response = self.llm.invoke(
@@ -105,6 +104,7 @@ class SchemaIntelligence:
                 "Determine if the schema needs evolution (e.g. new columns).\n"
                 "If strictly compatible, return 'COMPATIBLE'.\n"
                 "If new columns are needed, return the SQLite ALTER TABLE statements (one per line).\n"
+                "Ensure all new column names are escaped with double quotes.\n"
                 "Return ONLY the SQL or 'COMPATIBLE'."
             )
 
