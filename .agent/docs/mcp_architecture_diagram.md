@@ -1,6 +1,6 @@
 
-<!-- AUTO-UPDATED: 2026-02-22T20:37:12.256358 -->
-<!-- Modified: .agent/docs/mcp_architecture_diagram.md, src/brain/data/architecture_diagrams/mcp_architecture.md, src/brain/healing/ci_bridge.py -->
+<!-- AUTO-UPDATED: 2026-02-22T20:38:44.619397 -->
+<!-- Modified: .agent/docs/mcp_architecture_diagram.md, src/brain/data/architecture_diagrams/mcp_architecture.md, tests/test_self_healing_recursion.py -->
 
 # Architecture Diagram - atlastrinity
 

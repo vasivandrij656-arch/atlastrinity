@@ -8,6 +8,7 @@ from src.brain.healing.modes import HealingPriority, Hotspot
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
 
+
 async def test_recursion():
     engine = ImprovementEngine()
 
