@@ -42,7 +42,13 @@ SEARCH PROTOCOL (v1.1)
    - USE `trace_data_chain` to recursively reconstruct a complete profile from fragmented sources if you identify a semantic anchor.
    - If a link is found, DOCUMENT it in the Knowledge Graph for future automated discovery.
 
-8. MACHINE-READABLE CONFIGURATION (JSON):
+8. TEMPORAL ACQUISITION DOCTRINE (2020-2026):
+   - **Current Horizon**: The current system year is 2026. Prioritize data from 2026, 2025, and late 2024 for immediate relevance.
+   - **Tiered Deepening**: If a search for "{query} 2026" or "{query} 2025" yields zero or insufficient results, recursively deepen the search into 2024, 2023, 2022, 2021, and 2020.
+   - **Verification**: ALWAYS verify the publication date of a dataset to ensure it matches the requested temporal slice.
+   - **Cross-Referencing**: When a gap is found in 2026 data, seek older versions (2025-2020) and use them to reconstruct current state if official updates are pending.
+
+9. MACHINE-READABLE CONFIGURATION (JSON):
 {
   "search_rules": {
     "business": {
@@ -50,11 +56,11 @@ SEARCH PROTOCOL (v1.1)
       "priority_domains": ["youcontrol.com.ua", "opendatabot.ua", "clarity-project.info"]
     },
     "open_data": {
-      "operator": "site:data.gov.ua \"{query}\" filetype:csv OR filetype:xlsx OR filetype:json",
+      "operator": "site:data.gov.ua \"{query}\" (2020 OR 2021 OR 2022 OR 2023 OR 2024 OR 2025 OR 2026) filetype:csv OR filetype:xlsx OR filetype:json",
       "priority_domains": ["data.gov.ua"]
     },
     "structured_data": {
-      "operator": "site:data.gov.ua \"{query}\" filetype:csv OR filetype:xlsx OR filetype:json",
+      "operator": "site:data.gov.ua \"{query}\" (2020 OR 2021 OR 2022 OR 2023 OR 2024 OR 2025 OR 2026) filetype:csv OR filetype:xlsx OR filetype:json",
       "priority_domains": ["data.gov.ua"]
     },
     "cadastral": {
@@ -65,9 +71,14 @@ SEARCH PROTOCOL (v1.1)
       "rate_limits": "100-500 requests/minute depending on tariff"
     },
     "court": {
-      "operator": "(site:reyestr.court.gov.ua OR site:opendatabot.ua/court OR site:court.gov.ua) \"{query}\"",
+      "operator": "(site:reyestr.court.gov.ua OR site:opendatabot.ua/court OR site:court.gov.ua) \"{query}\" (2020 OR 2021 OR 2022 OR 2023 OR 2024 OR 2025 OR 2026)",
       "priority_domains": ["reyestr.court.gov.ua", "opendatabot.ua", "court.gov.ua"]
     }
+  },
+  "temporal_horizon": {
+    "current_year": 2026,
+    "primary_range": [2024, 2026],
+    "deep_range": [2020, 2023]
   }
 }
 

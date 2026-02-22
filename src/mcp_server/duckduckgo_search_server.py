@@ -20,32 +20,36 @@ server = FastMCP("search-server")
 
 # Path to protocol file (centralized configuration)
 PROJECT_ROOT = os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
-PROTOCOL_PATH = os.path.join(PROJECT_ROOT, "src", "brain", "data", "search_protocol.txt")
+PROTOCOL_PATH = os.path.join(PROJECT_ROOT, "src", "brain", "mcp", "data", "protocols", "search_protocol.txt")
 
 
-def _load_search_rules() -> dict[str, Any]:
-    """Load search rules from the machine-readable section of the search protocol."""
+def _load_protocol_config() -> dict[str, Any]:
+    """Load configuration from the machine-readable section of the search protocol."""
     try:
         if not os.path.exists(PROTOCOL_PATH):
             return {}
         with open(PROTOCOL_PATH, encoding="utf-8") as f:
             content = f.read()
 
-        # Find JSON block (starts after 5. MACHINE-READABLE CONFIGURATION)
-        match = re.search(r"\{.*\}", content, re.DOTALL)
-        if match:
-            config = json.loads(match.group(0))
-            return cast("dict[str, Any]", config.get("search_rules", {}))
+        # Find JSON block (starts after 9. MACHINE-READABLE CONFIGURATION)
+        json_start = content.find("9. MACHINE-READABLE CONFIGURATION")
+        if json_start != -1:
+            match = re.search(r"\{.*\}", content[json_start:], re.DOTALL)
+            if match:
+                config = json.loads(match.group(0))
+                return cast("dict[str, Any]", config)
     except Exception as e:
         logger.error(f"Error loading protocol: {e}")
     return {}
 
 
 def _execute_protocol_search(rule_name: str, query_val: str, provider_name: str) -> dict[str, Any]:
-    """Execute search based on rules defined in the protocol."""
-    rules = _load_search_rules()
+    """Execute search based on rules defined in the protocol, with tiered temporal support."""
+    config = _load_protocol_config()
+    rules = config.get("search_rules", {})
+    horizon = config.get("temporal_horizon", {})
+    
     rule = rules.get(rule_name, {})
-
     operator = rule.get("operator", "{query}")
     priority_domains = rule.get("priority_domains", [])
 
@@ -54,11 +58,36 @@ def _execute_protocol_search(rule_name: str, query_val: str, provider_name: str)
 
     try:
         results = _search_ddg(query=expanded_query, max_results=10, timeout_s=15.0)
+        
+        # Tiered Deepening if insufficient results and it's a structural rule
+        if len(results) < 3 and rule_name in ["open_data", "structured_data", "court"]:
+            primary_years = horizon.get("primary_range", [2024, 2026])
+            deep_years = horizon.get("deep_range", [2020, 2023])
+            
+            logger.info(f"Insufficient results for primary query. Initiating tiered deepening.")
+            
+            # Deepen to primary range first (if not already covered)
+            for year in range(primary_years[1], primary_years[0] - 1, -1):
+                year_query = f"{query_val.strip()} {year}"
+                logger.info(f"Deepening search for year: {year}")
+                results += _search_ddg(query=year_query, max_results=5, timeout_s=10.0)
+                if len(results) >= 10: break
+                
+            # If still low, go to deep range
+            if len(results) < 5:
+                for year in range(deep_years[1], deep_years[0] - 1, -1):
+                    year_query = f"{query_val.strip()} {year}"
+                    logger.info(f"Deepening search for year (deep): {year}")
+                    results += _search_ddg(query=year_query, max_results=5, timeout_s=10.0)
+                    if len(results) >= 10: break
 
         prioritized = []
         others = []
+        seen_urls = set()
 
         for r in results:
+            if r["url"] in seen_urls: continue
+            seen_urls.add(r["url"])
             if any(domain in r["url"] for domain in priority_domains):
                 prioritized.append(r)
             else:
@@ -69,6 +98,7 @@ def _execute_protocol_search(rule_name: str, query_val: str, provider_name: str)
             "query": expanded_query,
             "results": prioritized + others,
             "provider": provider_name,
+            "temporal_horizon": horizon
         }
     except Exception as e:
         return {"error": str(e)}
