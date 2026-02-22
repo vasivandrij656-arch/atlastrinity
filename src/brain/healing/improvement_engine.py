@@ -122,54 +122,64 @@ class ImprovementEngine:
         try:
             from src.brain.mcp.mcp_manager import mcp_manager
 
-            # Build improvement prompt
+            max_retries = 3
             prompt = self._build_improvement_prompt(hotspot)
 
-            # Call Vibe for the fix
-            vibe_result = await mcp_manager.call_tool(
-                "vibe",
-                "vibe_prompt",
-                {
-                    "prompt": prompt,
-                    "auto_approve": True,
-                },
-            )
-
-            if not vibe_result:
-                return HealingResult(
-                    mode=HealingMode.IMPROVE,
-                    success=False,
-                    message=f"Vibe returned empty result for {hotspot.file_path}",
+            for attempt in range(max_retries):
+                logger.info(f"[ImprovementEngine] Attempt {attempt + 1}/{max_retries} for {hotspot.file_path}")
+                
+                # Call Vibe for the fix
+                vibe_result = await mcp_manager.call_tool(
+                    "vibe",
+                    "vibe_prompt",
+                    {
+                        "prompt": prompt,
+                        "auto_approve": True,
+                    },
                 )
 
-            # Run lint verification
-            if self._require_lint:
-                lint_result = await mcp_manager.call_tool(
-                    "devtools", "devtools_run_global_lint", {}
-                )
-                lint_ok = isinstance(lint_result, dict) and lint_result.get("overall_status") in (
-                    "clean",
-                    "pass",
-                    True,
-                )
-                if not lint_ok:
-                    logger.warning(
-                        f"[ImprovementEngine] Lint failed after improvement: {lint_result}"
-                    )
+                if not vibe_result:
                     return HealingResult(
                         mode=HealingMode.IMPROVE,
                         success=False,
-                        message=f"Lint failed after applying improvement to {hotspot.file_path}",
-                        details={"lint_result": str(lint_result)[:200]},
+                        message=f"Vibe returned empty result for {hotspot.file_path}",
                     )
 
-            logger.info(f"[ImprovementEngine] Successfully improved {hotspot.file_path}")
-            return HealingResult(
-                mode=HealingMode.IMPROVE,
-                success=True,
-                message=f"Improvement applied to {hotspot.file_path}: {hotspot.category}",
-                details={"hotspot": hotspot.to_dict()},
-            )
+                # Run lint verification
+                if self._require_lint:
+                    lint_result = await mcp_manager.call_tool(
+                        "devtools", "devtools_run_global_lint", {}
+                    )
+                    lint_ok = isinstance(lint_result, dict) and lint_result.get("overall_status") in (
+                        "clean",
+                        "pass",
+                        True,
+                    )
+                    if not lint_ok:
+                        logger.warning(
+                            f"[ImprovementEngine] Lint failed on attempt {attempt + 1}: {lint_result}"
+                        )
+                        if attempt < max_retries - 1:
+                            # Feed the lint error back to Vibe
+                            lint_errors_str = str(lint_result.get("errors", lint_result))[:1000]
+                            prompt += f"\n\n--- PREVIOUS ATTEMPT FAILED ---\nLinting failed with the following errors:\n{lint_errors_str}\n\nPlease fix these errors and try again. Make sure your changes are syntactically valid."
+                            continue
+                        else:
+                            return HealingResult(
+                                mode=HealingMode.IMPROVE,
+                                success=False,
+                                message=f"Lint failed after {max_retries} attempts applying improvement to {hotspot.file_path}",
+                                details={"lint_result": str(lint_result)[:200]},
+                            )
+                
+                # If we get here, it succeeded
+                logger.info(f"[ImprovementEngine] Successfully improved {hotspot.file_path}")
+                return HealingResult(
+                    mode=HealingMode.IMPROVE,
+                    success=True,
+                    message=f"Improvement applied to {hotspot.file_path}: {hotspot.category} (after {attempt + 1} attempts)",
+                    details={"hotspot": hotspot.to_dict()},
+                )
 
         except Exception as e:
             logger.error(f"[ImprovementEngine] Failed to apply improvement: {e}")
@@ -178,6 +188,12 @@ class ImprovementEngine:
                 success=False,
                 message=f"Improvement failed: {e}",
             )
+
+        return HealingResult(
+            mode=HealingMode.IMPROVE,
+            success=False,
+            message="Improvement failed: reached end of function"
+        )
 
     async def run_improvement_cycle(
         self,

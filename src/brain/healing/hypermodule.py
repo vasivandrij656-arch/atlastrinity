@@ -590,6 +590,14 @@ class SelfHealingHypermodule:
                 message="No improvement notes pending",
             )
 
+        # Sync repository before making improvements
+        if not await self.ci_bridge.sync_repository():
+            return HealingResult(
+                mode=HealingMode.IMPROVE,
+                success=False,
+                message="Cannot run improvement cycle: repository sync failed or not clean",
+            )
+
         # Run improvement cycle
         results = await self.improvement_engine.run_improvement_cycle(
             notes=notes,

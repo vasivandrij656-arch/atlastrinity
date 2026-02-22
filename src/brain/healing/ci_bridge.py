@@ -417,6 +417,66 @@ class CIBridge:
             logger.error(f"[CIBridge] Log fetch error: {e}")
             return None
 
+    async def sync_repository(self) -> bool:
+        """Synchronize local repository with origin/main.
+
+        Returns:
+            True if synchronized (or already up to date) and clean, False otherwise.
+        """
+        try:
+            cwd = str(self.project_root)
+
+            # Check if working tree is clean
+            status = subprocess.run(
+                ["git", "status", "--porcelain"],
+                cwd=cwd,
+                capture_output=True,
+                text=True,
+                check=True
+            )
+            if status.stdout.strip():
+                logger.warning("[CIBridge] Cannot sync: Working tree is not clean")
+                return False
+
+            # Fetch latest
+            logger.info("[CIBridge] Fetching origin...")
+            subprocess.run(["git", "fetch", "origin"], cwd=cwd, check=True, capture_output=True)
+
+            # Check branch status against origin/main
+            rev_list = subprocess.run(
+                ["git", "rev-list", "--right-only", "--count", "HEAD...origin/main"],
+                cwd=cwd,
+                capture_output=True,
+                text=True,
+                check=False
+            )
+            
+            # If rev-list fails (e.g. origin/main doesn't exist), we assume it's up to date or we can't sync
+            if rev_list.returncode == 0:
+                behind = int(rev_list.stdout.strip())
+                if behind > 0:
+                    logger.info(f"[CIBridge] Behind origin/main by {behind} commits. Pulling...")
+                    subprocess.run(
+                        ["git", "pull", "--rebase", "origin", "main"],
+                        cwd=cwd,
+                        check=True,
+                        capture_output=True
+                    )
+                    logger.info("[CIBridge] Repository synchronized")
+                else:
+                    logger.info("[CIBridge] Repository is already up to date")
+            else:
+                logger.info("[CIBridge] Could not determine behind count, assuming up to date")
+
+            return True
+
+        except subprocess.CalledProcessError as e:
+            logger.error(f"[CIBridge] Git sync failed: {e.stderr if hasattr(e, 'stderr') and e.stderr else e}")
+            return False
+        except Exception as e:
+            logger.error(f"[CIBridge] Sync error: {e}")
+            return False
+
     def commit_and_push(
         self,
         message: str,
