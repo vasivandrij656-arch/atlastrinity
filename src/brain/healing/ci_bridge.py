@@ -432,7 +432,7 @@ class CIBridge:
                 cwd=cwd,
                 capture_output=True,
                 text=True,
-                check=True
+                check=True,
             )
             if status.stdout.strip():
                 logger.warning("[CIBridge] Cannot sync: Working tree is not clean")
@@ -448,9 +448,9 @@ class CIBridge:
                 cwd=cwd,
                 capture_output=True,
                 text=True,
-                check=False
+                check=False,
             )
-            
+
             # If rev-list fails (e.g. origin/main doesn't exist), we assume it's up to date or we can't sync
             if rev_list.returncode == 0:
                 behind = int(rev_list.stdout.strip())
@@ -460,7 +460,7 @@ class CIBridge:
                         ["git", "pull", "--rebase", "origin", "main"],
                         cwd=cwd,
                         check=True,
-                        capture_output=True
+                        capture_output=True,
                     )
                     logger.info("[CIBridge] Repository synchronized")
                 else:
@@ -471,7 +471,9 @@ class CIBridge:
             return True
 
         except subprocess.CalledProcessError as e:
-            logger.error(f"[CIBridge] Git sync failed: {e.stderr if hasattr(e, 'stderr') and e.stderr else e}")
+            logger.error(
+                f"[CIBridge] Git sync failed: {e.stderr if hasattr(e, 'stderr') and e.stderr else e}"
+            )
             return False
         except Exception as e:
             logger.error(f"[CIBridge] Sync error: {e}")
