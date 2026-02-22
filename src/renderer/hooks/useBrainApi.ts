@@ -261,16 +261,9 @@ export const useBrainApi = () => {
         'action',
       );
 
-      // Add user message to chat history
-      setChatHistory((prev) => [
-        ...prev,
-        {
-          agent: 'USER' as const,
-          text: cmd,
-          timestamp: new Date(),
-          type: 'text' as const,
-        },
-      ]);
+      // NOTE: User message is NOT added locally here.
+      // The backend tracks all messages in state['messages'] and returns
+      // them via /api/state polling — single source of truth to avoid duplicates.
 
       setSystemState('PROCESSING');
       try {
@@ -309,17 +302,9 @@ export const useBrainApi = () => {
           }
           addLog('ATLAS', message, 'success');
 
-          // Add agent response to chat history
-          const agentName = data.active_agent || 'ATLAS';
-          setChatHistory((prev) => [
-            ...prev,
-            {
-              agent: agentName,
-              text: message,
-              timestamp: new Date(),
-              type: 'voice' as const,
-            },
-          ]);
+          // NOTE: Agent response is NOT added locally here.
+          // The backend handle_chat_log() already appends it to state['messages']
+          // and /api/state polling delivers it — single source of truth.
 
           setSystemState('IDLE');
         } else {

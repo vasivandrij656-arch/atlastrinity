@@ -612,7 +612,7 @@ class Trinity(TourMixin, VoiceOrchestrationMixin):
             f"[DevTools: {devtools_status}] "
             f"(Repo logic aware)"
         )
-        logger.info(f"[SYSTEM] {report}")
+        logger.debug(f"[SYSTEM] {report}")  # debug-level to avoid duplication with _log
         await self._log(report, source="SYSTEM", type="startup_report")
 
     async def _log(self, text: str, source: str = "system", type: str = "info"):
@@ -1304,7 +1304,8 @@ class Trinity(TourMixin, VoiceOrchestrationMixin):
                         self.state["messages"].append(msg)
                         asyncio.create_task(self._save_chat_message("ai", str(response), "atlas"))
 
-                    await self._speak("atlas", response)
+                    # chat_visible=False because the AIMessage was already appended above
+                    await self._speak("atlas", response, chat_visible=False)
                     return {"status": "completed", "result": response, "type": intent}
 
             # Complex task planning
@@ -1323,7 +1324,8 @@ class Trinity(TourMixin, VoiceOrchestrationMixin):
                     )
 
             shared_context.available_mcp_catalog = await mcp_manager.get_mcp_catalog()
-            await self._speak("atlas", analysis.get("voice_response") or "Аналізую запит...")
+            # Internal status message — speak but don't show in chat panel
+            await self._speak("atlas", analysis.get("voice_response") or "Аналізую запит...", chat_visible=False)
 
             # 3. Intent-based Routing for Tasks
             if intent in ["task", "subtask", "follow_up"]:

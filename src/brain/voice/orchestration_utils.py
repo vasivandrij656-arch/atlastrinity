@@ -23,8 +23,16 @@ class VoiceOrchestrationMixin:
     _last_live_speech_time: int | None = None
     voice: "VoiceManager"  # Type hint for checks, actual value provided by implementer
 
-    async def _speak(self, agent_id: str, text: str) -> None:
-        """Voice wrapper with config-driven sanitization."""
+    async def _speak(self, agent_id: str, text: str, *, chat_visible: bool = True) -> None:
+        """Voice wrapper with config-driven sanitization.
+
+        Args:
+            agent_id: The agent whose voice to use.
+            text: Text to speak.
+            chat_visible: If True (default), the message is also added to the chat
+                          panel via handle_chat_log(). Set to False for internal
+                          status messages that should only be spoken, not displayed.
+        """
         voice_config = behavior_engine.get_output_processing("voice")
 
         # Deduplication Logic
@@ -83,7 +91,7 @@ class VoiceOrchestrationMixin:
         print(f"[{agent_id.upper()}] Speaking: {final_text[:100]}", file=sys.stderr)
 
         try:
-            if hasattr(self, "handle_chat_log"):
+            if chat_visible and hasattr(self, "handle_chat_log"):
                 await self.handle_chat_log(agent_id, final_text)
 
             if hasattr(self, "voice"):
@@ -120,7 +128,7 @@ class VoiceOrchestrationMixin:
                 if hasattr(self, "_last_live_speech_time"):
                     self._last_live_speech_time = int(now)
                 if hasattr(self, "_speak"):
-                    asyncio.create_task(self._speak("atlas", speech_text))
+                    asyncio.create_task(self._speak("atlas", speech_text, chat_visible=False))
 
     async def handle_voice_feedback(self, agent_id: str, text: str) -> None:
         """Handle voice feedback and route to appropriate handlers."""
