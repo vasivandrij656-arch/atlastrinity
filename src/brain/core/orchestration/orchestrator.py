@@ -275,9 +275,13 @@ class Trinity(TourMixin, VoiceOrchestrationMixin):
             if str(project_root) not in sys.path:
                 sys.path.insert(0, str(project_root))
             try:
+                from types import SimpleNamespace
+
                 from src.maintenance import setup_dev
 
-                await asyncio.to_thread(setup_dev.backup_databases)
+                # We disable auto-commit/push during session reset to keep the UI responsive
+                args = SimpleNamespace(no_auto_commit=True)
+                await asyncio.to_thread(setup_dev.backup_databases, args)
             except ImportError:
                 # Handle non-package scripts folder
                 import importlib.util
@@ -289,7 +293,10 @@ class Trinity(TourMixin, VoiceOrchestrationMixin):
                 if spec and spec.loader:
                     setup_dev = importlib.util.module_from_spec(spec)
                     spec.loader.exec_module(setup_dev)
-                    await asyncio.to_thread(setup_dev.backup_databases)
+                    from types import SimpleNamespace
+
+                    args = SimpleNamespace(no_auto_commit=True)
+                    await asyncio.to_thread(setup_dev.backup_databases, args)
             await self._log("📦 Backup попередньої сесії...", "system")
         except Exception as e:
             logger.warning(f"[BACKUP] Не вдалося створити backup: {e}")
