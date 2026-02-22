@@ -12,6 +12,7 @@ from src.brain.neural_core.memory.graph import cognitive_graph
 
 logger = logging.getLogger("brain.neural_core.evolution.prompt_tuner")
 
+
 class PromptTuner:
     def __init__(self):
         self.analyzer = Atlas(model_name="atlas-deep")
@@ -60,12 +61,13 @@ class PromptTuner:
         try:
             response = await self.analyzer.llm.ainvoke(prompt)
             proposal = response.content if hasattr(response, "content") else str(response)
-            
+
             logger.info("[PROMPT TUNER] Proposal generated.")
             return proposal
         except Exception as e:
             logger.error(f"[PROMPT TUNER] Analysis failed: {e}")
             return None
+
 
 # Global instance
 prompt_tuner = PromptTuner()
