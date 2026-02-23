@@ -267,18 +267,19 @@ class MCPManager:
             logger.error("MCP Python package is not installed; MCP features are unavailable")
             return None
 
-        async with self._lock:
-            # Bridging logic: If requested server is macos-use or googlemaps, redirect to xcodebuild
-            if server_name in {"macos-use", "googlemaps"}:
-                logger.debug(f"[MCP] Redirecting session request for {server_name} to xcodebuild")
-                return await self.get_session("xcodebuild")
+        # Bridging logic: redirect BEFORE acquiring lock to avoid deadlock
+        # (asyncio.Lock is not reentrant, so recursive get_session would deadlock)
+        if server_name in {"macos-use", "googlemaps"}:
+            logger.debug(f"[MCP] Redirecting session request for {server_name} to xcodebuild")
+            server_name = "xcodebuild"
 
+        async with self._lock:
             if server_name in self.sessions:
                 return self.sessions[server_name]
 
             server_config = self.config.get("mcpServers", {}).get(server_name)
             if not server_config:
-                logger.error(f"Server {server_name} not configured")
+                logger.warning(f"[MCP] Server {server_name} not configured")
                 return None
 
             try:
@@ -562,7 +563,7 @@ class MCPManager:
 
     def _create_no_session_error(self, server_name: str, tool_name: str) -> dict[str, Any]:
         """Create a standardized error when no session is available."""
-        logger.error(f"[MCP] No session available for {server_name}")
+        logger.warning(f"[MCP] No session available for {server_name}")
         return {
             "error": f"Could not connect to server {server_name}",
             "success": False,

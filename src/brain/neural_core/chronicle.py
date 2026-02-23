@@ -41,31 +41,58 @@ class KyivChronicle:
         """
         Attempts to synchronize with an external time source to detect local clock skew.
         This ensures the 'Absolute Time' principle of the HOCE upgrade.
+        Uses multiple APIs with fallback for resilience.
         """
-        try:
-            async with httpx.AsyncClient(timeout=5.0) as client:
-                # Using a reliable public API for time sync check
-                response = await client.get("https://worldtimeapi.org/api/timezone/Europe/Kyiv")
-                if response.status_code == 200:
-                    data = response.json()
-                    external_now_str = data.get("datetime")
-                    if external_now_str:
-                        external_now = datetime.fromisoformat(external_now_str)
-                        local_now = datetime.now(UTC)
-                        # WorldTimeAPI returns UTC-based ISO string here usually or with offset
-                        # We compare UTC to UTC to find the drift
-                        drift = (external_now.astimezone(UTC) - local_now).total_seconds()
-                        self._last_sync_drift = drift
-                        logger.info(
-                            f"[CHRONICLE] Time sync successful. Detected drift: {drift:.3f}s"
-                        )
-                        return True
-        except Exception as e:
-            logger.warning(
-                f"[CHRONICLE] External time sync failed: {e}. Falling back to system clock."
-            )
+        apis = [
+            (
+                "https://timeapi.io/api/time/current/zone?timeZone=Europe/Kyiv",
+                self._parse_timeapi_response,
+            ),
+            (
+                "https://worldtimeapi.org/api/timezone/Europe/Kyiv",
+                self._parse_worldtimeapi_response,
+            ),
+        ]
 
+        for url, parser in apis:
+            try:
+                async with httpx.AsyncClient(timeout=5.0) as client:
+                    response = await client.get(url)
+                    if response.status_code == 200:
+                        external_now = parser(response.json())
+                        if external_now:
+                            local_now = datetime.now(UTC)
+                            drift = (external_now.astimezone(UTC) - local_now).total_seconds()
+                            self._last_sync_drift = drift
+                            logger.info(
+                                f"[CHRONICLE] Time sync successful via {url.split('/')[2]}. "
+                                f"Detected drift: {drift:.3f}s"
+                            )
+                            return True
+            except Exception as e:
+                logger.debug(
+                    f"[CHRONICLE] Time sync failed for {url.split('/')[2]}: "
+                    f"{type(e).__name__}: {e}"
+                )
+
+        logger.debug("[CHRONICLE] All time sync APIs unavailable. Using system clock.")
         return False
+
+    @staticmethod
+    def _parse_timeapi_response(data: dict) -> datetime | None:
+        """Parse response from timeapi.io."""
+        dt_str = data.get("dateTime")
+        if dt_str:
+            return datetime.fromisoformat(dt_str)
+        return None
+
+    @staticmethod
+    def _parse_worldtimeapi_response(data: dict) -> datetime | None:
+        """Parse response from worldtimeapi.org."""
+        dt_str = data.get("datetime")
+        if dt_str:
+            return datetime.fromisoformat(dt_str)
+        return None
 
 
 # Global instance for pervasive access
