@@ -912,25 +912,37 @@ class ToolDispatcher:
             f"Tool '{tool_name}' may not be compatible with {server} realm. Server capabilities: {', '.join(capabilities)}",
         )
 
+    # Universal argument synonym map: schema_name -> [known LLM aliases]
+    _ARG_SYNONYMS: dict[str, list[str]] = {
+        "term": ["query", "search", "keyword", "libraryName"],
+        "command": ["cmd", "action", "script", "code"],
+        "goal": ["feature_description", "features", "objective", "prompt"],
+        "data_source": ["source", "file", "path", "dataset"],
+        "log_path": ["logs", "path", "file"],
+        "prompt": ["query", "question", "objective", "action"],
+        "company_name": ["query", "name", "company"],
+        "query": ["question", "search", "term"],
+    }
+
     def _autofill_missing_args(
         self, tool_name: str, validated: dict[str, Any], missing: list[str]
     ) -> list[str]:
-        """Try to auto-fill common missing arguments with sensible defaults."""
-        for req in missing:
-            # Handle business_registry_search specific mapping
-            if (
-                req == "company_name"
-                and "query" in validated
-                and "business_registry_search" in tool_name
-            ):
-                validated[req] = validated["query"]
-                logger.info(f"[DISPATCHER] Auto-filled '{req}' from 'query' for {tool_name}")
-            elif req == "query" and "question" in validated and req not in validated:
-                validated[req] = validated["question"]
-                logger.info(f"[DISPATCHER] Auto-filled '{req}' from 'question' for {tool_name}")
-            elif req == "prompt" and "query" in validated and req not in validated:
-                validated[req] = validated["query"]
-                logger.info(f"[DISPATCHER] Auto-filled '{req}' from 'query' for {tool_name}")
+        """Try to auto-fill common missing arguments with sensible defaults.
+
+        Uses a universal synonym table to map LLM-generated argument names
+        to the canonical names expected by tool schemas.
+        """
+        for req in list(missing):
+            if req in validated and validated[req] is not None:
+                continue
+
+            # 1. Try universal synonym lookup
+            synonyms = self._ARG_SYNONYMS.get(req, [])
+            for syn in synonyms:
+                if syn in validated and validated[syn] is not None:
+                    validated[req] = validated[syn]
+                    logger.info(f"[DISPATCHER] Auto-filled '{req}' from '{syn}' for {tool_name}")
+                    break
 
         # Re-check after auto-fill
         return [r for r in missing if r not in validated or validated[r] is None]
@@ -1572,6 +1584,17 @@ class ToolDispatcher:
                 args["prompt"] = args["question"]
             elif "error_message" in args:
                 args["prompt"] = args["error_message"]
+            elif "action" in args:
+                args["prompt"] = args["action"]
+
+        # Normalize 'goal' for vibe_implement_feature
+        if resolved_tool == "vibe_implement_feature" and "goal" not in args:
+            if "feature_description" in args:
+                args["goal"] = args["feature_description"]
+            elif "features" in args:
+                args["goal"] = args["features"]
+            elif "prompt" in args:
+                args["goal"] = args["prompt"]
 
         # Enforce defaults/timeouts - Vibe tasks can be long-running
         if "timeout_s" not in args:
@@ -1749,6 +1772,8 @@ class ToolDispatcher:
             # Live schema expects: term
             if "libraryName" in args and "term" not in args:
                 args["term"] = args.pop("libraryName")
+            if "query" in args and "term" not in args:
+                args["term"] = args.pop("query")
         elif resolved_tool == "c7_query":
             # Live schema expects: projectIdentifier + query
             if "context7CompatibleLibraryID" in args and "projectIdentifier" not in args:
