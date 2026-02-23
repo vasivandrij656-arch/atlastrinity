@@ -916,12 +916,19 @@ class ToolDispatcher:
     _ARG_SYNONYMS: dict[str, list[str]] = {
         "term": ["query", "search", "keyword", "libraryName"],
         "command": ["cmd", "action", "script", "code"],
-        "goal": ["feature_description", "features", "objective", "prompt", "errors", "artifacts_to_fix"],
+        "goal": [
+            "feature_description",
+            "features",
+            "objective",
+            "prompt",
+            "errors",
+            "artifacts_to_fix",
+        ],
         "data_source": ["source", "file", "path", "dataset"],
         "log_path": ["logs", "path", "file"],
         "prompt": ["query", "question", "objective", "action"],
         "company_name": ["query", "name", "company"],
-        "query": ["question", "search", "term"],
+        "query": ["question", "search", "term", "action", "path"],
         "file_path": ["review_scope", "path", "file", "source_file"],
         "libraryName": ["query", "term", "search"],
     }
@@ -1020,14 +1027,15 @@ class ToolDispatcher:
         # Check required arguments
         required = schema.get("required", [])
         missing = [r for r in required if r not in validated or validated[r] is None]
+        
         if missing:
-            error_msg = f"Missing required arguments: {', '.join(missing)}. Schema requires: {required}. Provided: {list(validated.keys())}"
-            logger.error(f"[DISPATCHER] Validation failed for '{tool_name}': {error_msg}")
-
-            # Try to auto-fill common missing arguments with sensible defaults
+            # Try to auto-fill common missing arguments with sensible defaults FIRST
             missing = self._autofill_missing_args(tool_name, validated, missing)
 
+            # ONLY log and fail if there are genuinely missing args after autofill
             if missing:
+                error_msg = f"Missing required arguments: {', '.join(missing)}. Schema requires: {required}. Provided: {list(validated.keys())}"
+                logger.error(f"[DISPATCHER] Validation failed for '{tool_name}': {error_msg}")
                 validated["__validation_error__"] = error_msg
                 return validated
 
