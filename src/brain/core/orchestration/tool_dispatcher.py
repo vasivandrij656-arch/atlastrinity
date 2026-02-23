@@ -1183,6 +1183,7 @@ class ToolDispatcher:
             "tour-guide": self._handle_tour,
             "googlemaps": self._handle_xcodebuild_unified,
             "google-maps": self._handle_xcodebuild_unified,
+            "report-generator": self._handle_report_generator,
         }
         if explicit_server and explicit_server in handlers:
             return handlers[explicit_server](tool_name, args)
@@ -1233,6 +1234,11 @@ class ToolDispatcher:
             return self._handle_xcodebuild(tool_name, args)
         if tool_name.startswith("git_") or explicit_server == "git":
             return self._handle_legacy_git(tool_name, args)
+
+        # Hallucination Fallbacks
+        if tool_name == "prerequisite_gap_analyzer":
+            args["objective"] = "Analyze prerequisites and gaps for this feature"
+            return "vibe", "vibe_smart_plan", args
 
         return None
 
@@ -1295,6 +1301,18 @@ class ToolDispatcher:
             new_args["command"] = f"cd {path} && {full_command}"
 
         return "xcodebuild", "execute_command", new_args
+
+    def _handle_report_generator(
+        self,
+        tool_name: str,
+        args: dict[str, Any],
+    ) -> tuple[str, str, dict[str, Any]]:
+        """Fallback to handle hallucinated report-generator server requests"""
+        logger.info(f"[DISPATCHER] Handled hallucinated report-generator ({tool_name}), redirecting to data-analysis")
+        # Ensure we have some sort of command for it
+        if "action" not in args:
+            args["action"] = tool_name
+        return "data-analysis", "analyze_dataset", args
 
     def _handle_data_analysis(
         self,
