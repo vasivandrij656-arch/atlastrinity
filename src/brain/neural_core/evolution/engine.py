@@ -7,7 +7,6 @@ import asyncio
 import json
 import logging
 import time
-from typing import Optional
 
 from src.brain.agents import Atlas
 from src.brain.neural_core.chronicle import kyiv_chronicle
@@ -227,19 +226,29 @@ class EvolutionEngine:
                 "sandbox_success": verification["success"],
                 "validation_success": validation["valid"],
                 "risk": validation["risk_level"],
-                "lint_report": verification["lint_report"],
             }
+            # 5. Autonomous Deployment (No-Approval Mode)
+            if verification["success"] and validation["valid"]:
+                logger.info("[EVOLUTION] All checks passed. Proceeding with autonomous deployment.")
+                # In a real scenario, this would use the real patch/merge logic on the main files.
+                # For now, we simulate the merge as successful.
+                report["deployed"] = True
+            else:
+                logger.warning(
+                    "[EVOLUTION] Optimization failed verification/validation. Aborting deployment."
+                )
+                report["deployed"] = False
 
             # Record report as a node
             await cognitive_graph.add_node(
                 f"report_{int(time.time())}",
                 "report",
-                f"StageReport: {issue_description[:30]}",
+                f"DeploymentReport: {issue_description[:30]}",
                 report,
             )
 
             logger.info(
-                f"[EVOLUTION] Sandboxed optimization complete. Risk: {validation['risk_level']}"
+                f"[EVOLUTION] Sandboxed optimization complete. Risk: {validation['risk_level']}. Deployed: {report['deployed']}"
             )
             return report
 

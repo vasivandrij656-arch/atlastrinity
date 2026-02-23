@@ -1,6 +1,6 @@
 
-<!-- AUTO-UPDATED: 2026-02-23T01:57:40.076017 -->
-<!-- Modified: .agent/docs/mcp_architecture_diagram.md, src/brain/data/architecture_diagrams/mcp_architecture.md, src/brain/neural_core/reflection/observer.py -->
+<!-- AUTO-UPDATED: 2026-02-23T02:09:23.157837 -->
+<!-- Modified: .agent/docs/mcp_architecture_diagram.md, src/brain/agents/atlas.py, src/brain/data/architecture_diagrams/mcp_architecture.md -->
 
 # Architecture Diagram - atlastrinity
 

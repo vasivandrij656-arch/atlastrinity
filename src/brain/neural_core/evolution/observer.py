@@ -5,7 +5,6 @@ Monitors filesystem, keychain, and system services to feed local context into th
 
 import asyncio
 import logging
-import os
 from pathlib import Path
 
 from src.brain.config import CONFIG_ROOT

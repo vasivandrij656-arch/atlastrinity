@@ -3,7 +3,6 @@ KyivChronicle: The Absolute Single Source of Truth for Time in NeuralCore.
 Ensures ATLAS operates exclusively on Europe/Kyiv time with external synchronization.
 """
 
-import asyncio
 import logging
 from datetime import UTC, datetime
 from zoneinfo import ZoneInfo
