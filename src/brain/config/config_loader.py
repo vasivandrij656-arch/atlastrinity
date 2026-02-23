@@ -73,8 +73,8 @@ class SystemConfig:
 
         # Sync each config file (first run only)
         for config_spec in configs_to_sync:
-            global_path: Path = cast("Path", config_spec["global"])
-            template_path: Path = cast("Path", config_spec["template"])
+            global_path: Path = config_spec["global"]
+            template_path: Path = config_spec["template"]
 
             if not global_path.exists():
                 if config_spec["use_defaults"]:
@@ -184,6 +184,12 @@ class SystemConfig:
                     f"sqlite+aiosqlite:///{CONFIG_ROOT}/atlastrinity.db",
                 ),
             },
+            "models": {
+                "aliases": {
+                    "atlas-deep": "gpt-4.1",
+                },
+                "copilot_fallback": "gpt-4o",
+            },
             "state": {"redis_url": os.getenv("REDIS_URL", "redis://localhost:6379/0")},
             "logging": {"level": "INFO", "max_log_size": 10485760, "backup_count": 5},
         }
@@ -285,6 +291,17 @@ class SystemConfig:
     def get_security_config(self) -> dict[str, Any]:
         """Returns security configuration."""
         return cast("dict[str, Any]", self.get("security", {}))
+
+    def resolve_model_alias(self, model_name: str | None) -> str | None:
+        """Resolves a virtual model ID to a real provider model ID via config aliases."""
+        if not model_name:
+            return model_name
+
+        aliases = self.get("models.aliases", {})
+        if not isinstance(aliases, dict):
+            return model_name
+
+        return aliases.get(model_name, model_name)
 
     @property
     def all(self) -> dict[str, Any]:

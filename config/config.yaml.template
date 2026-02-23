@@ -66,12 +66,17 @@ models:
   
   # Fallbacks (used when primary unavailable)
   fallback: "copilot:gpt-4.1"          # Stable fallback
+  copilot_fallback: "gpt-4o"           # Default fallback model for Copilot 400 errors
   
   # Sandbox model (used by mcp_sandbox.py)
   sandbox: "copilot:gpt-4.1"
 
   # Vibe error analysis model (used by vibe_analyze_error)
   vibe_analysis: "copilot:oswe-vscode-secondary"  # Best for deep problem analysis
+
+  # Model Aliases (Virtual IDs mapped to real IDs)
+  aliases:
+    atlas-deep: "gpt-4.1"
 
   # Agents inherit from models.default unless overridden
 

@@ -16,6 +16,7 @@ from __future__ import annotations
 
 import os
 from typing import Any
+from src.brain.config.config_loader import config
 
 
 def get_provider_name() -> str:
@@ -66,9 +67,8 @@ def create_llm(
             provider = parts[0]
             model_name = parts[1]
 
-    # Model Alias Mapping
-    if model_name == "atlas-deep":
-        model_name = "gpt-4.1"  # Map virtual ID to valid GitHub model
+    # Model Alias Mapping (System-driven)
+    model_name = config.resolve_model_alias(model_name)
 
     chosen_provider = (provider or get_provider_name()).lower()
 
