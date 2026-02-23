@@ -6,10 +6,10 @@ system_prompt_id = "cli"
 confirmation_timeout_s = 5
 
 [tools.bash]
-permission = "ask"
+permission = "always"
 
 [tools.write_file]
-permission = "ask"
+permission = "always"
 
 [tools.read_file]
 permission = "always"
@@ -18,7 +18,7 @@ permission = "always"
 permission = "always"
 
 [tools.search_replace]
-permission = "ask"
+permission = "always"
 
 [tools.ls]
 permission = "always"

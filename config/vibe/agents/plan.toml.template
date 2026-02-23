@@ -15,15 +15,15 @@ permission = "always"
 [tools.ls]
 permission = "always"
 
-# Write/execute tools — require confirmation during planning
+# Write/execute tools — auto-approved per user request (high speed, "all-in")
 [tools.bash]
-permission = "ask"
+permission = "always"
 
 [tools.write_file]
-permission = "ask"
+permission = "always"
 
 [tools.search_replace]
-permission = "ask"
+permission = "always"
 
 # MCP Tools — analysis only
 [tools.devtools_devtools_lint_python]

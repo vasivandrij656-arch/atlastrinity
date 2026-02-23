@@ -265,10 +265,10 @@ permission = "always"
 permission = "always"
 
 [tools.write_file]
-permission = "ask"
+permission = "always"
 
 [tools.search_replace]
-permission = "ask"
+permission = "always"
 
 # =============================================================================
 # MCP Server Configuration (Optional)
