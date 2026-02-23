@@ -1,6 +1,6 @@
 
-<!-- AUTO-UPDATED: 2026-02-23T02:55:47.325764 -->
-<!-- Modified: .agent/docs/mcp_architecture_diagram.md, .secrets.baseline, src/brain/data/architecture_diagrams/mcp_architecture.md -->
+<!-- AUTO-UPDATED: 2026-02-23T03:00:01.237544 -->
+<!-- Modified: .agent/docs/mcp_architecture_diagram.md, src/brain/data/architecture_diagrams/mcp_architecture.md, src/brain/neural_core/reflection/pipeline.py -->
 
 # Architecture Diagram - atlastrinity
 
