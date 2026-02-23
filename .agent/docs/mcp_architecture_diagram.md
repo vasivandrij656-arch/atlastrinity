@@ -1,6 +1,6 @@
 
-<!-- AUTO-UPDATED: 2026-02-23T20:33:16.710039 -->
-<!-- Modified: .agent/docs/mcp_architecture_diagram.md, src/brain/core/orchestration/tool_dispatcher.py, src/brain/data/architecture_diagrams/mcp_architecture.md -->
+<!-- AUTO-UPDATED: 2026-02-23T20:42:22.241370 -->
+<!-- Modified: .agent/docs/mcp_architecture_diagram.md, .env.example, src/brain/core/orchestration/tool_dispatcher.py -->
 
 # Architecture Diagram - atlastrinity
 

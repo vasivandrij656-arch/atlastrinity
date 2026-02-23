@@ -544,6 +544,14 @@ class VoiceManager:
         if len(english_words) < 2 and (total_chars > 0 and latin_chars / total_chars < 0.2):
             return text
 
+        # Skip CLI / raw technical payload heuristics
+        tech_keywords = {"git", "prs", "commit", "status", "diff", "merge", "branch", "error:"}
+        text_lower = text.lower()
+        if any(kw in text_lower for kw in tech_keywords) and len(english_words) > 5:
+            # Heavy terminal output
+            return text
+
+
         logger.info(f"[TTS] 🔄 Translating English-heavy text to Ukrainian: {text[:50]}...")
         llm = await self._get_translator()
 
