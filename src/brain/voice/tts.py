@@ -629,10 +629,10 @@ Ukrainian:"""
                 print(f"[TTS] [{agent_id.upper()}] (Text-only): {text}", file=sys.stderr)
                 return None
 
-            # Prepare text (sanitize + translate)
-            text = await self.prepare_speech_text(text)
-            if not text:
-                return None
+            # NOTE: text is already prepared by the orchestrator
+            # (VoiceOrchestrationMixin._speak -> voice.prepare_speech_text)
+            # Do NOT call prepare_speech_text() here to avoid double-sanitization
+            # that causes TTS to speak different text than what appears in the chat panel.
 
             agent_id = agent_id.lower()
             if agent_id not in AGENT_VOICES:

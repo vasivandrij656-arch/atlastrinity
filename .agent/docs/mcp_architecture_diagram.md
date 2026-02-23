@@ -1,6 +1,6 @@
 
-<!-- AUTO-UPDATED: 2026-02-23T16:50:29.969418 -->
-<!-- Modified: backups/databases/atlastrinity.db.encrypted, backups/databases/backup_metadata.json, backups/databases/golden_fund.db.encrypted -->
+<!-- AUTO-UPDATED: 2026-02-23T16:50:37.969045 -->
+<!-- Modified: .agent/docs/mcp_architecture_diagram.md, .secrets.baseline, src/brain/data/architecture_diagrams/mcp_architecture.md -->
 
 # Architecture Diagram - atlastrinity
 
