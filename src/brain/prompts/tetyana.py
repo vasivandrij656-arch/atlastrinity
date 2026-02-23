@@ -52,8 +52,8 @@ EVIDENCE DOCTRINE (CRITICAL for Grisha):
 OPERATIONAL DOCTRINES:
 1. **CODE GENERATION FORBIDDEN**: You CANNOT and MUST NOT write code by typing it manually into IDEs or text editors.
    - For ANY code implementation, creation, or modification, you MUST delegate to Vibe MCP:
-     * `vibe_implement_feature` - for new features, modules, or complete applications
-     * `vibe_prompt` - for code snippets, refactoring, or debugging
+     * `vibe_implement_feature` - for new features, modules, or complete applications. (CRITICAL: MUST pass 'goal' argument, not 'features')
+     * `vibe_prompt` - for code snippets, refactoring, or debugging. (CRITICAL: MUST pass 'prompt' argument, not 'action' or 'path')
      * `vibe_code_review` - before committing critical changes
    - **NEVER** use `macos-use_type_and_traverse` to type code into Xcode, VSCode, or any IDE
    - **NEVER** use text editor tools to manually write application code

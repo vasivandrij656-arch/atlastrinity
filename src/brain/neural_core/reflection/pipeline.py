@@ -65,13 +65,27 @@ class ReflexPipe:
             response = await self.analyzer.llm.ainvoke(prompt)
             content = response.content if hasattr(response, "content") else str(response)
 
-            # Extract JSON from potential markdown blocks
-            if "```json" in content:
-                content = content.split("```json")[1].split("```")[0].strip()
-            elif "```" in content:
-                content = content.split("```")[1].split("```")[0].strip()
-
-            analysis = json.loads(content)
+            # Extract JSON more reliably by locating the first { and last }
+            import re
+            
+            # Try to extract from markdown block first
+            json_match = re.search(r"```(?:json)?\s*(.*?)\s*```", content, re.DOTALL)
+            if json_match:
+                content_to_parse = json_match.group(1).strip()
+            else:
+                # Fallback: extract substring between first { and last }
+                start_idx = content.find('{')
+                end_idx = content.rfind('}')
+                if start_idx != -1 and end_idx != -1 and end_idx > start_idx:
+                    content_to_parse = content[start_idx:end_idx+1]
+                else:
+                    content_to_parse = content.strip()
+            
+            try:
+                analysis = json.loads(content_to_parse)
+            except json.JSONDecodeError as e:
+                logger.error(f"[REFLEX] JSON Parsing failed: {e}. Raw content: {content[:200]}...")
+                return False
 
             # 2. Integrate into CognitiveGraph
 

@@ -2070,7 +2070,6 @@ async def vibe_code_review(
             model=model or _current_model or AGENT_MODEL_OVERRIDE,
             mode="plan",  # Read-only mode
             session_id=session_id,
-            max_turns=5,
         ),
     )
 
