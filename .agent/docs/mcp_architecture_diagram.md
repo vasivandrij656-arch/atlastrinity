@@ -1,6 +1,6 @@
 
-<!-- AUTO-UPDATED: 2026-02-23T07:27:15.743536 -->
-<!-- Modified: .agent/docs/mcp_architecture_diagram.md, .env.example, src/brain/data/architecture_diagrams/mcp_architecture.md -->
+<!-- AUTO-UPDATED: 2026-02-23T07:28:04.897727 -->
+<!-- Modified: .agent/docs/mcp_architecture_diagram.md, .env.example, config/config.yaml.template -->
 
 # Architecture Diagram - atlastrinity
 

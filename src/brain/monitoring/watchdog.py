@@ -155,10 +155,12 @@ class ProcessWatchdog:
                     # For Vibe CLI: 0% CPU for > 5 min while running is suspect
                     if info["type"] == "vibe_cli":
                         uptime = time.time() - proc.create_time()
-                        
+
                         # Hard timeout: if Vibe CLI runs longer than 60 minutes, it's definitively stuck
                         if uptime > 3600:
-                            logger.error(f"[WATCHDOG] Process {pid} ({info['type']}) exceeded absolute 60m timeout.")
+                            logger.error(
+                                f"[WATCHDOG] Process {pid} ({info['type']}) exceeded absolute 60m timeout."
+                            )
                             await self.handle_stuck_process(pid)
                             continue
 
