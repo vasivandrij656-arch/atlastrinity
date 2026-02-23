@@ -73,8 +73,8 @@ class SystemConfig:
 
         # Sync each config file (first run only)
         for config_spec in configs_to_sync:
-            global_path: Path = cast(Path, config_spec["global"])
-            template_path: Path = cast(Path, config_spec["template"])
+            global_path: Path = cast("Path", config_spec["global"])
+            template_path: Path = cast("Path", config_spec["template"])
 
             if not global_path.exists():
                 if config_spec["use_defaults"]:

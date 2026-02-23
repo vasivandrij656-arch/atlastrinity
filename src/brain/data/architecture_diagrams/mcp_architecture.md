@@ -1,6 +1,6 @@
 
-<!-- AUTO-UPDATED: 2026-02-23T07:36:27.982751 -->
-<!-- Modified: .agent/docs/mcp_architecture_diagram.md, src/brain/data/architecture_diagrams/mcp_architecture.md, src/brain/monitoring/watchdog.py -->
+<!-- AUTO-UPDATED: 2026-02-23T07:38:10.782915 -->
+<!-- Modified: .agent/docs/mcp_architecture_diagram.md, .secrets.baseline, backups/databases/atlastrinity.db.encrypted -->
 
 # Architecture Diagram - atlastrinity
 
