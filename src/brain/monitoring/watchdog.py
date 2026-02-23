@@ -125,7 +125,8 @@ class ProcessWatchdog:
                 return "mcp_server"
             if "devtools_server" in cmd:
                 return "mcp_devtools"
-            if "vibe" in cmd and "-p" in cmd:
+            # More robust detection for vibe cli even if called via absolute python path
+            if "vibe" in cmd and ("-p" in cmd or "--output" in cmd or "agent" in cmd):
                 return "vibe_cli"
             if "copilot_proxy" in cmd:
                 return "proxy"
@@ -154,8 +155,15 @@ class ProcessWatchdog:
                     # For Vibe CLI: 0% CPU for > 5 min while running is suspect
                     if info["type"] == "vibe_cli":
                         uptime = time.time() - proc.create_time()
-                        # If running > 2 min AND cpu is 0 for last 5 checks
-                        if uptime > 120 and all(c < 0.1 for c in info["cpu_history"][-5:]):
+                        
+                        # Hard timeout: if Vibe CLI runs longer than 60 minutes, it's definitively stuck
+                        if uptime > 3600:
+                            logger.error(f"[WATCHDOG] Process {pid} ({info['type']}) exceeded absolute 60m timeout.")
+                            await self.handle_stuck_process(pid)
+                            continue
+
+                        # If running > 2 min AND cpu is ~0 for last 5 checks (allow small spikes up to 0.5)
+                        if uptime > 120 and all(c < 0.5 for c in info["cpu_history"][-5:]):
                             info["stuck_count"] += 1
                         else:
                             info["stuck_count"] = 0
