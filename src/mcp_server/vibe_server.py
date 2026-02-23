@@ -1946,6 +1946,13 @@ CONTEXT FILES
 CONSTRAINTS & GUIDELINES
 ============================================================
 {constraints or "Standard project guidelines apply."}
+
+CRITICAL ARCHITECTURAL RULES:
+1. "TEMPLATES FIRST" POLICY FOR CONFIGURATIONS:
+   - Apply changes ONLY to configuration templates (usually located in `.config/atlastrinity/` or `config/` templates).
+   - NEVER directly edit generated/active configuration files if a template exists.
+   - The primary source of truth for changes is the template. Active configs are only for reading.
+
 {quality_section}
 
 ============================================================
