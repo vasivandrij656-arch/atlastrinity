@@ -35,8 +35,8 @@ from tenacity import (
     wait_exponential,
 )
 
-from src.brain.monitoring.logger import logger
 from src.brain.config.config_loader import config
+from src.brain.monitoring.logger import logger
 
 # Type aliases for better type safety
 ContentItem = str | dict[str, Any]
@@ -495,7 +495,9 @@ class CopilotLLM(BaseChatModel):
                         pass
 
                     # Use a fallback model from environment or default to a config value
-                    fallback_model = os.getenv("COPILOT_FALLBACK_MODEL") or config.get("models.copilot_fallback", "gpt-4o")
+                    fallback_model = os.getenv("COPILOT_FALLBACK_MODEL") or config.get(
+                        "models.copilot_fallback", "gpt-4o"
+                    )
                     payload["model"] = fallback_model
 
                     # Clean headers and payload for fallback
