@@ -494,7 +494,7 @@ class CopilotLLM(BaseChatModel):
                         pass
 
                     # Use a fallback model from environment or default to a config value
-                    fallback_model = os.getenv("COPILOT_FALLBACK_MODEL", "default_fallback_model")
+                    fallback_model = os.getenv("COPILOT_FALLBACK_MODEL", "gpt-4o")
                     payload["model"] = fallback_model
 
                     # Clean headers and payload for fallback

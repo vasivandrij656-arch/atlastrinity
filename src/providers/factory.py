@@ -66,6 +66,10 @@ def create_llm(
             provider = parts[0]
             model_name = parts[1]
 
+    # Model Alias Mapping
+    if model_name == "atlas-deep":
+        model_name = "gpt-4.1"  # Map virtual ID to valid GitHub model
+
     chosen_provider = (provider or get_provider_name()).lower()
 
     if chosen_provider == "windsurf":
