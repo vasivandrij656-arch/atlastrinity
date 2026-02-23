@@ -1,6 +1,6 @@
 
-<!-- AUTO-UPDATED: 2026-02-23T07:17:44.689383 -->
-<!-- Modified: .agent/docs/mcp_architecture_diagram.md, src/brain/data/architecture_diagrams/mcp_architecture.md, src/brain/monitoring/watchdog.py -->
+<!-- AUTO-UPDATED: 2026-02-23T07:18:01.690377 -->
+<!-- Modified: .agent/docs/mcp_architecture_diagram.md, config/vibe/agents/auto-approve.toml.template, config/vibe/agents/plan.toml.template -->
 
 # Architecture Diagram - atlastrinity
 

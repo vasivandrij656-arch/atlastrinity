@@ -865,7 +865,7 @@ def _prepare_vibe_env(env: dict[str, str] | None) -> dict[str, str]:
     process_env["NO_COLOR"] = "1"
     process_env["PYTHONUNBUFFERED"] = "1"
     process_env["TEXTUAL_ALLOW_NON_INTERACTIVE"] = "1"
-    process_env["VIBE_DEBUG_RAW"] = "false"
+    process_env["VIBE_DEBUG_RAW"] = "true"
     process_env.update(config.get_environment())
     if env:
         process_env.update({k: str(v) for k, v in env.items()})
@@ -1080,7 +1080,7 @@ async def _execute_vibe_with_retries(
                 env=process_env,
                 stdout=asyncio.subprocess.PIPE,
                 stderr=asyncio.subprocess.PIPE,
-                stdin=asyncio.subprocess.PIPE,
+                stdin=asyncio.subprocess.DEVNULL,
             )
 
             stdout_chunks: list[bytes] = []
