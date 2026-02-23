@@ -916,12 +916,14 @@ class ToolDispatcher:
     _ARG_SYNONYMS: dict[str, list[str]] = {
         "term": ["query", "search", "keyword", "libraryName"],
         "command": ["cmd", "action", "script", "code"],
-        "goal": ["feature_description", "features", "objective", "prompt"],
+        "goal": ["feature_description", "features", "objective", "prompt", "errors", "artifacts_to_fix"],
         "data_source": ["source", "file", "path", "dataset"],
         "log_path": ["logs", "path", "file"],
         "prompt": ["query", "question", "objective", "action"],
         "company_name": ["query", "name", "company"],
         "query": ["question", "search", "term"],
+        "file_path": ["review_scope", "path", "file", "source_file"],
+        "libraryName": ["query", "term", "search"],
     }
 
     def _autofill_missing_args(
@@ -1593,8 +1595,21 @@ class ToolDispatcher:
                 args["goal"] = args["feature_description"]
             elif "features" in args:
                 args["goal"] = args["features"]
+            elif "errors" in args:
+                args["goal"] = args["errors"]
+            elif "artifacts_to_fix" in args:
+                args["goal"] = args["artifacts_to_fix"]
+            elif "previous_verification_results" in args:
+                args["goal"] = args["previous_verification_results"]
             elif "prompt" in args:
                 args["goal"] = args["prompt"]
+
+        # Normalize 'file_path' for vibe_code_review
+        if resolved_tool == "vibe_code_review" and "file_path" not in args:
+            if "review_scope" in args:
+                args["file_path"] = args["review_scope"]
+            elif "path" in args:
+                args["file_path"] = args["path"]
 
         # Enforce defaults/timeouts - Vibe tasks can be long-running
         if "timeout_s" not in args:
@@ -1760,9 +1775,18 @@ class ToolDispatcher:
             "library",
             "c7_search",
             "c7_list_libraries",
+            "resolve-library-id",
+            "resolve_library_id",
         ]:
             resolved_tool = "c7_search"
-        elif tool_name in ["c7_query", "c7_info", "get_context", "c7_get_context"]:
+        elif tool_name in [
+            "c7_query",
+            "c7_info",
+            "get_context",
+            "c7_get_context",
+            "get-library-docs",
+            "get_library_docs",
+        ]:
             resolved_tool = "c7_query"
         else:
             resolved_tool = tool_name
