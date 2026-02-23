@@ -71,8 +71,7 @@ class KyivChronicle:
                             return True
             except Exception as e:
                 logger.debug(
-                    f"[CHRONICLE] Time sync failed for {url.split('/')[2]}: "
-                    f"{type(e).__name__}: {e}"
+                    f"[CHRONICLE] Time sync failed for {url.split('/')[2]}: {type(e).__name__}: {e}"
                 )
 
         logger.debug("[CHRONICLE] All time sync APIs unavailable. Using system clock.")
