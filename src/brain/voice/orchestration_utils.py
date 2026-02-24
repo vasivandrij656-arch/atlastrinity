@@ -129,9 +129,10 @@ class VoiceOrchestrationMixin:
                 return
 
             # Skip highly technical dense text (e.g. paths, class names)
-            if len(speech_text) > 0 and (speech_text.count(".") + speech_text.count("_")) / len(
-                speech_text
-            ) > 0.15:
+            if (
+                len(speech_text) > 0
+                and (speech_text.count(".") + speech_text.count("_")) / len(speech_text) > 0.15
+            ):
                 return
 
             if len(speech_text) > 5:
