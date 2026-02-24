@@ -1567,8 +1567,8 @@ async def devtools_restart_system(reason: str = "User requested restart") -> dic
         return {"success": False, "error": "Healing hypermodule not available"}
 
     try:
-        from src.brain.healing.modes import HealingMode
         from src.brain.core.server.server import trinity
+        from src.brain.healing.modes import HealingMode
 
         # Capture current state from trinity
         state = trinity.get_state() if trinity else {}
@@ -1591,8 +1591,8 @@ async def devtools_restart_system(reason: str = "User requested restart") -> dic
         await healing_orchestrator.handle_error(
             step_id="manual_restart",
             error=reason,
-            context={"action": "devtools_restart_system"},
-            log_context="User initiated Phoenix Protocol via DevTools."
+            context={"action": "devtools_restart_system", "preserved_state": state},
+            log_context="User initiated Phoenix Protocol via DevTools.",
         )
 
         return {
