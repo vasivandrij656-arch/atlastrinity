@@ -98,6 +98,17 @@ SPAM_TRIGGERS = [
     "Discoveries:",
     "brain - INFO - [MEMORY]",
     "brain - INFO - [STATE]",
+    "INFOsrc.",
+    "INFObrain.",
+    "INFOgolden_fund.",
+    "INFOgoldenfund.",
+    "DEBUGsrc.",
+    "WARNINGsrc.",
+    "ERRORsrc.",
+    "role system,",
+    "role assistant,",
+    "role user,",
+    "content:",
 ]
 
 logger = logging.getLogger("vibe_mcp")
@@ -992,8 +1003,15 @@ async def _format_and_emit_vibe_log(line: str, stream_name: str, ctx: Context | 
         formatted = f"🧠 [VIBE-THOUGHT] {line}"
     elif "Running" in line or "Executing" in line:
         formatted = f"🔧 [VIBE-ACTION] {line}"
-    else:
+    elif not any(
+        line.startswith(p)
+        for p in ["INFO", "DEBUG", "WARNING", "ERROR", "traceback", "  File "]
+    ):
         formatted = f"⚡ [VIBE-LIVE] {line}"
+    else:
+        # It's a technical log, don't use the VIBE-LIVE marker
+        # This prevents the orchestrator from speaking it
+        formatted = line
 
     logger.debug(mask_sensitive_data(f"[VIBE_{stream_name}] {line}"))
     level = "warning" if stream_name == "ERR" else "info"

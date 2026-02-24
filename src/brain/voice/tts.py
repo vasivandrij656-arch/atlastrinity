@@ -637,7 +637,15 @@ Ukrainian:"""
 
         # 2. Translate if needed (force_ukrainian defense)
         if config.get("voice.tts.force_ukrainian", True):
-            text = await self.translate_to_ukrainian(text)
+            translated = await self.translate_to_ukrainian(text)
+            # If translation was skipped (returned original) AND it's English/Technical,
+            # we should skip speaking it to avoid weird English-via-Ukrainian-voice issues.
+            if translated == text and len(text) > 0:
+                latin_chars = len(re.findall(r"[a-zA-Z]", text))
+                if latin_chars > len(text) * 0.3:
+                    logger.debug(f"[TTS] Skipping technical/English text: {text[:50]}...")
+                    return ""
+            text = translated
 
         return text
 

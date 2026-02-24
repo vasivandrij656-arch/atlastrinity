@@ -123,6 +123,17 @@ class VoiceOrchestrationMixin:
                 speech_text = speech_text.replace(marker, "")
             speech_text = re.sub(r"[^\w\s\.,!\?]", "", speech_text).strip()
 
+            # Secondary filtering: Skip if text is purely technical
+            tech_patterns = ["INFO", "DEBUG", "WARNING", "ERROR", "src.", "brain.", "golden_fund."]
+            if any(speech_text.startswith(p) for p in tech_patterns):
+                return
+
+            # Skip highly technical dense text (e.g. paths, class names)
+            if len(speech_text) > 0 and (speech_text.count(".") + speech_text.count("_")) / len(
+                speech_text
+            ) > 0.15:
+                return
+
             if len(speech_text) > 5:
                 # Use 'atlas' for status updates
                 if hasattr(self, "_last_live_speech_time"):
