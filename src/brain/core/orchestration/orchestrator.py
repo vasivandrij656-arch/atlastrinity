@@ -1323,16 +1323,20 @@ class Trinity(TourMixin, VoiceOrchestrationMixin):
                     mode_profile=mode_profile,
                 )
                 if response != "__ESCALATE__":
+                    # CRITICAL FIX: Ensure the response is translated for BOTH UI and Voice
+                    # This prevents the English leakage in the chat panel
+                    final_response = await self.voice.prepare_speech_text(str(response))
+
                     # Persist response to history so it appears in UI
                     if self.state and "messages" in self.state:
-                        msg = AIMessage(content=str(response), name="ATLAS")
+                        msg = AIMessage(content=final_response, name="ATLAS")
                         msg.additional_kwargs["timestamp"] = datetime.now().timestamp()
                         self.state["messages"].append(msg)
-                        asyncio.create_task(self._save_chat_message("ai", str(response), "atlas"))
+                        asyncio.create_task(self._save_chat_message("ai", final_response, "atlas"))
 
                     # chat_visible=False because the AIMessage was already appended above
-                    await self._speak("atlas", response, chat_visible=False)
-                    return {"status": "completed", "result": response, "type": intent}
+                    await self._speak("atlas", final_response, chat_visible=False)
+                    return {"status": "completed", "result": final_response, "type": intent}
 
             # Complex task planning
             self.state["system_state"] = SystemState.PLANNING.value
@@ -1521,7 +1525,10 @@ class Trinity(TourMixin, VoiceOrchestrationMixin):
                 images=images,
                 mode_profile=segment.profile,
             )
-            return {"status": "completed", "result": response, "mode": segment.mode}
+            
+            # Ensure translation for segmented feedback
+            final_response = await self.voice.prepare_speech_text(str(response))
+            return {"status": "completed", "result": final_response, "mode": segment.mode}
 
         # Complex modes (task, development) - need full planning
         # Create temporary analysis for this segment

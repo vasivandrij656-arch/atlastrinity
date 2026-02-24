@@ -579,24 +579,30 @@ class VoiceManager:
         ):
             return text
 
-        # Skip strings with very high dot/underscore density (likely paths/filenames)
-        if total_chars > 0 and (text.count(".") + text.count("_")) / total_chars > 0.1:
+        # Higher threshold for technical density if force_ukrainian is on
+        density_limit = 0.2 if config.get("voice.tts.force_ukrainian", True) else 0.1
+        if total_chars > 0 and (text.count(".") + text.count("_")) / total_chars > density_limit:
             return text
 
         if any(kw in text_lower for kw in tech_keywords) and (
-            len(english_words) > 5 or "{" in text
+            len(english_words) > 15 or "{" in text
         ):
-            # Heavy terminal output, JSON, or multi-keyword technical text
+            # Only skip if it's REALLY heavy tech (likely a raw JSON dump or massive terminal log)
+            # Mixed content should still be translated
             return text
 
         logger.info(f"[TTS] 🔄 Translating English-heavy text to Ukrainian: {text[:50]}...")
         llm = await self._get_translator()
 
         prompt = f"""Task: Translate the following text into HIGH-QUALITY natural Ukrainian.
-CRITICAL: ZERO English words. Localize technical terms, paths, and names.
-The tone should be professional and guardian-like.
+CRITICAL: ZERO English words in the final output.
+- Localize technical terms where equivalents exist (e.g., 'file' -> 'файл').
+- Keep technical paths or IDs if they are critical, but translate surrounding explanation.
+- If there is code or JSON, translate only the human-readable strings/comments within it.
+- The tone should be professional, helpful, and guardian-like.
 
-Text: {text}
+Text to translate:
+{text}
 
 Ukrainian:"""
 
@@ -605,7 +611,7 @@ Ukrainian:"""
 
             messages = [
                 SystemMessage(
-                    content="You are a professional Ukrainian translator. Zero English words allowed."
+                    content="You are a professional Ukrainian translator specializing in technical content. Your goal is a natural Ukrainian response with zero English words in the explanations."
                 ),
                 HumanMessage(content=prompt),
             ]
