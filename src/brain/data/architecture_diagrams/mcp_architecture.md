@@ -1,6 +1,6 @@
 
-<!-- AUTO-UPDATED: 2026-02-24T20:25:56.779580 -->
-<!-- Modified: .agent/docs/mcp_architecture_diagram.md, .vscode/settings.json, src/brain/data/architecture_diagrams/mcp_architecture.md -->
+<!-- AUTO-UPDATED: 2026-02-24T20:39:02.572854 -->
+<!-- Modified: .agent/docs/mcp_architecture_diagram.md, .githuactions/setup-atlastrinity/action.yml, .githuworkflows/ci-core.yml -->
 
 # Architecture Diagram - atlastrinity
 
