@@ -170,9 +170,20 @@ def _execute_protocol_search(rule_name: str, query_val: str, provider_name: str)
         return {"error": str(e)}
 
 
-def _extract_from_match(match, seen_urls, results, max_results, is_fallback=False):
-    """Extracted logic to process a single regex match."""
-    href = html.unescape(match.group(1)).strip()
+def _extract_from_match(
+    match_or_url: Any,
+    seen_urls: set[str],
+    results: list[dict[str, Any]],
+    max_results: int,
+    title: str | None = None,
+    snippet: str | None = None,
+    is_fallback: bool = False,
+) -> bool:
+    """Extracted logic to process a single search result."""
+    if isinstance(match_or_url, str):
+        href = match_or_url
+    else:
+        href = html.unescape(match_or_url.group(1)).strip()
 
     # Filter DDG internal links
     forbidden = ["duckduckgo.com/", "ad_redirect", "javascript:"]
@@ -184,11 +195,12 @@ def _extract_from_match(match, seen_urls, results, max_results, is_fallback=Fals
             return False
 
     # Title extraction
-    if not is_fallback:
-        title = html.unescape(match.group(2)).strip()
-    else:
-        title_html = match.group(2)
-        title = html.unescape(re.sub(r"<.*?>", "", title_html)).strip()
+    if title is None:
+        if not is_fallback:
+            title = html.unescape(match_or_url.group(2)).strip()
+        else:
+            title_html = match_or_url.group(2)
+            title = html.unescape(re.sub(r"<.*?>", "", title_html)).strip()
 
     if not href or not title or len(title) < 2:
         return False
@@ -206,6 +218,10 @@ def _extract_from_match(match, seen_urls, results, max_results, is_fallback=Fals
     elif is_fallback and href.startswith("/"):
         href = "https://duckduckgo.com" + href
 
+    if snippet:
+        # Clean up HTML tags from snippet
+        snippet = html.unescape(re.sub(r"<.*?>", "", snippet)).strip()
+
     if is_fallback:
         # Filter UI elements
         if any(title.lower() == x for x in ["next", "previous", "images", "videos", "news"]):
@@ -213,7 +229,10 @@ def _extract_from_match(match, seen_urls, results, max_results, is_fallback=Fals
 
     if href not in seen_urls and href.startswith("http"):
         seen_urls.add(href)
-        results.append({"title": title, "url": href})
+        result_item = {"title": title, "url": href}
+        if snippet:
+            result_item["snippet"] = snippet
+        results.append(result_item)
         return len(results) >= max_results
     return False
 
@@ -245,13 +264,31 @@ def _search_ddg(query: str, max_results: int, timeout_s: float) -> list[dict[str
     results: list[dict[str, Any]] = []
     seen_urls: set[str] = set()
 
-    # Method 1: Extraction via result__a class
-    title_pattern = re.compile(r'class="result__a"[^>]*href="([^"]+)"[^>]*>([^<]+)', re.IGNORECASE)
-    for match in title_pattern.finditer(resp.text):
-        if _extract_from_match(match, seen_urls, results, max_results):
+    # Strategy 1: Find result containers and extract title + snippet
+    # This is more robust than matching titles and snippets independently
+    container_pattern = re.compile(
+        r'<div[^>]*class="[^"]*result__body[^"]*"[^>]*>.*?class="result__a"[^>]*href="([^"]+)"[^>]*>(.*?)</a>.*?class="result__snippet"[^>]*>(.*?)</a>',
+        re.DOTALL | re.IGNORECASE,
+    )
+
+    for match in container_pattern.finditer(resp.text):
+        url = match.group(1)
+        title = match.group(2)
+        snippet = match.group(3)
+        if _extract_from_match(url, seen_urls, results, max_results, title=title, snippet=snippet):
             break
 
-    # Method 2: Fallback
+    # Strategy 2: Fallback to old behavior if few results (no snippets found)
+    if len(results) < max_results:
+        # Method 1: Extraction via result__a class
+        title_pattern = re.compile(
+            r'class="result__a"[^>]*href="([^"]+)"[^>]*>([^<]+)', re.IGNORECASE
+        )
+        for match in title_pattern.finditer(resp.text):
+            if _extract_from_match(match, seen_urls, results, max_results):
+                break
+
+    # Strategy 3: Extreme Fallback
     if len(results) < max_results:
         fallback_pattern = re.compile(
             r'<a[^>]*href="([^"]+)"[^>]*>(.*?)</a>', re.IGNORECASE | re.DOTALL
