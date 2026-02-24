@@ -8,9 +8,7 @@ Once the fix is purportedly applied, it restarts the application again.
 
 import asyncio
 import logging
-import subprocess
 import sys
-import time
 from pathlib import Path
 
 from src.brain.healing.hypermodule import HealingMode, healing_hypermodule

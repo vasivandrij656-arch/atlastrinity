@@ -182,8 +182,10 @@ def _extract_from_match(
     """Extracted logic to process a single search result."""
     if isinstance(match_or_url, str):
         href = match_or_url
-    else:
+    elif match_or_url:
         href = html.unescape(match_or_url.group(1)).strip()
+    else:
+        return False
 
     # Filter DDG internal links
     forbidden = ["duckduckgo.com/", "ad_redirect", "javascript:"]
@@ -195,7 +197,7 @@ def _extract_from_match(
             return False
 
     # Title extraction
-    if title is None:
+    if title is None and not isinstance(match_or_url, str) and match_or_url:
         if not is_fallback:
             title = html.unescape(match_or_url.group(2)).strip()
         else:

@@ -1,6 +1,6 @@
 
-<!-- AUTO-UPDATED: 2026-02-24T19:35:22.117214 -->
-<!-- Modified: scripts/sync_config_templates.js, src/brain/core/orchestration/orchestrator.py, src/brain/voice/tts.py -->
+<!-- AUTO-UPDATED: 2026-02-24T19:42:57.180204 -->
+<!-- Modified: .agent/docs/mcp_architecture_diagram.md, src/brain/core/orchestration/orchestrator.py, src/brain/data/architecture_diagrams/mcp_architecture.md -->
 
 # Architecture Diagram - atlastrinity
 
