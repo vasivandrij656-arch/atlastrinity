@@ -1,6 +1,6 @@
 
-<!-- AUTO-UPDATED: 2026-02-24T22:18:49.648338 -->
-<!-- Modified: .agent/docs/mcp_architecture_diagram.md, src/brain/data/architecture_diagrams/mcp_architecture.md, src/mcp_server/vibe_server.py -->
+<!-- AUTO-UPDATED: 2026-02-24T22:26:56.772330 -->
+<!-- Modified: .agent/docs/mcp_architecture_diagram.md, src/brain/data/architecture_diagrams/mcp_architecture.md, src/brain/voice/orchestration_utils.py -->
 
 # Architecture Diagram - atlastrinity
 

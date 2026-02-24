@@ -1555,6 +1555,55 @@ def devtools_get_system_map() -> dict[str, Any]:
 
 
 @server.tool()
+async def devtools_restart_system(reason: str = "User requested restart") -> dict[str, Any]:
+    """Trigger the 'Phoenix Protocol' (System Restart with State Preservation).
+    Saves the current orchestrator state and task context, then re-executes the system process.
+    The system should resume from the last recorded step after restarting.
+
+    Args:
+        reason: Optional reason for the restart.
+    """
+    if not healing_hypermodule:
+        return {"success": False, "error": "Healing hypermodule not available"}
+
+    try:
+        from src.brain.healing.modes import HealingMode
+        from src.brain.core.server.server import trinity
+
+        # Capture current state from trinity
+        state = trinity.get_state() if trinity else {}
+
+        # Trigger Phoenix Protocol via hypermodule
+        # We use HEAL mode with a specific context to force a Phoenix Restart
+        # although hypermodule usually handles this via analysis, we can trigger it
+        # more directly if we expose a restart method, but here we'll use the
+        # public hypermodule.restart_server which handles state preservation.
+
+        # Since we want a FULL system restart (Phoenix), we use the orchestrator's
+        # internal _run_phoenix_protocol or the hypermodule's restart_server
+        # with 'system' as the name if it supports it, or direct call.
+
+        # Let's use the hypermodule's restart_server logic but for the "brain" itself.
+        # Actually, looking at system_healing.py, _run_phoenix_protocol is what we want.
+        from src.brain.healing.system_healing import healing_orchestrator
+
+        # We simulate a SYSTEM_CRITICAL error to trigger Phoenix
+        await healing_orchestrator.handle_error(
+            step_id="manual_restart",
+            error=reason,
+            context={"action": "devtools_restart_system"},
+            log_context="User initiated Phoenix Protocol via DevTools."
+        )
+
+        return {
+            "success": True,
+            "message": "Phoenix Protocol initiated. System is restarting...",
+        }
+    except Exception as e:
+        return {"success": False, "error": str(e)}
+
+
+@server.tool()
 def devtools_test_all_mcp_native() -> dict[str, Any]:
     """Test ALL enabled MCP servers natively by spawning each server process,
     listing its tools via stdio JSON-RPC, and reporting results.
