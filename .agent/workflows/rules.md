@@ -16,6 +16,7 @@ You must strictly adhere to the following operational rules and architectural co
 - **Agent-Trinity Interaction**: After EVERY code change, ALWAYS run `scripts/agent_preflight.py --autofix` to verify local integrity. It is MANDATORY to achieve and maintain a "green" (passing) status for all CI/CD workflows. If a workflow fails, you MUST investigate, diagnose, and fix the root cause immediately.
 - **Pre-Work Synchronization**: BEFORE starting any task or code changes, ALWAYS synchronize the local repository with the remote (git pull --rebase) to ensure work starts from the latest state.
 - **GitHub Identity & Authentication**: ALWAYS use the `GITHUB_TOKEN` from the global `.env` file for all repository operations (gh commands, git push/pull). The identity and permissions are determined exclusively by the provided token. Never use local credentials or other tokens.
+- **YAML & Action Validation**: ALWAYS check for IDE diagnostics and schema errors after changing YAML files. For composite actions (`.github/actions/`), ensure they strictly follow the Action schema. Address any reported issues immediately to maintain configuration integrity.
 
 ## Model Suite (Copilot Provider Only)
 
