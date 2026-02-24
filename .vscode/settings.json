@@ -7,14 +7,14 @@
   "github.gitCredentialHelper": true,
   "github.enterpriseUri": "${env:GITHUB_TOKEN}",
   "[python]": {
-    "editor.defaultFormatter": "charliermarsh.ruff",
+    "editor.defaultFormatter": "ms-python.python",
     "editor.formatOnSave": true,
     "editor.codeActionsOnSave": {
       "source.organizeImports": "explicit"
     }
   },
   "[typescript]": {
-    "editor.defaultFormatter": "biomejs.biome",
+    "editor.defaultFormatter": "vscode.typescript-language-features",
     "editor.formatOnSave": true
   },
   "[javascript]": {
@@ -54,6 +54,13 @@
     "GitHub.copilot"
   ],
   "yaml.schemas": {
-    "https://json.schemastore.org/github-action": ".github/actions/*/action.{yml,yaml}"
+    "https://json.schemastore.org/github-action": [
+      ".github/actions/*/action.yml",
+      ".github/actions/*/action.yaml"
+    ],
+    "https://json.schemastore.org/github-workflow": [
+      ".github/workflows/*.yml",
+      ".github/workflows/*.yaml"
+    ]
   }
 }
