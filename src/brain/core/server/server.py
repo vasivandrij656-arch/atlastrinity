@@ -410,6 +410,18 @@ async def resume_system():
     return await trinity.resume()
 
 
+@app.post("/api/voice/toggle")
+async def toggle_voice(payload: dict[str, bool]):
+    """Enable or disable TTS voice output"""
+    enabled = payload.get("enabled", True)
+    if trinity.voice:
+        trinity.voice.enabled = enabled
+        if not enabled:
+            trinity.voice.stop()
+        logger.info(f"[SERVER] Voice output {'enabled' if enabled else 'disabled'}")
+    return {"status": "success", "voice_enabled": enabled}
+
+
 @app.post("/api/stt")
 async def speech_to_text(audio: UploadFile = File(...)):
     """Convert speech to text using Whisper"""

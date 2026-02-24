@@ -268,7 +268,7 @@ class MonitoringSystem:
             logger.info(f"Prometheus metrics server started on port {self.prometheus_port}")
         except OSError as e:
             if e.errno == 48:  # Address already in use
-                logger.warning(
+                logger.debug(
                     f"Prometheus port {self.prometheus_port} is busy. Metrics server likely already running (common during reload)."
                 )
             else:

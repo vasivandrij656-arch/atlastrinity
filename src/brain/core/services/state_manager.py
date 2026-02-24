@@ -231,18 +231,20 @@ class StateManager:
 
             full_channel = self._key(f"events:{channel}")
             await self.redis_client.publish(full_channel, json.dumps(message, default=str))  # type: ignore
-            
+
             if self._publish_fail_count > 0:
                 logger.info("[STATE] Redis pub/sub recovered from previous failures.")
             self._publish_fail_count = 0  # Reset on success
-            
+
         except Exception as e:
             # Avoid logging if it's just a loop closure error
             if "Event loop is closed" not in str(e):
                 self._publish_fail_count += 1
                 if self._publish_fail_count <= 3:  # Allow 3 strikes before giving up logging
-                    logger.warning(f"[STATE] Redis publish failed (attempt {self._publish_fail_count}), backing off: {e}")
-                
+                    logger.warning(
+                        f"[STATE] Redis publish failed (attempt {self._publish_fail_count}), backing off: {e}"
+                    )
+
                 # Do NOT permanently disable. Just mark as temporarily unhealthy.
                 if self._publish_fail_count >= 3:
                     self._publish_ready = False

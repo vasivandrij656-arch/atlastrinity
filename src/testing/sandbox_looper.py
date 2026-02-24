@@ -14,7 +14,6 @@ import time
 from pathlib import Path
 
 from src.brain.healing.hypermodule import HealingMode, healing_hypermodule
-from src.brain.monitoring.logger import logger
 
 logger = logging.getLogger("brain.healing.sandbox_looper")
 
@@ -35,8 +34,10 @@ class SandboxLooper:
         await healing_hypermodule.initialize()
 
         while self.running and self.current_retry < self.max_retries:
-            logger.info(f"\n[SandboxLooper] --- Starting Process (Attempt {self.current_retry + 1}/{self.max_retries}) ---")
-            
+            logger.info(
+                f"\n[SandboxLooper] --- Starting Process (Attempt {self.current_retry + 1}/{self.max_retries}) ---"
+            )
+
             try:
                 # Run the target script and capture output
                 process = await asyncio.create_subprocess_exec(
@@ -56,17 +57,20 @@ class SandboxLooper:
                     logger.info("[SandboxLooper] Process completed successfully without errors!")
                     self.current_retry = 0  # Reset on success
                     break  # Could also loop forever if it's a daemon
-                else:
-                    logger.error(f"[SandboxLooper] Process crashed with code {return_code}")
-                    logger.error(f"[SandboxLooper] STDERR: {stderr_str}")
+                logger.error(f"[SandboxLooper] Process crashed with code {return_code}")
+                logger.error(f"[SandboxLooper] STDERR: {stderr_str}")
 
-                    # Attempt to heal
-                    logger.info("[SandboxLooper] Triggering Self-Healing, waiting up to 60s for fix to apply...")
-                    await self._heal_error(stderr_str, stdout_str)
-                    
-                    self.current_retry += 1
-                    logger.info("[SandboxLooper] Waiting 30 seconds before restarting to ensure code is written...")
-                    await asyncio.sleep(30)
+                # Attempt to heal
+                logger.info(
+                    "[SandboxLooper] Triggering Self-Healing, waiting up to 60s for fix to apply..."
+                )
+                await self._heal_error(stderr_str, stdout_str)
+
+                self.current_retry += 1
+                logger.info(
+                    "[SandboxLooper] Waiting 30 seconds before restarting to ensure code is written..."
+                )
+                await asyncio.sleep(30)
 
             except Exception as e:
                 logger.error(f"[SandboxLooper] Error running process: {e}")
@@ -74,7 +78,9 @@ class SandboxLooper:
                 await asyncio.sleep(5)
 
         if self.current_retry >= self.max_retries:
-            logger.critical("[SandboxLooper] Max retries reached. Application is hopelessly broken or the loop failed to heal it.")
+            logger.critical(
+                "[SandboxLooper] Max retries reached. Application is hopelessly broken or the loop failed to heal it."
+            )
 
         await healing_hypermodule.shutdown()
         logger.info("[SandboxLooper] Exited.")
@@ -82,7 +88,7 @@ class SandboxLooper:
     async def _heal_error(self, error_str: str, stdout_str: str):
         """Pass error to Hypermodule for automated healing."""
         logger.info("[SandboxLooper] 🦅 Triggering Self-Healing Hypermodule...")
-        
+
         # We wrap the error properly to give maximum context
         context = {
             "error": error_str,
@@ -91,14 +97,16 @@ class SandboxLooper:
                 "target_script": self.target_script,
                 "stdout": stdout_str[-2000:],  # Last 2000 chars
             },
-            "depth": 0
+            "depth": 0,
         }
 
         # Use HEAL mode, which will eventually leverage Vibe/Copilot to patch the file
         result = await healing_hypermodule.run(HealingMode.HEAL, context=context)
 
         if result.success:
-            logger.info(f"[SandboxLooper] ✅ Fix applied successfully (Duration: {result.duration_seconds:.1f}s)")
+            logger.info(
+                f"[SandboxLooper] ✅ Fix applied successfully (Duration: {result.duration_seconds:.1f}s)"
+            )
             logger.info(f"[SandboxLooper] Details: {result.message}")
         else:
             logger.error(f"[SandboxLooper] ❌ Healing failed: {result.message}")
@@ -115,10 +123,12 @@ async def main():
         sys.exit(1)
 
     # Configure root logger to output to console for the sandbox
-    logging.basicConfig(level=logging.INFO, format="%(asctime)s - %(name)s - %(levelname)s - %(message)s")
+    logging.basicConfig(
+        level=logging.INFO, format="%(asctime)s - %(name)s - %(levelname)s - %(message)s"
+    )
 
     looper = SandboxLooper(target_script=target, max_retries=10)
-    
+
     try:
         await looper.start()
     except KeyboardInterrupt:

@@ -975,6 +975,7 @@ class Trinity(TourMixin, VoiceOrchestrationMixin):
             "step_results": self.state.get("step_results") or [],
             "metrics": metrics_collector.get_metrics(),
             "map_state": map_state_manager.to_dict(),
+            "voice_enabled": self.voice.enabled if hasattr(self, "voice") else True,
         }
 
     async def _planning_loop(self, analysis, user_request, is_subtask, history):

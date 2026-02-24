@@ -33,6 +33,7 @@ export const useBrainApi = () => {
   const [activeMode, setActiveMode] = useState<'STANDARD' | 'LIVE'>('STANDARD');
   const [currentTask, setCurrentTask] = useState<string>('');
   const [currentSessionId, setCurrentSessionId] = useState<string>('current_session');
+  const [voiceEnabled, setVoiceEnabled] = useState<boolean>(true);
 
   const addLog = useCallback(
     (agent: AgentName, message: string, type: LogEntry['type'] = 'info') => {
@@ -61,6 +62,7 @@ export const useBrainApi = () => {
           setCurrentTask(data.current_task || '');
           setActiveMode(data.active_mode || 'STANDARD');
           if (data.metrics) setMetrics(data.metrics);
+          if (data.voice_enabled !== undefined) setVoiceEnabled(data.voice_enabled);
 
           if (data.map_state) {
             const ms = data.map_state;
@@ -385,6 +387,28 @@ export const useBrainApi = () => {
     return false;
   };
 
+  const handleToggleVoice = useCallback(
+    async (enabled: boolean) => {
+      try {
+        const response = await fetch(`${API_BASE}/api/voice/toggle`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ enabled }),
+        });
+        if (response.ok) {
+          const data = await response.json();
+          setVoiceEnabled(data.voice_enabled);
+          addLog('SYSTEM', `Голос ${enabled ? 'увімкнено' : 'вимкнено'}`, 'info');
+          return true;
+        }
+      } catch (err) {
+        console.error('Failed to toggle voice:', err);
+      }
+      return false;
+    },
+    [addLog],
+  );
+
   return {
     systemState,
     setSystemState,
@@ -408,5 +432,7 @@ export const useBrainApi = () => {
     handleRestoreSession,
     handlePause,
     handleResume,
+    voiceEnabled,
+    handleToggleVoice,
   };
 };

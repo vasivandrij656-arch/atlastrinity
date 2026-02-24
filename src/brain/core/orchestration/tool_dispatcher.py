@@ -1027,7 +1027,7 @@ class ToolDispatcher:
         # Check required arguments
         required = schema.get("required", [])
         missing = [r for r in required if r not in validated or validated[r] is None]
-        
+
         if missing:
             # Try to auto-fill common missing arguments with sensible defaults FIRST
             missing = self._autofill_missing_args(tool_name, validated, missing)
@@ -1308,7 +1308,9 @@ class ToolDispatcher:
         args: dict[str, Any],
     ) -> tuple[str, str, dict[str, Any]]:
         """Fallback to handle hallucinated report-generator server requests"""
-        logger.info(f"[DISPATCHER] Handled hallucinated report-generator ({tool_name}), redirecting to data-analysis")
+        logger.info(
+            f"[DISPATCHER] Handled hallucinated report-generator ({tool_name}), redirecting to data-analysis"
+        )
         # Ensure we have some sort of command for it
         if "action" not in args:
             args["action"] = tool_name

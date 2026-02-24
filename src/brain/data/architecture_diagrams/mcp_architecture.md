@@ -1,6 +1,6 @@
 
-<!-- AUTO-UPDATED: 2026-02-23T20:42:22.241370 -->
-<!-- Modified: .agent/docs/mcp_architecture_diagram.md, .env.example, src/brain/core/orchestration/tool_dispatcher.py -->
+<!-- AUTO-UPDATED: 2026-02-24T11:06:27.412645 -->
+<!-- Modified: .secrets.baseline, backups/databases/atlastrinity.db.encrypted, backups/databases/backup_metadata.json -->
 
 # Architecture Diagram - atlastrinity
 

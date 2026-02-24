@@ -545,12 +545,49 @@ class VoiceManager:
             return text
 
         # Skip CLI / raw technical payload heuristics
-        tech_keywords = {"git", "prs", "commit", "status", "diff", "merge", "branch", "error:"}
-        text_lower = text.lower()
-        if any(kw in text_lower for kw in tech_keywords) and len(english_words) > 5:
-            # Heavy terminal output
+        tech_keywords = {
+            "git",
+            "prs",
+            "commit",
+            "status",
+            "diff",
+            "merge",
+            "branch",
+            "error:",
+            "info:",
+            "warning:",
+            "debug:",
+            "role:",
+            "content:",
+            "name:",
+            "src.",
+            "brain.",
+            "golden_fund.",
+            "atlastrinity",
+            "http:",
+            "https:",
+            "metadata",
+            "payload",
+            "json",
+            "result:",
+        }
+        text_lower = text.lower().strip()
+
+        # Immediate skip for standard log lines or technical paths
+        if any(
+            text_lower.startswith(kw) for kw in ["info:", "warning:", "debug:", "error:", "role:"]
+        ):
             return text
 
+        # Skip strings with very high dot/underscore density (likely paths/filenames)
+        if total_chars > 0 and (text.count(".") + text.count("_")) / total_chars > 0.1:
+            return text
+
+        if any(kw in text_lower for kw in tech_keywords) and (
+            len(english_words) > 5 or "{" in text
+        ):
+            # Heavy terminal output, JSON, or multi-keyword technical text
+            return text
 
         logger.info(f"[TTS] 🔄 Translating English-heavy text to Ukrainian: {text[:50]}...")
         llm = await self._get_translator()
@@ -626,6 +663,10 @@ Ukrainian:"""
 
     async def speak(self, agent_id: str, text: str) -> str | None:
         """Centralized speak method for VoiceManager."""
+        if not self.enabled:
+            logger.debug(f"[TTS] [{agent_id.upper()}] Speech skipped (Muted).")
+            return None
+
         self._stop_event.clear()
 
         async with self._lock:

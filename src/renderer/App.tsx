@@ -36,9 +36,18 @@ const App: React.FC = () => {
     handleResume,
     currentTask,
     activeMode,
+    voiceEnabled,
+    handleToggleVoice,
   } = useBrainApi();
 
   const [isVoiceEnabled, setIsVoiceEnabled] = useState(true);
+
+  // Sync local voice state with backend
+  useEffect(() => {
+    if (voiceEnabled !== isVoiceEnabled) {
+      setIsVoiceEnabled(voiceEnabled);
+    }
+  }, [voiceEnabled, isVoiceEnabled]);
   const [viewMode, setViewMode] = useState<'NEURAL' | 'MAP'>('NEURAL');
   const [isHistoryOpen, setIsHistoryOpen] = useState(false);
 
@@ -376,7 +385,9 @@ const App: React.FC = () => {
             void handleCommand(cmd, files);
           }}
           isVoiceEnabled={isVoiceEnabled}
-          onToggleVoice={() => setIsVoiceEnabled(!isVoiceEnabled)}
+          onToggleVoice={() => {
+            void handleToggleVoice(!isVoiceEnabled);
+          }}
           isProcessing={false}
           onFocusChange={setIsInputFocused}
         />
