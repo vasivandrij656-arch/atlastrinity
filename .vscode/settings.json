@@ -21,7 +21,10 @@
     "editor.defaultFormatter": "vscode.typescript-language-features",
     "editor.formatOnSave": true
   },
-  "editor.rulers": [80, 120],
+  "editor.rulers": [
+    80,
+    120
+  ],
   "editor.wordWrap": "on",
   "files.exclude": {
     "**/__pycache__": true,
@@ -39,7 +42,9 @@
   "python.linting.enabled": true,
   "python.linting.ruffEnabled": true,
   "python.testing.pytestEnabled": true,
-  "python.testing.pytestArgs": ["tests"],
+  "python.testing.pytestArgs": [
+    "tests"
+  ],
   "extensions.recommendations": [
     "ms-python.python",
     "ms-python.vscode-pylance",
@@ -47,5 +52,8 @@
     "biomejs.biome",
     "eamodio.gitlens",
     "GitHub.copilot"
-  ]
+  ],
+  "yaml.schemas": {
+    "https://json.schemastore.org/github-action": ".github/actions/*/action.{yml,yaml}"
+  }
 }
