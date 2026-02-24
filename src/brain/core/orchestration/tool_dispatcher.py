@@ -544,6 +544,8 @@ class ToolDispatcher:
 
     # Common hallucinated tool names that LLMs generate but don't exist
     HALLUCINATED_TOOLS = {
+        "create_spreadsheet": "No 'create_spreadsheet' tool exists. Use data-analysis server tools like run_pandas_code to generate CSV/Excel files, or use filesystem.write_file to write CSV content directly.",
+        "spreadsheet": "No 'spreadsheet' server exists. Use data-analysis server for data processing or filesystem for writing CSV files.",
         "evaluate": "No 'evaluate' tool exists. Use vibe_code_review for code evaluation or execute_command for running tests.",
         "assess": "No 'assess' tool exists. Use vibe_code_review for assessment.",
         "verify": "No 'verify' tool exists. Use execute_command to run verification commands.",

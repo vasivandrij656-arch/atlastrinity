@@ -40,8 +40,8 @@
       "command": "npx",
       "args": [
         "@modelcontextprotocol/server-filesystem",
-        "${HOME}",
         "${PROJECT_ROOT}",
+        "${CONFIG_ROOT}",
         "/tmp",
         "/private/tmp"
       ],
@@ -94,7 +94,7 @@
         "${PROJECT_ROOT}/vendor/XcodeBuildMCP/build/cli.js",
         "mcp"
       ],
-      "connect_timeout": 120,
+      "connect_timeout": 600,
       "env": {
         "MACOS_USE_BINARY_PATH": "${PROJECT_ROOT}/vendor/mcp-server-macos-use/.build/release/mcp-server-macos-use",
         "GOOGLEMAPS_BINARY_PATH": "${PROJECT_ROOT}/vendor/mcp-server-googlemaps/.build/release/mcp-server-googlemaps",

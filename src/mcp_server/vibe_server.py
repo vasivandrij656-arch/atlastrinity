@@ -150,7 +150,7 @@ try:
     AGENT_MODEL_OVERRIDE = get_config_value("agents.tetyana", "model", None)
 
     if not AGENT_MODEL_OVERRIDE:
-        logger.warning(
+        logger.debug(
             "[VIBE] AGENT_MODEL_OVERRIDE not set in config, strict configuration enforced",
         )
 

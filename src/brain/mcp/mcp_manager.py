@@ -195,6 +195,12 @@ class MCPManager:
 
         name_overrides = {
             "whisper-stt": "whisper_stt",
+            "golden-fund": "golden_fund",
+            "duckduckgo-search": "duckduckgo_search",
+            "chrome-devtools": "chrome_devtools",
+            "react-devtools": "react_devtools",
+            "data-analysis": "data_analysis",
+            "sequential-thinking": "sequential_thinking",
         }
 
         servers = raw_config.get("mcpServers", {})
@@ -233,7 +239,8 @@ class MCPManager:
             if missing_env:
                 server_config["_missing_env"] = sorted(set(missing_env))
 
-            processed["mcpServers"][server_name] = server_config
+            normalized_name = name_overrides.get(server_name, server_name)
+            processed["mcpServers"][normalized_name] = server_config
 
         return processed
 
@@ -592,7 +599,9 @@ class MCPManager:
     def _log_if_slow(self, start_time: float, server_name: str, tool_name: str) -> None:
         """Log a warning if tool call execution was slow."""
         duration = asyncio.get_event_loop().time() - start_time
-        if duration > 5.0:
+        # Known-heavy servers get a higher threshold to reduce log spam
+        slow_threshold = 30.0 if server_name in {"xcodebuild", "filesystem"} else 10.0
+        if duration > slow_threshold:
             logger.warning(f"[MCP] Slow tool call: {server_name}.{tool_name} took {duration:.2f}s")
 
     async def _handle_call_tool_error(
