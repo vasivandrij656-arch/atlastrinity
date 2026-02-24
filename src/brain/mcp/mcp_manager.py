@@ -239,7 +239,7 @@ class MCPManager:
             if missing_env:
                 server_config["_missing_env"] = sorted(set(missing_env))
 
-            normalized_name = name_overrides.get(server_name, server_name)
+            normalized_name = name_overrides.get(server_name) or server_name
             processed["mcpServers"][normalized_name] = server_config
 
         return processed

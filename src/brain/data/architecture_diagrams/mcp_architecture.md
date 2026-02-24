@@ -1,6 +1,5 @@
-
-<!-- AUTO-UPDATED: 2026-02-25T01:34:20.293390 -->
-<!-- Modified: .agent/docs/mcp_architecture_diagram.md, .secrets.baseline, src/brain/data/architecture_diagrams/mcp_architecture.md -->
+<!-- AUTO-UPDATED: 2026-02-25T01:59:39.715891 -->
+<!-- Modified: .agent/docs/mcp_architecture_diagram.md, config/mcp_servers.json.template, src/brain/core/orchestration/tool_dispatcher.py, src/brain/mcp/mcp_manager.py -->
 
 # Architecture Diagram - atlastrinity
 
@@ -72,10 +71,12 @@ flowchart TD
 ## Components
 
 ### Entry Points
+
 - `src/main/main.ts`
 - `src/brain/server.py`
 
 ### Detected Components
+
 - **Brain.Behavior**
 - **Brain.Tools**
 - **Brain.Core**
@@ -88,6 +89,7 @@ flowchart TD
 - **Brain.Voice**
 
 ### Key Configuration Files
+
 - `package.json`
 - `pyproject.toml`
 - `config/config.yaml.template`
@@ -98,8 +100,8 @@ flowchart TD
 **Project:** atlastrinity  
 **Type:** atlastrinity
 
-
 ### Vibe (AI agent) — Usage & Integration
+
 The Vibe usage diagram and inventory are included in project exports.
 
 ![](/src/brain/data/architecture_diagrams/exports/vibe-usage-diagram.png)
