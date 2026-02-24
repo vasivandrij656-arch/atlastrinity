@@ -1,6 +1,6 @@
 
-<!-- AUTO-UPDATED: 2026-02-24T22:12:07.996307 -->
-<!-- Modified: .agent/docs/mcp_architecture_diagram.md, .secrets.baseline, src/brain/data/architecture_diagrams/mcp_architecture.md -->
+<!-- AUTO-UPDATED: 2026-02-24T22:15:31.592180 -->
+<!-- Modified: .agent/docs/mcp_architecture_diagram.md, src/brain/data/architecture_diagrams/mcp_architecture.md, src/testing/verify_tts_fix.py -->
 
 # Architecture Diagram - atlastrinity
 

@@ -98,13 +98,13 @@ SPAM_TRIGGERS = [
     "Discoveries:",
     "brain - INFO - [MEMORY]",
     "brain - INFO - [STATE]",
-    "INFOsrc.",
-    "INFObrain.",
-    "INFOgolden_fund.",
-    "INFOgoldenfund.",
-    "DEBUGsrc.",
-    "WARNINGsrc.",
-    "ERRORsrc.",
+    "INFO:src.",
+    "INFO:brain.",
+    "INFO:golden_fund.",
+    "INFO:goldenfund.",
+    "DEBUG:src.",
+    "WARNING:src.",
+    "ERROR:src.",
     "role system,",
     "role assistant,",
     "role user,",
@@ -1004,8 +1004,7 @@ async def _format_and_emit_vibe_log(line: str, stream_name: str, ctx: Context | 
     elif "Running" in line or "Executing" in line:
         formatted = f"🔧 [VIBE-ACTION] {line}"
     elif not any(
-        line.startswith(p)
-        for p in ["INFO", "DEBUG", "WARNING", "ERROR", "traceback", "  File "]
+        line.startswith(p) for p in ["INFO", "DEBUG", "WARNING", "ERROR", "traceback", "  File "]
     ):
         formatted = f"⚡ [VIBE-LIVE] {line}"
     else:
