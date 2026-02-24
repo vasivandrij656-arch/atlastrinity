@@ -148,6 +148,10 @@ class MCPManager:
                     from src.brain.config import CONFIG_ROOT
 
                     return str(CONFIG_ROOT)
+                if var_name == "MCP_DIR":
+                    from src.brain.config import MCP_DIR
+
+                    return str(MCP_DIR)
                 if var_name == "HOME":
                     return str(Path.home())
 
