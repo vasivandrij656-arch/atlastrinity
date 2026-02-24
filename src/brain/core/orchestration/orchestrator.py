@@ -1525,7 +1525,7 @@ class Trinity(TourMixin, VoiceOrchestrationMixin):
                 images=images,
                 mode_profile=segment.profile,
             )
-            
+
             # Ensure translation for segmented feedback
             final_response = await self.voice.prepare_speech_text(str(response))
             return {"status": "completed", "result": final_response, "mode": segment.mode}
