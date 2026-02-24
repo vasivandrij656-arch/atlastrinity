@@ -40,50 +40,49 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: Checkout
-        uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
+        uses: actions/checkout@v4
         with:
           submodules: recursive
-          fetch-depth: 0 # Needed for git history analysis in architecture check
-          persist-credentials: false
+          fetch-depth: 0
 
-      - name: Set up Python
-        uses: actions/setup-python@42375524e23c412d93fb67b49958b491fce71c38 # v5.4.0
-        with:
-          python-version: ${{ env.PYTHON_VERSION }}
-          cache: 'pip'
-
-      - name: Setup Node
-        uses: actions/setup-node@1d0ff469b7ec7b3cb9d8673fde0c81c44821de2a # v4.2.0
-        with:
-          node-version: ${{ env.NODE_VERSION }}
-          cache: 'npm'
-
-      - name: Create Virtual Environment & Install Dependencies
-        run: |
-          python -m venv .venv
-          .venv/bin/pip install --upgrade pip
-          .venv/bin/pip install -r requirements.txt
-          # Install extra tools if not in requirements (though they should be)
-          .venv/bin/pip install ruff bandit xenon pyrefly safety detect-secrets
-
-      - name: Install Node Dependencies
-        run: npm ci
-
-      - name: Sync Configuration
-        run: .venv/bin/python src/maintenance/config_sync.py
+      - name: Setup Atlas Trinity
+        uses: ./.github/actions/setup-atlastrinity
 
       - name: Run Unified Linting (Lefthook)
         run: npx lefthook run lint:all
 
       - name: Verify Architecture Diagrams
-        run: .venv/bin/python src/testing/ci/check_architecture.py
+        run: python src/testing/ci/check_architecture.py
 
       - name: Validate Mermaid diagrams
         run: |
-          .venv/bin/python scripts/validate_mermaid.py
+          python scripts/validate_mermaid.py
         env:
-          # Allow npx to fetch mermaid-cli if not already cached
           CI: true
+
+  security-audit:
+    name: Security Audit
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Atlas Trinity (Minimial)
+        uses: ./.github/actions/setup-atlastrinity
+        with:
+          install-node-deps: 'false'
+          sync-config: 'false'
+
+      - name: Check Secrets Baseline
+        run: |
+          detect-secrets scan --baseline .secrets.baseline --slim
+          git diff --exit-code .secrets.baseline
+
+      - name: Safety Check
+        run: safety check --policy-file .safety-policy.yml
+
+      - name: Zizmor CI Security
+        run: zizmor .github/workflows/*.yml
 
   # ============================================
   # Integration Jobs
@@ -100,20 +99,10 @@ jobs:
         with:
           persist-credentials: false
 
-      - name: Set up Python
-        uses: actions/setup-python@42375524e23c412d93fb67b49958b491fce71c38 # v5.4.0
-
+      - name: Setup Atlas Trinity
+        uses: ./.github/actions/setup-atlastrinity
         with:
-          python-version: ${{ env.PYTHON_VERSION }}
-          cache: 'pip'
-
-      - name: Install dependencies
-        run: |
-          python -m pip install --upgrade pip
-          pip install -r requirements.txt
-
-      - name: Sync Configuration
-        run: python src/maintenance/config_sync.py
+          install-node-deps: 'false'
 
       - name: Run MCP Sandbox Test
         env:
@@ -149,23 +138,10 @@ jobs:
           submodules: recursive
           persist-credentials: false
 
-      - name: Setup Python
-        uses: actions/setup-python@42375524e23c412d93fb67b49958b491fce71c38 # v5.4.0
-
+      - name: Setup Atlas Trinity
+        uses: ./.github/actions/setup-atlastrinity
         with:
-          python-version: ${{ matrix.python-version }}
-          cache: 'pip'
-
-      - name: Install dependencies
-        run: |
-          python -m pip install --upgrade pip
-          pip install -r requirements.txt
-          # Install optional dev dependencies required for docs/diagram exports (cairosvg)
-          pip install -r requirements-dev.txt || true
-          pip install pytest pytest-cov pytest-asyncio pytest-timeout
-
-      - name: Sync Configuration
-        run: python src/maintenance/config_sync.py
+          install-node-deps: 'false'
 
       - name: Run unit tests with coverage
         run: |
@@ -285,19 +261,10 @@ jobs:
           submodules: recursive
           persist-credentials: false
 
-      - name: Set up Python
-        uses: actions/setup-python@42375524e23c412d93fb67b49958b491fce71c38 # v5.4.0
-
+      - name: Setup Atlas Trinity
+        uses: ./.github/actions/setup-atlastrinity
         with:
-          python-version: ${{ env.PYTHON_VERSION }}
-
-      - name: Install Dependencies for Validation
-        run: |
-          python -m pip install --upgrade pip
-          pip install PyYAML toml
-
-      - name: Sync Configuration
-        run: python src/maintenance/config_sync.py
+          install-node-deps: 'false'
 
       - name: Validate MCP configuration
         run: python src/testing/ci/validate_mcp_config.py
@@ -343,6 +310,31 @@ jobs:
   # ============================================
   # Status Summary
   # ============================================
+
+  changelog-preview:
+    name: Changelog Preview
+    runs-on: ubuntu-latest
+    if: github.event_name == 'pull_request'
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Setup Atlas Trinity (Minimal)
+        uses: ./.github/actions/setup-atlastrinity
+        with:
+          install-node-deps: 'false'
+          sync-config: 'false'
+
+      - name: Generate Preview
+        run: python src/testing/ci/generate_changelog.py "PREVIEW"
+
+      - name: Upload Preview Artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: changelog-preview
+          path: CHANGELOG.md
 
   ci-status:
     name: CI Status Check

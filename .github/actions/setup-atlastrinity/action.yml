@@ -1,0 +1,57 @@
+name: 'Setup Atlas Trinity'
+description: 'Centralized environment setup for Atlas Trinity CI'
+
+inputs:
+  python-version:
+    description: 'Python version to use'
+    required: false
+    default: '3.12'
+  node-version:
+    description: 'Node version to use'
+    required: false
+    default: '22'
+  install-python-deps:
+    description: 'Whether to install python dependencies'
+    required: false
+    default: 'true'
+  install-node-deps:
+    description: 'Whether to install node dependencies'
+    required: false
+    default: 'true'
+  sync-config:
+    description: 'Whether to run config sync'
+    required: false
+    default: 'true'
+
+runs:
+  using: 'composite'
+  steps:
+    - name: Set up Python
+      uses: actions/setup-python@v5
+      with:
+        python-version: ${{ inputs.python-version }}
+        cache: 'pip'
+
+    - name: Setup Node
+      uses: actions/setup-node@v4
+      with:
+        node-version: ${{ inputs.node-version }}
+        cache: 'npm'
+
+    - name: Install Python Dependencies
+      if: inputs.install-python-deps == 'true'
+      shell: bash
+      run: |
+        python -m pip install --upgrade pip
+        pip install -r requirements.txt
+        pip install ruff bandit xenon pyrefly safety detect-secrets pytest pytest-cov pytest-asyncio pytest-timeout zizmor
+
+    - name: Install Node Dependencies
+      if: inputs.install-node-deps == 'true'
+      shell: bash
+      run: npm ci
+
+    - name: Sync Configuration
+      if: inputs.sync-config == 'true'
+      shell: bash
+      run: python src/maintenance/config_sync.py

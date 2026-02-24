@@ -1,6 +1,6 @@
 
-<!-- AUTO-UPDATED: 2026-02-24T19:56:43.239890 -->
-<!-- Modified: .agent/docs/mcp_architecture_diagram.md, src/brain/data/architecture_diagrams/mcp_architecture.md, src/mcp_server/duckduckgo_search_server.py -->
+<!-- AUTO-UPDATED: 2026-02-24T20:25:56.779580 -->
+<!-- Modified: .agent/docs/mcp_architecture_diagram.md, .vscode/settings.json, src/brain/data/architecture_diagrams/mcp_architecture.md -->
 
 # Architecture Diagram - atlastrinity
 
