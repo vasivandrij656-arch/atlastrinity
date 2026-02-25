@@ -1213,17 +1213,9 @@ def devtools_update_architecture_diagrams(
             docs_path = PROJECT_ROOT / ".agent" / "docs" / "mcp_architecture_diagram.md"
 
             # Generate fresh diagram based on current project structure
-            # This ensures we actually reflect architectural changes
             diagram_content = generate_architecture_diagram(project_path_obj, project_analysis)
 
-            # Create clean header
-            update_notice = f"\n<!-- AUTO-UPDATED: {datetime.now().isoformat()} -->\n"
-            update_notice += f"<!-- Modified: {', '.join(modified_files[:3])} -->\n\n"
-
-            updated_diagram = update_notice + diagram_content
-
-            # If a Vibe usage doc/diagram exists, append a reference so it's
-            # included in the canonical architecture doc and exported assets.
+            # If a Vibe usage doc/diagram exists, append a reference
             try:
                 vibe_doc = PROJECT_ROOT / "docs" / "vibe-usage.md"
                 vibe_svg = PROJECT_ROOT / "docs" / "vibe-usage-diagram.svg"
@@ -1232,12 +1224,32 @@ def devtools_update_architecture_diagrams(
                     vibe_section += (
                         "The Vibe usage diagram and inventory are included in project exports.\n\n"
                     )
-                    # Prefer PNG (exported into exports/) then fallback to svg
                     vibe_section += "![](/src/brain/data/architecture_diagrams/exports/vibe-usage-diagram.png)\n"
-                    updated_diagram = updated_diagram + vibe_section
+                    diagram_content += vibe_section
             except Exception:
-                # non-fatal
                 pass
+
+            # Read existing content to check for changes (ignoring header)
+            content_changed = True
+            if internal_path.exists():
+                with open(internal_path, encoding="utf-8") as f:
+                    existing_total = f.read()
+                    # Strip the 3 lines of header
+                    existing_body = "\n".join(existing_total.split("\n")[4:])
+                    if existing_body.strip() == diagram_content.strip():
+                        content_changed = False
+
+            if not content_changed:
+                return {
+                    "success": True,
+                    "message": "Architecture diagrams are already up to date",
+                    "updates_made": False,
+                }
+
+            # Create clean header
+            update_notice = f"\n<!-- AUTO-UPDATED: {datetime.now().isoformat()} -->\n"
+            update_notice += f"<!-- Modified: {', '.join(modified_files[:3])} -->\n\n"
+            updated_diagram = update_notice + diagram_content
 
             with open(internal_path, "w", encoding="utf-8") as f:
                 f.write(updated_diagram)

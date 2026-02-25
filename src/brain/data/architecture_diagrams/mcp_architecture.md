@@ -1,6 +1,6 @@
 
-<!-- AUTO-UPDATED: 2026-02-25T13:08:29.037625 -->
-<!-- Modified: .agent/docs/mcp_architecture_diagram.md, backups/databases/atlastrinity.db.encrypted, backups/databases/backup_metadata.json -->
+<!-- AUTO-UPDATED: 2026-02-25T13:34:21.759067 -->
+<!-- Modified: .agent/docs/mcp_architecture_diagram.md, src/brain/data/architecture_diagrams/mcp_architecture.md, src/mcp_server/golden_fund/liconnectors/ckan_connector.py -->
 
 # Architecture Diagram - atlastrinity
 

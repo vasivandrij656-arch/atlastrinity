@@ -10,13 +10,12 @@ from typing import Any
 
 import pandas as pd
 
+from ..lib.connectors.ckan_connector import CKANConnector
 from ..lib.entity_extractor import EntityExtractor
 from ..lib.parser import DataParser
 from ..lib.scraper import DataScraper
 from ..lib.storage import SearchStorage, SQLStorage, VectorStorage
 from ..lib.validation import DataValidator
-
-from ..lib.connectors.ckan_connector import CKANConnector
 
 logger = logging.getLogger("golden_fund.tools.ingest")
 
