@@ -1580,7 +1580,6 @@ async def devtools_restart_system(reason: str = "User requested restart") -> dic
 
     try:
         from src.brain.core.server.server import trinity
-        from src.brain.healing.modes import HealingMode
 
         # Capture current state from trinity
         state = trinity.get_state() if trinity else {}

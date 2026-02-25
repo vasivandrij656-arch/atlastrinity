@@ -1,5 +1,4 @@
 import asyncio
-import os
 import sys
 from pathlib import Path
 
@@ -27,7 +26,7 @@ sys.path.append(str(PROJECT_ROOT))
 
 # Import the actual components
 from src.brain.voice.orchestration_utils import VoiceOrchestrationMixin
-from src.brain.voice.tts import VoiceManager, sanitize_text_for_tts
+from src.brain.voice.tts import VoiceManager
 
 
 class MockTrinity(VoiceOrchestrationMixin):
