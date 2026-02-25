@@ -10,6 +10,7 @@ sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), "..")
 
 from src.brain.agents.grisha import Grisha
 
+
 class TestGrishaDiscoveryResilience(unittest.TestCase):
     def setUp(self):
         # Create Grisha instance with mocked dependencies
@@ -23,7 +24,7 @@ class TestGrishaDiscoveryResilience(unittest.TestCase):
             {
                 "tool": "duckduckgo-search",
                 "result": "No results found for the given query.",
-                "error": False
+                "error": False,
             }
         ]
         verdict = self.grisha._fallback_verdict(results)
@@ -32,24 +33,14 @@ class TestGrishaDiscoveryResilience(unittest.TestCase):
 
     def test_fallback_verdict_empty_result_is_success_for_discovery(self):
         """Test that empty results for discovery tools are treated as success."""
-        results = [
-            {
-                "tool": "golden-fund",
-                "result": "",
-                "error": False
-            }
-        ]
+        results = [{"tool": "golden-fund", "result": "", "error": False}]
         verdict = self.grisha._fallback_verdict(results)
         self.assertTrue(verdict["verified"])
 
     def test_fallback_verdict_actual_error_is_failure(self):
         """Test that actual errors are still treated as failures."""
         results = [
-            {
-                "tool": "duckduckgo-search",
-                "result": "error: connection timeout",
-                "error": True
-            }
+            {"tool": "duckduckgo-search", "result": "error: connection timeout", "error": True}
         ]
         verdict = self.grisha._fallback_verdict(results)
         self.assertFalse(verdict["verified"])
@@ -79,6 +70,7 @@ class TestGrishaDiscoveryResilience(unittest.TestCase):
         issues = self.grisha._extract_issues(analysis_text, verified=True)
         self.assertEqual(len(issues), 1)
         self.assertEqual(issues[0], "- Slow response time")
+
 
 if __name__ == "__main__":
     unittest.main()

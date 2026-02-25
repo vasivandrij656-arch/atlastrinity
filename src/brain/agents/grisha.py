@@ -1063,8 +1063,11 @@ class Grisha(BaseAgent):
         # We don't want to report 'not found' as a problem if we accepted it as a result.
         if verified:
             issues = [
-                i for i in issues 
-                if not any(kw in i.lower() for kw in ["not found", "не знайдено", "empty", "порожньо"])
+                i
+                for i in issues
+                if not any(
+                    kw in i.lower() for kw in ["not found", "не знайдено", "empty", "порожньо"]
+                )
             ]
 
         return issues
