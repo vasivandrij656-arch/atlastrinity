@@ -17,6 +17,7 @@ from typing import Any
 import requests
 from bs4 import BeautifulSoup
 
+from src.brain.auth.keychain_bridge import KeychainBridge
 from src.mcp_server.tool_result_interface import ToolResult
 
 # Initialize logger
@@ -67,6 +68,7 @@ class DataScraper:
     def __init__(self, user_agent: str = "AtlasTrinity-GoldenFund/1.0"):
         self.user_agent = user_agent
         self.session = requests.Session()
+        self.keychain = KeychainBridge()
         self.session.headers.update(
             {
                 "User-Agent": self.user_agent,
@@ -74,12 +76,42 @@ class DataScraper:
                 "Accept-Language": "en-US,en;q=0.5",
             }
         )
-        logger.info("DataScraper initialized")
+        logger.info("DataScraper initialized with KeychainBridge support")
+
+    def _apply_auth_from_keychain(self, url: str) -> bool:
+        """Attempt to find and apply credentials for the given URL."""
+        from urllib.parse import urlparse
+
+        domain = urlparse(url).netloc
+        if not domain:
+            return False
+
+        logger.info(f"Searching keychain for domain: {domain}")
+        cred = self.keychain.get_credential_for_domain(domain)
+        if cred and cred.secret:
+            logger.info(f"Found credentials for {domain} in {cred.source}")
+            # Try to determine if it's a token or basic auth
+            # Very simple heuristic: if it contains ' ' it might be already formatted
+            if " " in cred.secret:
+                self.session.headers["Authorization"] = cred.secret
+            else:
+                # Default to Bearer if not specified
+                self.session.headers["Authorization"] = f"Bearer {cred.secret}"
+            return True
+        return False
 
     def scrape_web_page(self, url: str, timeout: int = 30) -> ScrapeResult:
         try:
             logger.info(f"Scraping URL: {url}")
             response = self.session.get(url, timeout=timeout)
+
+            # Handle auth challenge
+            if response.status_code in [401, 403]:
+                logger.warning(f"Auth challenge ({response.status_code}) for {url}")
+                if self._apply_auth_from_keychain(url):
+                    logger.info("Retrying with keychain credentials")
+                    response = self.session.get(url, timeout=timeout)
+
             response.raise_for_status()
 
             soup = BeautifulSoup(response.content, "html.parser")
@@ -103,6 +135,11 @@ class DataScraper:
         try:
             logger.info(f"Scraping API endpoint: {url}")
             response = self.session.get(url, params=params, timeout=timeout)
+
+            if response.status_code in [401, 403]:
+                if self._apply_auth_from_keychain(url):
+                    response = self.session.get(url, params=params, timeout=timeout)
+
             response.raise_for_status()
 
             try:
@@ -138,6 +175,11 @@ class DataScraper:
                 return result
 
             response = self.session.get(url, timeout=timeout)
+
+            if response.status_code in [401, 403]:
+                if self._apply_auth_from_keychain(url):
+                    response = self.session.get(url, timeout=timeout)
+
             response.raise_for_status()
 
             # Return raw bytes

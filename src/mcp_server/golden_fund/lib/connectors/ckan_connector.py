@@ -20,16 +20,40 @@ class CKANConnector:
         )
         logger.info(f"CKAN Connector initialized for {self.base_url}")
 
-    def search_packages(self, query: str, rows: int = 10) -> list[dict[str, Any]]:
+    def search_packages(
+        self,
+        query: str,
+        rows: int = 10,
+        filters: dict[str, str] | None = None,
+        sort: str | None = None,
+        facets: list[str] | None = None,
+    ) -> list[dict[str, Any]]:
         """
         Search for datasets (packages) in CKAN.
+
+        Args:
+            query: The search query.
+            rows: Number of results to return.
+            filters: Dictionary of field:value filters (fq in CKAN).
+            sort: Sort string (e.g., 'metadata_modified desc').
+            facets: List of fields to facet on.
         """
         url = f"{self.base_url}/action/package_search"
-        params = {"q": query, "rows": rows}
+        params: dict[str, Any] = {"q": query, "rows": rows}
+
+        if filters:
+            fq = " AND ".join([f"{k}:{v}" for k, v in filters.items()])
+            params["fq"] = fq
+
+        if sort:
+            params["sort"] = sort
+
+        if facets:
+            params["facet.field"] = facets
 
         try:
-            logger.info(f"Searching CKAN packages for: {query}")
-            response = self.session.get(url, params=params)  # type: ignore[arg-type]
+            logger.info(f"Searching CKAN packages: {params}")
+            response = self.session.get(url, params=params)
             response.raise_for_status()
             data = response.json()
 

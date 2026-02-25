@@ -16,6 +16,8 @@ from ..lib.scraper import DataScraper
 from ..lib.storage import SearchStorage, SQLStorage, VectorStorage
 from ..lib.validation import DataValidator
 
+from ..lib.connectors.ckan_connector import CKANConnector
+
 logger = logging.getLogger("golden_fund.tools.ingest")
 
 # Define storage path (Global config directory)
@@ -24,6 +26,55 @@ DATA_DIR = CONFIG_ROOT / "data" / "golden_fund"
 DATA_DIR.mkdir(parents=True, exist_ok=True)
 RAW_DIR = DATA_DIR / "raw"
 RAW_DIR.mkdir(exist_ok=True)
+
+
+async def search_and_ingest(
+    query: str,
+    portal_url: str = "https://data.gov.ua/api/3",
+    max_datasets: int = 1,
+    process_pipeline: list[str] | None = None,
+) -> str:
+    """
+    Search for datasets on a CKAN portal and ingest the most relevant ones.
+
+    Args:
+        query: Search query for the portal.
+        portal_url: Base URL of the CKAN API.
+        max_datasets: Maximum number of datasets to ingest.
+        process_pipeline: List of processing steps.
+    """
+    connector = CKANConnector(portal_url)
+    packages = connector.search_packages(query, rows=max_datasets)
+
+    if not packages:
+        return f"No datasets found for query '{query}' on {portal_url}"
+
+    results = []
+    for pkg in packages:
+        pkg_id = pkg.get("name") or pkg.get("id")
+        title = pkg.get("title", pkg_id)
+        logger.info(f"Processing discovered package: {title}")
+
+        # Find suitable resources (CSV, JSON, etc.)
+        resources = connector.find_resources_by_format(pkg, formats=["CSV", "JSON", "XLSX", "XML"])
+        if not resources:
+            results.append(f"Package '{title}': No supported resources found.")
+            continue
+
+        # Ingest the first suitable resource
+        res = resources[0]
+        res_url = connector.get_resource_url(res)
+        res_format = res.get("format", "").lower()
+
+        logger.info(f"Ingesting resource: {res_url} ({res_format})")
+        ingest_res = await ingest_dataset(
+            url=res_url,
+            type=res_format,
+            process_pipeline=process_pipeline,
+        )
+        results.append(f"Package '{title}': {ingest_res}")
+
+    return "\n".join(results)
 
 
 def _get_scrape_result(url: str, type: str, scraper: DataScraper):

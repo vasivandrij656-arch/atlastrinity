@@ -11,6 +11,7 @@ from .lib.storage.blob import BlobStorage
 from .lib.transformer import DataTransformer
 from .tools.chain import recursive_enrichment
 from .tools.ingest import ingest_dataset as ingest_impl
+from .tools.ingest import search_and_ingest as search_and_ingest_impl
 
 logging.basicConfig(level=logging.INFO, encoding="utf-8")
 logger = logging.getLogger("golden_fund")
@@ -105,6 +106,25 @@ async def ingest_dataset(
         limit: Max records to index in this step.
     """
     return await ingest_impl(url, type, process_pipeline, offset=offset, limit=limit)
+
+
+@mcp.tool()
+async def search_and_ingest_portals(
+    query: str,
+    portal_url: str = "https://data.gov.ua/api/3",
+    max_datasets: int = 1,
+    process_pipeline: list[str] | None = None,
+) -> str:
+    """
+    Search for datasets on a CKAN portal and ingest them.
+
+    Args:
+        query: Search query (e.g., 'courts', 'budgets', 'addresses').
+        portal_url: CKAN API base URL (default: data.gov.ua).
+        max_datasets: Max number of datasets to try ingesting.
+        process_pipeline: List of steps ('parse', 'store_sql', 'keyword_index', 'vectorize', 'extract_entities').
+    """
+    return await search_and_ingest_impl(query, portal_url, max_datasets, process_pipeline)
 
 
 @mcp.tool()
