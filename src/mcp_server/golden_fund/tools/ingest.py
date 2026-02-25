@@ -142,7 +142,9 @@ async def ingest_dataset(
         return msg
 
     if not result.data:
-        return "No data retrieved"
+        msg = f"No data retrieved from {url}. Status code: {result.metadata.get('status_code')}"
+        logger.warning(msg)
+        return msg
 
     # Fix: Handle BeautifulSoup object from scrape_web_page
     data_to_save = result.data

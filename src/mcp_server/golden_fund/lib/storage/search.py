@@ -1,5 +1,6 @@
 import json
 import logging
+import re
 import sqlite3
 import uuid
 from pathlib import Path
@@ -115,30 +116,38 @@ class SearchStorage:
 
                 # Basic FTS5 sanitization: remove or escape special chars
                 # For simplicity, we'll strip most punct that FTS5 interprets specially
-                import re
-
                 sanitized_query = re.sub(r"[^a-zA-Z0-9\sа-яА-ЯіІєЄїЇґҐ]", " ", query)
                 sanitized_query = " ".join(sanitized_query.split())  # normalize spaces
 
+                if not sanitized_query:
+                    return StorageResult(True, "search", data={"results": [], "total": 0})
+
+                # Strategy 1: Direct match
                 cursor = conn.execute(
                     f"SELECT id, source_json, rank FROM {self.index_name} WHERE {self.index_name} MATCH ? ORDER BY rank LIMIT ?",
                     (sanitized_query, limit),
                 )
-
                 rows = cursor.fetchall()
+
+                # Strategy 2: Wildcard match if no rows found
+                if not rows and len(sanitized_query) > 2:
+                    wildcard_query = " ".join([f"{term}*" for term in sanitized_query.split()])
+                    logger.info(f"No direct matches, trying wildcard: {wildcard_query}")
+                    cursor = conn.execute(
+                        f"SELECT id, source_json, rank FROM {self.index_name} WHERE {self.index_name} MATCH ? ORDER BY rank LIMIT ?",
+                        (wildcard_query, limit),
+                    )
+                    rows = cursor.fetchall()
+
                 for row in rows:
                     results.append(
                         {
                             "id": row["id"],
-                            "score": row[
-                                "rank"
-                            ],  # FTS5 rank is lower = better usually, but API expects score.
+                            "score": row["rank"],
                             "source": json.loads(row["source_json"]),
                         }
                     )
 
-                # Get total count (approximation)
-                # For FTS this can be slow if table is huge
                 total = len(results)
 
             return StorageResult(True, "search", data={"results": results, "total": total})

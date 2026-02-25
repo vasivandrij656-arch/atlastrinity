@@ -53,7 +53,7 @@ class CKANConnector:
 
         try:
             logger.info(f"Searching CKAN packages: {params}")
-            response = self.session.get(url, params=params)
+            response = self.session.get(url, params=params, timeout=30)
             response.raise_for_status()
             data = response.json()
 
@@ -76,7 +76,7 @@ class CKANConnector:
         params = {"id": package_id}
 
         try:
-            response = self.session.get(url, params=params)
+            response = self.session.get(url, params=params, timeout=20)
             response.raise_for_status()
             data = response.json()
 

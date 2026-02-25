@@ -100,7 +100,7 @@ class DataScraper:
             return True
         return False
 
-    def scrape_web_page(self, url: str, timeout: int = 30) -> ScrapeResult:
+    def scrape_web_page(self, url: str, timeout: int = 60) -> ScrapeResult:
         try:
             logger.info(f"Scraping URL: {url}")
             response = self.session.get(url, timeout=timeout)
@@ -130,7 +130,7 @@ class DataScraper:
             return ScrapeResult(False, error=f"Unexpected error scraping {url}: {e!s}")
 
     def scrape_api_endpoint(
-        self, url: str, params: dict | None = None, timeout: int = 30
+        self, url: str, params: dict | None = None, timeout: int = 60
     ) -> ScrapeResult:
         try:
             logger.info(f"Scraping API endpoint: {url}")
