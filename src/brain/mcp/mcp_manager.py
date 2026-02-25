@@ -278,9 +278,13 @@ class MCPManager:
             logger.error("MCP Python package is not installed; MCP features are unavailable")
             return None
 
+        # Normalize server name: callers may use hyphens (e.g. "sequential-thinking")
+        # but _process_config stores under underscores (e.g. "sequential_thinking")
+        server_name = server_name.replace("-", "_")
+
         # Bridging logic: redirect BEFORE acquiring lock to avoid deadlock
         # (asyncio.Lock is not reentrant, so recursive get_session would deadlock)
-        if server_name in {"macos-use", "googlemaps"}:
+        if server_name in {"macos_use", "googlemaps"}:
             logger.debug(f"[MCP] Redirecting session request for {server_name} to xcodebuild")
             server_name = "xcodebuild"
 
