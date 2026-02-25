@@ -515,37 +515,27 @@ Focus on accuracy and semantic understanding. Each segment should be meaningful 
         # FIXED: Do NOT sort by start_pos. Trust the LLM's output order or keyword order.
         # Sorting can break execution flow if start_pos is hallucinated or defaulted to 0.
 
-        # Merge consecutive segments of same mode
-        merged = []
-        i = 0
-        while i < len(segments):
-            current = segments[i]
+        # Merge consecutive segments
+        merged: list[RequestSegment] = []
+        for seg in segments:
+            if not merged:
+                merged.append(seg)
+                continue
 
-            # Look for merge candidates
-            mode_config = _MODE_PROFILES.get(current.mode, {})
+            last = merged[-1]
+            mode_config = _MODE_PROFILES.get(last.mode, {})
             seg_config = mode_config.get("segmentation", {})
             merge_with = seg_config.get("merge_with", [])
 
-            # Check if next segment can be merged
-            if i + 1 < len(segments) and segments[i + 1].mode in merge_with:
-                # Merge with next segment
-                next_seg = segments[i + 1]
-                merged_text = f"{current.text} {next_seg.text}".strip()
-
-                merged.append(
-                    RequestSegment(
-                        text=merged_text,
-                        mode=current.mode,
-                        priority=current.priority,
-                        reason=f"Merged {current.mode}+{next_seg.mode}",
-                        start_pos=current.start_pos,
-                        end_pos=next_seg.end_pos,
-                    )
-                )
-                i += 2  # Skip both segments
+            # Check if this segment can be merged into the last one
+            if seg.mode == last.mode or seg.mode in merge_with:
+                last.text = f"{last.text} {seg.text}".strip()
+                last.end_pos = seg.end_pos
+                last.reason = f"Merged {last.mode}+{seg.mode}"
+                # Keep the lower priority (more important)
+                last.priority = min(last.priority, seg.priority)
             else:
-                merged.append(current)
-                i += 1
+                merged.append(seg)
 
         # Limit number of segments
         max_segments = _SEGMENTATION_CONFIG.get("max_segments", 5)
