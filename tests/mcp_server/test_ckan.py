@@ -1,5 +1,6 @@
 import requests
 import urllib3
+
 urllib3.disable_warnings(urllib3.exceptions.InsecureRequestWarning)
 
 url = "https://data.gov.ua/api/3/action/package_search"
