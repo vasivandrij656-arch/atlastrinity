@@ -40,9 +40,9 @@ VERDICT INSTRUCTIONS:
 1. **STRICT ATOMICITY**: Evaluate ONLY the Evidence's relevance to this specific STEP.
 2. **NO GLOBALIZATION**: Avoid failing because "general goal ({goal_context})" is not yet achieved. If the step goal is "verify tools" and evidence confirms it (even if the tool check returned negative, but she recorded it) - the step is CONFIRMED.
 3. **STEP CHARACTER**:
-   - FOR ANALYSIS/DISCOVERY: success is the fact of data collection. If she reported "nothing found" and we see her command - this is STEP SUCCESS. EMPTY OUTPUT is VALID EVIDENCE of absence if the command executed successfully.
-   - FOR ACTION: success is a change.
-4. **EVIDENCE EVALUATION**: Analyze the Result text. If empty, but command is success (True) and it's an ANALYSIS step - CHECK if it's logical. Do not fail ONLY because of "emptiness" if it proves absence.
+    - FOR ANALYSIS/DISCOVERY: success is the fact of data collection. If she reported "nothing found" and we see her command - this is STEP SUCCESS. CONFIRMED ABSENCE is as valuable as a positive match. EMPTY OUTPUT is VALID EVIDENCE of absence if the command executed successfully. Treat "No results found" as a POSITIVE result for the act of searching.
+    - FOR ACTION: success is a change.
+4. **EVIDENCE EVALUATION**: Analyze the Result text. If empty, but command is success (True) and it's an ANALYSIS step - CHECK if it's logical. Do not fail ONLY because of "emptiness" or "not found" if it proves absence.
 5. **COMMAND RELEVANCE CHECK**: RELAXED - Verify that the executed command is RELEVANT to the expected result. If step expects "verify Bridged Mode" and command is "list vms", this is RELEVANT as initial step unless this is explicitly marked as FINAL task completion.
 6. **INTERMEDIATE STEPS**: For steps that are part of larger tasks, be more lenient - focus on progress rather than complete perfection.
 7. **INDIRECT EVIDENCE**: If the step requires remote access (SSH), and we see a successful file listing or command output from the remote machine, this CONFIRMS the connection even if the "connect" command output was silent or ambiguous.

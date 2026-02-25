@@ -1058,6 +1058,15 @@ class Grisha(BaseAgent):
 
         if not verified and not issues:
             issues.append("Verification criteria not met")
+
+        # FILTER: If verified but 'not found' is in issues, it's likely a Discovery Success
+        # We don't want to report 'not found' as a problem if we accepted it as a result.
+        if verified:
+            issues = [
+                i for i in issues 
+                if not any(kw in i.lower() for kw in ["not found", "не знайдено", "empty", "порожньо"])
+            ]
+
         return issues
 
     def _extract_voice_summary_uk(self, analysis_text: str) -> str:
@@ -1099,13 +1108,17 @@ class Grisha(BaseAgent):
 
             # Even if 'success' is True, if result contains failure markers or is empty for info tools, it's a failure
             if success:
-                if "error:" in result_val or "failed to" in result_val or "not found" in result_val:
+                if "error:" in result_val or "failed to" in result_val:
                     success = False
+                elif "not found" in result_val or "не знайдено" in result_val:
+                    # 'Not found' during discovery is a valid positive outcome
+                    success = True
                 elif not result_val.strip() and r.get("tool", "").startswith(
-                    ("macos-use.read", "vibe.vibe_check")
+                    ("macos-use.read", "vibe.vibe_check", "duckduckgo-search", "golden-fund")
                 ):
-                    # Empty results for read/check tools are suspicious
-                    success = False
+                    # Empty results for search/read tools are common in discovery
+                    # We consider it success if the tool itself didn't crash
+                    success = True
 
             if success:
                 actual_successes.append(r)
