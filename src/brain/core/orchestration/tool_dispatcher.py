@@ -546,6 +546,7 @@ class ToolDispatcher:
     HALLUCINATED_TOOLS = {
         "create_spreadsheet": "No 'create_spreadsheet' tool exists. Use data-analysis server tools like run_pandas_code to generate CSV/Excel files, or use filesystem.write_file to write CSV content directly.",
         "spreadsheet": "No 'spreadsheet' server exists. Use data-analysis server for data processing or filesystem for writing CSV files.",
+        "spreadsheet.create_spreadsheet": "No 'spreadsheet' server exists. Use data-analysis server tools like run_pandas_code to generate CSV/Excel files, or use filesystem.write_file.",
         "evaluate": "No 'evaluate' tool exists. Use vibe_code_review for code evaluation or execute_command for running tests.",
         "assess": "No 'assess' tool exists. Use vibe_code_review for assessment.",
         "verify": "No 'verify' tool exists. Use execute_command to run verification commands.",
@@ -600,6 +601,18 @@ class ToolDispatcher:
 
             if not server:
                 return self._handle_resolution_failure(tool_name)
+
+            # 4b. Post-routing hallucination check (catches dot-notation like "spreadsheet.tool")
+            if server in self.HALLUCINATED_TOOLS:
+                suggestion = self.HALLUCINATED_TOOLS[server]
+                logger.warning(
+                    f"[DISPATCHER] Hallucinated server detected: '{server}'. {suggestion}"
+                )
+                return {
+                    "success": False,
+                    "error": f"Server '{server}' does not exist. {suggestion}",
+                    "hallucinated": True,
+                }
 
             # 5. Validate compatibility and arguments
             validation_result = self._pre_dispatch_validation(
