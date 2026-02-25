@@ -5,10 +5,13 @@ Handles interaction with Opendatabot API and provides simulation data for testin
 
 import logging
 from typing import Any, cast
+
 import requests
+
 from src.brain.auth.keychain_bridge import KeychainBridge
 
 logger = logging.getLogger("golden_fund.connectors.opendatabot")
+
 
 class OpendatabotConnector:
     def __init__(self, api_key: str | None = None):
@@ -19,8 +22,10 @@ class OpendatabotConnector:
         if self.api_key:
             self.session.headers.update({"Authorization": f"Bearer {self.api_key}"})
         self.session.headers.update({"Accept": "application/json"})
-        
-        logger.info(f"Opendatabot Connector initialized (API Key: {'set' if self.api_key else 'missing, simulation mode only'})")
+
+        logger.info(
+            f"Opendatabot Connector initialized (API Key: {'set' if self.api_key else 'missing, simulation mode only'})"
+        )
 
     def _get_api_key_from_keychain(self) -> str | None:
         cred = self.keychain.get_credential_for_domain("opendatabot.ua")
@@ -49,7 +54,7 @@ class OpendatabotConnector:
         Returns high-impact simulation data for testing and demonstration.
         """
         logger.info(f"Returning Opendatabot simulation data for: {query}")
-        
+
         # High-impact sample: A real estate developer with address and owners
         sample_data = [
             {
@@ -61,7 +66,7 @@ class OpendatabotConnector:
                 "director": "Ніконов Ігор Володимирович",
                 "owners": ["Ніконов Ігор Володимирович"],
                 "activities": ["Організація будівництва будівель"],
-                "source": "opendatabot_simulation"
+                "source": "opendatabot_simulation",
             },
             {
                 "full_name": "ТОВАРИСТВО З ОБМЕЖЕНОЮ ВІДПОВІДАЛЬНІСТЮ 'СТОЛИЦЯ ГРУП'",
@@ -72,10 +77,10 @@ class OpendatabotConnector:
                 "director": "Молчанова Владислава Борисівна",
                 "owners": ["Молчанова Владислава Борисівна"],
                 "activities": ["Будівництво житлових і нежитлових будівель"],
-                "source": "opendatabot_simulation"
-            }
+                "source": "opendatabot_simulation",
+            },
         ]
-        
+
         # Filter by simple string match for "simulation" search feeling
         results = [d for d in sample_data if query.lower() in str(d).lower()]
-        return results if results else sample_data
+        return results or sample_data
