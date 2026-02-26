@@ -79,6 +79,8 @@ jobs:
       - name: Check Secrets Baseline
         run: |
           detect-secrets scan --baseline .secrets.baseline --slim
+          # Strip the non-deterministic timestamp to match local lint:security behavior
+          jq 'del(.generated_at)' .secrets.baseline > .secrets.baseline.tmp && mv .secrets.baseline.tmp .secrets.baseline
           git diff --exit-code .secrets.baseline
 
       - name: Safety Check
