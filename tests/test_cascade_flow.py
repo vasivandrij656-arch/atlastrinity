@@ -14,6 +14,7 @@ from langchain_core.messages import HumanMessage, SystemMessage
 
 from providers.windsurf import WindsurfLLM
 
+
 def run_test():
     logger.info(f"Using Python {sys.version}")
 
@@ -63,6 +64,7 @@ def run_test():
         logger.info("2. Verify your API key has sufficient quota")
         logger.info("3. Check network/firewall settings")
         return False
+
 
 if __name__ == "__main__":
     if not run_test():
