@@ -44,9 +44,11 @@ runs:
       if: ${{ inputs.install-python-deps == 'true' }}
       shell: bash
       run: |
-        python -m pip install --upgrade pip
-        pip install -r requirements.txt
-        pip install ruff bandit xenon pyrefly safety detect-secrets pytest pytest-cov pytest-asyncio pytest-timeout zizmor
+        python -m venv .venv
+        echo "$PWD/.venv/bin" >> $GITHUB_PATH
+        .venv/bin/python -m pip install --upgrade pip
+        .venv/bin/pip install -r requirements.txt
+        .venv/bin/pip install ruff bandit pyrefly safety detect-secrets pytest pytest-cov pytest-asyncio pytest-timeout zizmor xenon vulture
 
     - name: 'Install Node Dependencies'
       if: ${{ inputs.install-node-deps == 'true' }}

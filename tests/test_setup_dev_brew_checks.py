@@ -2,7 +2,7 @@ import os
 import subprocess
 from unittest.mock import Mock
 
-from scripts import setup_dev as s
+from src.maintenance import setup_dev as s
 
 
 def test_brew_formula_installed(monkeypatch):

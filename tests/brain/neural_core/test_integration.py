@@ -12,7 +12,9 @@ from src.brain.neural_core.core import NeuralCore
 
 
 @pytest.fixture
-async def neural_core_instance():
+async def neural_core_instance(monkeypatch):
+    monkeypatch.setenv("COPILOT_API_KEY", "fake_copilot_key")
+    monkeypatch.setenv("WINDSURF_API_KEY", "fake_windsurf_key")
     # Use a test-specific db path if needed, but for now we test the facade logic
     core = NeuralCore()
     # Mocking wait times if necessary
