@@ -33,7 +33,12 @@ class Colors:
     ENDC = "\033[0m"
 
 
-async def check_mcp(output_json: bool = False, show_tools: bool = False, check_all: bool = False):
+async def check_mcp(
+    output_json: bool = False,
+    show_tools: bool = False,
+    check_all: bool = False,
+    verify_tools: bool = False,
+):
     """Run MCP health checks for all servers."""
     from src.brain.config import ensure_dirs
     from src.brain.mcp.mcp_manager import mcp_manager
@@ -64,8 +69,27 @@ async def check_mcp(output_json: bool = False, show_tools: bool = False, check_a
         ]
 
     if not output_json:
-        print(f"\n{Colors.CYAN}{Colors.BOLD}🔍 Перевірка здоров'я MCP серверів...{Colors.ENDC}")
+        status_msg = "Перевірка здоров'я MCP серверів"
+        if verify_tools:
+            status_msg += " з верифікацією інструментів"
+        print(f"\n{Colors.CYAN}{Colors.BOLD}🔍 {status_msg}...{Colors.ENDC}")
         print(f"{Colors.DIM}{'=' * 60}{Colors.ENDC}")
+
+    # Tool verification registry: server_name -> (tool_name, arguments)
+    VERIFY_REGISTRY = {
+        "filesystem": ("list_allowed_directories", {}),
+        "memory": ("list_entities", {}),
+        "vibe": ("vibe_get_config", {}),
+        "duckduckgo-search": ("duckduckgo_search", {"query": "AtlasTrinity", "max_results": 1}),
+        "sequential-thinking": (
+            "sequentialthinking",
+            {"thought": "Health check probe", "thoughtNumber": 1, "totalThoughts": 1},
+        ),
+        "github": ("search_repositories", {"query": "AtlasTrinity", "per_page": 1}),
+        "devtools": ("devtools_validate_config", {}),
+        "chrome-devtools": ("browser_inspect", {}),
+        "puppeteer": ("puppeteer_navigate", {"url": "https://google.com"}),
+    }
 
     for server_name, server_config in servers_to_check:
         tier = server_config.get("tier", 4)
@@ -115,6 +139,40 @@ async def check_mcp(output_json: bool = False, show_tools: bool = False, check_a
                     if show_tools:
                         for name in tool_names:
                             print(f"      {Colors.DIM}•{Colors.ENDC} {name}")
+
+                # Deep verification
+                if verify_tools and server_name in VERIFY_REGISTRY:
+                    tool_name, tool_args = VERIFY_REGISTRY[server_name]
+                    try:
+                        v_start = time.time()
+                        v_result = await mcp_manager.call_tool(
+                            server_name, tool_name, tool_args
+                        )
+                        v_elapsed = (time.time() - v_start) * 1000
+
+                        if v_result:  # Assume success if we got a result
+                            results[server_name]["verified"] = True
+                            results[server_name]["verify_tool"] = tool_name
+                            results[server_name]["verify_time_ms"] = round(v_elapsed, 1)
+                            if not output_json:
+                                print(
+                                    f"      {Colors.GREEN}↳ Verified: {tool_name}{Colors.ENDC} ({v_elapsed:>.1f}ms)"
+                                )
+                        else:
+                            results[server_name]["verified"] = False
+                            results[server_name]["status"] = "degraded"
+                            if not output_json:
+                                print(
+                                    f"      {Colors.RED}↳ Verification Failed: {tool_name} (No result){Colors.ENDC}"
+                                )
+                    except Exception as ve:
+                        results[server_name]["verified"] = False
+                        results[server_name]["status"] = "degraded"
+                        results[server_name]["verify_error"] = str(ve)
+                        if not output_json:
+                            print(
+                                f"      {Colors.RED}↳ Verification Error: {tool_name} ({str(ve)[:40]}){Colors.ENDC}"
+                            )
             # check if it's connected
             elif server_name in mcp_manager.sessions:
                 results[server_name] = {
@@ -220,9 +278,19 @@ def main():
     parser.add_argument(
         "--all", action="store_true", help="Probe all servers in registry, even if disabled"
     )
+    parser.add_argument(
+        "--verify", action="store_true", help="Perform deep tool execution verification"
+    )
     args = parser.parse_args()
 
-    asyncio.run(check_mcp(output_json=args.json, show_tools=args.tools, check_all=args.all))
+    asyncio.run(
+        check_mcp(
+            output_json=args.json,
+            show_tools=args.tools,
+            check_all=args.all,
+            verify_tools=args.verify,
+        )
+    )
 
 
 if __name__ == "__main__":

@@ -109,7 +109,7 @@ def devtools_check_mcp_health() -> dict[str, Any]:
     """Run the system-wide MCP health check script.
     Ping all enabled servers and report their status, response time, and tool counts.
     """
-    script_path = PROJECT_ROOT / "scripts" / "check_mcp_health.py"
+    script_path = PROJECT_ROOT / "src" / "maintenance" / "mcp_health.py"
 
     if not script_path.exists():
         return {"error": f"Health check script not found at {script_path}"}
@@ -529,7 +529,7 @@ def devtools_run_mcp_sandbox(
     Returns:
         Dict with test results including passed/failed counts and details.
     """
-    script_path = PROJECT_ROOT / "scripts" / "mcp_sandbox.py"
+    script_path = PROJECT_ROOT / "src" / "testing" / "mcp_sandbox.py"
 
     if not script_path.exists():
         return {"error": f"Sandbox script not found at {script_path}"}
