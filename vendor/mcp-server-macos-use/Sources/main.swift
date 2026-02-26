@@ -55,9 +55,7 @@ struct WindowActionResult: Codable {
     let note: String
 }
 
-func captureMainDisplay() -> CGImage? {
-    return CGDisplayCreateImage(CGMainDisplayID())
-}
+// captureMainDisplay(monitor:) defined below with multi-monitor support
 
 func encodeBase64JPEG(image: CGImage, quality: String = "high") -> String? {
     let bitmapRep = NSBitmapImageRep(cgImage: image)
@@ -271,7 +269,8 @@ func requestRemindersAccess(openSettings: Bool = true) async -> Bool {
 
     if !granted {
         if openSettings {
-            fputs("log: requestRemindersAccess: Access denied, opening System Settings...\n", stderr)
+            fputs(
+                "log: requestRemindersAccess: Access denied, opening System Settings...\n", stderr)
             openSystemSettings(for: .reminders)
         } else {
             fputs("log: requestRemindersAccess: Access denied (silent mode)\n", stderr)
@@ -565,8 +564,17 @@ func getQualityValue(_ quality: String) -> Double {
 }
 
 func captureMainDisplay(monitor: Int? = nil) -> CGImage? {
-    // For now, just capture main display. Multi-monitor support would require additional implementation
-    return CGDisplayCreateImage(CGMainDisplayID())
+    guard let monitorIndex = monitor, monitorIndex > 0 else {
+        return CGDisplayCreateImage(CGMainDisplayID())
+    }
+    // Real multi-monitor support
+    var displayCount: UInt32 = 0
+    CGGetActiveDisplayList(0, nil, &displayCount)
+    guard displayCount > 0 else { return CGDisplayCreateImage(CGMainDisplayID()) }
+    var displays = [CGDirectDisplayID](repeating: 0, count: Int(displayCount))
+    CGGetActiveDisplayList(displayCount, &displays, &displayCount)
+    let idx = min(monitorIndex, Int(displayCount) - 1)
+    return CGDisplayCreateImage(displays[idx])
 }
 
 // --- Helper for Non-blocking AppleScript Execution ---
@@ -1085,6 +1093,13 @@ func setupAndStartServer() async throws -> Server {
                 "type": .string("number"),
                 "description": .string("OPTIONAL. Amount to scroll (default 3)."),
             ]),
+            "sensitivity": .object([
+                "type": .string("string"),
+                "description": .string(
+                    "OPTIONAL. Scroll sensitivity: 'fine' (1x), 'normal' (10x, default), 'fast' (30x)."
+                ),
+                "enum": .array([.string("fine"), .string("normal"), .string("fast")]),
+            ]),
         ]),
         "required": .array([.string("direction")]),
     ])
@@ -1123,6 +1138,22 @@ func setupAndStartServer() async throws -> Server {
         inputSchema: mouseActionSchema
     )
 
+    // *** NEW: Triple Click Tool (select entire line) ***
+    let tripleClickTool = Tool(
+        name: "macos-use_triple_click_and_traverse",
+        description:
+            "Simulates a triple-click to select an entire line of text at the specified coordinates.",
+        inputSchema: mouseActionSchema
+    )
+
+    // *** NEW: Mouse Move Tool ***
+    let mouseMoveTool = Tool(
+        name: "macos-use_mouse_move",
+        description:
+            "Moves the mouse cursor to the specified screen coordinates without clicking. Useful for hover effects, tooltips, and positioning before other actions.",
+        inputSchema: mouseActionSchema
+    )
+
     // *** NEW: Drag & Drop Tool ***
     let dragDropSchema: Value = .object([
         "type": .string("object"),
@@ -1143,6 +1174,11 @@ func setupAndStartServer() async throws -> Server {
             ]),
             "endY": .object([
                 "type": .string("number"), "description": .string("REQUIRED. End Y coordinate."),
+            ]),
+            "steps": .object([
+                "type": .string("number"),
+                "description": .string(
+                    "OPTIONAL. Number of interpolation steps for smooth drag (default 10)."),
             ]),
         ]),
         "required": .array([
@@ -2171,8 +2207,8 @@ func setupAndStartServer() async throws -> Server {
 
     // --- Aggregate list of tools ---
     let allTools = [
-        openAppTool, clickTool, rightClickTool, doubleClickTool, dragDropTool, typeTool,
-        pressKeyTool,
+        openAppTool, clickTool, rightClickTool, doubleClickTool, tripleClickTool, mouseMoveTool,
+        dragDropTool, typeTool, pressKeyTool,
         scrollTool, refreshTool, windowMgmtTool, executeCommandTool, terminalTool,
         screenshotTool, screenshotAliasTool, visionTool, ocrAliasTool, analyzeAliasTool,
         setClipboardTool, getClipboardTool, clipboardHistoryTool, mediaControlTool, fetchTool,
@@ -3472,14 +3508,26 @@ func setupAndStartServer() async throws -> Server {
             case scrollTool.name:
                 let direction = try getRequiredString(from: params.arguments, key: "direction")
                 let amount = try getOptionalInt(from: params.arguments, key: "amount") ?? 3
+                let sensitivity =
+                    try getOptionalString(from: params.arguments, key: "sensitivity") ?? "normal"
 
-                // Native CGEvent scroll
+                // Configurable scroll sensitivity multiplier
+                let multiplier: Int
+                switch sensitivity.lowercased() {
+                case "fine": multiplier = 1
+                case "fast": multiplier = 30
+                default: multiplier = 10  // normal
+                }
+
+                // Native CGEvent scroll with configurable sensitivity
                 let dy =
                     direction == "down"
-                    ? Int32(amount * 10) : (direction == "up" ? Int32(-amount * 10) : 0)
+                    ? Int32(amount * multiplier)
+                    : (direction == "up" ? Int32(-amount * multiplier) : 0)
                 let dx =
                     direction == "right"
-                    ? Int32(amount * 10) : (direction == "left" ? Int32(-amount * 10) : 0)
+                    ? Int32(amount * multiplier)
+                    : (direction == "left" ? Int32(-amount * multiplier) : 0)
                 let scrollEvent = CGEvent(
                     scrollWheelEvent2Source: nil, units: .line, wheelCount: 2, wheel1: dy,
                     wheel2: dx, wheel3: 0)
@@ -3510,7 +3558,7 @@ func setupAndStartServer() async throws -> Server {
                 let x = try getRequiredDouble(from: params.arguments, key: "x")
                 let y = try getRequiredDouble(from: params.arguments, key: "y")
 
-                // Native double click using CGEvent
+                // Native double click using CGEvent with system-aware timing
                 let point = CGPoint(x: x, y: y)
                 let mouseDown1 = CGEvent(
                     mouseEventSource: nil, mouseType: .leftMouseDown, mouseCursorPosition: point,
@@ -3530,11 +3578,55 @@ func setupAndStartServer() async throws -> Server {
                 mouseDown2?.setIntegerValueField(.mouseEventClickState, value: 2)
                 mouseUp2?.setIntegerValueField(.mouseEventClickState, value: 2)
 
+                // Use system double-click interval for reliable timing
+                let dblClickDelay = UInt64(NSEvent.doubleClickInterval * 0.4 * 1_000_000_000)
                 mouseDown1?.post(tap: .cghidEventTap)
                 mouseUp1?.post(tap: .cghidEventTap)
-                try? await Task.sleep(nanoseconds: 50_000_000)  // 50ms delay for reliable double-click
+                try? await Task.sleep(nanoseconds: dblClickDelay)
                 mouseDown2?.post(tap: .cghidEventTap)
                 mouseUp2?.post(tap: .cghidEventTap)
+
+                primaryAction = .traverseOnly
+                options.pidForTraversal = convertedPid
+
+            case tripleClickTool.name:
+                let x = try getRequiredDouble(from: params.arguments, key: "x")
+                let y = try getRequiredDouble(from: params.arguments, key: "y")
+
+                // Native triple click for line selection using CGEvent
+                let point = CGPoint(x: x, y: y)
+                let dblClickDelay = UInt64(NSEvent.doubleClickInterval * 0.3 * 1_000_000_000)
+
+                for clickNum in 1...3 {
+                    let down = CGEvent(
+                        mouseEventSource: nil, mouseType: .leftMouseDown,
+                        mouseCursorPosition: point,
+                        mouseButton: .left)
+                    let up = CGEvent(
+                        mouseEventSource: nil, mouseType: .leftMouseUp, mouseCursorPosition: point,
+                        mouseButton: .left)
+                    down?.setIntegerValueField(.mouseEventClickState, value: Int64(clickNum))
+                    up?.setIntegerValueField(.mouseEventClickState, value: Int64(clickNum))
+                    down?.post(tap: .cghidEventTap)
+                    up?.post(tap: .cghidEventTap)
+                    if clickNum < 3 {
+                        try? await Task.sleep(nanoseconds: dblClickDelay)
+                    }
+                }
+
+                primaryAction = .traverseOnly
+                options.pidForTraversal = convertedPid
+
+            case mouseMoveTool.name:
+                let x = try getRequiredDouble(from: params.arguments, key: "x")
+                let y = try getRequiredDouble(from: params.arguments, key: "y")
+
+                // Native mouse move using CGEvent
+                let point = CGPoint(x: x, y: y)
+                let moveEvent = CGEvent(
+                    mouseEventSource: nil, mouseType: .mouseMoved, mouseCursorPosition: point,
+                    mouseButton: .left)
+                moveEvent?.post(tap: .cghidEventTap)
 
                 primaryAction = .traverseOnly
                 options.pidForTraversal = convertedPid
@@ -3544,24 +3636,37 @@ func setupAndStartServer() async throws -> Server {
                 let startY = try getRequiredDouble(from: params.arguments, key: "startY")
                 let endX = try getRequiredDouble(from: params.arguments, key: "endX")
                 let endY = try getRequiredDouble(from: params.arguments, key: "endY")
+                let steps = try getOptionalInt(from: params.arguments, key: "steps") ?? 10
 
                 let start = CGPoint(x: startX, y: startY)
                 let end = CGPoint(x: endX, y: endY)
 
+                // Mouse down at start position
                 let mouseDown = CGEvent(
                     mouseEventSource: nil, mouseType: .leftMouseDown, mouseCursorPosition: start,
                     mouseButton: .left)
-                let mouseDrag = CGEvent(
-                    mouseEventSource: nil, mouseType: .leftMouseDragged, mouseCursorPosition: end,
-                    mouseButton: .left)
+                mouseDown?.post(tap: .cghidEventTap)
+                try? await Task.sleep(nanoseconds: 50_000_000)  // 50ms settle
+
+                // Smooth interpolated drag with configurable steps
+                let actualSteps = max(1, min(steps, 50))  // Clamp 1-50
+                for i in 1...actualSteps {
+                    let t = Double(i) / Double(actualSteps)
+                    let currentX = startX + (endX - startX) * t
+                    let currentY = startY + (endY - startY) * t
+                    let currentPoint = CGPoint(x: currentX, y: currentY)
+                    let dragEvent = CGEvent(
+                        mouseEventSource: nil, mouseType: .leftMouseDragged,
+                        mouseCursorPosition: currentPoint,
+                        mouseButton: .left)
+                    dragEvent?.post(tap: .cghidEventTap)
+                    try? await Task.sleep(nanoseconds: 20_000_000)  // 20ms between steps
+                }
+
+                // Mouse up at end position
                 let mouseUp = CGEvent(
                     mouseEventSource: nil, mouseType: .leftMouseUp, mouseCursorPosition: end,
                     mouseButton: .left)
-
-                mouseDown?.post(tap: .cghidEventTap)
-                try? await Task.sleep(nanoseconds: 100_000_000)  // Wait for app to catch up
-                mouseDrag?.post(tap: .cghidEventTap)
-                try? await Task.sleep(nanoseconds: 100_000_000)
                 mouseUp?.post(tap: .cghidEventTap)
 
                 primaryAction = .traverseOnly
@@ -4382,7 +4487,8 @@ func setupAndStartServer() async throws -> Server {
                 // We verify notification delivery via osascript instead.
                 let notifCheck = "display notification \"permission check\" with title \"MCP\""
                 let (notifOk, _, _) = runAppleScriptNonBlocking(notifCheck, timeout: 3.0)
-                status += "- Notifications: \(notifOk ? "GRANTED (osascript)" : "DENIED (osascript)")\n"
+                status +=
+                    "- Notifications: \(notifOk ? "GRANTED (osascript)" : "DENIED (osascript)")\n"
 
                 // 2. Calendar
                 let calGranted = await requestCalendarAccess(openSettings: false)
@@ -4508,12 +4614,16 @@ struct MCPServer {
 
         // Accessibility (silent check, no prompt — requires manual setup)
         let accessibilityEnabled = AXIsProcessTrusted()
-        fputs("log: main: Accessibility: \(accessibilityEnabled ? "granted" : "not granted")\n", stderr)
+        fputs(
+            "log: main: Accessibility: \(accessibilityEnabled ? "granted" : "not granted")\n",
+            stderr)
 
         // Screen Recording (silent check)
         if #available(macOS 11.0, *) {
             let screenRecording = CGPreflightScreenCaptureAccess()
-            fputs("log: main: Screen Recording: \(screenRecording ? "granted" : "not granted")\n", stderr)
+            fputs(
+                "log: main: Screen Recording: \(screenRecording ? "granted" : "not granted")\n",
+                stderr)
         }
 
         // Calendar — request access (triggers TCC dialog if notDetermined), no Settings popup
@@ -4525,7 +4635,9 @@ struct MCPServer {
         fputs("log: main: Reminders: \(remGranted ? "granted" : "not granted")\n", stderr)
 
         if !accessibilityEnabled || !calGranted || !remGranted {
-            fputs("warning: main: Some permissions missing. Grant access in System Settings > Privacy & Security.\n", stderr)
+            fputs(
+                "warning: main: Some permissions missing. Grant access in System Settings > Privacy & Security.\n",
+                stderr)
         } else {
             fputs("log: main: All core permissions granted.\n", stderr)
         }

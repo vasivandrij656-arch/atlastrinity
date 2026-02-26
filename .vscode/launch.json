@@ -17,6 +17,24 @@
       "name": "Release mcp-server-windsurf (vendor/mcp-server-windsurf)",
       "program": "${workspaceFolder:atlastrinity}/vendor/mcp-server-windsurf/.build/release/mcp-server-windsurf",
       "preLaunchTask": "swift: Build Release mcp-server-windsurf (vendor/mcp-server-windsurf)"
+    },
+    {
+      "type": "lldb",
+      "request": "launch",
+      "args": [],
+      "cwd": "${workspaceFolder:atlastrinity}/vendor/mcp-server-macos-use",
+      "name": "Debug mcp-server-macos-use (vendor/mcp-server-macos-use)",
+      "program": "${workspaceFolder:atlastrinity}/vendor/mcp-server-macos-use/.build/debug/mcp-server-macos-use",
+      "preLaunchTask": "swift: Build Debug mcp-server-macos-use (vendor/mcp-server-macos-use)"
+    },
+    {
+      "type": "lldb",
+      "request": "launch",
+      "args": [],
+      "cwd": "${workspaceFolder:atlastrinity}/vendor/mcp-server-macos-use",
+      "name": "Release mcp-server-macos-use (vendor/mcp-server-macos-use)",
+      "program": "${workspaceFolder:atlastrinity}/vendor/mcp-server-macos-use/.build/release/mcp-server-macos-use",
+      "preLaunchTask": "swift: Build Release mcp-server-macos-use (vendor/mcp-server-macos-use)"
     }
   ]
 }

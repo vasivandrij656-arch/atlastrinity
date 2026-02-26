@@ -17,7 +17,7 @@ class FixedMacOSToolsBridge:
 
     def __init__(self):
         self.macos_server_path = (
-            "./vendor/mcp-server-macos-use/.build/arm64-apple-macosx/release/mcp-server-macos-use"
+            "./vendor/mcp-server-macos-use/.build/release/mcp-server-macos-use"
         )
 
     async def call_macos_tool(self, tool_name: str, params: dict[str, Any]) -> dict[str, Any]:
@@ -36,7 +36,7 @@ class FixedMacOSToolsBridge:
                 stdout=subprocess.PIPE,
                 stderr=subprocess.PIPE,
                 text=True,
-                cwd="/Users/olegikyma/Documents/GitHub/atlastrinity",
+                cwd="/Users/dev/Documents/GitHub/atlastrinity",
             )
 
             stdout, stderr = process.communicate(input=json.dumps(input_data) + "\n", timeout=15)
@@ -140,6 +140,24 @@ class FixedEnhancedXcodeBuildMCP:
                 "macos_tool": "macos-use_voice_control",
                 "params": {"command": "open safari", "language": "en-US"},
                 "description": "Voice control integration for hands-free development",
+            },
+            # Mouse Move
+            "mouse_move": {
+                "macos_tool": "macos-use_mouse_move",
+                "params": {"x": 0, "y": 0},
+                "description": "Move cursor to position without clicking",
+            },
+            # Triple Click (select line)
+            "triple_click": {
+                "macos_tool": "macos-use_triple_click_and_traverse",
+                "params": {"x": 100, "y": 100, "pid": 0},
+                "description": "Triple-click to select entire line of text",
+            },
+            # Smooth Drag
+            "drag": {
+                "macos_tool": "macos-use_drag_and_drop_and_traverse",
+                "params": {"startX": 0, "startY": 0, "endX": 100, "endY": 100, "steps": 10},
+                "description": "Smooth drag-and-drop with interpolation",
             },
         }
 

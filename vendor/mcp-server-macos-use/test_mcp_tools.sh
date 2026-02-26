@@ -6,7 +6,17 @@
 
 set -euo pipefail
 
-SERVER_BIN="./.build/debug/mcp-server-macos-use"
+# Check for binary in common places
+if [[ -f "./.build/release/mcp-server-macos-use" ]]; then
+    SERVER_BIN="./.build/release/mcp-server-macos-use"
+elif [[ -f "./.build/debug/mcp-server-macos-use" ]]; then
+    SERVER_BIN="./.build/debug/mcp-server-macos-use"
+elif [[ -f "./mcp-server-macos-use" ]]; then
+    SERVER_BIN="./mcp-server-macos-use"
+else
+    SERVER_BIN="./.build/debug/mcp-server-macos-use" # Fallback for error message
+fi
+
 PASSED=0
 FAILED=0
 SKIPPED=0
@@ -141,6 +151,8 @@ EXPECTED_TOOLS=(
     "macos-use_scroll_and_traverse"
     "macos-use_right_click_and_traverse"
     "macos-use_double_click_and_traverse"
+    "macos-use_triple_click_and_traverse"
+    "macos-use_mouse_move"
     "macos-use_drag_and_drop_and_traverse"
     "macos-use_window_management"
     "execute_command"
