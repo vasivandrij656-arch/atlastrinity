@@ -2647,7 +2647,7 @@ class Grisha(BaseAgent):
         """Standard backtick and regex fallback."""
 
         if "```json" in text:
-            text = text.split("```json")[1].split("```")[0].strip()
+            text = text.split("```json")[1].split("```", maxsplit=1)[0].strip()
         elif "```" in text:
             parts = text.split("```")
             json_candidates = [p.strip() for p in parts if "{" in p and "}" in p]

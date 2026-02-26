@@ -68,24 +68,49 @@ class InstallationTracker:
 tracker = InstallationTracker()
 
 
+def _log_to_file(msg: str):
+    """Logs a message to the setup_dev.log file."""
+    log_dir = CONFIG_ROOT / "logs"
+    log_dir.mkdir(parents=True, exist_ok=True)
+    log_file = log_dir / "setup_dev.log"
+    timestamp = time.strftime("%Y-%m-%d %H:%M:%S")
+    # Strip ANSI colors for file logging
+    clean_msg = re.sub(r"\033\[[0-9;]*m", "", msg)
+    try:
+        with open(log_file, "a", encoding="utf-8") as f:
+            f.write(f"[{timestamp}] {clean_msg}\n")
+    except Exception:
+        pass
+
+
 def print_step(msg: str):
-    pass
+    output = f"{Colors.BOLD}{Colors.OKCYAN}STEP:{Colors.ENDC} {msg}"
+    print(output)
+    _log_to_file(output)
 
 
 def print_success(msg: str):
-    pass
+    output = f"{Colors.OKGREEN}SUCCESS:{Colors.ENDC} {msg}"
+    print(output)
+    _log_to_file(output)
 
 
 def print_warning(msg: str):
-    pass
+    output = f"{Colors.WARNING}WARNING:{Colors.ENDC} {msg}"
+    print(output)
+    _log_to_file(output)
 
 
 def print_error(msg: str):
-    pass
+    output = f"{Colors.FAIL}ERROR:{Colors.ENDC} {msg}"
+    print(output, file=sys.stderr)
+    _log_to_file(output)
 
 
 def print_info(msg: str):
-    pass
+    output = f"{Colors.OKBLUE}INFO:{Colors.ENDC} {msg}"
+    print(output)
+    _log_to_file(output)
 
 
 # Константи
