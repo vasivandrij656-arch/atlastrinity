@@ -92,7 +92,11 @@ def check_database():
             except Exception as e:
                 return {"status": "error", "message": f"Database error: {e}"}
 
-        return asyncio.run(test_db())
+        loop = asyncio.new_event_loop()
+        try:
+            return loop.run_until_complete(test_db())
+        finally:
+            loop.close()
     except Exception as e:
         return {"status": "error", "message": f"Database import error: {e}"}
 
