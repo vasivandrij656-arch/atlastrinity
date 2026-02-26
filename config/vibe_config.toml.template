@@ -30,7 +30,7 @@
 # NOTE: This is for VIBE only - NOT system reasoning!
 # System reasoning uses oswe-vscode-secondary from config.yaml
 # Complexity-aware fallback: premium models first, then standard, then lightweight
-fallback_chain = [\"gpt-4o\", \"gpt-4.1\", \"claude-haiku-4.5\", \"gemini-flash-3-preview\", \"oswe-vscode-secondary\", \"grok-code-fast-1\"]
+fallback_chain = ["gpt-4o", "gpt-4.1", "claude-haiku-4.5", "gemini-flash-3-preview", "oswe-vscode-secondary", "grok-code-fast-1"]
 
 # Current selection (change based on your provider):
 active_model = "gpt-4o"            # GPT-4o (Stable Primary)
