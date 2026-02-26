@@ -571,6 +571,13 @@ class ToolDispatcher:
         try:
             # 1. Basic cleaning and normalization
             tool_name = (tool_name or "").strip().lower()
+            if not tool_name or tool_name == "none":
+                logger.error(f"[DISPATCHER] Empty or 'none' tool call detected. Args: {args}")
+                return {
+                    "success": False,
+                    "error": "Empty tool name or 'none' provided in tool call. Please specify a valid tool from the catalog.",
+                    "invalid_tool": True,
+                }
             if not isinstance(args, dict):
                 args = {}
 

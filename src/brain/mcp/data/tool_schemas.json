@@ -1053,12 +1053,17 @@
   "search_files": {
     "server": "filesystem",
     "required": ["path", "pattern"],
-    "optional": [],
+    "optional": ["directories", "file_patterns", "content_patterns", "recursive", "max_results"],
     "types": {
       "path": "str",
-      "pattern": "str"
+      "pattern": "str",
+      "directories": "list",
+      "file_patterns": "list",
+      "content_patterns": "list",
+      "recursive": "bool",
+      "max_results": "int"
     },
-    "description": "Search files by name or content"
+    "description": "Search files by name or content. Supports flexible argument structures from different model types."
   },
   "get_file_info": {
     "server": "filesystem",
@@ -1146,13 +1151,14 @@
   },
   "sequentialthinking": {
     "server": "sequential-thinking",
-    "required": ["thought", "thoughtNumber", "totalThoughts", "nextThoughtNeeded"],
-    "optional": [],
+    "required": ["thought", "thoughtNumber", "totalThoughts"],
+    "optional": ["nextThoughtNeeded", "step_id"],
     "types": {
       "thought": "str",
       "thoughtNumber": "int",
       "totalThoughts": "int",
-      "nextThoughtNeeded": "bool"
+      "nextThoughtNeeded": "bool",
+      "step_id": "str"
     },
     "description": "Perform step-by-step reasoning for complex tasks."
   },

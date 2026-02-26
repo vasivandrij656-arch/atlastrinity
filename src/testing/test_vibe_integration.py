@@ -101,7 +101,6 @@ async def test_vibe_arg_filtering():
     result = await vibe_prompt(
         ctx=ctx,
         prompt="version",
-        args=["--no-tui"],
         timeout_s=30,
         max_turns=1,
     )

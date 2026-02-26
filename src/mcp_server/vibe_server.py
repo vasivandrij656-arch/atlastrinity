@@ -80,6 +80,8 @@ SPAM_TRIGGERS = [
     "──",
     "[2K",
     "[1A",
+    "[12;25H",
+    "[16;1H",
     "Press Enter",
     "↵",
     "ListToolsRequest",
@@ -795,6 +797,17 @@ async def run_vibe_subprocess(
     # Use a timeout for lock acquisition to avoid indefinite queue hangs
     # We wait up to timeout*2 to allow for one full task completion + some buffer
     lock_timeout = (timeout_s or DEFAULT_TIMEOUT_S) * 2
+
+    # Heartbeat/Watchdog for long holds - logic for warning
+    async def _lock_watchdog():
+        await asyncio.sleep(900)  # 15 minutes
+        if VIBE_LOCK.locked() and VIBE_QUEUE_SIZE > 0:
+            logger.warning(
+                "⚠️ [VIBE-WATCHDOG] Lock has been held for over 15 minutes while tasks are queued. This may indicate a hang."
+            )
+
+    watchdog_task = asyncio.create_task(_lock_watchdog())
+
     try:
         await asyncio.wait_for(VIBE_LOCK.acquire(), timeout=lock_timeout)
     except TimeoutError:
@@ -823,6 +836,10 @@ async def run_vibe_subprocess(
         logger.error(f"[VIBE] {error_msg}")
         return {"success": False, "error": error_msg, "command": argv}
     finally:
+        # Cancel watchdog if it's still running
+        if "watchdog_task" in locals() and not watchdog_task.done():
+            watchdog_task.cancel()
+
         # 1. Release Lock correctly
         if VIBE_LOCK.locked():
             try:
@@ -876,7 +893,7 @@ def _prepare_vibe_env(env: dict[str, str] | None) -> dict[str, str]:
     process_env["NO_COLOR"] = "1"
     process_env["PYTHONUNBUFFERED"] = "1"
     process_env["TEXTUAL_ALLOW_NON_INTERACTIVE"] = "1"
-    process_env["VIBE_DEBUG_RAW"] = "true"
+    process_env["VIBE_DEBUG_RAW"] = "false"
     process_env.update(config.get_environment())
     if env:
         process_env.update({k: str(v) for k, v in env.items()})
@@ -1097,7 +1114,7 @@ async def _execute_vibe_with_retries(
                 env=process_env,
                 stdout=asyncio.subprocess.PIPE,
                 stderr=asyncio.subprocess.PIPE,
-                stdin=asyncio.subprocess.DEVNULL,
+                stdin=asyncio.subprocess.PIPE,
             )
 
             stdout_chunks: list[bytes] = []
@@ -1371,7 +1388,7 @@ async def vibe_test_in_sandbox(
                 cwd=sandbox_dir,
                 stdout=asyncio.subprocess.PIPE,
                 stderr=asyncio.subprocess.PIPE,
-                stdin=asyncio.subprocess.DEVNULL,
+                stdin=asyncio.subprocess.PIPE,
                 env=env,
             )
 
@@ -1638,6 +1655,7 @@ async def vibe_analyze_error(
         Analysis with root cause, suggested or applied fixes, and verification
 
     """
+    config = get_vibe_config()
     prepare_workspace_and_instructions(cwd)
 
     # Build structured problem report

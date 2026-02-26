@@ -262,19 +262,27 @@ class MonitoringSystem:
             self.tracer = cast("Any", None)
 
     def _start_prometheus_server(self) -> None:
-        """Start Prometheus metrics server."""
-        try:
-            start_http_server(self.prometheus_port)
-            logger.info(f"Prometheus metrics server started on port {self.prometheus_port}")
-        except OSError as e:
-            if e.errno == 48:  # Address already in use
-                logger.debug(
-                    f"Prometheus port {self.prometheus_port} is busy. Metrics server likely already running (common during reload)."
-                )
-            else:
-                logger.error(f"Failed to start Prometheus server: {e}")
-        except Exception as e:
-            logger.error(f"Failed to start Prometheus server: {e}")
+        """Start Prometheus metrics server with port fallback."""
+        start_port = self.prometheus_port
+        for port_offset in range(10):  # Try 10 consecutive ports
+            current_port = start_port + port_offset
+            try:
+                start_http_server(current_port)
+                self.prometheus_port = current_port
+                logger.info(f"Prometheus metrics server started on port {current_port}")
+                return
+            except OSError as e:
+                if e.errno == 48:  # Address already in use
+                    logger.debug(f"Prometheus port {current_port} is busy. Trying next...")
+                    continue
+                logger.error(f"Failed to start Prometheus server on port {current_port}: {e}")
+                break
+            except Exception as e:
+                logger.error(f"Unexpected error starting Prometheus server: {e}")
+                break
+        logger.warning(
+            "Could not start Prometheus server after 10 attempts. Metrics delivery via port will be unavailable."
+        )
 
     def collect_system_metrics(self) -> dict[str, Any]:
         """
