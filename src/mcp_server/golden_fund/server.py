@@ -6,13 +6,14 @@ from typing import Any
 
 from mcp.server.fastmcp import FastMCP
 
+from src.brain.auth.keychain_bridge import KeychainBridge
+
 from .lib.storage import SearchStorage, SQLStorage, VectorStorage
 from .lib.storage.blob import BlobStorage
 from .lib.transformer import DataTransformer
 from .tools.chain import recursive_enrichment
 from .tools.ingest import ingest_dataset as ingest_impl
 from .tools.ingest import search_and_ingest as search_and_ingest_impl
-from src.brain.auth.keychain_bridge import KeychainBridge
 
 logging.basicConfig(level=logging.INFO, encoding="utf-8")
 logger = logging.getLogger("golden_fund")
@@ -554,7 +555,10 @@ async def keychain_search(query: str) -> str:
     """
     logger.info(f"Searching keychain for: {query}")
     results = keychain.search(query)
-    return json.dumps([{"source": r.source, "service": r.service, "account": r.account} for r in results], indent=2)
+    return json.dumps(
+        [{"source": r.source, "service": r.service, "account": r.account} for r in results],
+        indent=2,
+    )
 
 
 @mcp.tool()
@@ -566,12 +570,15 @@ async def keychain_get_credential(domain: str) -> str:
     logger.info(f"Getting credential for domain: {domain}")
     cred = keychain.get_credential_for_domain(domain)
     if cred:
-        return json.dumps({
-            "source": cred.source,
-            "service": cred.service,
-            "account": cred.account,
-            "secret": cred.secret
-        }, indent=2)
+        return json.dumps(
+            {
+                "source": cred.source,
+                "service": cred.service,
+                "account": cred.account,
+                "secret": cred.secret,
+            },
+            indent=2,
+        )
     return json.dumps({"error": f"No credential found for {domain}"})
 
 
