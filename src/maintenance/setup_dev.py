@@ -1611,7 +1611,7 @@ def download_models():
             else PROJECT_ROOT / "config" / "config.yaml.template"
         )
         if target_path.exists():
-            import yaml
+            import yaml  # pyrefly: ignore[missing-import]
 
             with open(target_path, encoding="utf-8") as f:
                 # Use dynamic lookup to satisfy Pyrefly and Ruff
@@ -1730,7 +1730,7 @@ def backup_databases(args=None):
     try:
         # Auto-install cryptography if missing (needed for secure backup)
         try:
-            import cryptography as cryptography  # noqa: F401, PLC0414
+            import cryptography as cryptography  # noqa: F401, PLC0414 # pyrefly: ignore[missing-import]
         except ImportError:
             print_info("Модуль 'cryptography' відсутній. Встановлення...")
             _pip_install_safe("cryptography")
@@ -1859,7 +1859,7 @@ def restore_databases():
     try:
         # Auto-install cryptography if missing
         try:
-            import cryptography as cryptography  # noqa: F401, PLC0414
+            import cryptography as cryptography  # noqa: F401, PLC0414 # pyrefly: ignore[missing-import]
         except ImportError:
             print_info("Модуль 'cryptography' відсутній. Встановлення...")
             _pip_install_safe("cryptography")
@@ -2385,7 +2385,7 @@ def main(args=None):
     # Install watchdog if missing (it might be in requirements.txt but we want to be sure for the watcher)
     print_step("Перевірка наявності Watchdog для авто-синхронізації...")
     try:
-        import watchdog
+        import watchdog  # pyrefly: ignore[missing-import]
 
         _ = watchdog
         print_success("Watchdog вже встановлено")
