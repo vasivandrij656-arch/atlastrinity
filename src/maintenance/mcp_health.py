@@ -145,9 +145,7 @@ async def check_mcp(
                     tool_name, tool_args = VERIFY_REGISTRY[server_name]
                     try:
                         v_start = time.time()
-                        v_result = await mcp_manager.call_tool(
-                            server_name, tool_name, tool_args
-                        )
+                        v_result = await mcp_manager.call_tool(server_name, tool_name, tool_args)
                         v_elapsed = (time.time() - v_start) * 1000
 
                         if v_result:  # Assume success if we got a result
