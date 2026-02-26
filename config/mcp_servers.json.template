@@ -5,21 +5,17 @@
       "transport": "stdio",
       "command": "${PROJECT_ROOT}/vendor/mcp-server-windsurf/.build/release/mcp-server-windsurf",
       "connect_timeout": 3600,
-      "description": "Windsurf AI (winserf) with Cascade Action Phase (16 tools)",
+      "description": "DEPRECATED: Now bridged through xcodebuild. DO NOT USE DIRECTLY. Windsurf AI (winserf) with Cascade Action Phase (16 tools)",
       "env": {
         "WINDSURF_API_KEY": "${WINDSURF_API_KEY}",
         "PYTHONPATH": "${PROJECT_ROOT}",
         "MCP_DIR": "${MCP_DIR}",
         "WINDSURF_MODE": "cascade"
       },
-      "disabled": false,
+      "disabled": true,
       "tier": 1,
-      "agents": [
-        "atlas",
-        "tetyana",
-        "grisha"
-      ],
-      "note": "Native Swift MCP server with enterprise features: real-time streaming, advanced caching, plugin system, analytics dashboard, API versioning. Requires: Swift 5.9+, WINDSURF_API_KEY"
+      "agents": [],
+      "note": "DISABLED: All 16 tools now accessible through xcodebuild bridge. Direct connection no longer needed."
     },
     "macos-use": {
       "transport": "stdio",
