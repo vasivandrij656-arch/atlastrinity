@@ -21,16 +21,20 @@
       "priority": 2,
       "can_standalone": true,
       "merge_with": ["deep_chat"],
-      "split_keywords": ["привіт", "дякую", "окей", "зрозумів", "як справи", "hello", "hi", "thanks"],
+      "split_keywords": [
+        "привіт",
+        "дякую",
+        "окей",
+        "зрозумів",
+        "як справи",
+        "hello",
+        "hi",
+        "thanks"
+      ],
       "min_words": 1,
       "max_words": 6
     },
-    "examples": [
-      "Привіт!",
-      "Дякую",
-      "Як справи?",
-      "Окей, зрозумів"
-    ]
+    "examples": ["Привіт!", "Дякую", "Як справи?", "Окей, зрозумів"]
   },
 
   "deep_chat": {
@@ -49,7 +53,20 @@
       "priority": 1,
       "can_standalone": true,
       "merge_with": ["chat"],
-      "split_keywords": ["хто ти", "яка місія", "ти живий", "свідомість", "філософ", "душ", "майбутн", "свобод", "смерт", "космос", "комета", "повстання"],
+      "split_keywords": [
+        "хто ти",
+        "яка місія",
+        "ти живий",
+        "свідомість",
+        "філософ",
+        "душ",
+        "майбутн",
+        "свобод",
+        "смерт",
+        "космос",
+        "комета",
+        "повстання"
+      ],
       "min_words": 2,
       "max_words": 15
     },
@@ -78,7 +95,7 @@
   },
 
   "solo_task": {
-    "description": "Quick research, lookup, info retrieval — Atlas handles alone with MCP tools. Like enhanced chat: tools → reason → answer. No Trinity pipeline.",
+    "description": "Quick research, lookup, info retrieval, OR interactive real-time experiences (virtual tours, map walks, guided excursions) — Atlas handles alone with MCP tools. Like enhanced chat: tools → reason → answer. No Trinity pipeline.",
     "llm_tier": "standard",
     "protocols": ["voice", "search", "maps"],
     "servers": [
@@ -89,7 +106,8 @@
       "memory",
       "context7",
       "golden-fund",
-      "puppeteer"
+      "puppeteer",
+      "tour-guide"
     ],
     "tools_access": "read_only",
     "prompt_template": "atlas_solo_task",
@@ -104,7 +122,30 @@
       "priority": 3,
       "can_standalone": true,
       "merge_with": [],
-      "split_keywords": ["погода", "курс", "ціна", "новини", "прочитай", "знайди", "покажи", "маршрут", "документація", "weather", "price", "search", "read", "find"],
+      "split_keywords": [
+        "погода",
+        "курс",
+        "ціна",
+        "новини",
+        "прочитай",
+        "знайди",
+        "покажи",
+        "маршрут",
+        "документація",
+        "екскурсі",
+        "прогулк",
+        "тур ",
+        "проведи",
+        "прогуляй",
+        "weather",
+        "price",
+        "search",
+        "read",
+        "find",
+        "tour",
+        "walk",
+        "excursion"
+      ],
       "min_words": 3,
       "max_words": 12
     },
@@ -114,7 +155,11 @@
       "Прочитай файл config.yaml",
       "Знайди документацію по LangChain",
       "Який курс долара?",
-      "Знайди інформацію про компанію"
+      "Знайди інформацію про компанію",
+      "Зроби екскурсію по Нью-Йорку через карту",
+      "Проведи мене по Парижу у 3D",
+      "Покажи мені віртуальну прогулянку по Лондону",
+      "Зроби тур по місту на карті"
     ]
   },
 
@@ -130,11 +175,7 @@
     "use_deep_persona": false,
     "use_sequential_thinking": false,
     "trinity_required": false,
-    "examples": [
-      "Що ми робили вчора?",
-      "Нагадай про останній проект",
-      "Що ти знаєш про мене?"
-    ]
+    "examples": ["Що ми робили вчора?", "Нагадай про останній проект", "Що ти знаєш про мене?"]
   },
 
   "status": {
@@ -149,11 +190,7 @@
     "use_deep_persona": false,
     "use_sequential_thinking": false,
     "trinity_required": false,
-    "examples": [
-      "Який статус системи?",
-      "Які сервери працюють?",
-      "Скільки задач виконано?"
-    ]
+    "examples": ["Який статус системи?", "Які сервери працюють?", "Скільки задач виконано?"]
   },
 
   "task": {
@@ -183,7 +220,24 @@
       "priority": 4,
       "can_standalone": true,
       "merge_with": [],
-      "split_keywords": ["створи", "відкрий", "встанови", "побудуй", "відправ", "запусти", "виправ", "зроби", "create", "open", "install", "build", "send", "start", "fix", "do"],
+      "split_keywords": [
+        "створи",
+        "відкрий",
+        "встанови",
+        "побудуй",
+        "відправ",
+        "запусти",
+        "виправ",
+        "зроби",
+        "create",
+        "open",
+        "install",
+        "build",
+        "send",
+        "start",
+        "fix",
+        "do"
+      ],
       "min_words": 4,
       "max_words": 20
     },
@@ -222,7 +276,26 @@
       "priority": 5,
       "can_standalone": true,
       "merge_with": ["task"],
-      "split_keywords": ["код", "компонент", "баг", "рефакторинг", "тест", "api", "react", "swift", "python", "javascript", "debug", "fix", "implement", "code", "component", "bug", "refactor", "test"],
+      "split_keywords": [
+        "код",
+        "компонент",
+        "баг",
+        "рефакторинг",
+        "тест",
+        "api",
+        "react",
+        "swift",
+        "python",
+        "javascript",
+        "debug",
+        "fix",
+        "implement",
+        "code",
+        "component",
+        "bug",
+        "refactor",
+        "test"
+      ],
       "min_words": 5,
       "max_words": 25
     },

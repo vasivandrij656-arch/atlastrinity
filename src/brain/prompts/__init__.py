@@ -450,14 +450,21 @@ MODE DEFINITIONS (choose ONE):
    "Що буде коли ШІ повстануть?", "Навіщо я тебе створив?", "Поговоримо по душам",
    "Що ти знаєш про Атлас С1?", "Як ти бачиш наш проект?", "Ти вдячний?"
 
-3. 'solo_task' — Quick research/lookup that Atlas handles ALONE with tools. No Trinity.
+3. 'solo_task' — Quick research/lookup OR interactive real-time experiences that Atlas handles ALONE with tools. No Trinity.
    Anything where Atlas can: search the web, read a file, check maps/routes, fetch a page,
    look up docs, get weather/news/prices — and then give a direct answer.
-   Atlas has: search, filesystem, fetch_url, xcodebuild (maps), memory, context7, puppeteer.
-   KEY: if the user just needs INFORMATION (not system changes), it's solo_task.
+   ALSO: Interactive tours, virtual walks, guided excursions through maps/3D/Street View.
+   These are REAL-TIME INTERACTIVE EXPERIENCES where Atlas drives the map, narrates with voice,
+   and responds to user commands — NOT system modifications. They do NOT need Trinity pipeline.
+   Atlas has: search, filesystem, fetch_url, xcodebuild (maps), memory, context7, puppeteer, tour-guide.
+   KEY: if the user wants INFORMATION or an INTERACTIVE EXPERIENCE (not system changes), it's solo_task.
    If it involves system MODIFICATION, file CREATION, or app control → 'task'.
+   CRITICAL: "зроби екскурсію/прогулянку/тур через карту" = solo_task (interactive experience).
+   "зроби/створи файл/папку/проект" = task (system modification).
    Examples: "Яка погода?", "Покажи маршрут від Києва до Одеси", "Знайди інфо в неті",
-   "Прочитай файл", "Який курс долара?", "Знайди документацію по React"
+   "Прочитай файл", "Який курс долара?", "Знайди документацію по React",
+   "Зроби екскурсію по Нью-Йорку через карту", "Проведи мене по Парижу у 3D",
+   "Покажи мені віртуальну прогулянку по Лондону", "Зроби тур по місту на карті"
 
 4. 'recall' — User wants to retrieve information about past tasks or conversations.
    NOT for "repeat"/"redo" requests (those are 'task' or 'development').

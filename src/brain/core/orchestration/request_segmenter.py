@@ -332,6 +332,12 @@ CRITICAL PRIORITY RULES:
 - Numbered questions (1., 2., 3.) about identity/mission → deep_chat mode
 - Technical tasks with tools → task mode (PRIORITY 4)
 - Simple conversation → chat mode (PRIORITY 2)
+- INTERACTIVE EXPERIENCES (tours, walks, excursions, map exploration, 3D flyovers,
+  virtual promenades) → solo_task mode (PRIORITY 3), NOT task mode.
+  KEY DISTINCTION: "зроби екскурсію/прогулянку/тур через карту" = solo_task (interactive experience).
+  "зроби/створи файл/папку/проект" = task (system modification).
+  If the user wants to EXPERIENCE something interactively (tour, walk, fly over, explore on map),
+  it is solo_task. If the user wants to BUILD/CREATE/MODIFY something, it is task.
 
 SEGMENTATION PRINCIPLES:
 1. Analyze semantic intent, not just keywords.
