@@ -53,65 +53,65 @@ models:
   #   windsurf: python scripts/windsurf_proxy.py
   # =============================================================================
   
-  provider: "windsurf"                  # LLM provider: copilot | windsurf (Default)
+  provider: "copilot"                   # LLM provider: copilot | windsurf (Default)
 
   # Default models for different purposes (HYBRID CONFIGURATION)
   # Format: "provider:model_name" to override global provider
   # STRICTLY choose from the allowed lists above.
-  default: "windsurf:swe-1.5"        # Default LLM for agents
-  vision: "windsurf:llama-3.1-405b"  # Best for Vision/multimodal tasks within windsurf or fallback
-  reasoning: "windsurf:deepseek-r1"   # Reliable logic for multi-turn
-  code_analysis: "windsurf:swe-1.5"   # General coding tasks
-  consolidation: "windsurf:swe-1.5"   # Efficient state management
+  default: "copilot:gpt-4.1"         # Default LLM for agents
+  vision: "copilot:gpt-4o"           # Best for Vision/multimodal tasks
+  reasoning: "copilot:gpt-4.1"        # Reliable logic for multi-turn
+  code_analysis: "copilot:gpt-4.1"     # General coding tasks
+  consolidation: "copilot:gpt-4.1"     # Efficient state management
   
   # Fallbacks (used when primary unavailable)
-  fallback: "windsurf:swe-1.5"        # Stable fallback
+  fallback: "copilot:gpt-4.1"          # Stable fallback
   copilot_fallback: "gpt-4o"           # Default fallback model for Copilot 400 errors
   
   # Sandbox model (used by mcp_sandbox.py)
-  sandbox: "windsurf:swe-1.5"
+  sandbox: "copilot:gpt-4.1"
 
   # Vibe error analysis model (used by vibe_analyze_error)
-  vibe_analysis: "windsurf:swe-1.5"  # Best for deep problem analysis
+  vibe_analysis: "copilot:oswe-vscode-secondary"  # Best for deep problem analysis
 
   # Model Aliases (Virtual IDs mapped to real IDs)
   aliases:
-    atlas-deep: "swe-1.5"
+    atlas-deep: "gpt-4.1"
 
   # Agents inherit from models.default unless overridden
 
 agents:
   atlas:
     # model: inherited from models.default 
-    deep_model: "windsurf:swe-1.5"  # Latest model
+    deep_model: "gpt-4.1"  # Latest GPT-4 model
     temperature: 0.7
     max_tokens: 2000                 # Standard chat/task mode
     max_tokens_deep: 12000           # Deep persona mode (increased from 8000)
 
   tetyana:
     # model: inherited from models.default
-    reasoning_model: "windsurf:deepseek-r1"  # Precision routing and tool selection
-    vision_model: "windsurf:llama-3.1-405b"   # UI state analysis
+    reasoning_model: "copilot:gpt-4.1"  # Precision routing and tool selection
+    vision_model: "copilot:gpt-4o"      # UI state analysis
     temperature: 0.5
     max_tokens: 2000
 
   grisha:
     # Three-Phase Verification Architecture:
     # Phase 1: Strategy planning (what to verify, which tools)
-    strategy_model: "windsurf:swe-1.5"   # Strategic verification planning
+    strategy_model: "copilot:gpt-4.1"   # Strategic verification planning
     
     # Phase 2: Tool selection & execution (MCP server interaction)
     # model: inherited from models.default
     
     # Phase 3: Result analysis & verdict
-    vision_model: "windsurf:llama-3.1-405b"   # UI/Visual verification
-    verdict_model: "windsurf:swe-1.5"    # Rigorous final verdict reasoning
+    vision_model: "copilot:gpt-4o"      # UI/Visual verification
+    verdict_model: "copilot:gpt-4.1"    # Rigorous final verdict reasoning
     
     # General settings
     temperature: 0.3
     max_tokens: 1500
     
-    verification_reasoning_model: "windsurf:swe-1.5" # Latest model
+    verification_reasoning_model: "gpt-4.1" # Latest GPT-4 model
     verification_temperature: 0.2          # Low temp for precise reasoning
     verification_max_tokens: 4000          # Sufficient for deep analysis
 
