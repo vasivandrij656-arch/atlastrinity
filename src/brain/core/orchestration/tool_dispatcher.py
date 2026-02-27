@@ -1757,6 +1757,8 @@ class ToolDispatcher:
         """Executes Tour Driver commands locally."""
         from src.brain.navigation.tour_driver import tour_driver
 
+        logger.info(f"[DISPATCHER] Executing tour tool: {tool_name} with args: {args}")
+
         try:
             if tool_name == "tour_start":
                 polyline = args.get("polyline")

@@ -362,6 +362,8 @@ class TourDriver:
             result = 0
 
             while True:
+                if index >= length:
+                    return points
                 b = ord(polyline_str[index]) - 63  # pyre-ignore
                 index += 1  # pyre-ignore
                 result |= (b & 0x1F) << shift
@@ -376,6 +378,8 @@ class TourDriver:
             result = 0
 
             while True:
+                if index >= length:
+                    return points
                 b = ord(polyline_str[index]) - 63  # pyre-ignore
                 index += 1  # pyre-ignore
                 result |= (b & 0x1F) << shift
