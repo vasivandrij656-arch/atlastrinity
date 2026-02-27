@@ -708,6 +708,15 @@ Respond in JSON:
                             "places",
                             "thinking",
                             "thought",
+                            "tour",
+                            "street",
+                            "start",
+                            "stop",
+                            "pause",
+                            "resume",
+                            "control",
+                            "navigate",
+                            "look",
                         ]
                     )
                     is_mut = any(
@@ -719,7 +728,6 @@ Respond in JSON:
                             "update",
                             "exec",
                             "run",
-                            "set",
                             "modify",
                         ]
                     )
@@ -732,9 +740,66 @@ Respond in JSON:
                             }
                         )
 
+            # Inject tour-guide tools (internal server, not discovered via MCP)
+            # These are handled by tool_dispatcher._execute_tour()
+            tour_tools = [
+                {
+                    "name": "tour-guide_tour_start",
+                    "description": "Start an interactive virtual tour along a route. Requires a Google Maps encoded polyline string. Use xcodebuild_maps_directions first to get a polyline, then pass it here to start the tour. The tour will animate Street View along the route in the Electron frontend.",
+                    "input_schema": {
+                        "type": "object",
+                        "properties": {
+                            "polyline": {
+                                "type": "string",
+                                "description": "Google Maps encoded polyline string (from directions API)"
+                            }
+                        },
+                        "required": ["polyline"]
+                    }
+                },
+                {
+                    "name": "tour-guide_tour_stop",
+                    "description": "Stop the current virtual tour.",
+                    "input_schema": {"type": "object", "properties": {}}
+                },
+                {
+                    "name": "tour-guide_tour_pause",
+                    "description": "Pause the current virtual tour.",
+                    "input_schema": {"type": "object", "properties": {}}
+                },
+                {
+                    "name": "tour-guide_tour_resume",
+                    "description": "Resume a paused virtual tour.",
+                    "input_schema": {"type": "object", "properties": {}}
+                },
+                {
+                    "name": "tour-guide_tour_look",
+                    "description": "Change the viewing angle during a tour. Positive = look right, negative = look left.",
+                    "input_schema": {
+                        "type": "object",
+                        "properties": {
+                            "angle": {"type": "integer", "description": "Viewing angle offset in degrees (-180 to 180). 0=forward, 90=right, -90=left"}
+                        },
+                        "required": ["angle"]
+                    }
+                },
+                {
+                    "name": "tour-guide_tour_set_speed",
+                    "description": "Set the tour movement speed. 1.0 is normal, 0.5 is slow, 2.0 is fast.",
+                    "input_schema": {
+                        "type": "object",
+                        "properties": {
+                            "speed": {"type": "number", "description": "Speed multiplier (0.5 to 3.0)"}
+                        },
+                        "required": ["speed"]
+                    }
+                },
+            ]
+            new_tools.extend(tour_tools)
+
             self._cached_info_tools = new_tools
             self._last_tool_refresh = int(now)
-            logger.info(f"[ATLAS SOLO] Discovered {len(new_tools)} safe tools")
+            logger.info(f"[ATLAS SOLO] Discovered {len(new_tools)} safe tools (including {len(tour_tools)} tour tools)")
         except Exception as e:
             logger.warning(f"[ATLAS SOLO] Tool discovery failed: {e}")
 
