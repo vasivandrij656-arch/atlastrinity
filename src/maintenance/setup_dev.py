@@ -427,14 +427,22 @@ def ensure_database():
         elif encrypted_backup.exists():
             print_info("Відновлення основної бази з зашифрованого бекапу...")
             try:
-                from src.maintenance.secure_backup import SecureBackupManager
-
-                backup_mgr = SecureBackupManager(PROJECT_ROOT)
-                key = backup_mgr.get_backup_key()
-                if backup_mgr.decrypt_file(encrypted_backup, db_path, key):
+                venv_python = str(VENV_PATH / "bin" / "python")
+                script = f"""
+import sys
+from pathlib import Path
+sys.path.insert(0, '{PROJECT_ROOT}')
+from src.maintenance.secure_backup import SecureBackupManager
+mgr = SecureBackupManager(Path('{PROJECT_ROOT}'))
+key = mgr.get_backup_key()
+success = mgr.decrypt_file(Path('{encrypted_backup}'), Path('{db_path}'), key)
+sys.exit(0 if success else 1)
+"""
+                result = subprocess.run([venv_python, "-c", script], capture_output=True, text=True)
+                if result.returncode == 0:
                     print_success("Базу даних відновлено з зашифрованого бекапу")
                 else:
-                    print_warning("Не вдалося розшифрувати базу")
+                    print_warning(f"Не вдалося розшифрувати базу: {result.stderr.strip()}")
             except Exception as e:
                 print_warning(f"Помилка відновлення з encrypted: {e}")
 
@@ -466,14 +474,22 @@ def ensure_database():
         if trinity_backup_encrypted.exists():
             print_info("Відновлення trinity.db з зашифрованого бекапу...")
             try:
-                from src.maintenance.secure_backup import SecureBackupManager
-
-                backup_mgr = SecureBackupManager(PROJECT_ROOT)
-                key = backup_mgr.get_backup_key()
-                if backup_mgr.decrypt_file(trinity_backup_encrypted, trinity_db_path, key):
+                venv_python = str(VENV_PATH / "bin" / "python")
+                script = f"""
+import sys
+from pathlib import Path
+sys.path.insert(0, '{PROJECT_ROOT}')
+from src.maintenance.secure_backup import SecureBackupManager
+mgr = SecureBackupManager(Path('{PROJECT_ROOT}'))
+key = mgr.get_backup_key()
+success = mgr.decrypt_file(Path('{trinity_backup_encrypted}'), Path('{trinity_db_path}'), key)
+sys.exit(0 if success else 1)
+"""
+                result = subprocess.run([venv_python, "-c", script], capture_output=True, text=True)
+                if result.returncode == 0:
                     print_success("trinity.db відновлено з зашифрованого бекапу")
                 else:
-                    print_warning("Не вдалося розшифрувати trinity.db")
+                    print_warning(f"Не вдалося розшифрувати trinity.db: {result.stderr.strip()}")
             except Exception as e:
                 print_warning(f"Помилка відновлення trinity.db з бекапу: {e}")
         elif trinity_backup_plain.exists():
@@ -538,14 +554,22 @@ def prepare_monitoring_db():
         if encrypted_backup.exists():
             print_info("Відновлення Monitoring DB з зашифрованого бекапу...")
             try:
-                from src.maintenance.secure_backup import SecureBackupManager
-
-                backup_mgr = SecureBackupManager(PROJECT_ROOT)
-                key = backup_mgr.get_backup_key()
-                if backup_mgr.decrypt_file(encrypted_backup, monitor_db_path, key):
+                venv_python = str(VENV_PATH / "bin" / "python")
+                script = f"""
+import sys
+from pathlib import Path
+sys.path.insert(0, '{PROJECT_ROOT}')
+from src.maintenance.secure_backup import SecureBackupManager
+mgr = SecureBackupManager(Path('{PROJECT_ROOT}'))
+key = mgr.get_backup_key()
+success = mgr.decrypt_file(Path('{encrypted_backup}'), Path('{monitor_db_path}'), key)
+sys.exit(0 if success else 1)
+"""
+                result = subprocess.run([venv_python, "-c", script], capture_output=True, text=True)
+                if result.returncode == 0:
                     print_success("Monitoring DB відновлено з зашифрованого бекапу")
                 else:
-                    print_warning("Не вдалося розшифрувати Monitoring DB")
+                    print_warning(f"Не вдалося розшифрувати Monitoring DB: {result.stderr.strip()}")
             except Exception as e:
                 print_warning(f"Помилка відновлення Monitoring DB: {e}")
         elif backup_path.exists():
@@ -700,15 +724,23 @@ def verify_golden_fund():
         if search_encrypted.exists():
             print_info("Відновлення Search Index DB з зашифрованого бекапу...")
             try:
-                from src.maintenance.secure_backup import SecureBackupManager
-
-                backup_mgr = SecureBackupManager(PROJECT_ROOT)
-                key = backup_mgr.get_backup_key()
-                if backup_mgr.decrypt_file(search_encrypted, search_index_path, key):
+                venv_python = str(VENV_PATH / "bin" / "python")
+                script = f"""
+import sys
+from pathlib import Path
+sys.path.insert(0, '{PROJECT_ROOT}')
+from src.maintenance.secure_backup import SecureBackupManager
+mgr = SecureBackupManager(Path('{PROJECT_ROOT}'))
+key = mgr.get_backup_key()
+success = mgr.decrypt_file(Path('{search_encrypted}'), Path('{search_index_path}'), key)
+sys.exit(0 if success else 1)
+"""
+                result = subprocess.run([venv_python, "-c", script], capture_output=True, text=True)
+                if result.returncode == 0:
                     print_success("Search Index DB відновлено з зашифрованого бекапу")
                     restored = True
                 else:
-                    print_warning("Не вдалося розшифрувати Search Index DB")
+                    print_warning(f"Не вдалося розшифрувати Search Index DB: {result.stderr.strip()}")
             except Exception as e:
                 print_warning(f"Помилка відновлення Search Index DB: {e}")
         elif search_plain.exists():
@@ -1727,23 +1759,30 @@ def backup_databases(args=None):
     """Архівує всі бази даних з шифруванням та фільтрацією секретів"""
     print_step("Створення безпечних резервних копій баз даних...")
 
+    venv_python = VENV_PATH / "bin" / "python"
+    if not venv_python.exists():
+        print_info("Venv ще не створено — використовується legacy метод бекапу...")
+        _legacy_backup_databases(args)
+        return
+
     try:
-        # Auto-install cryptography if missing (needed for secure backup)
-        try:
-            import cryptography as cryptography  # noqa: F401, PLC0414 # pyrefly: ignore[missing-import]
-        except ImportError:
-            print_info("Модуль 'cryptography' відсутній. Встановлення...")
-            _pip_install_safe("cryptography")
-            import importlib
+        script = f"""
+import sys
+from pathlib import Path
+sys.path.insert(0, '{PROJECT_ROOT}')
+try:
+    from src.maintenance.secure_backup import SecureBackupManager
+except ImportError:
+    print("WARNING: cryptography is not installed in venv", file=sys.stderr)
+    sys.exit(2)
+mgr = SecureBackupManager(Path('{PROJECT_ROOT}'))
+if mgr.create_secure_backup():
+    sys.exit(0)
+sys.exit(1)
+"""
+        result = subprocess.run([str(venv_python), "-c", script], capture_output=True, text=True)
 
-            importlib.invalidate_caches()
-
-        from src.maintenance.secure_backup import SecureBackupManager
-
-        backup_manager = SecureBackupManager(PROJECT_ROOT)
-        success = backup_manager.create_secure_backup()
-
-        if success:
+        if result.returncode == 0:
             print_success("Безпечний бекап завершено успішно.")
             print_info(f"Резервні копії збережено в: {PROJECT_ROOT / 'backups' / 'databases'}")
 
@@ -1751,30 +1790,27 @@ def backup_databases(args=None):
             if not (args and hasattr(args, "no_auto_commit") and args.no_auto_commit):
                 print_info("Автоматичний коміт та пуш бекапів до GitHub...")
                 try:
-                    import subprocess
-
-                    result = subprocess.run(
+                    commit_res = subprocess.run(
                         ["bash", "scripts/auto_commit_backups.sh"],
                         cwd=PROJECT_ROOT,
                         capture_output=True,
                         text=True,
                         timeout=60,
                     )
-                    if result.returncode == 0:
+                    if commit_res.returncode == 0:
                         print_success("Бекапи успішно запушені до GitHub")
                     else:
-                        print_warning(f"Не вдалося запушити бекапи: {result.stderr}")
+                        print_warning(f"Не вдалося запушити бекапи: {commit_res.stderr}")
                 except Exception as e:
                     print_warning(f"Помилка при автоматичному пуші бекапів: {e}")
             else:
                 print_info("Автоматичний коміт вимкнено (--no-auto-commit)")
+        elif result.returncode == 2:
+            print_warning("Модуль cryptography відсутній у venv. Використання legacy методу...")
+            _legacy_backup_databases(args)
         else:
-            print_error("Помилка при створенні безпечного бекапу")
+            print_error(f"Помилка при створенні безпечного бекапу: {result.stderr.strip()}")
 
-    except ImportError as e:
-        print_warning(f"Модуль безпечного бекапу недоступний: {e}")
-        print_info("Використання legacy методу бекапу (без шифрування)...")
-        _legacy_backup_databases(args)
     except Exception as e:
         print_error(f"Помилка при створенні бекапу: {e}")
 
@@ -1826,8 +1862,6 @@ def _legacy_backup_databases(args=None):
     if not (args and hasattr(args, "no_auto_commit") and args.no_auto_commit):
         print_info("Автоматичний коміт та пуш бекапів до GitHub...")
         try:
-            import subprocess
-
             result = subprocess.run(
                 ["bash", "scripts/auto_commit_backups.sh"],
                 cwd=PROJECT_ROOT,
@@ -1857,25 +1891,29 @@ def restore_databases():
         return
 
     try:
-        # Auto-install cryptography if missing
-        try:
-            import cryptography as cryptography  # noqa: F401, PLC0414 # pyrefly: ignore[missing-import]
-        except ImportError:
-            print_info("Модуль 'cryptography' відсутній. Встановлення...")
-            _pip_install_safe("cryptography")
-            import importlib
+        script = f"""
+import sys
+from pathlib import Path
+sys.path.insert(0, '{PROJECT_ROOT}')
+try:
+    from src.maintenance.secure_backup import SecureBackupManager
+except ImportError:
+    print("WARNING: cryptography is not installed in venv", file=sys.stderr)
+    sys.exit(2)
+mgr = SecureBackupManager(Path('{PROJECT_ROOT}'))
+if mgr.restore_secure_backup():
+    sys.exit(0)
+sys.exit(1)
+"""
+        result = subprocess.run([str(venv_python), "-c", script], capture_output=True, text=True)
 
-            importlib.invalidate_caches()
-
-        from src.maintenance.secure_backup import SecureBackupManager
-
-        backup_manager = SecureBackupManager(PROJECT_ROOT)
-        success = backup_manager.restore_secure_backup()
-
-        if success:
+        if result.returncode == 0:
             print_success("Відновлення з безпечного бекапу завершено.")
+        elif result.returncode == 2:
+            print_warning("Модуль cryptography відсутній у venv. Використання legacy методу...")
+            _legacy_restore_databases()
         else:
-            print_warning("Безпечне відновлення не вдалося або бекапів немає.")
+            print_warning(f"Безпечне відновлення не вдалося ({result.stderr.strip()}) або бекапів немає.")
             print_info("Спроба використати старий метод відновлення...")
             _legacy_restore_databases()
 
