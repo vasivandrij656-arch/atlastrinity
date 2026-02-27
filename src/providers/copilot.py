@@ -330,7 +330,8 @@ class CopilotLLM(BaseChatModel):
                     # Try to get schema from logic if it's a langchain tool or custom obj
                     schema_obj = getattr(tool, "args_schema", getattr(tool, "input_schema", {}))
                     if hasattr(schema_obj, "schema"):
-                        schema = schema_obj.schema()
+                        # Use cast(Any, ...) to satisfy Pyright for dynamic method access
+                        schema = cast("Any", schema_obj).schema()
                     else:
                         schema = schema_obj
 
