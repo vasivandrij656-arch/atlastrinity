@@ -24,6 +24,7 @@ from langchain_core.messages import (
     BaseMessage,
     HumanMessage,
     SystemMessage,
+    ToolMessage,
 )
 from langchain_core.outputs import ChatGeneration, ChatResult
 from PIL import Image
@@ -322,10 +323,18 @@ class CopilotLLM(BaseChatModel):
                 if isinstance(tool, dict):
                     name = tool.get("name", "tool")
                     description = tool.get("description", "")
+                    schema = tool.get("input_schema") or tool.get("inputSchema", {})
                 else:
                     name = getattr(tool, "name", getattr(tool, "__name__", "tool"))
                     description = getattr(tool, "description", "")
-                tools_desc_lines.append(f"- {name}: {description}")
+                    # Try to get schema from logic if it's a langchain tool or custom obj
+                    schema = getattr(tool, "args_schema", getattr(tool, "input_schema", {}))
+                    if hasattr(schema, "schema"):
+                        schema = schema.schema()
+                
+                schema_json = json.dumps(schema, ensure_ascii=False) if schema else "{}"
+                tools_desc_lines.append(f"- {name}: {description}\n  Args Schema: {schema_json}")
+            
             tools_desc = "\n".join(tools_desc_lines)
 
             tool_instructions = (
@@ -341,7 +350,7 @@ class CopilotLLM(BaseChatModel):
                 '  "final_answer": "Immediate feedback in UKRAINIAN (e.g., \'Зараз перевірю...\')."\n'
                 "}\n\n"
                 "If text response is enough (no tools needed), answer normally in Ukrainian.\n"
-                "If you ALREADY checked results (ToolMessages provided), provide a final summary in plain text.\n"
+                "If you ALREADY checked results (ToolMessages provided), provide a final summary in plain text using the data from the tools.\n"
             )
         else:
             tool_instructions = ""
@@ -363,6 +372,9 @@ class CopilotLLM(BaseChatModel):
                 role = "assistant"
             elif isinstance(m, HumanMessage):
                 role = "user"
+            elif isinstance(m, ToolMessage):
+                role = "user"  # Copilot API doesn't have a 'tool' role, map to user
+                content = f"[TOOL RESULT for {m.tool_call_id}]: {m.content}"
 
             # Handle list content (Vision)
             content = m.content
