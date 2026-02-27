@@ -1257,10 +1257,18 @@ class WindsurfLLM(BaseChatModel):
         # Phase 2: Find bot response using proto byte pattern
         # Target tags: 0x7A = field 15 wire type 2, 0x2A = field 5, 0x22 = field 4
         target_tags = (0x7A, 0x2A, 0x22)
-        metadata_keys = {"responseId", "trafficType", "sessionId", "cascadeId", "requestId", "status", "ok"}
+        metadata_keys = {
+            "responseId",
+            "trafficType",
+            "sessionId",
+            "cascadeId",
+            "requestId",
+            "status",
+            "ok",
+        }
         for i in range(len(frames) - 1, 1, -1):  # Search backwards
             frame = frames[i]
-            
+
             # Scan for length-delimited strings at target field tags
             candidates = WindsurfLLM._find_proto_candidates(frame, target_tags)
 
@@ -1276,7 +1284,7 @@ class WindsurfLLM(BaseChatModel):
                     continue
                 # UUID check
                 if c.count("-") >= 4 and len(c) < 50:
-                    continue  
+                    continue
                 if c.startswith(("MODEL_", "file://", "http", "bot-", "LanguageServer", ".")):
                     continue
                 if c in metadata_keys:
@@ -1305,14 +1313,14 @@ class WindsurfLLM(BaseChatModel):
                     and s not in metadata_keys
                 ):
                     return s
-        
+
         # Phase 4: Extreme fallback - if we only have one string and it's long enough
         if frames:
             all_strs = _proto_find_strings(frames[-1], min_len=20)
             if all_strs:
-                 for s in all_strs:
-                     if s.strip() not in metadata_keys and "LanguageServer" not in s:
-                         return s.strip()
+                for s in all_strs:
+                    if s.strip() not in metadata_keys and "LanguageServer" not in s:
+                        return s.strip()
 
         return ""
 
