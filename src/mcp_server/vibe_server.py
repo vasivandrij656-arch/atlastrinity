@@ -187,7 +187,7 @@ def get_instructions_dir(cwd: str | None = None) -> str:
     return str(Path(get_vibe_workspace()) / "instructions")
 
 
-VIBE_SESSION_DIR = Path.home() / ".vibe" / "logs" / "session"
+VIBE_SESSION_DIR = CONFIG_ROOT / "vibe" / "logs" / "session"
 DATABASE_URL = get_config_value(
     "database",
     "url",

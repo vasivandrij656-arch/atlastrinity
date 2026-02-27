@@ -70,6 +70,7 @@ class TourDriver:
 
         if not self.current_route_points:
             logger.error("[TourDriver] Failed to decode polyline or empty route.")
+            map_state_manager.set_agent_view(error="Вибачте, не вдалося отримати маршрут.")
             return
 
         logger.info(f"[TourDriver] Route decoded: {len(self.current_route_points)} points")
@@ -349,6 +350,8 @@ class TourDriver:
 
     def _decode_polyline(self, polyline_str: str) -> list[tuple[float, float]]:
         """Decodes a Google Maps encoded polyline string."""
+        if not polyline_str or not isinstance(polyline_str, str):
+            return []
         points = []
         index = 0
         lat = 0

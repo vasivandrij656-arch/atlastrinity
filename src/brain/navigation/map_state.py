@@ -128,12 +128,13 @@ class MapStateManager:
 
     def set_agent_view(
         self,
-        image_path: str,
-        heading: int,
-        pitch: int,
-        fov: int,
+        image_path: str | None = None,
+        heading: int | None = None,
+        pitch: int | None = None,
+        fov: int | None = None,
         lat: float | None = None,
         lng: float | None = None,
+        error: str | None = None,
     ):
         """Update the agent's current visual perspective"""
         self.state.agent_view = {
@@ -144,8 +145,13 @@ class MapStateManager:
             "timestamp": time.time(),
             "lat": lat,
             "lng": lng,
+            "error": error,
         }
         self.state.show_map = True
+
+    def clear_agent_view(self):
+        """Clear agent view state"""
+        self.state.agent_view = None
 
     def set_distance_info(
         self,

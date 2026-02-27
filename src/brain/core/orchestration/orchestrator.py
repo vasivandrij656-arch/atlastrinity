@@ -323,6 +323,8 @@ class Trinity(TourMixin, VoiceOrchestrationMixin):
 
         # Reset Map State
         map_state_manager.clear_all()
+        map_state_manager.clear_agent_view()
+        await tour_driver.stop_tour()
 
         # Create a new unique session ID
         self.current_session_id = str(uuid.uuid4())
@@ -495,15 +497,28 @@ class Trinity(TourMixin, VoiceOrchestrationMixin):
             try:
                 data = ast.literal_eval(t)
             except Exception:
+                # If it starts with "Saved to:", it's likely a path result (like Street View)
+                if "Saved to:" in t:
+                    return t
                 return t
 
         if isinstance(data, dict):
-            stdout = data.get("stdout")
-            stderr = data.get("stderr")
-            if isinstance(stdout, str) and stdout.strip():
-                return stdout.strip()
-            if isinstance(stderr, str) and stderr.strip():
-                return stderr.strip()
+            stdout = (data.get("stdout") or "").strip()
+            stderr = (data.get("stderr") or "").strip()
+            
+            # If we have content in stdout, prioritize it but append stderr if it looks like an error
+            if stdout:
+                if stderr and any(kw in stderr.lower() for kw in ["error", "fail", "exception"]):
+                    return f"{stdout}\n\n[ERRORS]:\n{stderr}"
+                return stdout
+            
+            # If stdout is empty, return stderr
+            if stderr:
+                return stderr
+                
+            # If both empty, return the whole dict representation as fallback
+            return json.dumps(data, ensure_ascii=False)
+            
         return t
 
     def stop(self):
