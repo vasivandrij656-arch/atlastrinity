@@ -10,7 +10,7 @@ To ensure you can commit changes in this repository, run the appropriate setup c
 
 ```zsh
 export GITHUB_TOKEN=$(grep GITHUB_TOKEN .env | cut -d'=' -f2 | tr -d '\r\n') && \
-git remote set-url origin https://$GITHUB_TOKEN@github.com/solagurma/atlastrinity.git && \
+git remote set-url origin https://$GITHUB_TOKEN@github.com/vasivandrij656-arch/atlastrinity.git && \
 echo "✅ Git remote configured with token from .env"
 ```
 
@@ -39,7 +39,7 @@ git remote -v
 If Git still asks for login, run:
 
 ```zsh
-git remote set-url origin https://<TOKEN>@github.com/solagurma/atlastrinity
+git remote set-url origin https://<TOKEN>@github.com/vasivandrij656-arch/atlastrinity
 ```
 
 _(Замініть `<TOKEN>` на значенння з вашого `.env`)_

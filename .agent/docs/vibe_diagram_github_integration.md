@@ -61,7 +61,7 @@ paths:
   github:
     token_env_var: GITHUB_TOKEN  # Vibe читає звідси
     token_file: ${PROJECT_ROOT}/.env
-    repository: solagurma/atlastrinity  # Для самолікування
+    repository: vasivandrij656-arch/atlastrinity  # Для самолікування
     external_repos_base: null
 ```
 
@@ -463,7 +463,7 @@ async def test_github_mcp_access():
     
     # Vibe викликає через GitHub MCP
     result = await manager.call_tool("github", "get_file_contents", {
-        "owner": "solagurma",
+        "owner": "vasivandrij656-arch",
         "repo": "atlastrinity",
         "path": "src/brain/tool_dispatcher.py"
     })

@@ -67,7 +67,7 @@ for SECRET in $KEYS; do
     
     if [ -n "$VALUE" ]; then
         echo "📤 Syncing $SECRET..."
-        echo "$VALUE" | gh secret set "$SECRET" -R solagurma/atlastrinity
+        echo "$VALUE" | gh secret set "$SECRET" -R vasivandrij656-arch/atlastrinity
         SYNC_COUNT=$((SYNC_COUNT + 1))
     fi
 done

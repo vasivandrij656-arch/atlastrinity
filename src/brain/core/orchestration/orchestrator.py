@@ -505,20 +505,20 @@ class Trinity(TourMixin, VoiceOrchestrationMixin):
         if isinstance(data, dict):
             stdout = (data.get("stdout") or "").strip()
             stderr = (data.get("stderr") or "").strip()
-            
+
             # If we have content in stdout, prioritize it but append stderr if it looks like an error
             if stdout:
                 if stderr and any(kw in stderr.lower() for kw in ["error", "fail", "exception"]):
                     return f"{stdout}\n\n[ERRORS]:\n{stderr}"
                 return stdout
-            
+
             # If stdout is empty, return stderr
             if stderr:
                 return stderr
-                
+
             # If both empty, return the whole dict representation as fallback
             return json.dumps(data, ensure_ascii=False)
-            
+
         return t
 
     def stop(self):

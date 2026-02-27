@@ -48,7 +48,7 @@ class CIBridge:
     def __init__(self, project_root: Path | None = None):
         self.project_root = project_root or PROJECT_ROOT
         self._github_token = os.getenv("GITHUB_TOKEN_ACTION") or os.getenv("GITHUB_TOKEN")
-        self._repo = "solagurma/atlastrinity"
+        self._repo = "vasivandrij656-arch/atlastrinity"
 
     async def check_workflow_status(self) -> list[WorkflowResult]:
         """Query GitHub Actions API for recent workflow runs.

@@ -221,7 +221,7 @@ SAFE_TEST_ARGS: dict[str, dict[str, dict]] = {
         "puppeteer_navigate": {"url": "about:blank"},
     },
     "github": {
-        "list_commits": {"owner": "solagurma", "repo": "atlastrinity", "perPage": 1},
+        "list_commits": {"owner": "vasivandrij656-arch", "repo": "atlastrinity", "perPage": 1},
         "search_repositories": {"query": "atlastrinity"},
     },
     "googlemaps": {

@@ -58,7 +58,7 @@ fi
 # Configure git with token if available
 if [ -n "$GITHUB_TOKEN_VAL" ] && [ "$USE_GH_CLI" = false ]; then
     # Set up remote URL with token for push
-    git remote set-url origin "https://$GITHUB_TOKEN_VAL@github.com/solagurma/atlastrinity.git"
+    git remote set-url origin "https://$GITHUB_TOKEN_VAL@github.com/vasivandrij656-arch/atlastrinity.git"
     echo "🔐 Configured git remote with token."
 fi
 

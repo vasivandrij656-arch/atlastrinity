@@ -17,7 +17,7 @@ description: GitHub repository operations using GITHUB_TOKEN from .env
 
 ```zsh
 export GITHUB_TOKEN=$(grep '^GITHUB_TOKEN=' .env | cut -d'=' -f2 | tr -d '\r\n' | tr -d " '\"") && \
-git remote set-url origin https://$GITHUB_TOKEN@github.com/solagurma/atlastrinity.git && \
+git remote set-url origin https://$GITHUB_TOKEN@github.com/vasivandrij656-arch/atlastrinity.git && \
 echo "✅ Git remote configured with GITHUB_TOKEN from .env"
 ```
 
@@ -32,7 +32,7 @@ git remote -v
 **Очікуваний результат**: URL має містити токен у форматі:
 
 ```
-origin  https://ghp_xxxxxxxxxxxxx@github.com/solagurma/atlastrinity.git
+origin  https://ghp_xxxxxxxxxxxxx@github.com/vasivandrij656-arch/atlastrinity.git
 ```
 
 ### 3. Стандартний Git Workflow
@@ -118,7 +118,7 @@ env:
 ```zsh
 # 1. Налаштувати remote (якщо ще не зроблено)
 export GITHUB_TOKEN=$(grep '^GITHUB_TOKEN=' .env | cut -d'=' -f2 | tr -d '\r\n' | tr -d " '\"") && \
-git remote set-url origin https://$GITHUB_TOKEN@github.com/solagurma/atlastrinity.git
+git remote set-url origin https://$GITHUB_TOKEN@github.com/vasivandrij656-arch/atlastrinity.git
 
 # 2. Перевірити якість коду
 npm run lint:all
@@ -159,7 +159,7 @@ git push origin main
 
 ```zsh
 export GITHUB_TOKEN=$(grep '^GITHUB_TOKEN=' .env | cut -d'=' -f2 | tr -d '\r\n' | tr -d " '\"") && \
-git remote set-url origin https://$GITHUB_TOKEN@github.com/solagurma/atlastrinity.git
+git remote set-url origin https://$GITHUB_TOKEN@github.com/vasivandrij656-arch/atlastrinity.git
 ```
 
 ### Проблема: Permission denied
@@ -199,7 +199,7 @@ git remote -v
 
 # Оновити токен у remote URL
 export GITHUB_TOKEN=$(grep '^GITHUB_TOKEN=' .env | cut -d'=' -f2 | tr -d '\r\n' | tr -d " '\"") && \
-git remote set-url origin https://$GITHUB_TOKEN@github.com/solagurma/atlastrinity.git
+git remote set-url origin https://$GITHUB_TOKEN@github.com/vasivandrij656-arch/atlastrinity.git
 ```
 
 ## 🎓 Для AI Агентів

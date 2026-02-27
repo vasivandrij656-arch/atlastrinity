@@ -168,13 +168,13 @@ debugging:
 ```python
 # Vibe через GitHub MCP читає додатковий контекст
 github_context = await manager.call_tool("github", "get_file_contents", {
-    "owner": "solagurma",
+    "owner": "vasivandrij656-arch",
     "repo": "atlastrinity",
     "path": error_context["file"]
 })
 
 recent_commits = await manager.call_tool("github", "list_commits", {
-    "owner": "solagurma",
+    "owner": "vasivandrij656-arch",
     "repo": "atlastrinity",
     "path": error_context["file"],
     "limit": 5
