@@ -39,6 +39,7 @@ runs:
       with:
         node-version: ${{ inputs.node-version }}
         cache: 'npm'
+        cache-dependency-path: package-lock.json
 
     - name: 'Install System Dependencies (Linux)'
       if: runner.os == 'Linux'

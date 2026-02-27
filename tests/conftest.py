@@ -8,7 +8,17 @@ import os
 import sys
 from pathlib import Path
 
-sys.path.insert(0, str(Path(__file__).parent.parent))
+# Ensure src is in the path for CI and local tests
+root_path = Path(__file__).parent.parent.absolute()
+if str(root_path / "src") not in sys.path:
+    sys.path.insert(0, str(root_path / "src"))
+if str(root_path) not in sys.path:
+    sys.path.insert(0, str(root_path))
+
+# Disable heavy brain components during collection if on Linux CI
+if os.getenv("CI") and os.name != "nt":
+    # Prevent top-level brain initialization during collection
+    os.environ["ATLAS_BRAIN_SKIP_INIT"] = "true"
 
 # Default list of MCP servers used in tests
 DEFAULT_SERVERS = [
