@@ -563,6 +563,7 @@ Respond in JSON:
                                 "query",
                                 "cat",
                                 "ls",
+                                "tour",
                             ]
                         )
                         is_mut = any(
@@ -578,8 +579,9 @@ Respond in JSON:
                                 "modify",
                             ]
                         )
-
-                        if is_safe and not is_mut:
+                        
+                        # Tour tools might contain "set" (e.g., tour_set_speed), allow them
+                        if is_safe and (not is_mut or "tour" in t_low):
                             new_tools.append(
                                 {
                                     "name": f"{s_name}_{tool.name}",
