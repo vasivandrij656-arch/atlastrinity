@@ -5,15 +5,16 @@ Reduces cognitive friction by defaulting to parallel tool execution,
 eliminating redundant sequential patterns, and optimizing response latency.
 """
 
-from typing import Any, Dict, List
 import asyncio
 from dataclasses import dataclass
+from typing import Any, Dict, List
+
 
 @dataclass
 class ToolCall:
     name: str
-    args: Dict[str, Any]
-    dependencies: List[str] | None = None  # Tools that must complete first
+    args: dict[str, Any]
+    dependencies: list[str] | None = None  # Tools that must complete first
     
 class ParallelOptimizer:
     """Optimizes tool execution for minimal cognitive friction."""
@@ -26,7 +27,7 @@ class ParallelOptimizer:
             'time_saved': 0.0
         }
     
-    async def execute_optimized(self, tools: List[ToolCall]) -> List[Any]:
+    async def execute_optimized(self, tools: list[ToolCall]) -> list[Any]:
         """Execute tools with parallel-first optimization."""
         if not tools:
             return []
@@ -52,7 +53,7 @@ class ParallelOptimizer:
         
         return results
     
-    def _create_execution_batches(self, tools: List[ToolCall]) -> List[List[ToolCall]]:
+    def _create_execution_batches(self, tools: list[ToolCall]) -> list[list[ToolCall]]:
         """Create execution batches based on dependencies."""
         if not tools:
             return []
@@ -84,7 +85,7 @@ class ParallelOptimizer:
         await asyncio.sleep(0.1)  # Simulate tool latency
         return f"Result from {tool.name}"
     
-    def get_efficiency_report(self) -> Dict[str, Any]:
+    def get_efficiency_report(self) -> dict[str, Any]:
         """Generate efficiency report for entropy manifesto compliance."""
         total_calls = self.execution_stats['parallel_calls'] + self.execution_stats['sequential_calls']
         
