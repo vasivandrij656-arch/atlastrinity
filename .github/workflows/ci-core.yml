@@ -53,11 +53,11 @@ jobs:
         run: npx lefthook run lint:all
 
       - name: Verify Architecture Diagrams
-        run: python src/testing/ci/check_architecture.py
+        run: .venv/bin/python src/testing/ci/check_architecture.py
 
       - name: Validate Mermaid diagrams
         run: |
-          python scripts/validate_mermaid.py
+          .venv/bin/python scripts/validate_mermaid.py
         env:
           CI: true
 
@@ -122,7 +122,7 @@ jobs:
           fi
 
           # Run sandbox test for all servers, chain len 2
-          python src/testing/ci/mcp_sandbox.py --all --chain 2
+          .venv/bin/python src/testing/ci/mcp_sandbox.py --all --chain 2
 
   # ============================================
   # Testing Jobs
@@ -150,7 +150,7 @@ jobs:
 
       - name: Run unit tests with coverage
         run: |
-          pytest tests/ \
+          .venv/bin/pytest tests/ \
             --cov=src \
             --cov-report=xml \
             --cov-report=term \
@@ -270,11 +270,11 @@ jobs:
           install-node-deps: 'false'
 
       - name: Validate MCP configuration
-        run: python src/testing/ci/validate_mcp_config.py
+        run: .venv/bin/python src/testing/ci/validate_mcp_config.py
 
       - name: Check JSON syntax
         run: |
-          find . -name "*.json" -not -path "./node_modules/*" -not -path "./dist_venv/*" -exec python -m json.tool {} \; > /dev/null
+          find . -name "*.json" -not -path "./node_modules/*" -not -path "./dist_venv/*" -exec .venv/bin/python -m json.tool {} \; > /dev/null
 
       - name: Validate package.json
         run: |
@@ -333,7 +333,7 @@ jobs:
           sync-config: 'false'
 
       - name: Generate Preview
-        run: python src/testing/ci/generate_changelog.py "PREVIEW"
+        run: .venv/bin/python src/testing/ci/generate_changelog.py "PREVIEW"
 
       - name: Upload Preview Artifact
         uses: actions/upload-artifact@65c4c4a1ddee5b72f698fdd19549f0f0fb45cf08 # v4.6.0

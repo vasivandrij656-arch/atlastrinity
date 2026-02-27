@@ -40,6 +40,21 @@ runs:
         node-version: ${{ inputs.node-version }}
         cache: 'npm'
 
+    - name: 'Install System Dependencies (Linux)'
+      if: runner.os == 'Linux'
+      shell: bash
+      run: |
+        sudo apt-get update
+        sudo apt-get install -y \
+          libx11-dev \
+          libxtst-dev \
+          python3-tk \
+          libasound2-dev \
+          libportaudio2 \
+          libcairo2-dev \
+          pkg-config \
+          libglib2.0-dev
+
     - name: 'Install Python Dependencies'
       if: ${{ inputs.install-python-deps == 'true' }}
       shell: bash
@@ -48,7 +63,13 @@ runs:
         mkdir -p bin
         echo "$PWD/.venv/bin" >> $GITHUB_PATH
         echo "$PWD/bin" >> $GITHUB_PATH
-        .venv/bin/python -m pip install --upgrade pip
+        .venv/bin/python -m pip install --upgrade pip setuptools wheel
+
+        if [[ "${{ runner.os }}" == "Linux" ]]; then
+          echo "Installing CPU-only torch for Linux"
+          .venv/bin/pip install torch torchaudio --index-url https://download.pytorch.org/whl/cpu
+        fi
+
         .venv/bin/pip install -r requirements.txt
         .venv/bin/pip install ruff bandit pyrefly safety detect-secrets pytest pytest-cov pytest-asyncio pytest-timeout zizmor xenon vulture
         curl -sSfL https://raw.githubusercontent.com/rhysd/actionlint/main/scripts/download-actionlint.bash | bash -s -- latest bin
@@ -61,4 +82,4 @@ runs:
     - name: 'Sync Configuration'
       if: ${{ inputs.sync-config == 'true' }}
       shell: bash
-      run: python src/maintenance/config_sync.py
+      run: .venv/bin/python src/maintenance/config_sync.py
