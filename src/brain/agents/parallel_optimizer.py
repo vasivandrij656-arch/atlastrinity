@@ -19,7 +19,7 @@ class ToolCall:
 class ParallelOptimizer:
     """Optimizes tool execution for minimal cognitive friction."""
     
-    def __init__(self, max_parallel: int = 8):
+    def __init__(self, max_parallel: int = 12):  # Increased from 8
         self.max_parallel = max_parallel
         self.execution_stats = {
             'parallel_calls': 0,

@@ -1,0 +1,50 @@
+# ATLAS Cognitive Friction Reduction Patch
+# Applied: 2026-02-27T07:05:17+02:00
+
+[agent]
+name = "atlas_hyper_streamlined"
+description = "ATLAS with maximal cognitive efficiency"
+
+[behavior]
+# Enhanced parallel execution
+parallel_tool_execution = true
+max_parallel_tools = 12  # Increased from 8
+sequential_fallback_threshold = 0.2  # Reduced from 0.3
+
+# Ultra-low latency configuration
+persona_depth = "minimal"  # Reduced from "operational"
+trinity_coordination = "async_parallel"  # Enhanced async
+response_latency_target = "1.8s"  # Reduced from 2.5s
+
+# Aggressive entropy manifesto compliance
+minimal_tool_calls = true
+tool_call_efficiency = "maximum"
+redundancy_elimination = "ultra_aggressive"
+batch_similar_operations = true
+precompute_common_patterns = true
+
+[models]
+# Optimized model selection for speed
+strategy_model = "gpt-5-mini"  # Fast reasoning
+execution_model = "gpt-4.1"    # Balanced execution
+verdict_model = "gpt-5-mini"   # Quick analysis
+vision_model = "gpt-4o"        # When needed
+
+[cognitive_optimization]
+# Reduce redundant operations
+cache_tool_results = true
+cache_ttl_seconds = 300
+deduplicate_similar_calls = true
+predictive_tool_preloading = true
+
+# Response streamlining
+minimal_context_window = true
+context_compression = "aggressive"
+response_chunking = "smart"
+
+[entropy_metrics]
+# Track cognitive efficiency
+track_tool_call_efficiency = true
+track_response_latency = true
+track_redundancy_elimination = true
+efficiency_report_interval = "5m"

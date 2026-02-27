@@ -66,13 +66,15 @@ class CopilotLLM(BaseChatModel):
         # Import config here to avoid circular dependencies if possible, or assume it's available
         from src.brain.config.config_loader import config
 
-        self.model_name = model_name or os.getenv("COPILOT_MODEL") or config.get("models.default")
+        self.model_name = self._strip_provider_prefix(
+            model_name or os.getenv("COPILOT_MODEL") or config.get("models.default")
+        )
         if not self.model_name:
             # Absolute fallback if config is broken
             self.model_name = "gpt-4o"
 
         vm = vision_model_name or os.getenv("COPILOT_VISION_MODEL")
-        self.vision_model_name = (
+        self.vision_model_name = self._strip_provider_prefix(
             vm or config.get("models.vision") or self.model_name
         )  # Fallback to main model if vision not distinct
 
@@ -105,6 +107,19 @@ class CopilotLLM(BaseChatModel):
                 "COPILOT_API_KEY environment variable is not set. "
                 "Agent will fail if invoked before setting the key.",
             )
+
+    @staticmethod
+    def _strip_provider_prefix(model: str | None) -> str | None:
+        """Strip 'copilot:' or 'windsurf:' prefix from hybrid model names.
+
+        Config uses 'provider:model' format (e.g. 'copilot:gpt-4.1') but the
+        Copilot API expects just the model name ('gpt-4.1').
+        """
+        if model and ":" in model:
+            parts = model.split(":", 1)
+            if parts[0].lower() in ("copilot", "windsurf"):
+                return parts[1]
+        return model
 
     def _has_image(self, messages: list[BaseMessage]) -> bool:
         for m in messages:
