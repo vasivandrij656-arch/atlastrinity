@@ -51,7 +51,7 @@ runs:
         .venv/bin/python -m pip install --upgrade pip
         .venv/bin/pip install -r requirements.txt
         .venv/bin/pip install ruff bandit pyrefly safety detect-secrets pytest pytest-cov pytest-asyncio pytest-timeout zizmor xenon vulture
-        curl -sSfL https://raw.githubusercontent.com/rhysd/actionlint/main/scripts/download-actionlint.bash | bash -s -- -b bin
+        curl -sSfL https://raw.githubusercontent.com/rhysd/actionlint/main/scripts/download-actionlint.bash | bash -s -- latest bin
 
     - name: 'Install Node Dependencies'
       if: ${{ inputs.install-node-deps == 'true' }}
