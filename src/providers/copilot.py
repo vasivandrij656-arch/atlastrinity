@@ -259,6 +259,7 @@ class CopilotLLM(BaseChatModel):
         retry=retry_if_exception_type(
             (requests.Timeout, requests.ConnectionError, requests.HTTPError)
         ),
+        reraise=True,
     )
     def _get_session_token(self) -> tuple[str, str]:
         headers = {

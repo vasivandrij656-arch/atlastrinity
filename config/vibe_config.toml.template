@@ -33,7 +33,7 @@
 fallback_chain = ["gpt-4o", "gpt-4.1", "claude-haiku-4.5", "gemini-flash-3-preview", "oswe-vscode-secondary", "grok-code-fast-1"]
 
 # Current selection (change based on your provider):
-active_model = "gpt-4o"            # GPT-4o (Stable Primary)
+active_model = "swe-1.5"           # Windsurf Primary
 
 # System prompt ID (refers to file in ~/.vibe/prompts/ cli.md by default)
 system_prompt_id = "cli"
