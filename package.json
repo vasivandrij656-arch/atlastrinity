@@ -85,7 +85,7 @@
     "electron-builder": "^26.8.1",
     "eslint": "^9.19.0",
     "eslint-plugin-react": "^7.37.4",
-    "eslint-plugin-react-hooks": "^5.2.0",
+    "eslint-plugin-react-hooks": "^7.0.1",
     "knip": "^5.82.1",
     "lefthook": "^2.0.16",
     "oxlint": "^1.43.0",
