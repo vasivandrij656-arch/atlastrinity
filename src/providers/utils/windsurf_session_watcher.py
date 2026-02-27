@@ -60,7 +60,7 @@ STATE_DB_PATH = (
 
 
 ENV_FILE_PATH = Path(CONFIG_ROOT) / ".env"
-PROJECT_ENV_PATH = Path(PROJECT_ROOT) / ".env"
+PROJECT_ENV_PATH = Path(PROJECT_ROOT).parent / ".env"
 
 
 # ─── Session Data ──────────────────────────────────────────────────────────────
