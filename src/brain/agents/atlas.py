@@ -1168,11 +1168,11 @@ Respond in JSON:
 
             final_messages.append(response)
             if current_turn == 0:
-                # Solo task: direct answer, no "end with question" chat behavior
                 if intent == "solo_task":
+                    # Standard solo synthesis hint
                     final_messages.append(
                         SystemMessage(
-                            content="SYNTHESIS: You have tool results. Now deliver a COMPLETE answer in Ukrainian. Include all specific data (numbers, names, facts). If you discovered a route/polyline and the user requested a tour, you MUST call tour-guide_tour_start with the ACTUAL encoded polyline string found in the tool output (e.g., from maps_directions results) NOW before finishing. ABSOLUTELY DO NOT use placeholder strings like 'encoded_polyline_string_from_directions' — YOU MUST use the real data from the previous tool results."
+                            content="SYNTHESIS: You have tool results. Now deliver a COMPLETE answer in Ukrainian. Include all specific data (numbers, names, facts). Do NOT say 'check the link' — speak the actual data."
                         )
                     )
                 else:
@@ -1183,6 +1183,16 @@ Respond in JSON:
                     )
 
             tool_executed = await self._process_chat_tool_calls(response.tool_calls, final_messages)
+
+            # Special high-priority reminder after receiving directions in Turn 0
+            if current_turn == 0 and intent == "solo_task" and tool_executed:
+                has_polyline = any("overview_polyline" in str(m.content) or "points" in str(m.content) for m in final_messages)
+                if has_polyline:
+                    final_messages.append(
+                        SystemMessage(
+                            content="CRITICAL: I see you just received route/direction data. To fulfill the user's request for a tour, you MUST now call 'tour-guide_tour_start' using the ACTUAL encoded polyline string from the tool output. Do NOT finish the task yet. Call the tool first. ABSOLUTELY DO NOT use placeholders."
+                        )
+                    )
 
             # Phase 3: Autonomous Self-Healing
             if not tool_executed and any(

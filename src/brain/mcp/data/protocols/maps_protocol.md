@@ -10,8 +10,9 @@
 
 - **Precision Filtering**: Do NOT just search for "restaurants". Use parameters:
   - `open_now: true` (Don't send user to closed places)
-  - `min_price/max_price` (Respect budget if known)
+  - `min_price/max_price` (Respect budget if known)Test typing
   - `rankby: distance` (If proximity is key)
+
 - **Radius**: Default is 5000m (5km). Adjust based on mode (Walking: 1000m, Driving: 10000m).
 - **Type Safety**: Use the `type` parameter (e.g., `cafe`, `gym`) for cleaner results than keyword matching.
 
