@@ -424,13 +424,18 @@ class CopilotLLM(BaseChatModel):
         # Choose model based on whether we have images
         chosen_model = self.vision_model_name if self._has_image(messages) else self.model_name
 
-        return {
+        payload = {
             "model": chosen_model,
             "messages": final_messages,
             "temperature": 0.1,
             "max_tokens": self.max_tokens,
             "stream": stream if stream is not None else False,
         }
+        
+        # DEBUG: Log the payload
+        logger.debug(f"[COPILOT DEBUG] Payload messages: {json.dumps(final_messages, ensure_ascii=False)[:3000]}...")
+        
+        return payload
 
     def _optimize_image_b64(self, data_url: str) -> str:
         """Resize and compress image for stability"""
