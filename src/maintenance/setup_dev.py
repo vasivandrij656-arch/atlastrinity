@@ -740,7 +740,9 @@ sys.exit(0 if success else 1)
                     print_success("Search Index DB відновлено з зашифрованого бекапу")
                     restored = True
                 else:
-                    print_warning(f"Не вдалося розшифрувати Search Index DB: {result.stderr.strip()}")
+                    print_warning(
+                        f"Не вдалося розшифрувати Search Index DB: {result.stderr.strip()}"
+                    )
             except Exception as e:
                 print_warning(f"Помилка відновлення Search Index DB: {e}")
         elif search_plain.exists():
@@ -1913,7 +1915,9 @@ sys.exit(1)
             print_warning("Модуль cryptography відсутній у venv. Використання legacy методу...")
             _legacy_restore_databases()
         else:
-            print_warning(f"Безпечне відновлення не вдалося ({result.stderr.strip()}) або бекапів немає.")
+            print_warning(
+                f"Безпечне відновлення не вдалося ({result.stderr.strip()}) або бекапів немає."
+            )
             print_info("Спроба використати старий метод відновлення...")
             _legacy_restore_databases()
 
