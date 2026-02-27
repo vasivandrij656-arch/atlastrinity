@@ -49,7 +49,7 @@ export const useBrainApi = () => {
     [],
   );
 
-  const pollState = useCallback(async (viewMode: 'NEURAL' | 'MAP') => {
+  const pollState = useCallback(async (_viewMode: 'NEURAL' | 'MAP') => {
     try {
       const response = await fetch(`${API_BASE}/api/state`);
       if (response.ok) {
@@ -76,11 +76,30 @@ export const useBrainApi = () => {
                 const fileUrl = `file://${av.image_path}`;
                 if (
                   prev.url !== fileUrl ||
-                  prev.type !== 'STREET' ||
+                  prev.type !== 'INTERACTIVE' ||
                   prev.agentView?.timestamp !== av.timestamp
                 ) {
                   newState.url = fileUrl;
-                  newState.type = 'STREET';
+                  newState.type = 'INTERACTIVE';
+                  newState.location = `AGENT_VIEW @ ${av.heading}°`;
+                  newState.agentView = {
+                    heading: av.heading,
+                    pitch: av.pitch,
+                    fov: av.fov,
+                    timestamp: av.timestamp,
+                    lat: av.lat,
+                    lng: av.lng,
+                  };
+                  changed = true;
+                }
+              } else if (av?.lat !== undefined && av?.lng !== undefined) {
+                // Coordinate-only update (no image) — still sync INTERACTIVE Street View
+                if (
+                  prev.agentView?.lat !== av.lat ||
+                  prev.agentView?.lng !== av.lng ||
+                  prev.agentView?.heading !== av.heading
+                ) {
+                  newState.type = 'INTERACTIVE';
                   newState.location = `AGENT_VIEW @ ${av.heading}°`;
                   newState.agentView = {
                     heading: av.heading,
@@ -97,10 +116,6 @@ export const useBrainApi = () => {
               if (JSON.stringify(prev.distanceInfo) !== JSON.stringify(ms.distance_info)) {
                 newState.distanceInfo = ms.distance_info;
                 changed = true;
-              }
-
-              if (ms.show_map && viewMode !== 'MAP') {
-                // This logic might need to be handled by the caller too
               }
 
               return changed ? newState : prev;

@@ -148,6 +148,7 @@ class MapStateManager:
             "lat": lat,
             "lng": lng,
         }
+        self.state.show_map = True
 
     def set_distance_info(
         self,
