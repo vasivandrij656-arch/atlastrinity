@@ -1066,9 +1066,29 @@ Respond in JSON:
             except Exception as err:
                 logger.error(f"[ATLAS CHAT] Tool call failed: {err}")
                 result = {"error": str(err)}
+            import json
+            
+            # Extract text safely from standard MCP CallToolResult responses
+            content_str = ""
+            if isinstance(result, dict) and "result" in result:
+                res_val = result["result"]
+                if isinstance(res_val, list) and len(res_val) > 0 and hasattr(res_val[0], "text"):
+                    # It's a list of TextContent
+                    content_str = "".join(str(getattr(item, "text", "")) for item in res_val)
+                else:
+                    try:
+                        content_str = json.dumps(result, ensure_ascii=False)
+                    except Exception:
+                        content_str = str(result)
+            else:
+                try:
+                    content_str = json.dumps(result, ensure_ascii=False)
+                except Exception:
+                    content_str = str(result)
+                    
             final_messages.append(
                 ToolMessage(
-                    content=str(result)[:5000], tool_call_id=tool_call.get("id", "chat_call")
+                    content=content_str[:25000], tool_call_id=tool_call.get("id", "chat_call")
                 )
             )
         return tool_executed

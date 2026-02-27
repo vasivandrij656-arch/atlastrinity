@@ -128,7 +128,6 @@ const App: React.FC = () => {
     }
   }, [isTourActive, viewMode]);
 
-
   useEffect(() => {
     let mounted = true;
     let interval: NodeJS.Timeout;

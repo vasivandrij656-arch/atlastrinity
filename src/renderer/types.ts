@@ -47,7 +47,6 @@ export interface MapData {
   showMap?: boolean;
 }
 
-
 export interface Session {
   id: string;
   theme: string;

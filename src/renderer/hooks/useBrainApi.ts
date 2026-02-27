@@ -74,10 +74,7 @@ export const useBrainApi = () => {
 
               if (av?.image_path) {
                 const fileUrl = `file://${av.image_path}`;
-                if (
-                  prev.url !== fileUrl ||
-                  prev.agentView?.timestamp !== av.timestamp
-                ) {
+                if (prev.url !== fileUrl || prev.agentView?.timestamp !== av.timestamp) {
                   newState.url = fileUrl;
                   // Keep as INTERACTIVE if that's what App.tsx expects for Street View,
                   // but we prefer STREET for pre-fetched images if they are used.
@@ -119,7 +116,6 @@ export const useBrainApi = () => {
                 newState.showMap = ms.show_map;
                 changed = true;
               }
-
 
               if (JSON.stringify(prev.distanceInfo) !== JSON.stringify(ms.distance_info)) {
                 newState.distanceInfo = ms.distance_info;
