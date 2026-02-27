@@ -1257,52 +1257,62 @@ class WindsurfLLM(BaseChatModel):
         # Phase 2: Find bot response using proto byte pattern
         # Target tags: 0x7A = field 15 wire type 2, 0x2A = field 5, 0x22 = field 4
         target_tags = (0x7A, 0x2A, 0x22)
+        metadata_keys = {"responseId", "trafficType", "sessionId", "cascadeId", "requestId", "status", "ok"}
         for i in range(len(frames) - 1, 1, -1):  # Search backwards
             frame = frames[i]
-            bot_idx = frame.find(b"bot-")
-            if bot_idx < 0:
-                continue
-
-            # Search in a window before bot- marker
-            search_start = max(0, bot_idx - 2000)
-            window = frame[search_start:bot_idx]
-
+            
             # Scan for length-delimited strings at target field tags
-            candidates = WindsurfLLM._find_proto_candidates(window, target_tags)
+            candidates = WindsurfLLM._find_proto_candidates(frame, target_tags)
 
             # Filter candidates: skip UUIDs, model names, noise, binary garbage
             filtered: list[str] = []
             user_stripped = user_text.strip()
             for c in candidates:
                 c = c.strip()
-                if not c:
+                if not c or len(c) < 3:
                     continue
                 # Reject strings with control characters (binary proto fragments)
                 if any(ord(ch) < 32 and ch not in "\n\r\t" for ch in c):
                     continue
+                # UUID check
                 if c.count("-") >= 4 and len(c) < 50:
-                    continue  # UUID
-                if c.startswith(("MODEL_", "file://", "http", "bot-")):
+                    continue  
+                if c.startswith(("MODEL_", "file://", "http", "bot-", "LanguageServer", ".")):
+                    continue
+                if c in metadata_keys:
+                    continue
+                if "LanguageServerService" in c:
                     continue
                 if user_stripped and c == user_stripped:
-                    continue  # Exact user input echo
-                filtered.append(c)
+                    continue
+                # AI response usually has spaces or is quite long
+                if " " in c or len(c) > 40:
+                    filtered.append(c)
 
             if filtered:
-                # Return the longest printable candidate (dedup by content)
+                # Return the longest printable candidate
                 return max(filtered, key=len)
 
         # Phase 3: Fallback - look for readable text in the last frames
         for i in range(len(frames) - 1, max(1, len(frames) - 5), -1):
-            strings = _proto_find_strings(frames[i], min_len=5)
+            strings = _proto_find_strings(frames[i], min_len=10)
             for s in strings:
                 s = s.strip()
+                # Must look like real text (spaces or long and not metadata)
                 if (
-                    len(s) > 2
-                    and s.count("-") < 3
-                    and not s.startswith(("file://", "http", "MODEL_", "{", "<"))
+                    " " in s
+                    and not s.startswith(("file://", "http", "MODEL_", "{", "<", "responseId"))
+                    and s not in metadata_keys
                 ):
                     return s
+        
+        # Phase 4: Extreme fallback - if we only have one string and it's long enough
+        if frames:
+            all_strs = _proto_find_strings(frames[-1], min_len=20)
+            if all_strs:
+                 for s in all_strs:
+                     if s.strip() not in metadata_keys and "LanguageServer" not in s:
+                         return s.strip()
 
         return ""
 
