@@ -764,9 +764,6 @@ class ToolDispatcher:
         """Analyze result from MCP and add metadata if needed.
         STABILIZATION: Converts SDK objects to dicts to prevent 'not subscriptable' errors.
         """
-        # Visual Hook: Update map state if result contains location data
-        self._post_process_map_data(tool, result)
-
         # Convert CallToolResult (SDK object) to dict if it's not already
         if not isinstance(result, dict):
             # Attempt to convert SDK object to a dictionary
@@ -783,6 +780,9 @@ class ToolDispatcher:
                 processed["content"] = result.content
 
             result = processed
+
+        # Visual Hook: Update map state if result contains location data
+        self._post_process_map_data(tool, result)
 
         error_msg = str(result.get("error") or "")
         if "not found" in error_msg.lower() or "-32602" in error_msg:

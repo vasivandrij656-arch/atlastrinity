@@ -1172,7 +1172,7 @@ Respond in JSON:
                 if intent == "solo_task":
                     final_messages.append(
                         SystemMessage(
-                            content="SYNTHESIS: You have tool results. Now deliver a COMPLETE answer in Ukrainian. Include all specific data (numbers, names, facts). Do NOT say 'check the link' — speak the actual data."
+                            content="SYNTHESIS: You have tool results. Now deliver a COMPLETE answer in Ukrainian. Include all specific data (numbers, names, facts). If you discovered a route/polyline and the user requested a tour, you MUST call tour-guide_tour_start with that polyline NOW before finishing. Do NOT say 'check the link' — speak the actual data."
                         )
                     )
                 else:
