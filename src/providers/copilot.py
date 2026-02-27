@@ -350,7 +350,8 @@ class CopilotLLM(BaseChatModel):
                 '  "final_answer": "Immediate feedback in UKRAINIAN (e.g., \'Зараз перевірю...\')."\n'
                 "}\n\n"
                 "If text response is enough (no tools needed), answer normally in Ukrainian.\n"
-                "If you ALREADY checked results (ToolMessages provided), provide a final summary in plain text using the data from the tools.\n"
+                "If you have completed all necessary tool steps, provide a final summary in plain text using the data from the tools.\n"
+                "If you still need to perform more actions (e.g. starting a tour AFTER getting directions), continue by emitting another JSON with the next tool calls.\n"
             )
         else:
             tool_instructions = ""

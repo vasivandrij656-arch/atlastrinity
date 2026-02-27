@@ -76,10 +76,12 @@ export const useBrainApi = () => {
                 const fileUrl = `file://${av.image_path}`;
                 if (
                   prev.url !== fileUrl ||
-                  prev.type !== 'INTERACTIVE' ||
                   prev.agentView?.timestamp !== av.timestamp
                 ) {
                   newState.url = fileUrl;
+                  // Keep as INTERACTIVE if that's what App.tsx expects for Street View,
+                  // but we prefer STREET for pre-fetched images if they are used.
+                  // For now, let's keep it INTERACTIVE as forced by App.tsx to ensure Street View launches.
                   newState.type = 'INTERACTIVE';
                   newState.location = `AGENT_VIEW @ ${av.heading}°`;
                   newState.agentView = {
@@ -93,11 +95,11 @@ export const useBrainApi = () => {
                   changed = true;
                 }
               } else if (av?.lat !== undefined && av?.lng !== undefined) {
-                // Coordinate-only update (no image) — still sync INTERACTIVE Street View
                 if (
                   prev.agentView?.lat !== av.lat ||
                   prev.agentView?.lng !== av.lng ||
-                  prev.agentView?.heading !== av.heading
+                  prev.agentView?.heading !== av.heading ||
+                  prev.agentView?.timestamp !== av.timestamp
                 ) {
                   newState.type = 'INTERACTIVE';
                   newState.location = `AGENT_VIEW @ ${av.heading}°`;
@@ -112,6 +114,12 @@ export const useBrainApi = () => {
                   changed = true;
                 }
               }
+
+              if (prev.showMap !== ms.show_map) {
+                newState.showMap = ms.show_map;
+                changed = true;
+              }
+
 
               if (JSON.stringify(prev.distanceInfo) !== JSON.stringify(ms.distance_info)) {
                 newState.distanceInfo = ms.distance_info;

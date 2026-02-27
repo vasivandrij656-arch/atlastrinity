@@ -112,17 +112,22 @@ const App: React.FC = () => {
   const isTourActive = Boolean(mapData.agentView);
   const pollInterval = isTourActive ? 1000 : 3000;
 
+  // Handle backend-driven map display triggers (showMap: True)
+  useEffect(() => {
+    if (mapData.showMap && viewMode !== 'MAP') {
+      console.log('[APP] Backend requested MAP view — auto-switching');
+      setViewMode('MAP');
+    }
+  }, [mapData.showMap, viewMode]);
+
   // Auto-switch to MAP view when a tour starts (agentView appears)
   useEffect(() => {
     if (isTourActive && viewMode !== 'MAP') {
       console.log('[APP] Tour detected — auto-switching to MAP view');
       setViewMode('MAP');
-      // Ensure map type is INTERACTIVE for Street View sync
-      if (mapData.type !== 'INTERACTIVE') {
-        setMapData((prev) => ({ ...prev, type: 'INTERACTIVE' as const }));
-      }
     }
-  }, [isTourActive, viewMode, mapData.type, setMapData]);
+  }, [isTourActive, viewMode]);
+
 
   useEffect(() => {
     let mounted = true;

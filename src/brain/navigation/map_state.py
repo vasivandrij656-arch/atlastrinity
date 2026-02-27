@@ -1,9 +1,7 @@
-"""Google Maps State Manager
-Manages map markers, routes, and active place state for frontend synchronization
-"""
-
 from dataclasses import dataclass, field
 from typing import Any
+import time
+
 
 
 @dataclass
@@ -140,15 +138,17 @@ class MapStateManager:
     ):
         """Update the agent's current visual perspective"""
         self.state.agent_view = {
+
             "image_path": image_path,
             "heading": heading,
             "pitch": pitch,
             "fov": fov,
-            "timestamp": "now",  # Handled by frontend
+            "timestamp": time.time(),
             "lat": lat,
             "lng": lng,
         }
         self.state.show_map = True
+
 
     def set_distance_info(
         self,
@@ -160,12 +160,14 @@ class MapStateManager:
     ):
         """Set distance/duration info for overlay display"""
         self.state.distance_info = {
+
             "distance": distance,
             "duration": duration,
             "origin": origin,
             "destination": destination,
-            "timestamp": "now",
+            "timestamp": time.time(),
         }
+
         if trigger_display:
             self.state.show_map = True
 

@@ -1088,13 +1088,13 @@ Respond in JSON:
         if tool_executed:
             final_messages.append(
                 SystemMessage(
-                    content="Check: does the data fully answer the request? If snippet is incomplete, fetch the full page. Otherwise deliver the answer now."
+                    content="Check: does the data fully answer the request? If you need more data (fetch pages, search again) or need to trigger more actions (START A TOUR after getting directions), CONTINUE calling tools. Only deliver the final answer once the process is complete."
                 )
             )
         elif current_turn == 0:
             final_messages.append(
                 SystemMessage(
-                    content="You did NOT call any tools. Call a tool NOW to get the data."
+                    content="You did NOT call any tools. Call a tool NOW (search, fetch, maps, tour-guide) to fulfill the request."
                 )
             )
 

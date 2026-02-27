@@ -44,7 +44,9 @@ export interface MapData {
     origin?: string;
     destination?: string;
   } | null;
+  showMap?: boolean;
 }
+
 
 export interface Session {
   id: string;
