@@ -1,0 +1,43 @@
+🚀 Testing Enhanced macOS Use MCP Tools
+================================================================================
+
+📸 Testing Enhanced Screenshot...
+============================= test session starts ==============================
+platform darwin -- Python 3.12.12, pytest-9.0.2, pluggy-1.6.0
+rootdir: /Users/dev/Documents/GitHub/atlastrinity
+configfile: pytest.ini (WARNING: ignoring pytest config in setup.cfg!)
+plugins: anyio-4.12.1, mock-3.15.1, langsmith-0.7.7, timeout-2.4.0, typeguard-4.5.1, asyncio-1.3.0, hydra-core-1.3.2, cov-7.0.0
+asyncio: mode=Mode.AUTO, debug=False, asyncio_default_fixture_loop_scope=None, asyncio_default_test_loop_scope=function
+collected 14 items
+
+<Dir atlastrinity>
+  <Dir tests>
+    <Dir brain>
+      <Dir neural_core>
+        <Module test_chronicle.py>
+          <Coroutine test_kyiv_time_format>
+          <Coroutine test_time_sync_fallback>
+          <Function test_kyiv_timezone_offset>
+        <Module test_graph.py>
+          <Coroutine test_add_and_get_node>
+          <Coroutine test_causality_chain>
+        <Module test_identity.py>
+          <Function test_postulates_content>
+          <Function test_milestones_presence>
+          <Function test_audit_context>
+        <Module test_integration.py>
+          <Coroutine test_neural_core_awakening>
+          <Coroutine test_neural_core_facade_methods>
+          <Coroutine test_neural_core_evolution_trigger>
+    <Dir macos_tools>
+      <Module test_all_42_complete.py>
+        <Coroutine test_all_42_tools>
+      <Module test_all_tools.py>
+        <Coroutine test_all_tools>
+      <Module test_atlas_macos.py>
+        <Coroutine test_via_atlas>
+
+!!!!!!!!!!!!!!!!!!!!!!!!!!!!!! KeyboardInterrupt !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+/opt/homebrew/Cellar/python@3.12/3.12.12/Frameworks/Python.framework/Versions/3.12/lib/python3.12/asyncio/runners.py:123: KeyboardInterrupt
+(to show a full traceback on KeyboardInterrupt use --full-trace)
+========================= 14 tests collected in 44.80s =========================
