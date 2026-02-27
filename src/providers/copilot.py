@@ -357,6 +357,8 @@ class CopilotLLM(BaseChatModel):
 
         for m in messages:
             role = "user"
+            # Handle message based on type
+            content: Any = ""
             if isinstance(m, SystemMessage):
                 role = "system"
                 if isinstance(m.content, str):
@@ -368,16 +370,31 @@ class CopilotLLM(BaseChatModel):
                         "\n\n" + tool_instructions if tool_instructions else ""
                     )
                 continue
+            
             if isinstance(m, AIMessage):
                 role = "assistant"
+                content = m.content
+                # If there are tool calls, reconstruct the JSON for history context
+                if hasattr(m, "tool_calls") and m.tool_calls:
+                    calls = []
+                    for tc in m.tool_calls:
+                        calls.append({"name": tc["name"], "args": tc["args"]})
+                    
+                    content = json.dumps({
+                        "tool_calls": calls,
+                        "final_answer": m.content or ""
+                    }, ensure_ascii=False)
             elif isinstance(m, HumanMessage):
                 role = "user"
+                content = m.content
             elif isinstance(m, ToolMessage):
                 role = "user"  # Copilot API doesn't have a 'tool' role, map to user
                 content = f"[TOOL RESULT for {m.tool_call_id}]: {m.content}"
+            else:
+                role = "user"
+                content = str(m.content)
 
             # Handle list content (Vision)
-            content = m.content
             if isinstance(content, list):
                 processed_content: list[ContentItem] = []
                 for item in content:
