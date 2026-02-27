@@ -99,9 +99,11 @@ class CopilotLLM(BaseChatModel):
             self.api_key = None
 
         if not self.api_key:
-            raise RuntimeError(
-                "COPILOT_API_KEY environment variable must be set. "
-                "Note: GITHUB_TOKEN is only for GitHub MCP server, not for agents.",
+            # During test collection or lazy initialization, we might not have the key yet.
+            # We log a warning instead of raising RuntimeError to allow imports to succeed.
+            logger.warning(
+                "COPILOT_API_KEY environment variable is not set. "
+                "Agent will fail if invoked before setting the key.",
             )
 
     def _has_image(self, messages: list[BaseMessage]) -> bool:
