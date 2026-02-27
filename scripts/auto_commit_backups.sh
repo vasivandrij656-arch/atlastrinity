@@ -79,6 +79,14 @@ COMMIT_MSG="Auto-commit database backups after fresh install - $TIMESTAMP"
 echo "📝 Creating commit: $COMMIT_MSG"
 git commit --no-verify -m "$COMMIT_MSG"
 
+# Fetch and rebase with remote to avoid push rejection
+echo "⬇️  Syncing with remote..."
+if [ "$USE_GH_CLI" = true ]; then
+    git fetch && git rebase origin/main || { echo "⚠️  Rebase failed. Trying to abort and fallback to merge."; git rebase --abort; git pull --no-edit origin main; }
+else
+    git fetch origin && git rebase origin/main || { echo "⚠️  Rebase failed. Trying to abort and fallback to merge."; git rebase --abort; git pull --no-edit origin main; }
+fi
+
 # Push changes
 echo "🚀 Pushing to GitHub..."
 if [ "$USE_GH_CLI" = true ]; then
