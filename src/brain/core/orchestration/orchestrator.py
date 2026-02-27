@@ -321,6 +321,9 @@ class Trinity(TourMixin, VoiceOrchestrationMixin):
         if state_manager.available:
             await state_manager.clear_session(self.current_session_id)
 
+        # Reset Map State
+        map_state_manager.clear_all()
+
         # Create a new unique session ID
         self.current_session_id = str(uuid.uuid4())
 
@@ -965,7 +968,7 @@ class Trinity(TourMixin, VoiceOrchestrationMixin):
                         },
                     )
 
-        return {
+        result = {
             "system_state": sys_state,
             "current_task": task_summary,
             "active_agent": active_agent,
@@ -977,6 +980,11 @@ class Trinity(TourMixin, VoiceOrchestrationMixin):
             "map_state": map_state_manager.to_dict(),
             "voice_enabled": self.voice.enabled if hasattr(self, "voice") else True,
         }
+
+        # Reset map trigger after delivery to prevent looping/flapping in frontend
+        map_state_manager.reset_map_trigger()
+
+        return result
 
     async def _planning_loop(self, analysis, user_request, is_subtask, history):
         """Handle the planning and verification loop."""

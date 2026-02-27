@@ -328,13 +328,15 @@ class CopilotLLM(BaseChatModel):
                     name = getattr(tool, "name", getattr(tool, "__name__", "tool"))
                     description = getattr(tool, "description", "")
                     # Try to get schema from logic if it's a langchain tool or custom obj
-                    schema = getattr(tool, "args_schema", getattr(tool, "input_schema", {}))
-                    if hasattr(schema, "schema"):
-                        schema = schema.schema()
-                
+                    schema_obj = getattr(tool, "args_schema", getattr(tool, "input_schema", {}))
+                    if hasattr(schema_obj, "schema"):
+                        schema = schema_obj.schema()
+                    else:
+                        schema = schema_obj
+
                 schema_json = json.dumps(schema, ensure_ascii=False) if schema else "{}"
                 tools_desc_lines.append(f"- {name}: {description}\n  Args Schema: {schema_json}")
-            
+
             tools_desc = "\n".join(tools_desc_lines)
 
             tool_instructions = (
@@ -371,7 +373,7 @@ class CopilotLLM(BaseChatModel):
                         "\n\n" + tool_instructions if tool_instructions else ""
                     )
                 continue
-            
+
             if isinstance(m, AIMessage):
                 role = "assistant"
                 content = m.content
@@ -380,11 +382,10 @@ class CopilotLLM(BaseChatModel):
                     calls = []
                     for tc in m.tool_calls:
                         calls.append({"name": tc["name"], "args": tc["args"]})
-                    
-                    content = json.dumps({
-                        "tool_calls": calls,
-                        "final_answer": m.content or ""
-                    }, ensure_ascii=False)
+
+                    content = json.dumps(
+                        {"tool_calls": calls, "final_answer": m.content or ""}, ensure_ascii=False
+                    )
             elif isinstance(m, HumanMessage):
                 role = "user"
                 content = m.content
@@ -431,10 +432,12 @@ class CopilotLLM(BaseChatModel):
             "max_tokens": self.max_tokens,
             "stream": stream if stream is not None else False,
         }
-        
+
         # DEBUG: Log the payload
-        logger.debug(f"[COPILOT DEBUG] Payload messages: {json.dumps(final_messages, ensure_ascii=False)[:3000]}...")
-        
+        logger.debug(
+            f"[COPILOT DEBUG] Payload messages: {json.dumps(final_messages, ensure_ascii=False)[:3000]}..."
+        )
+
         return payload
 
     def _optimize_image_b64(self, data_url: str) -> str:

@@ -137,7 +137,6 @@ class MapStateManager:
     ):
         """Update the agent's current visual perspective"""
         self.state.agent_view = {
-
             "image_path": image_path,
             "heading": heading,
             "pitch": pitch,
@@ -147,7 +146,6 @@ class MapStateManager:
             "lng": lng,
         }
         self.state.show_map = True
-
 
     def set_distance_info(
         self,
@@ -159,7 +157,6 @@ class MapStateManager:
     ):
         """Set distance/duration info for overlay display"""
         self.state.distance_info = {
-
             "distance": distance,
             "duration": duration,
             "origin": origin,

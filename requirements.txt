@@ -60,7 +60,7 @@ soundfile>=0.12.1
 posthog>=3.0.0,<4.0.0  # pinned: posthog 7.x breaks chromadb telemetry capture() API
 chromadb==0.6.3
 redis>=5.0.0
-googleapis-common-protos==1.63.2
+googleapis-common-protos==1.72.0
 opentelemetry-api==1.39.1
 opentelemetry-sdk==1.39.1
 opentelemetry-exporter-otlp-proto-grpc==1.39.1
@@ -113,7 +113,7 @@ onnxruntime
 prometheus-client>=0.17.1
 opensearch-py>=2.3.0
 importlib-metadata>=6.0
-protobuf>=4.25.0
+protobuf>=6.33.5
 
 # === Automation ===
 watchdog>=4.0.0

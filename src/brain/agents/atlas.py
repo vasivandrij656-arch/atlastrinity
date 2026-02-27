@@ -396,7 +396,7 @@ Respond in JSON:
     ) -> tuple[str, str, list[dict[str, Any]]]:
         """Parallel fetching of Graph, Vector, and Tool context with cognitive streamlining."""
         # Default to parallel execution unless sequential is explicitly required
-        if not getattr(mode_profile, 'force_sequential', False):
+        if not getattr(mode_profile, "force_sequential", False):
             # Execute all context fetches in parallel for maximum speed
             # Note: _parallel_context_fetch method needs to be implemented
             # For now, fall back to existing sequential logic
@@ -579,7 +579,7 @@ Respond in JSON:
                                 "modify",
                             ]
                         )
-                        
+
                         # Tour tools might contain "set" (e.g., tour_set_speed), allow them
                         if is_safe and (not is_mut or "tour" in t_low):
                             new_tools.append(
@@ -753,26 +753,26 @@ Respond in JSON:
                         "properties": {
                             "polyline": {
                                 "type": "string",
-                                "description": "Google Maps encoded polyline string (from directions API)"
+                                "description": "Google Maps encoded polyline string (from directions API)",
                             }
                         },
-                        "required": ["polyline"]
-                    }
+                        "required": ["polyline"],
+                    },
                 },
                 {
                     "name": "tour-guide_tour_stop",
                     "description": "Stop the current virtual tour.",
-                    "input_schema": {"type": "object", "properties": {}}
+                    "input_schema": {"type": "object", "properties": {}},
                 },
                 {
                     "name": "tour-guide_tour_pause",
                     "description": "Pause the current virtual tour.",
-                    "input_schema": {"type": "object", "properties": {}}
+                    "input_schema": {"type": "object", "properties": {}},
                 },
                 {
                     "name": "tour-guide_tour_resume",
                     "description": "Resume a paused virtual tour.",
-                    "input_schema": {"type": "object", "properties": {}}
+                    "input_schema": {"type": "object", "properties": {}},
                 },
                 {
                     "name": "tour-guide_tour_look",
@@ -780,10 +780,13 @@ Respond in JSON:
                     "input_schema": {
                         "type": "object",
                         "properties": {
-                            "angle": {"type": "integer", "description": "Viewing angle offset in degrees (-180 to 180). 0=forward, 90=right, -90=left"}
+                            "angle": {
+                                "type": "integer",
+                                "description": "Viewing angle offset in degrees (-180 to 180). 0=forward, 90=right, -90=left",
+                            }
                         },
-                        "required": ["angle"]
-                    }
+                        "required": ["angle"],
+                    },
                 },
                 {
                     "name": "tour-guide_tour_set_speed",
@@ -791,17 +794,22 @@ Respond in JSON:
                     "input_schema": {
                         "type": "object",
                         "properties": {
-                            "speed": {"type": "number", "description": "Speed multiplier (0.5 to 3.0)"}
+                            "speed": {
+                                "type": "number",
+                                "description": "Speed multiplier (0.5 to 3.0)",
+                            }
                         },
-                        "required": ["speed"]
-                    }
+                        "required": ["speed"],
+                    },
                 },
             ]
             new_tools.extend(tour_tools)
 
             self._cached_info_tools = new_tools
             self._last_tool_refresh = int(now)
-            logger.info(f"[ATLAS SOLO] Discovered {len(new_tools)} safe tools (including {len(tour_tools)} tour tools)")
+            logger.info(
+                f"[ATLAS SOLO] Discovered {len(new_tools)} safe tools (including {len(tour_tools)} tour tools)"
+            )
         except Exception as e:
             logger.warning(f"[ATLAS SOLO] Tool discovery failed: {e}")
 
@@ -1069,7 +1077,7 @@ Respond in JSON:
                 logger.error(f"[ATLAS CHAT] Tool call failed: {err}")
                 result = {"error": str(err)}
             import json
-            
+
             # Extract text safely from standard MCP CallToolResult responses
             content_str = ""
             if isinstance(result, dict) and "result" in result:
@@ -1087,7 +1095,7 @@ Respond in JSON:
                     content_str = json.dumps(result, ensure_ascii=False)
                 except Exception:
                     content_str = str(result)
-                    
+
             final_messages.append(
                 ToolMessage(
                     content=content_str[:25000], tool_call_id=tool_call.get("id", "chat_call")
@@ -1186,7 +1194,10 @@ Respond in JSON:
 
             # Special high-priority reminder after receiving directions in Turn 0
             if current_turn == 0 and intent == "solo_task" and tool_executed:
-                has_polyline = any("overview_polyline" in str(m.content) or "points" in str(m.content) for m in final_messages)
+                has_polyline = any(
+                    "overview_polyline" in str(m.content) or "points" in str(m.content)
+                    for m in final_messages
+                )
                 if has_polyline:
                     final_messages.append(
                         SystemMessage(

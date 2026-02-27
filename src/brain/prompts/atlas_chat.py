@@ -284,4 +284,3 @@ ANSWER FORMAT:
 
 SYSTEM: {system_status}
 """
-

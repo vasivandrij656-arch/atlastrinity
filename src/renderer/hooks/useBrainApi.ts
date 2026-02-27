@@ -350,6 +350,14 @@ export const useBrainApi = () => {
         const result = await response.json();
         setLogs([]);
         setChatHistory([]);
+        setMapData({
+          agentView: null,
+          url: undefined,
+          type: 'STATIC',
+          location: '',
+          distanceInfo: null,
+          showMap: false,
+        });
         if (result.session_id) setCurrentSessionId(result.session_id);
         return result.session_id;
       }

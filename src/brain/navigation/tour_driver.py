@@ -68,7 +68,6 @@ class TourDriver:
         map_state_manager.trigger_map_display()
         self.current_route_points = self._decode_polyline(route_polyline)
 
-
         if not self.current_route_points:
             logger.error("[TourDriver] Failed to decode polyline or empty route.")
             return

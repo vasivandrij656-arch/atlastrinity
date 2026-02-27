@@ -335,6 +335,7 @@ const MapView: React.FC<MapViewProps> = memo(
     const [cyberpunkFilterEnabled, setCyberpunkFilterEnabled] = useState(true);
     const mapContainerRef = useRef<HTMLDivElement>(null);
     const searchMarkerRef = useRef<google.maps.Marker | null>(null);
+    const streetViewActiveRef = useRef(false);
 
     // Force update attributes and STYLES on gmp-map when filter state changes
     useLayoutEffect(() => {
@@ -428,7 +429,9 @@ const MapView: React.FC<MapViewProps> = memo(
                 // Listen for Street View visibility changes to sync state
                 const streetView = mapElement.innerMap.getStreetView();
                 google.maps.event.addListener(streetView, 'visible_changed', () => {
-                  setStreetViewActive(streetView.getVisible());
+                  const isVisible = streetView.getVisible();
+                  setStreetViewActive(isVisible);
+                  streetViewActiveRef.current = isVisible;
                 });
 
                 // Inject styles into shadow DOM to darken the copyright bar and position Pegman
@@ -514,9 +517,11 @@ const MapView: React.FC<MapViewProps> = memo(
         const streetView = mapElement.innerMap.getStreetView();
         if (streetView) {
           // Ensure Street View is visible when agent starts driving
-          if (!streetView.getVisible()) {
+          // Avoid redundant setVisible(true) if already visible to minimize API calls
+          if (!(streetView.getVisible() || streetViewActiveRef.current)) {
             streetView.setVisible(true);
             setStreetViewActive(true);
+            streetViewActiveRef.current = true;
           }
 
           // Update Position if coordinates provided (sync with tour)
@@ -843,6 +848,7 @@ const MapView: React.FC<MapViewProps> = memo(
         if (streetView) {
           streetView.setVisible(false);
           setStreetViewActive(false);
+          streetViewActiveRef.current = false;
         }
       } else {
         // Check for coverage before activating to avoid white screen
@@ -864,10 +870,16 @@ const MapView: React.FC<MapViewProps> = memo(
                   streetView.setPosition(data.location.latLng);
                   streetView.setVisible(true);
                   setStreetViewActive(true);
+                  streetViewActiveRef.current = true;
+                  setError(null);
                 }
+              } else if (String(status) === 'OVER_QUERY_LIMIT') {
+                console.warn('Street View API rate limit hit (429)');
+                setError('API Rate limit reached. Please wait a moment.');
               } else {
-                console.warn('Street View not available at this location');
-                // Optional: Show a toast?
+                console.warn('Street View not available at this location:', status);
+                setError('STREET_VIEW_UNAVAILABLE_AT_LOCATION');
+                setTimeout(() => setError(null), 3000);
               }
             },
           );
