@@ -80,7 +80,7 @@ pyobjc-framework-ApplicationServices>=10.0 ; sys_platform == 'darwin'
 python-dotenv>=1.0.0
 pydantic>=2.10.0,<2.13.0
 httpx>=0.25.0
-mcp==1.25.0
+mcp==1.26.0
 fastmcp==2.14.2
 pydocket==0.16.3
 pyyaml>=6.0.0
