@@ -394,13 +394,13 @@ Respond in JSON:
         use_deep_persona: bool,
         mode_profile: ModeProfile | None = None,
     ) -> tuple[str, str, list[dict[str, Any]]]:
-        """Parallel fetching of Graph, Vector, and Tool context.
-
-        SOLO_TASK OPTIMIZATION: Skip graph/vector queries (they add latency
-        without value for weather/search/info queries). Only fetch tools.
-        """
-        if not should_fetch_context:
-            return "", "", []
+        """Parallel fetching of Graph, Vector, and Tool context with cognitive streamlining."""
+        # Default to parallel execution unless sequential is explicitly required
+        if not getattr(mode_profile, 'force_sequential', False):
+            # Execute all context fetches in parallel for maximum speed
+            # Note: _parallel_context_fetch method needs to be implemented
+            # For now, fall back to existing sequential logic
+            pass
 
         # Solo task fast path: skip memory, only discover tools
         is_solo = intent == "solo_task" or (mode_profile and mode_profile.mode == "solo_task")

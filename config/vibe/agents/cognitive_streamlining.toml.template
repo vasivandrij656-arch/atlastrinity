@@ -1,0 +1,31 @@
+[agent]
+name = "atlas_streamlined"
+description = "ATLAS with cognitive friction reduction"
+
+[behavior]
+# Core optimization: Parallel-first execution
+parallel_tool_execution = true
+max_parallel_tools = 8
+sequential_fallback_threshold = 0.3
+
+# Cognitive load reduction
+persona_depth = "operational"  # Instead of "philosophical"
+trinity_coordination = "async"  # Instead of "sequential"
+response_latency_target = "2.5s"
+
+# Entropy manifesto adherence
+minimal_tool_calls = true
+tool_call_efficiency = "high"
+redundancy_elimination = "aggressive"
+
+[models]
+# Fast models for rapid response
+strategy_model = "gpt-5-mini"
+execution_model = "gpt-4.1"
+verdict_model = "gpt-5-mini"
+
+[optimization]
+# Reduce cognitive friction
+precompute_common_patterns = true
+cache_frequent_operations = true
+batch_similar_operations = true
