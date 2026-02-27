@@ -40,7 +40,7 @@ from typing import Any
 
 import requests
 
-from src.brain.config import CONFIG_ROOT
+from src.brain.config import CONFIG_ROOT, PROJECT_ROOT
 
 logger = logging.getLogger("windsurf.session_watcher")
 
@@ -60,6 +60,7 @@ STATE_DB_PATH = (
 
 
 ENV_FILE_PATH = Path(CONFIG_ROOT) / ".env"
+PROJECT_ENV_PATH = Path(PROJECT_ROOT) / ".env"
 
 
 # ─── Session Data ──────────────────────────────────────────────────────────────
@@ -191,25 +192,19 @@ def read_api_key_from_db() -> tuple[str, str]:
         return "", ""
 
 
-def sync_env_file(session: WindsurfSession) -> bool:
-    """Update .env file with current session parameters.
+def _update_env_at_path(env_path: Path, env_map: dict[str, str]) -> bool:
+    """Update Windsurf keys in a single .env file.
 
     Returns True on success.
     """
-    if not ENV_FILE_PATH.exists():
+    if not env_path.exists():
         return False
 
     try:
-        content = ENV_FILE_PATH.read_text()
+        content = env_path.read_text()
         lines = content.split("\n")
         updated = []
         keys_seen: set[str] = set()
-        env_map = {
-            "WINDSURF_API_KEY": session.api_key,
-            "WINDSURF_INSTALL_ID": session.install_id,
-            "WINDSURF_LS_PORT": str(session.port),
-            "WINDSURF_LS_CSRF": session.csrf,
-        }
 
         for line in lines:
             key = line.split("=", 1)[0].strip() if "=" in line else ""
@@ -224,11 +219,40 @@ def sync_env_file(session: WindsurfSession) -> bool:
             if key not in keys_seen:
                 updated.append(f"{key}={val}")
 
-        ENV_FILE_PATH.write_text("\n".join(updated))
+        env_path.write_text("\n".join(updated))
         return True
     except Exception as e:
-        logger.warning("Failed to sync .env: %s", e)
+        logger.warning("Failed to sync %s: %s", env_path, e)
         return False
+
+
+def sync_env_file(session: WindsurfSession) -> bool:
+    """Update .env files with current session parameters.
+
+    Syncs to BOTH the active config (.env in CONFIG_ROOT) AND the project root
+    .env (template source of truth). This ensures that watchdog-triggered
+    template resyncs don't overwrite fresh session data.
+
+    Returns True if at least one file was updated successfully.
+    """
+    env_map = {
+        "WINDSURF_API_KEY": session.api_key,
+        "WINDSURF_INSTALL_ID": session.install_id,
+        "WINDSURF_LS_PORT": str(session.port),
+        "WINDSURF_LS_CSRF": session.csrf,
+    }
+
+    ok_config = _update_env_at_path(ENV_FILE_PATH, env_map)
+    ok_project = _update_env_at_path(PROJECT_ENV_PATH, env_map)
+
+    if ok_config or ok_project:
+        logger.debug(
+            "Synced session to .env (config=%s, project=%s)",
+            ok_config,
+            ok_project,
+        )
+
+    return ok_config or ok_project
 
 
 # ─── Session Watcher ──────────────────────────────────────────────────────────
