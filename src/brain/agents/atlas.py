@@ -1172,7 +1172,7 @@ Respond in JSON:
                 if intent == "solo_task":
                     final_messages.append(
                         SystemMessage(
-                            content="SYNTHESIS: You have tool results. Now deliver a COMPLETE answer in Ukrainian. Include all specific data (numbers, names, facts). If you discovered a route/polyline and the user requested a tour, you MUST call tour-guide_tour_start with that polyline NOW before finishing. Do NOT say 'check the link' — speak the actual data."
+                            content="SYNTHESIS: You have tool results. Now deliver a COMPLETE answer in Ukrainian. Include all specific data (numbers, names, facts). If you discovered a route/polyline and the user requested a tour, you MUST call tour-guide_tour_start with the ACTUAL encoded polyline string found in the tool output (e.g., from maps_directions results) NOW before finishing. ABSOLUTELY DO NOT use placeholder strings like 'encoded_polyline_string_from_directions' — YOU MUST use the real data from the previous tool results."
                         )
                     )
                 else:
