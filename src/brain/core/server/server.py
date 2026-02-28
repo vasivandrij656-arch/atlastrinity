@@ -36,23 +36,6 @@ warnings.filterwarnings(
     "ignore", message=".*make_pad_mask with a list of lengths is not tracable.*"
 )
 
-
-class LogNoiseFilter(logging.Filter):
-    """Filter to suppress repetitive 200 OK logs for polling endpoints."""
-
-    def filter(self, record):
-        # record.msg usually contains the access log string for uvicorn.access
-        msg = record.getMessage()
-        # Suppress 200 OK for frequent polling endpoints
-        noisy_endpoints = [
-            "GET /api/state",
-            "GET /api/health",
-            "GET /api/monitoring/metrics",
-            "GET /api/monitoring/processes",
-        ]
-        return not (any(endpoint in msg for endpoint in noisy_endpoints) and " 200 OK" in msg)
-
-
 # Type hints for static type checking
 if TYPE_CHECKING:
     from src.brain.core.orchestration.orchestrator import Trinity
@@ -1014,9 +997,8 @@ class WhisperMCPServer:
 def main():
     import uvicorn
 
-    # Apply noise filter to uvicorn access logs
-    access_logger = logging.getLogger("uvicorn.access")
-    access_logger.addFilter(LogNoiseFilter())
+    # Silence noisy access logs for polling
+    logging.getLogger("uvicorn.access").setLevel(logging.WARNING)
 
     uvicorn.run(app, host="0.0.0.0", port=8000)  # nosec B104
 

@@ -136,9 +136,8 @@ const App: React.FC = () => {
       if (!mounted) return;
       console.log('[BRAIN] Backend connected. Starting synchronization.');
       setIsConnected(true);
-      void pollState(viewMode);
       interval = setInterval(() => {
-        void pollState(viewMode);
+        pollState(viewMode).catch(console.error);
       }, pollInterval);
     };
 

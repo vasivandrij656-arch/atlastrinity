@@ -175,35 +175,11 @@ const ClockworkBackground: React.FC<ClockworkProps> = ({ activeAgent }) => {
         className="clockwork-svg"
       >
         <defs>
-          {/* 3D Gear Bevel/Lighting Filter */}
-          <filter id="gear-3d" x="-50%" y="-50%" width="200%" height="200%">
-            <feGaussianBlur in="SourceAlpha" stdDeviation="1.5" result="blur" />
-            <feOffset in="blur" dx="1" dy="1" result="offsetBlur" />
-            <feSpecularLighting
-              in="blur"
-              surfaceScale="3"
-              specularConstant="1.2"
-              specularExponent="30"
-              lightingColor="white"
-              result="specOut"
-            >
-              <fePointLight x="-5000" y="-10000" z="20000" />
-            </feSpecularLighting>
-            <feComposite in="specOut" in2="SourceAlpha" operator="in" result="specOut" />
-            <feComposite
-              in="SourceGraphic"
-              in2="specOut"
-              operator="arithmetic"
-              k1="0"
-              k2="1"
-              k3="1"
-              k4="0"
-              result="litGraphic"
-            />
-            <feMerge>
-              <feMergeNode in="offsetBlur" />
-              <feMergeNode in="litGraphic" />
-            </feMerge>
+          {/* Simple depth filter (drop shadow replacement) */}
+          <filter id="gear-depth" x="-20%" y="-20%" width="140%" height="140%">
+            <feGaussianBlur in="SourceAlpha" stdDeviation="1" result="blur" />
+            <feOffset in="blur" dx="0.5" dy="0.5" result="offsetBlur" />
+            <feComposite in="SourceGraphic" in2="offsetBlur" operator="over" />
           </filter>
 
           {/* Per-color inner gradients for depth */}
@@ -287,7 +263,7 @@ const ClockworkBackground: React.FC<ClockworkProps> = ({ activeAgent }) => {
                 style={{
                   animation: `${animDir} ${g.speed}s linear infinite`,
                 }}
-                filter={`url(#gear-3d) url(#${filterId})`}
+                filter={`url(#gear-depth) url(#${filterId})`}
               >
                 <path
                   d={path}
