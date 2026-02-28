@@ -125,45 +125,7 @@ const GEARS: GearDef[] = [
     cw: true,
     glowColor: 'rgba(0,255,65,0.3)',
   },
-  // 6. Orange Small (Meshes with 5) - Down/Left to avoid G1 overlap
-  {
-    cx: -170,
-    cy: 110,
-    innerR: 35,
-    outerR: 50,
-    teeth: 20,
-    color: 'var(--grisha-orange)',
-    opacity: 0.3,
-    speed: 60,
-    cw: false,
-    glowColor: 'rgba(255,140,0,0.3)',
-  },
-  // 7. Blue Tiny (Meshes with 1) - Top
-  {
-    cx: -200,
-    cy: -185,
-    innerR: 25,
-    outerR: 35,
-    teeth: 14,
-    color: 'var(--atlas-blue)',
-    opacity: 0.25,
-    speed: 42,
-    cw: false,
-    glowColor: 'rgba(0,212,255,0.25)',
-  },
-  // 8. Green Medium (Meshes with 7) - Right
-  {
-    cx: -85,
-    cy: -185,
-    innerR: 55,
-    outerR: 75,
-    teeth: 32,
-    color: 'var(--tetyana-green)',
-    opacity: 0.28,
-    speed: 96,
-    cw: true,
-    glowColor: 'rgba(0,255,65,0.3)',
-  },
+  // 6. Removed Gear for performance
 ];
 
 const ClockworkBackground: React.FC<ClockworkProps> = ({ activeAgent }) => {
@@ -262,6 +224,7 @@ const ClockworkBackground: React.FC<ClockworkProps> = ({ activeAgent }) => {
               <g
                 style={{
                   animation: `${animDir} ${g.speed}s linear infinite`,
+                  willChange: 'transform',
                 }}
                 filter={`url(#gear-depth) url(#${filterId})`}
               >
@@ -353,7 +316,6 @@ const ClockworkBackground: React.FC<ClockworkProps> = ({ activeAgent }) => {
           z-index: 100;
           pointer-events: none;
           overflow: hidden;
-          mix-blend-mode: plus-lighter;
         }
         .clockwork-svg {
           width: 100%;
