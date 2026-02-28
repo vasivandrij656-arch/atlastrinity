@@ -322,7 +322,7 @@ async def test_all_mcp_tools():
 
                 # Extra assertions for specific tools
                 if tool_name == "vibe_which" and isinstance(result, dict):
-                    binary = result.get("binary", "")
+                    binary = result.get("binary_path", "")
                     if binary and os.path.exists(binary):
                         ok(f"    Binary verified: {binary}")
                     else:

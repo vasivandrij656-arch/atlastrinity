@@ -1013,7 +1013,7 @@ async def _format_and_emit_vibe_log(line: str, stream_name: str, ctx: Context | 
     if any(t in line for t in SPAM_TRIGGERS):
         return
 
-    if len(line) >= 1000:
+    if len(line) >= 4000:
         return
 
     if "Thinking" in line or "Planning" in line:
@@ -1074,8 +1074,9 @@ async def _read_vibe_stream(
     try:
         while True:
             # Use read() instead of readline() to handle status lines without newlines
-            # Apply a timeout to avoid hangs if the process stops writing but won't exit
-            data = await asyncio.wait_for(stream.read(1024), timeout=timeout_s)
+            # Apply a per-chunk timeout (120s) to detect hangs faster than full task timeout
+            chunk_timeout = min(120.0, timeout_s)
+            data = await asyncio.wait_for(stream.read(1024), timeout=chunk_timeout)
             if not data:
                 break
 
