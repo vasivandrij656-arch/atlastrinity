@@ -153,4 +153,5 @@ async def test_final_enhancements():
     print("✅ Total: 44 інструменти (з 42 + 2 нові)")
 
 
-asyncio.run(test_final_enhancements())
+if __name__ == "__main__":
+    asyncio.run(test_final_enhancements())

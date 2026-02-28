@@ -384,4 +384,5 @@ async def final_comprehensive_test():
     }
 
 
-asyncio.run(final_comprehensive_test())
+if __name__ == "__main__":
+    asyncio.run(final_comprehensive_test())

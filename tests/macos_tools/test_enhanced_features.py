@@ -139,4 +139,5 @@ async def test_enhanced_features():
     print("=" * 80)
 
 
-asyncio.run(test_enhanced_features())
+if __name__ == "__main__":
+    asyncio.run(test_enhanced_features())

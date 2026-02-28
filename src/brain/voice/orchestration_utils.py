@@ -116,6 +116,11 @@ class VoiceOrchestrationMixin:
         """Callback to handle live log notifications from MCP servers."""
         now = time.time()
 
+        # [VIBE-POLISH] Always print Vibe logs to the terminal for the user
+        if server_name == "vibe":
+            # Using light blue for Vibe visibility
+            print(f"\033[94m[VIBE]\033[0m {msg}", file=sys.stderr, flush=True)
+
         significant_markers = ["[VIBE-THOUGHT]", "[VIBE-ACTION]", "[VIBE-LIVE]"]
         if server_name == "vibe" and any(marker in msg for marker in significant_markers):
             speech_text = msg
