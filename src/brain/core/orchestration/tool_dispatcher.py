@@ -601,7 +601,9 @@ class ToolDispatcher:
             # --- NEW: Placeholder Hallucination Check ---
             placeholder_error = self._check_for_placeholders(normalized_args)
             if placeholder_error:
-                logger.warning(f"[DISPATCHER] Placeholder hallucination blocked: {placeholder_error}")
+                logger.warning(
+                    f"[DISPATCHER] Placeholder hallucination blocked: {placeholder_error}"
+                )
                 return {
                     "success": False,
                     "error": f"Placeholder hallucination detected: {placeholder_error}. Please resolve placeholders like <ID> or ${{VAR}} to actual values before calling tools.",
@@ -776,12 +778,7 @@ class ToolDispatcher:
         """
         # 1. Handle List Result (Common cause of 'AttributeError: list has no attribute get')
         if isinstance(result, list):
-            result = {
-                "success": True,
-                "content": result,
-                "result": str(result),
-                "is_list": True
-            }
+            result = {"success": True, "content": result, "result": str(result), "is_list": True}
 
         # 2. Convert CallToolResult (SDK object) to dict if it's not already
         if not isinstance(result, dict):
@@ -797,7 +794,7 @@ class ToolDispatcher:
             # Many agents expect 'content' explicitly (like Tetyana)
             if hasattr(result, "content"):
                 processed["content"] = result.content
-            
+
             result = processed
 
         # 2b. JSON Auto-Parsing: If result content is a JSON string, parse it
@@ -823,7 +820,7 @@ class ToolDispatcher:
         Updates the 'result' dictionary in-place with 'structured_data' if successful.
         """
         import json
-        
+
         content = result.get("content")
         if not content or not isinstance(content, list):
             return
@@ -835,19 +832,22 @@ class ToolDispatcher:
                 text = item.text
             elif isinstance(item, dict) and item.get("type") == "text":
                 text = item.get("text")
-            
+
             if text and isinstance(text, str):
                 text_stripped = text.strip()
                 # Simple heuristic for JSON array or object
-                if (text_stripped.startswith("[") and text_stripped.endswith("]")) or \
-                   (text_stripped.startswith("{") and text_stripped.endswith("}")):
+                if (text_stripped.startswith("[") and text_stripped.endswith("]")) or (
+                    text_stripped.startswith("{") and text_stripped.endswith("}")
+                ):
                     try:
                         parsed = json.loads(text_stripped)
                         if parsed:
                             result["structured_data"] = parsed
                             # Also update the 'result' string representation for older LLM prompts
-                            # result["result"] = parsed 
-                            logger.info(f"[DISPATCHER] Auto-parsed JSON content for tool '{result.get('tool')}'")
+                            # result["result"] = parsed
+                            logger.info(
+                                f"[DISPATCHER] Auto-parsed JSON content for tool '{result.get('tool')}'"
+                            )
                             break
                     except Exception:
                         pass
@@ -855,12 +855,13 @@ class ToolDispatcher:
     def _check_for_placeholders(self, args: dict[str, Any]) -> str | None:
         """Scan arguments for common LLM placeholder patterns."""
         import re
+
         patterns = [
-            r"<[A-Z0-9_]+>",        # <CALCULATOR_PID>
-            r"\${[A-Z0-9_]+}",      # ${VAR}
+            r"<[A-Z0-9_]+>",  # <CALCULATOR_PID>
+            r"\${[A-Z0-9_]+}",  # ${VAR}
             r"\[INSERT_[A-Z_]+\]",  # [INSERT_PID_HERE]
         ]
-        
+
         for k, v in args.items():
             if not isinstance(v, str):
                 continue

@@ -231,7 +231,9 @@ const MACOS_USE_TOOLS: BridgedToolDefinition[] = [
     description: 'List all running applications with PIDs, bundle IDs, and window info',
     backendId: MACOS_USE,
     remoteToolName: 'macos-use_list_running_apps',
-    schema: z.object({}),
+    schema: z.object({
+      filter: z.string().optional().describe('Optional: Filter by application name or bundle identifier.'),
+    }),
     categories: [ToolCategory.APP_MANAGEMENT],
     priority: 2,
     tags: ['apps', 'running', 'pid', 'list'],
