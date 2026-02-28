@@ -61,6 +61,34 @@ class TaskPlan:
     context: dict[str, Any] = field(default_factory=dict)
 
 
+def _build_input_schema(tool_def: dict[str, Any]) -> dict[str, Any]:
+    """Build a JSON Schema object from a tool definition.
+
+    Shared utility used when building tool discovery schemas for Atlas
+    in both chat and solo_task modes.
+    """
+    schema: dict[str, Any] = {
+        "type": "object",
+        "properties": {},
+        "required": tool_def.get("required", []),
+    }
+    types_map = tool_def.get("types", {})
+    type_to_schema = {
+        "str": "string",
+        "int": "number",
+        "float": "number",
+        "bool": "boolean",
+        "list": "array",
+        "dict": "object",
+        "any": "string",
+    }
+    for fld in tool_def.get("required", []) + tool_def.get("optional", []):
+        t_raw = types_map.get(fld, "string")
+        t = type_to_schema.get(t_raw, t_raw)
+        schema["properties"][fld] = {"type": t, "description": fld}
+    return schema
+
+
 class Atlas(BaseAgent):
     """Atlas - The Strategist
 
@@ -76,6 +104,8 @@ class Atlas(BaseAgent):
     DISPLAY_NAME = AgentPrompts.ATLAS["DISPLAY_NAME"]
     VOICE = AgentPrompts.ATLAS["VOICE"]
     COLOR = AgentPrompts.ATLAS["COLOR"]
+
+    _init_logged: bool = False  # Class-level: log init only once per process
 
     @property
     def system_prompt(self) -> str:
@@ -113,10 +143,12 @@ class Atlas(BaseAgent):
             self.llm = create_llm(model_name=final_model, max_tokens=max_tokens_standard)
             self.llm_deep = create_llm(model_name=deep_model, max_tokens=max_tokens_deep)
 
-            logger.info(
-                f"[ATLAS] Initialized with models: {final_model} (standard), {deep_model} (deep persona) | "
-                f"max_tokens: {max_tokens_standard} (standard), {max_tokens_deep} (deep persona)"
-            )
+            if not Atlas._init_logged:
+                logger.info(
+                    f"[ATLAS] Initialized with models: {final_model} (standard), {deep_model} (deep persona) | "
+                    f"max_tokens: {max_tokens_standard} (standard), {max_tokens_deep} (deep persona)"
+                )
+                Atlas._init_logged = True
 
         # Optimization: Tool Cache
         self._cached_info_tools: list[dict[str, Any]] = []
@@ -535,27 +567,6 @@ Respond in JSON:
 
                 from src.brain.mcp.mcp_registry import TOOL_SCHEMAS
 
-                def _build_input_schema(tool_def: dict[str, Any]) -> dict[str, Any]:
-                    schema = {
-                        "type": "object",
-                        "properties": {},
-                        "required": tool_def.get("required", []),
-                    }
-                    types_map = tool_def.get("types", {})
-                    type_to_schema = {
-                        "str": "string",
-                        "int": "number",
-                        "float": "number",
-                        "bool": "boolean",
-                        "list": "array",
-                        "dict": "object",
-                        "any": "string",
-                    }
-                    for field in tool_def.get("required", []) + tool_def.get("optional", []):
-                        t_raw = types_map.get(field, "string")
-                        t = type_to_schema.get(t_raw, t_raw)
-                        schema["properties"][field] = {"type": t, "description": field}
-                    return schema
 
                 for s_name in active_servers:
                     server_tools = [
@@ -700,27 +711,6 @@ Respond in JSON:
         try:
             from src.brain.mcp.mcp_registry import TOOL_SCHEMAS
 
-            def _build_input_schema(tool_def: dict[str, Any]) -> dict[str, Any]:
-                schema = {
-                    "type": "object",
-                    "properties": {},
-                    "required": tool_def.get("required", []),
-                }
-                types_map = tool_def.get("types", {})
-                type_to_schema = {
-                    "str": "string",
-                    "int": "number",
-                    "float": "number",
-                    "bool": "boolean",
-                    "list": "array",
-                    "dict": "object",
-                    "any": "string",
-                }
-                for field in tool_def.get("required", []) + tool_def.get("optional", []):
-                    t_raw = types_map.get(field, "string")
-                    t = type_to_schema.get(t_raw, t_raw)
-                    schema["properties"][field] = {"type": t, "description": field}
-                return schema
 
             for s_name in active_servers:
                 server_tools = [

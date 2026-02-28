@@ -162,7 +162,7 @@ except Exception:
         return default
 
     VIBE_BINARY = "vibe"
-    DEFAULT_TIMEOUT_S = 1801.0
+    DEFAULT_TIMEOUT_S = 3601.0
     MAX_OUTPUT_CHARS = 500000
     CONFIG_ROOT = Path.home() / ".config" / "atlastrinity"
     PROJECT_ROOT = Path(__file__).parent.parent.parent
@@ -675,7 +675,10 @@ def _prepare_temp_vibe_home(model_alias: str) -> str:
         config_text = "\n".join(toml_lines)
         (temp_path / "config.toml").write_text(config_text, encoding="utf-8")
         logger.debug(f"[VIBE] Prepared temp VIBE_HOME at {temp_dir} with model={model_alias}")
-        logger.debug(f"[VIBE] Generated TOML:\n{config_text}")
+        logger.debug(
+            f"[VIBE] Generated TOML for model={model_alias} "
+            f"({len(config_text)} chars, {len(toml_lines)} lines)"
+        )
         return temp_dir
 
     except Exception as e:
@@ -1875,7 +1878,7 @@ async def vibe_implement_feature(
     context_files: list[str] | None = None,
     constraints: str | None = None,
     cwd: str | None = None,
-    timeout_s: float | None = 3601,
+    timeout_s: float | None = None,
     session_id: str | None = None,
     # Enhanced options for software development
     quality_checks: bool = True,
@@ -1895,7 +1898,7 @@ async def vibe_implement_feature(
         context_files: List of relevant file paths
         constraints: Technical constraints or guidelines
         cwd: Working directory
-        timeout_s: Timeout (default: 1200s for deep work)
+        timeout_s: Timeout (default: from config DEFAULT_TIMEOUT_S for deep work)
         quality_checks: Run lint/syntax checks after implementation (default: True)
         iterative_review: Self-review and fix issues until clean (default: True)
         max_iterations: Maximum review/fix iterations (default: 3)
@@ -2041,7 +2044,7 @@ EXECUTE NOW
             ctx=ctx,
             prompt=prompt,
             cwd=cwd,
-            timeout_s=timeout_s or 3601,
+            timeout_s=timeout_s or DEFAULT_TIMEOUT_S,
             model=model or _current_model or AGENT_MODEL_OVERRIDE,
             mode="auto-approve",
             session_id=session_id,
@@ -2109,7 +2112,7 @@ async def vibe_code_review(
             ctx=ctx,
             prompt="\n".join(prompt_parts),
             cwd=cwd,
-            timeout_s=timeout_s or 300,
+            timeout_s=timeout_s or DEFAULT_TIMEOUT_S,
             model=model or _current_model or AGENT_MODEL_OVERRIDE,
             mode="plan",  # Read-only mode
             session_id=session_id,
@@ -2165,7 +2168,7 @@ async def vibe_smart_plan(
             ctx=ctx,
             prompt="\n".join(prompt_parts),
             cwd=cwd,
-            timeout_s=timeout_s or 300,
+            timeout_s=timeout_s or DEFAULT_TIMEOUT_S,
             mode="plan",
             session_id=session_id,
             max_turns=5,
