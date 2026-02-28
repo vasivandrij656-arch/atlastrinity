@@ -2576,8 +2576,17 @@ class Trinity(TourMixin, VoiceOrchestrationMixin):
             # If depth is getting critical, ask user before crashing
             critical_depth = shared_context.max_recursive_depth - 1
             if depth >= critical_depth:
-                logger.warning(f"[ORCHESTRATOR] ⚠️ Critical recursion depth {depth} reached. Asking user.")
-                strategy = type('Strategy', (), {'action': 'ASK_USER', 'reason': f"I've tried {depth} levels of recovery for step {step_id} and I'm still stuck. Should I keep trying or do you want to take over?"})()
+                logger.warning(
+                    f"[ORCHESTRATOR] ⚠️ Critical recursion depth {depth} reached. Asking user."
+                )
+                strategy = type(
+                    "Strategy",
+                    (),
+                    {
+                        "action": "ASK_USER",
+                        "reason": f"I've tried {depth} levels of recovery for step {step_id} and I'm still stuck. Should I keep trying or do you want to take over?",
+                    },
+                )()
                 should_retry, _ = await self._handle_strategy_ask_user(strategy, step_id)
                 if not should_retry:
                     raise Exception(f"Recovery aborted by user at critical depth {depth}.")
