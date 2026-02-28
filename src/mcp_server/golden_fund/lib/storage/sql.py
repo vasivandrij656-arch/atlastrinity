@@ -85,7 +85,9 @@ class SQLStorage:
             logger.error(f"Failed to store dataset {dataset_name}: {e}")
             return StorageResult(success=False, target=table_name, error=str(e))
 
-    def _handle_append(self, df: pd.DataFrame, table_name: str, schema_sql: str, conn: sqlite3.Connection):
+    def _handle_append(
+        self, df: pd.DataFrame, table_name: str, schema_sql: str, conn: sqlite3.Connection
+    ):
         """Handle appending data with optional schema evolution."""
         schema_intel = self._get_schema_intelligence()
         if schema_intel:
@@ -96,16 +98,25 @@ class SQLStorage:
                     if stmt.strip():
                         conn.execute(stmt)
                 self._persist_schema_to_file(table_name, conn)
-        
+
         df.to_sql(table_name, conn, if_exists="append", index=False)
 
-    def _handle_create_or_replace(self, df: pd.DataFrame, table_name: str, dataset_name: str, if_exists: Literal["fail", "replace", "append"], conn: sqlite3.Connection):
+    def _handle_create_or_replace(
+        self,
+        df: pd.DataFrame,
+        table_name: str,
+        dataset_name: str,
+        if_exists: Literal["fail", "replace", "append"],
+        conn: sqlite3.Connection,
+    ):
         """Handle creating a new table or replacing an existing one."""
         schema_intel = self._get_schema_intelligence()
         created_smart = False
 
         if schema_intel:
-            create_stmt = schema_intel.generate_schema(df, table_name, context=f"Dataset: {dataset_name}")
+            create_stmt = schema_intel.generate_schema(
+                df, table_name, context=f"Dataset: {dataset_name}"
+            )
             if create_stmt:
                 logger.info(f"Creating smart schema for {table_name}")
                 if if_exists == "replace":
@@ -122,12 +133,20 @@ class SQLStorage:
         """Lazy load SchemaIntelligence."""
         try:
             from ..schema_intelligence import SchemaIntelligence
+
             return SchemaIntelligence()
         except ImportError:
             logger.warning("SchemaIntelligence not available")
             return None
 
-    def _update_metadata(self, conn: sqlite3.Connection, dataset_name: str, table_name: str, source_url: str, rows: int):
+    def _update_metadata(
+        self,
+        conn: sqlite3.Connection,
+        dataset_name: str,
+        table_name: str,
+        source_url: str,
+        rows: int,
+    ):
         """Update dataset metadata in sqlite."""
         conn.execute(
             """

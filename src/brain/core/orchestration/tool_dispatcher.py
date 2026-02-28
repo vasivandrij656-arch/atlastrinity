@@ -544,7 +544,9 @@ class ToolDispatcher:
         self._total_calls = 0
         self._macos_use_calls = 0
 
-    def _get_arg(self, args: dict[str, Any], keys: list[str], pop: bool = False, default: Any = None) -> Any:
+    def _get_arg(
+        self, args: dict[str, Any], keys: list[str], pop: bool = False, default: Any = None
+    ) -> Any:
         """Helper to extract an argument from a list of possible keys."""
         for key in keys:
             if key in args:
@@ -1750,7 +1752,9 @@ class ToolDispatcher:
 
         # Argument normalization
         if "prompt" not in args:
-            args["prompt"] = self._get_arg(args, ["objective", "question", "error_message", "action"])
+            args["prompt"] = self._get_arg(
+                args, ["objective", "question", "error_message", "action"]
+            )
 
         # Normalize 'goal' for vibe_implement_feature
         if resolved_tool == "vibe_implement_feature" and "goal" not in args:

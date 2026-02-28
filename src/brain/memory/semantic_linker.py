@@ -42,50 +42,52 @@ class SemanticLinker:
         namespace: str = "global",
     ) -> list[dict[str, Any]]:
         """Scans existing DATASET nodes to find potential overlaps."""
-        links = []
-
         # 1. Identify potential keys in the new dataset
         new_keys = self._identify_possible_keys(new_df)
         if not new_keys:
             return []
 
-        # 2. Fetch all other DATASET nodes in the same namespace (or global)
+        # 2. Fetch all other DATASET nodes
         existing_graph = await knowledge_graph.get_graph_data(namespace=namespace)
         dataset_nodes = [
             n for n in existing_graph["nodes"] if n["type"] == "DATASET" and n["id"] != new_node_id
         ]
 
+        links = []
         for ds_node in dataset_nodes:
-            ds_attrs = ds_node.get("attributes", {})
-            ds_columns = [str(c).lower() for c in ds_attrs.get("columns", [])]
-
-            for n_key in new_keys:
-                for e_col in ds_columns:
-                    # Check for exact match, substring match, or alias match
-                    is_match = False
-                    if n_key == e_col:
-                        is_match = True
-                    elif n_key in e_col or e_col in n_key:
-                        # Ensure it's not too short (avoid 'i' in 'id' false positives)
-                        if len(n_key) > 2 and len(e_col) > 2:
-                            is_match = True
-
-                    if is_match:
-                        links.append(
-                            {
-                                "source": new_node_id,
-                                "target": str(ds_node["id"]),  # pyre-ignore
-                                "relation": "LINKED_TO",
-                                "attributes": {
-                                    "shared_key": n_key,
-                                    "matched_with": e_col,
-                                    "description": f"Semantic link discovered between '{n_key}' and '{e_col}'",
-                                },
-                            },
-                        )
-                        break  # Only one link per dataset pair for simplicity
+            link = self._check_dataset_for_links(new_node_id, new_keys, ds_node)
+            if link:
+                links.append(link)
 
         return links
+
+    def _check_dataset_for_links(
+        self, new_node_id: str, new_keys: list[str], ds_node: dict[str, Any]
+    ) -> dict[str, Any] | None:
+        """Helper to find first semantic match between new keys and existing dataset node."""
+        ds_attrs = ds_node.get("attributes", {})
+        ds_columns = [str(c).lower() for c in ds_attrs.get("columns", [])]
+
+        for n_key in new_keys:
+            for e_col in ds_columns:
+                is_match = False
+                if n_key == e_col or (
+                    len(n_key) > 2 and len(e_col) > 2 and (n_key in e_col or e_col in n_key)
+                ):
+                    is_match = True
+
+                if is_match:
+                    return {
+                        "source": new_node_id,
+                        "target": str(ds_node["id"]),
+                        "relation": "LINKED_TO",
+                        "attributes": {
+                            "shared_key": n_key,
+                            "matched_with": e_col,
+                            "description": f"Semantic link discovered between '{n_key}' and '{e_col}'",
+                        },
+                    }
+        return None
 
     def _identify_possible_keys(self, df: pd.DataFrame) -> list[str]:
         """Uses heuristics to find columns that look like identifiers or linkable keys."""

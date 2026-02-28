@@ -115,7 +115,9 @@ def _enhance_with_temporal_logic(
             if len(results) >= 12:
                 break
             logger.info(f"[TEMPORAL INTUITION] Probing detected shadow year: {year}")
-            results += _search_ddg(query=f"{query_val.strip()} {year}", max_results=5, timeout_s=10.0)
+            results += _search_ddg(
+                query=f"{query_val.strip()} {year}", max_results=5, timeout_s=10.0
+            )
 
     # --- SEQUENTIAL DEEPENING (Fallback) ---
     if len(results) < 5:
@@ -135,7 +137,9 @@ def _enhance_with_temporal_logic(
     return results
 
 
-def _prioritize_results(results: list[dict[str, Any]], priority_domains: list[str]) -> list[dict[str, Any]]:
+def _prioritize_results(
+    results: list[dict[str, Any]], priority_domains: list[str]
+) -> list[dict[str, Any]]:
     """De-duplicate and prioritize results by domain."""
     prioritized = []
     others = []

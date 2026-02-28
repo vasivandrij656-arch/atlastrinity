@@ -14,28 +14,48 @@ class BaseAgent:
         """Parse JSON response from LLM with resilience."""
         text = str(content).strip()
 
-        # Try markdown JSON extraction
+        # 1. Try markdown JSON extraction
         if "```json" in text:
-            blocks = text.split("```json")
-            for block in blocks[1:]:
-                inner = block.split("`")[0].strip()
-                try:
-                    return cast("dict[str, Any]", json.loads(inner))
-                except json.JSONDecodeError:
-                    continue
+            result = self._extract_json_from_block(text, "```json")
+            if result:
+                return result
 
-        # Try generic code block extraction
+        # 2. Try generic code block extraction
         if "```" in text:
-            blocks = text.split("```")
-            for block in blocks[1:]:
-                inner = block.strip()
-                if inner.startswith("{") and "}" in inner:
-                    try:
-                        return cast("dict[str, Any]", json.loads(inner))
-                    except json.JSONDecodeError:
-                        pass
+            result = self._extract_json_from_block(text, "```")
+            if result:
+                return result
 
-        # Try natural JSON extraction
+        # 3. Try natural JSON extraction
+        result = self._extract_json_from_text(text)
+        if result:
+            return result
+
+        # 4. Fuzzy YAML parsing
+        try:
+            return self._parse_fuzzy_yaml(text)
+        except Exception:
+            pass
+
+        return {"raw": text}
+
+    def _extract_json_from_block(self, text: str, marker: str) -> dict[str, Any] | None:
+        """Extracts JSON from a specific markdown block."""
+        blocks = text.split(marker)
+        for block in blocks[1:]:
+            inner = block.split("`")[0].strip()
+            if not inner and "```" in block:  # Handle empty marker case
+                continue
+            try:
+                # Basic cleanup in case of nested blocks
+                if inner.startswith("{") and "}" in inner:
+                    return cast("dict[str, Any]", json.loads(inner))
+            except json.JSONDecodeError:
+                continue
+        return None
+
+    def _extract_json_from_text(self, text: str) -> dict[str, Any] | None:
+        """Attempts to find and parse raw JSON within a string."""
         try:
             start = text.find("{")
             end = text.rfind("}") + 1
@@ -44,14 +64,7 @@ class BaseAgent:
                 return cast("dict[str, Any]", json.loads(candidate))
         except (json.JSONDecodeError, Exception):
             pass
-
-        # Fuzzy YAML parsing
-        try:
-            return self._parse_fuzzy_yaml(text)
-        except Exception:
-            pass
-
-        return {"raw": text}
+        return None
 
     def _parse_fuzzy_yaml(self, text: str) -> dict[str, Any]:
         """Parse YAML-like key: value pairs."""

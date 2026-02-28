@@ -159,16 +159,22 @@ class SmartErrorRouter:
         self._cache = {}
         self._category_history: list[ErrorCategory] = []
         self._max_history = 10
-        
+
         # Pre-compile patterns for efficient matching
         self._patterns = {
-            ErrorCategory.INFRASTRUCTURE: re.compile("|".join(self.INFRASTRUCTURE_PATTERNS), re.IGNORECASE),
-            ErrorCategory.VERIFICATION: re.compile("|".join(self.VERIFICATION_PATTERNS), re.IGNORECASE),
+            ErrorCategory.INFRASTRUCTURE: re.compile(
+                "|".join(self.INFRASTRUCTURE_PATTERNS), re.IGNORECASE
+            ),
+            ErrorCategory.VERIFICATION: re.compile(
+                "|".join(self.VERIFICATION_PATTERNS), re.IGNORECASE
+            ),
             ErrorCategory.TRANSIENT: re.compile("|".join(self.TRANSIENT_PATTERNS), re.IGNORECASE),
             ErrorCategory.LOGIC: re.compile("|".join(self.LOGIC_PATTERNS), re.IGNORECASE),
             ErrorCategory.STATE: re.compile("|".join(self.STATE_PATTERNS), re.IGNORECASE),
             ErrorCategory.CI_FAILURE: re.compile("|".join(self.CI_PATTERNS), re.IGNORECASE),
-            ErrorCategory.ENVIRONMENT: re.compile("|".join(self.ENVIRONMENT_PATTERNS), re.IGNORECASE),
+            ErrorCategory.ENVIRONMENT: re.compile(
+                "|".join(self.ENVIRONMENT_PATTERNS), re.IGNORECASE
+            ),
             ErrorCategory.PERMISSION: re.compile("|".join(self.PERMISSION_PATTERNS), re.IGNORECASE),
             ErrorCategory.USER_INPUT: re.compile("|".join(self.USER_INPUT_PATTERNS), re.IGNORECASE),
         }
