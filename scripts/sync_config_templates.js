@@ -93,8 +93,18 @@ const CONFIG_MAPPINGS = [
     description: 'Mikrotik Logger Script',
   },
   {
-    template: path.join(PROJECT_ROOT, 'config', 'launchd', 'com.antigravity.mikrotik.logger.plist.template'),
-    destination: path.join(os.homedir(), 'Library', 'LaunchAgents', 'com.antigravity.mikrotik.logger.plist'),
+    template: path.join(
+      PROJECT_ROOT,
+      'config',
+      'launchd',
+      'com.antigravity.mikrotik.logger.plist.template',
+    ),
+    destination: path.join(
+      os.homedir(),
+      'Library',
+      'LaunchAgents',
+      'com.antigravity.mikrotik.logger.plist',
+    ),
     description: 'Mikrotik Logger LaunchAgent',
   },
 ];
