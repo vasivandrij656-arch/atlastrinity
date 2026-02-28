@@ -420,6 +420,16 @@ class MCPManager:
 
                         # Format message
                         msg = data
+                        
+                        # Route logs to the main console for visibility (e.g. Vibe progress)
+                        if level_str in ["error", "critical"]:
+                            logger.error(f"[{server_name.upper()}] {msg}")
+                        elif level_str == "warning":
+                            logger.warning(f"[{server_name.upper()}] {msg}")
+                        elif level_str == "debug":
+                            logger.debug(f"[{server_name.upper()}] {msg}")
+                        else:
+                            logger.info(f"[{server_name.upper()}] {msg}")
 
                         # Notify callbacks (e.g. for WebSocket limits)
                         for cb in self._log_callbacks:

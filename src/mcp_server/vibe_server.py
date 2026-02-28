@@ -896,6 +896,8 @@ def _prepare_vibe_env(env: dict[str, str] | None) -> dict[str, str]:
     process_env["NO_COLOR"] = "1"
     process_env["PYTHONUNBUFFERED"] = "1"
     process_env["TEXTUAL_ALLOW_NON_INTERACTIVE"] = "1"
+    process_env["VIBE_NON_INTERACTIVE"] = "1"
+    process_env["VIBE_AUTO_APPROVE"] = "1"
     process_env["VIBE_DEBUG_RAW"] = "false"
     process_env.update(config.get_environment())
     if env:
@@ -1085,24 +1087,35 @@ async def _read_vibe_stream(
     ctx: Context | None,
     process: asyncio.subprocess.Process | None = None,
 ) -> None:
-    """Read stream in chunks to handle TUI artifacts and provide real-time logging."""
+    """Read stream in chunks with short intervals to allow concurrent prompt detection."""
+    chunk_timeout = 5.0  # Polling interval to avoid long-read deadlocks
+    start_time = asyncio.get_event_loop().time()
+
     try:
         while True:
-            # Use read() instead of readline() to handle status lines without newlines
-            # Wait up to the full timeout_s per chunk. The outer task also enforces total timeout.
-            data = await asyncio.wait_for(stream.read(1024), timeout=timeout_s)
-            if not data:
+            # Check elapsed time against total timeout
+            if asyncio.get_event_loop().time() - start_time > timeout_s:
+                logger.warning(f"[VIBE] Total timeout reached for {stream_name} reader")
                 break
 
-            chunks.append(data)
+            try:
+                # Use a small timeout for individual reads to allow the loop to pulse
+                data = await asyncio.wait_for(stream.read(1024), timeout=chunk_timeout)
+                if not data:
+                    break
+                chunks.append(data)
 
-            # For logging, we still try to process lines if they exist in the chunk
-            text = data.decode(errors="replace")
-            for line in text.split("\n"):
-                if line.strip():
-                    await _handle_vibe_line(line, stream_name, ctx, process=process)
-    except TimeoutError:
-        logger.warning(f"[VIBE] Read timeout on {stream_name} after {timeout_s}s")
+                # Process results immediately
+                text = data.decode(errors="replace")
+                for line in text.split("\n"):
+                    if line.strip():
+                        await _handle_vibe_line(line, stream_name, ctx, process=process)
+            except TimeoutError:
+                # Pulse: Process is still alive but hasn't sent data. 
+                # This is normal, continue waiting.
+                if process and process.returncode is not None:
+                    break
+                continue
     except Exception as e:
         logger.debug(f"[VIBE] Error reading {stream_name} stream: {e}")
 
