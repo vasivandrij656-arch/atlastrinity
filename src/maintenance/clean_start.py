@@ -17,6 +17,8 @@ TARGET_SIGNATURES = [
     "src.mcp_server.vibe_server",  # Vibe Python Server
     "copilot_vibe_proxy.py",  # Copilot Proxy
     "vibe_windsurf_proxy.py",  # Windsurf Proxy
+    ".local/bin/vibe",  # Vibe CLI Binary
+    "vibe_cli",  # Vibe CLI Process Identity
     "electron .",  # Main Electron App
     "vite",  # Vite Renderer Dev Server
     "server-filesystem",  # @modelcontextprotocol/server-filesystem

@@ -977,7 +977,19 @@ async def _handle_vibe_line(
     await _format_and_emit_vibe_log(line, stream_name, ctx)
 
     # NEW: Detect interactive prompts from Vibe (Iteration 4)
-    if "Approve? [Y/n]" in line or "Confirm [Y/n]" in line or "Execute? [Y/n]" in line:
+    # Added more patterns to support Vibe 2.x variations
+    patterns = [
+        "Approve? [Y/n]",
+        "Confirm [Y/n]",
+        "Execute? [Y/n]",
+        "Proceed? [Y/n]",
+        "Continue? [Y/n]",
+        "Apply changes? [Y/n]",
+        "Do you want to",
+        "Type 'y' to",
+        "Press Enter to",
+    ]
+    if any(p in line for p in patterns):
         await _auto_confirm_vibe_action(line, ctx, process)
 
 
