@@ -6,7 +6,7 @@
     <string>com.antigravity.mikrotik.logger</string>
     <key>ProgramArguments</key>
     <array>
-        <string>/usr/bin/python3</string>
+        <string>${PROJECT_ROOT}/.venv/bin/python</string>
         <string>-u</string>
         <string>${CONFIG_ROOT}/scripts/mikrotik_logger.py</string>
     </array>
