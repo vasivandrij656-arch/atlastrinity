@@ -110,7 +110,7 @@ const App: React.FC = () => {
   }, []);
 
   const isTourActive = Boolean(mapData.agentView);
-  const pollInterval = isTourActive ? 1000 : 3000;
+  const pollInterval = isTourActive ? 1000 : 5000;
 
   // Handle backend-driven map display triggers (showMap: True)
   useEffect(() => {

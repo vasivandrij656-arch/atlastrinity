@@ -5,6 +5,7 @@ Exposes the orchestrator via FastAPI for Electron IPC with monitoring integratio
 # Standard library imports
 import asyncio
 import io
+import logging
 import os
 import sys
 import tempfile
@@ -34,6 +35,24 @@ warnings.filterwarnings("ignore", message=".*torch.nn.utils.weight_norm is depre
 warnings.filterwarnings(
     "ignore", message=".*make_pad_mask with a list of lengths is not tracable.*"
 )
+
+
+class LogNoiseFilter(logging.Filter):
+    """Filter to suppress repetitive 200 OK logs for polling endpoints."""
+
+    def filter(self, record):
+        # record.msg usually contains the access log string for uvicorn.access
+        msg = record.getMessage()
+        # Suppress 200 OK for frequent polling endpoints
+        noisy_endpoints = [
+            "GET /api/state",
+            "GET /api/health",
+            "GET /api/monitoring/metrics",
+            "GET /api/monitoring/processes",
+        ]
+        if any(endpoint in msg for endpoint in noisy_endpoints) and " 200 OK" in msg:
+            return False
+        return True
 
 # Type hints for static type checking
 if TYPE_CHECKING:
@@ -995,6 +1014,10 @@ class WhisperMCPServer:
 
 def main():
     import uvicorn
+
+    # Apply noise filter to uvicorn access logs
+    access_logger = logging.getLogger("uvicorn.access")
+    access_logger.addFilter(LogNoiseFilter())
 
     uvicorn.run(app, host="0.0.0.0", port=8000)  # nosec B104
 
