@@ -145,7 +145,7 @@ try:
 
     VIBE_BINARY: str = get_config_value("mcp.vibe", "binary", "vibe")
     # Timeout is now controlled by vibe_config.toml (eff_timeout logic)
-    DEFAULT_TIMEOUT_S: float = 1800.0
+    DEFAULT_TIMEOUT_S: float = 3601.0
     MAX_OUTPUT_CHARS: int = int(get_config_value("mcp.vibe", "max_output_chars", 500000))
     VIBE_WORKSPACE = get_config_value("mcp.vibe", "workspace", str(CONFIG_ROOT / "vibe_workspace"))
     VIBE_CONFIG_FILE = get_config_value("mcp.vibe", "config_file", None)
@@ -1647,7 +1647,7 @@ async def vibe_analyze_error(
         log_context: Recent log entries for context
         recovery_history: List of past recovery attempts or a summary string
         cwd: Working directory
-        timeout_s: Timeout in seconds (default: 1800)
+        timeout_s: Timeout in seconds (default: from config DEFAULT_TIMEOUT_S)
         auto_fix: Automatically apply fixes (default: True)
         step_action: The action that was being performed when the error occurred
         expected_result: What was expected to happen

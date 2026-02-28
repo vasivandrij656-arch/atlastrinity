@@ -256,7 +256,7 @@ class ParallelHealingManager:
                         "expected_result": task.step_context.get("expected_result", ""),
                     },
                 ),
-                timeout=900,
+                timeout=3601,
             )
 
             task.vibe_analysis = self._extract_text(vibe_result)
