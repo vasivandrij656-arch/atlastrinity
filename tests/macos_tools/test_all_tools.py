@@ -217,4 +217,5 @@ async def test_all_tools():
     return results
 
 
-asyncio.run(test_all_tools())
+if __name__ == "__main__":
+    asyncio.run(test_all_tools())

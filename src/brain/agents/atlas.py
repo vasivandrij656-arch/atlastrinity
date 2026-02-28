@@ -533,20 +533,31 @@ Respond in JSON:
 
                 logger.info(f"[ATLAS] Proactive tool discovery on servers: {active_servers}")
 
-                # Parallel tool listing
-                server_tools = await asyncio.gather(
-                    *[mcp_manager.list_tools(s) for s in active_servers],
-                    return_exceptions=True,
-                )
+                from src.brain.mcp.mcp_registry import TOOL_SCHEMAS
 
-                for s_name, t_list in zip(list(active_servers), server_tools, strict=True):
-                    if isinstance(t_list, Exception | BaseException):
-                        logger.warning(f"[ATLAS] Could not list tools for {s_name}: {t_list}")
-                        continue
+                def _build_input_schema(tool_def: dict[str, Any]) -> dict[str, Any]:
+                    schema = {"type": "object", "properties": {}, "required": tool_def.get("required", [])}
+                    types_map = tool_def.get("types", {})
+                    for field in tool_def.get("required", []) + tool_def.get("optional", []):
+                        t = types_map.get(field, "string")
+                        if t == "str": t = "string"
+                        elif t in ("int", "float"): t = "number"
+                        elif t == "bool": t = "boolean"
+                        elif t == "list": t = "array"
+                        elif t == "dict": t = "object"
+                        elif t == "any": t = "string"
+                        schema["properties"][field] = {"type": t, "description": field}
+                    return schema
 
-                    # Explicitly cast to list to satisfy type checkers
-                    for tool in cast("list", t_list):
-                        t_low, d_low = tool.name.lower(), tool.description.lower()
+                for s_name in active_servers:
+                    server_tools = [
+                        (name, schema) for name, schema in TOOL_SCHEMAS.items()
+                        if schema.get("server") == s_name and "alias_for" not in schema
+                    ]
+
+                    for t_name, t_schema in server_tools:
+                        t_low = t_name.lower()
+                        d_low = t_schema.get("description", "").lower()
                         # Broader 'safe' matching for solo research
                         is_safe = any(
                             p in t_low or p in d_low
@@ -584,9 +595,9 @@ Respond in JSON:
                         if is_safe and (not is_mut or "tour" in t_low):
                             new_tools.append(
                                 {
-                                    "name": f"{s_name}_{tool.name}",
-                                    "description": tool.description,
-                                    "input_schema": tool.inputSchema,
+                                    "name": f"{s_name}_{t_name}",
+                                    "description": t_schema.get("description", ""),
+                                    "input_schema": _build_input_schema(t_schema),
                                 },
                             )
 
@@ -678,17 +689,31 @@ Respond in JSON:
 
         new_tools: list[dict[str, Any]] = []
         try:
-            server_tools = await asyncio.gather(
-                *[mcp_manager.list_tools(s) for s in active_servers],
-                return_exceptions=True,
-            )
+            from src.brain.mcp.mcp_registry import TOOL_SCHEMAS
 
-            for s_name, t_list in zip(list(active_servers), server_tools, strict=True):
-                if isinstance(t_list, Exception | BaseException):
-                    continue
-                for tool in cast("list", t_list):
-                    t_low = tool.name.lower()
-                    d_low = tool.description.lower() if tool.description else ""
+            def _build_input_schema(tool_def: dict[str, Any]) -> dict[str, Any]:
+                schema = {"type": "object", "properties": {}, "required": tool_def.get("required", [])}
+                types_map = tool_def.get("types", {})
+                for field in tool_def.get("required", []) + tool_def.get("optional", []):
+                    t = types_map.get(field, "string")
+                    if t == "str": t = "string"
+                    elif t in ("int", "float"): t = "number"
+                    elif t == "bool": t = "boolean"
+                    elif t == "list": t = "array"
+                    elif t == "dict": t = "object"
+                    elif t == "any": t = "string"
+                    schema["properties"][field] = {"type": t, "description": field}
+                return schema
+
+            for s_name in active_servers:
+                server_tools = [
+                    (name, schema) for name, schema in TOOL_SCHEMAS.items()
+                    if schema.get("server") == s_name and "alias_for" not in schema
+                ]
+
+                for t_name, t_schema in server_tools:
+                    t_low = t_name.lower()
+                    d_low = t_schema.get("description", "").lower()
                     is_safe = any(
                         p in t_low or p in d_low
                         for p in [
@@ -736,9 +761,9 @@ Respond in JSON:
                     if is_safe and not is_mut:
                         new_tools.append(
                             {
-                                "name": f"{s_name}_{tool.name}",
-                                "description": tool.description,
-                                "input_schema": tool.inputSchema,
+                                "name": f"{s_name}_{t_name}",
+                                "description": t_schema.get("description", ""),
+                                "input_schema": _build_input_schema(t_schema),
                             }
                         )
 
