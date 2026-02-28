@@ -4,10 +4,10 @@ import re
 import subprocess
 import time
 from datetime import datetime
-from typing import Any
+from typing import Any, List, Dict, Optional
 
 # Configuration
-LOG_DIR = "/Users/dev/.config/atlastrinity/logs/mikrotik"
+LOG_DIR = "${CONFIG_ROOT}/logs/mikrotik"
 MAX_SIZE = 5 * 1024 * 1024  # Increased to 5MB
 STATE_FILE = os.path.join(LOG_DIR, ".last_id")
 SSH_CMD = ["ssh", "-p", "666", "-o", "StrictHostKeyChecking=no", "admin@192.168.88.1"]
@@ -41,7 +41,7 @@ def get_active_log_file():
         i += 1
 
 
-def run_ssh_cmd(command: str) -> str | None:  # Added type hints for command and return
+def run_ssh_cmd(command: str) -> Optional[str]:  # Added type hints for command and return
     cmd = [*SSH_CMD, command]
     try:
         result = subprocess.run(cmd, capture_output=True, text=True, timeout=30)
@@ -52,14 +52,14 @@ def run_ssh_cmd(command: str) -> str | None:  # Added type hints for command and
 
 
 def fetch_logs(
-    last_id: str | None = None,
-) -> list[dict[str, Any]]:  # Added type hints for last_id and return
+    last_id: Optional[str] = None,
+) -> List[Dict[str, Any]]:  # Added type hints for last_id and return
     stdout = run_ssh_cmd("/log print detail show-ids without-paging")
     if not stdout:
         return []
     lines = stdout.splitlines()
     logs = []
-    current_log: dict[str, Any] | None = None
+    current_log: Optional[Dict[str, Any]] = None
     for line in lines:
         line = line.strip()
         if not line:

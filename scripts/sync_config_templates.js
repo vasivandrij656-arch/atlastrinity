@@ -87,6 +87,16 @@ const CONFIG_MAPPINGS = [
     destination: path.join(VIBE_AGENTS_DIR, 'plan.toml'),
     description: 'Native Vibe Agent: Plan (Home)',
   },
+  {
+    template: path.join(PROJECT_ROOT, 'config', 'scripts', 'mikrotik_logger.py.template'),
+    destination: path.join(CONFIG_ROOT, 'scripts', 'mikrotik_logger.py'),
+    description: 'Mikrotik Logger Script',
+  },
+  {
+    template: path.join(PROJECT_ROOT, 'config', 'launchd', 'com.antigravity.mikrotik.logger.plist.template'),
+    destination: path.join(os.homedir(), 'Library', 'LaunchAgents', 'com.antigravity.mikrotik.logger.plist'),
+    description: 'Mikrotik Logger LaunchAgent',
+  },
 ];
 
 function ensureDirectoryExists(dirPath) {
