@@ -41,7 +41,7 @@
         "/tmp",
         "/private/tmp"
       ],
-      "connect_timeout": 300,
+      "connect_timeout": 3600,
       "description": "Official filesystem operations (pinned to @modelcontextprotocol/server-filesystem for reproducibility)",
       "disabled": false,
       "tier": 1,
@@ -53,7 +53,7 @@
     "sequential-thinking": {
       "transport": "stdio",
       "command": "bunx",
-      "connect_timeout": 300,
+      "connect_timeout": 3600,
       "args": [
         "@modelcontextprotocol/server-sequential-thinking"
       ],
@@ -72,7 +72,7 @@
     "googlemaps": {
       "transport": "stdio",
       "command": "${PROJECT_ROOT}/vendor/mcp-server-googlemaps/.build/release/mcp-server-googlemaps",
-      "connect_timeout": 60,
+      "connect_timeout": 3600,
       "description": "DEPRECATED: Now bridged through xcodebuild. DO NOT USE DIRECTLY. Google Maps (11 tools).",
       "env": {
         "GOOGLE_MAPS_API_KEY": "${GOOGLE_MAPS_API_KEY}"
@@ -90,7 +90,7 @@
         "${PROJECT_ROOT}/vendor/XcodeBuildMCP/build/cli.js",
         "mcp"
       ],
-      "connect_timeout": 600,
+      "connect_timeout": 3600,
       "env": {
         "MACOS_USE_BINARY_PATH": "${PROJECT_ROOT}/vendor/mcp-server-macos-use/.build/release/mcp-server-macos-use",
         "GOOGLEMAPS_BINARY_PATH": "${PROJECT_ROOT}/vendor/mcp-server-googlemaps/.build/release/mcp-server-googlemaps",
@@ -132,7 +132,7 @@
         "NODE_OPTIONS": "--max-old-space-size=4096",
         "DEBUG": "*"
       },
-      "connect_timeout": 120,
+      "connect_timeout": 3600,
       "description": "Chrome DevTools Protocol for browser automation (Note: requires Chrome 145+, current: 144 - may have issues)",
       "disabled": false,
       "tier": 4,
@@ -161,7 +161,7 @@
     "memory": {
       "transport": "stdio",
       "command": "${PROJECT_ROOT}/.venv/bin/python3",
-      "connect_timeout": 60,
+      "connect_timeout": 3600,
       "args": [
         "-m",
         "src.mcp_server.memory_server"
@@ -178,7 +178,7 @@
     "graph": {
       "transport": "stdio",
       "command": "${PROJECT_ROOT}/.venv/bin/python3",
-      "connect_timeout": 60,
+      "connect_timeout": 3600,
       "args": [
         "-m",
         "src.mcp_server.graph_server"
@@ -202,7 +202,7 @@
       "env": {
         "PUPPETEER_ALLOW_DANGEROUS": "true"
       },
-      "connect_timeout": 300,
+      "connect_timeout": 3600,
       "description": "High-speed Headless Browser (Puppeteer) for web searching, navigation, screenshots, element interaction, and JavaScript execution",
       "disabled": false,
       "tier": 3,
@@ -215,7 +215,7 @@
     "duckduckgo-search": {
       "transport": "stdio",
       "command": "${PROJECT_ROOT}/.venv/bin/python3",
-      "connect_timeout": 60,
+      "connect_timeout": 3600,
       "args": [
         "-m",
         "src.mcp_server.duckduckgo_search_server"
@@ -231,7 +231,7 @@
     "golden-fund": {
       "transport": "stdio",
       "command": "${PROJECT_ROOT}/.venv/bin/python3",
-      "connect_timeout": 60,
+      "connect_timeout": 3600,
       "args": [
         "-m",
         "src.mcp_server.golden_fund.server"
@@ -252,7 +252,7 @@
         "-y",
         "c7-mcp-server"
       ],
-      "connect_timeout": 300,
+      "connect_timeout": 3600,
       "description": "Context7 Documentation Server - Provides context-aware documentation for libraries and frameworks.",
       "disabled": false,
       "tier": 3,
@@ -265,7 +265,7 @@
     "whisper-stt": {
       "transport": "stdio",
       "command": "${PROJECT_ROOT}/.venv/bin/python3",
-      "connect_timeout": 60,
+      "connect_timeout": 3600,
       "args": [
         "-m",
         "src.mcp_server.whisper_server"
@@ -280,7 +280,7 @@
     "devtools": {
       "transport": "stdio",
       "command": "${PROJECT_ROOT}/.venv/bin/python3",
-      "connect_timeout": 300,
+      "connect_timeout": 3600,
       "args": [
         "-m",
         "src.mcp_server.devtools_server"
@@ -299,7 +299,7 @@
     "github": {
       "transport": "stdio",
       "command": "npx",
-      "connect_timeout": 300,
+      "connect_timeout": 3600,
       "args": [
         "-y",
         "@modelcontextprotocol/server-github"
@@ -319,7 +319,7 @@
     "redis": {
       "transport": "stdio",
       "command": "${PROJECT_ROOT}/.venv/bin/python3",
-      "connect_timeout": 60,
+      "connect_timeout": 3600,
       "args": [
         "-m",
         "src.mcp_server.redis_server"
@@ -336,7 +336,7 @@
     "data-analysis": {
       "transport": "stdio",
       "command": "${PROJECT_ROOT}/.venv/bin/python3",
-      "connect_timeout": 60,
+      "connect_timeout": 3600,
       "args": [
         "-m",
         "src.mcp_server.data_analysis_server"
@@ -357,7 +357,7 @@
         "-m",
         "src.mcp_server.postgres_server"
       ],
-      "connect_timeout": 300,
+      "connect_timeout": 3600,
       "description": "PostgreSQL Database Access (Experimental). Requires local PostgreSQL 17 installation.",
       "disabled": true,
       "tier": 3,
