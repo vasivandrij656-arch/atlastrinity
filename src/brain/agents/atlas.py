@@ -536,22 +536,31 @@ Respond in JSON:
                 from src.brain.mcp.mcp_registry import TOOL_SCHEMAS
 
                 def _build_input_schema(tool_def: dict[str, Any]) -> dict[str, Any]:
-                    schema = {"type": "object", "properties": {}, "required": tool_def.get("required", [])}
+                    schema = {
+                        "type": "object",
+                        "properties": {},
+                        "required": tool_def.get("required", []),
+                    }
                     types_map = tool_def.get("types", {})
+                    type_to_schema = {
+                        "str": "string",
+                        "int": "number",
+                        "float": "number",
+                        "bool": "boolean",
+                        "list": "array",
+                        "dict": "object",
+                        "any": "string",
+                    }
                     for field in tool_def.get("required", []) + tool_def.get("optional", []):
-                        t = types_map.get(field, "string")
-                        if t == "str": t = "string"
-                        elif t in ("int", "float"): t = "number"
-                        elif t == "bool": t = "boolean"
-                        elif t == "list": t = "array"
-                        elif t == "dict": t = "object"
-                        elif t == "any": t = "string"
+                        t_raw = types_map.get(field, "string")
+                        t = type_to_schema.get(t_raw, t_raw)
                         schema["properties"][field] = {"type": t, "description": field}
                     return schema
 
                 for s_name in active_servers:
                     server_tools = [
-                        (name, schema) for name, schema in TOOL_SCHEMAS.items()
+                        (name, schema)
+                        for name, schema in TOOL_SCHEMAS.items()
                         if schema.get("server") == s_name and "alias_for" not in schema
                     ]
 
@@ -692,22 +701,31 @@ Respond in JSON:
             from src.brain.mcp.mcp_registry import TOOL_SCHEMAS
 
             def _build_input_schema(tool_def: dict[str, Any]) -> dict[str, Any]:
-                schema = {"type": "object", "properties": {}, "required": tool_def.get("required", [])}
+                schema = {
+                    "type": "object",
+                    "properties": {},
+                    "required": tool_def.get("required", []),
+                }
                 types_map = tool_def.get("types", {})
+                type_to_schema = {
+                    "str": "string",
+                    "int": "number",
+                    "float": "number",
+                    "bool": "boolean",
+                    "list": "array",
+                    "dict": "object",
+                    "any": "string",
+                }
                 for field in tool_def.get("required", []) + tool_def.get("optional", []):
-                    t = types_map.get(field, "string")
-                    if t == "str": t = "string"
-                    elif t in ("int", "float"): t = "number"
-                    elif t == "bool": t = "boolean"
-                    elif t == "list": t = "array"
-                    elif t == "dict": t = "object"
-                    elif t == "any": t = "string"
+                    t_raw = types_map.get(field, "string")
+                    t = type_to_schema.get(t_raw, t_raw)
                     schema["properties"][field] = {"type": t, "description": field}
                 return schema
 
             for s_name in active_servers:
                 server_tools = [
-                    (name, schema) for name, schema in TOOL_SCHEMAS.items()
+                    (name, schema)
+                    for name, schema in TOOL_SCHEMAS.items()
                     if schema.get("server") == s_name and "alias_for" not in schema
                 ]
 
