@@ -57,7 +57,7 @@ const App: React.FC = () => {
   const showTimerRef = useRef<NodeJS.Timeout | null>(null);
   const hideTimerRef = useRef<NodeJS.Timeout | null>(null);
 
-  const DOCK_DELAY_MS = 1000;
+  const DOCK_DELAY_MS = 300;
 
   const handleHoverZoneEnter = useCallback(() => {
     if (hideTimerRef.current) {
@@ -77,13 +77,13 @@ const App: React.FC = () => {
       clearTimeout(showTimerRef.current);
       showTimerRef.current = null;
     }
-    if (isDockVisible && !isInputFocused && !hideTimerRef.current) {
+    if (isDockVisible && !hideTimerRef.current) {
       hideTimerRef.current = setTimeout(() => {
         setIsDockVisible(false);
         hideTimerRef.current = null;
       }, DOCK_DELAY_MS);
     }
-  }, [isDockVisible, isInputFocused]);
+  }, [isDockVisible]);
 
   useEffect(() => {
     if (isInputFocused) {
@@ -94,6 +94,7 @@ const App: React.FC = () => {
       setIsDockVisible(true);
     }
   }, [isInputFocused]);
+
 
   useEffect(() => {
     return () => {
