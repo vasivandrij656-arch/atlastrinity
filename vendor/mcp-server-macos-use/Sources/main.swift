@@ -3096,7 +3096,8 @@ func setupAndStartServer() async throws -> Server {
                     return .init(
                         content: [.text("Failed to serialize running apps list")], isError: true)
                 }
-                return .init(content: [.text(jsonString)], isError: false)
+                let contextLabel = "LIST_RUNNING_APPS_RESULT: Found \(appsList.count) applications."
+                return .init(content: [.text("\(contextLabel)\n\(jsonString)")], isError: false)
 
             // --- List Browser Tabs Handler ---
             case listTabsTool.name:

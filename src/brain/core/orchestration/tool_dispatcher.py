@@ -801,6 +801,14 @@ class ToolDispatcher:
         # This helps LLMs (like Tetyana) see structured data instead of blobs of text
         self._try_parse_json_content(result)
 
+        # 3. Add Result Summary for large structured data
+        if "structured_data" in result:
+            data = result["structured_data"]
+            if isinstance(data, list):
+                result["summary"] = f"Total items found: {len(data)}"
+            elif isinstance(data, dict):
+                result["summary"] = f"Structured object with {len(data)} keys"
+
         # Visual Hook: Update map state if result contains location data
         self._post_process_map_data(tool, result)
 
@@ -810,6 +818,15 @@ class ToolDispatcher:
             result["suggestion"] = f"Tool '{tool}' may not exist on server '{server}'."
         elif "bad request" in error_msg.lower() or "400" in error_msg:
             result["bad_request"] = True
+        elif "forbidden" in error_msg.lower() or "403" in error_msg:
+             result["auth_error"] = True
+             result["suggestion"] = "Access forbidden. Check API keys/tokens or run refresh script."
+        elif "unauthorized" in error_msg.lower() or "401" in error_msg:
+             result["auth_error"] = True
+             result["suggestion"] = "Unauthorized access. Token may be expired. Run refresh script."
+        elif "timeout" in error_msg.lower():
+             result["timeout_error"] = True
+             result["suggestion"] = "The request timed out. Try a simpler query or check server status."
 
         result["server"] = server
         result["tool"] = tool
@@ -818,12 +835,18 @@ class ToolDispatcher:
     def _try_parse_json_content(self, result: dict[str, Any]) -> None:
         """Heuristically detect and parse JSON strings in tool content.
         Updates the 'result' dictionary in-place with 'structured_data' if successful.
+        Uses regex to find JSON structures even if wrapped in other text.
         """
         import json
+        import re
 
         content = result.get("content")
         if not content or not isinstance(content, list):
             return
+
+        # Regex to find potential JSON objects or arrays
+        # Matches starting with { or [ and ending with } or ] greedily
+        json_pattern = re.compile(r"(\{.*\}|\[.*\])", re.DOTALL)
 
         for item in content:
             # Check if it's a TextContent object (SDK) or a dict with 'text'
@@ -834,23 +857,29 @@ class ToolDispatcher:
                 text = item.get("text")
 
             if text and isinstance(text, str):
-                text_stripped = text.strip()
-                # Simple heuristic for JSON array or object
-                if (text_stripped.startswith("[") and text_stripped.endswith("]")) or (
-                    text_stripped.startswith("{") and text_stripped.endswith("}")
-                ):
+                # Try to find a JSON-like substring
+                match = json_pattern.search(text)
+                if match:
+                    potential_json = match.group(0).strip()
                     try:
-                        parsed = json.loads(text_stripped)
+                        parsed = json.loads(potential_json)
                         if parsed:
                             result["structured_data"] = parsed
-                            # Also update the 'result' string representation for older LLM prompts
-                            # result["result"] = parsed
                             logger.info(
                                 f"[DISPATCHER] Auto-parsed JSON content for tool '{result.get('tool')}'"
                             )
                             break
                     except Exception:
-                        pass
+                        # Fallback to simple strip attempt if regex match wasn't valid JSON
+                        text_stripped = text.strip()
+                        if text_stripped != potential_json:
+                            try:
+                                parsed = json.loads(text_stripped)
+                                if parsed:
+                                    result["structured_data"] = parsed
+                                    break
+                            except Exception:
+                                pass
 
     def _check_for_placeholders(self, args: dict[str, Any]) -> str | None:
         """Scan arguments for common LLM placeholder patterns."""
