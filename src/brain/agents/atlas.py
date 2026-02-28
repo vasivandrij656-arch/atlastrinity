@@ -567,7 +567,6 @@ Respond in JSON:
 
                 from src.brain.mcp.mcp_registry import TOOL_SCHEMAS
 
-
                 for s_name in active_servers:
                     server_tools = [
                         (name, schema)
@@ -710,7 +709,6 @@ Respond in JSON:
         new_tools: list[dict[str, Any]] = []
         try:
             from src.brain.mcp.mcp_registry import TOOL_SCHEMAS
-
 
             for s_name in active_servers:
                 server_tools = [
