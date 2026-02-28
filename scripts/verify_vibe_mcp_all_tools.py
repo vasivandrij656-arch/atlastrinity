@@ -67,9 +67,9 @@ def make_mock_ctx():
 
 async def run_diagnostics():
     """Run full Vibe MCP diagnostics."""
-    print(f"\n{BOLD}{CYAN}{'='*60}{RESET}")
+    print(f"\n{BOLD}{CYAN}{'=' * 60}{RESET}")
     print(f"{BOLD}{CYAN}  🔧 Vibe MCP Tools — Comprehensive Diagnostics{RESET}")
-    print(f"{BOLD}{CYAN}{'='*60}{RESET}\n")
+    print(f"{BOLD}{CYAN}{'=' * 60}{RESET}\n")
 
     # --------------------------------------------------------
     # Phase 1: Import and list all registered tools
@@ -77,6 +77,7 @@ async def run_diagnostics():
     print(f"{BOLD}Phase 1: Importing Vibe MCP server module...{RESET}")
     try:
         from src.mcp_server import vibe_server
+
         server = vibe_server.server
         print(f"  {GREEN}✅ Module imported successfully{RESET}")
     except Exception as e:
@@ -88,9 +89,9 @@ async def run_diagnostics():
     tool_names: list[str] = []
     try:
         # FastMCP stores tools in _tool_manager._tools dict
-        if hasattr(server, '_tool_manager') and hasattr(server._tool_manager, '_tools'):
+        if hasattr(server, "_tool_manager") and hasattr(server._tool_manager, "_tools"):
             tool_names = list(server._tool_manager._tools.keys())
-        elif hasattr(server, 'list_tools'):
+        elif hasattr(server, "list_tools"):
             # Try the async list
             tools_result = await server.list_tools()
             tool_names = [t.name for t in tools_result]
@@ -108,13 +109,25 @@ async def run_diagnostics():
         print(f"  {YELLOW}⚠️  Could not enumerate tools: {e}{RESET}")
         # Fallback to known list
         tool_names = [
-            "vibe_which", "vibe_prompt", "vibe_analyze_error",
-            "vibe_implement_feature", "vibe_code_review", "vibe_smart_plan",
-            "vibe_get_config", "vibe_configure_model", "vibe_set_mode",
-            "vibe_configure_provider", "vibe_session_resume",
-            "vibe_ask", "vibe_execute_subcommand", "vibe_list_sessions",
-            "vibe_session_details", "vibe_reload_config",
-            "vibe_check_db", "vibe_get_system_context", "vibe_test_in_sandbox",
+            "vibe_which",
+            "vibe_prompt",
+            "vibe_analyze_error",
+            "vibe_implement_feature",
+            "vibe_code_review",
+            "vibe_smart_plan",
+            "vibe_get_config",
+            "vibe_configure_model",
+            "vibe_set_mode",
+            "vibe_configure_provider",
+            "vibe_session_resume",
+            "vibe_ask",
+            "vibe_execute_subcommand",
+            "vibe_list_sessions",
+            "vibe_session_details",
+            "vibe_reload_config",
+            "vibe_check_db",
+            "vibe_get_system_context",
+            "vibe_test_in_sandbox",
         ]
         print(f"  Using known tool list ({len(tool_names)} tools)")
 
@@ -142,10 +155,18 @@ async def run_diagnostics():
             if isinstance(result, dict):
                 if result.get("error"):
                     print(f"{YELLOW}WARN ({elapsed:.2f}s) — {result['error'][:80]}{RESET}")
-                    results[tool_name] = {"status": "warn", "elapsed": elapsed, "detail": result.get("error", "")[:200]}
+                    results[tool_name] = {
+                        "status": "warn",
+                        "elapsed": elapsed,
+                        "detail": result.get("error", "")[:200],
+                    }
                 elif result.get("success") is False:
                     print(f"{YELLOW}WARN ({elapsed:.2f}s) — success=False{RESET}")
-                    results[tool_name] = {"status": "warn", "elapsed": elapsed, "detail": str(result)[:200]}
+                    results[tool_name] = {
+                        "status": "warn",
+                        "elapsed": elapsed,
+                        "detail": str(result)[:200],
+                    }
                 else:
                     print(f"{GREEN}OK ({elapsed:.2f}s){RESET}")
                     results[tool_name] = {"status": "ok", "elapsed": elapsed}
@@ -200,9 +221,9 @@ async def run_diagnostics():
     # --------------------------------------------------------
     # Phase 5: Summary
     # --------------------------------------------------------
-    print(f"\n{BOLD}{'='*60}{RESET}")
+    print(f"\n{BOLD}{'=' * 60}{RESET}")
     print(f"{BOLD}  📊 SUMMARY{RESET}")
-    print(f"{'='*60}")
+    print(f"{'=' * 60}")
 
     total = len(tool_names)
     tested = len(results)
@@ -230,7 +251,7 @@ async def run_diagnostics():
             detail = info.get("detail", "no details")
             print(f"    {name}: {detail}")
 
-    print(f"\n{'='*60}\n")
+    print(f"\n{'=' * 60}\n")
 
 
 if __name__ == "__main__":
