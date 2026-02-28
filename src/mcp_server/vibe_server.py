@@ -1029,7 +1029,7 @@ async def _format_and_emit_vibe_log(line: str, stream_name: str, ctx: Context | 
         # This prevents the orchestrator from speaking it
         formatted = line
 
-    logger.debug(mask_sensitive_data(f"[VIBE_{stream_name}] {line}"))
+    logger.info(mask_sensitive_data(f"[VIBE_{stream_name}] {line}"))
     level = "warning" if stream_name == "ERR" else "info"
     await _emit_vibe_log(ctx, level, formatted)
 
