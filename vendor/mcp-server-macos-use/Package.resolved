@@ -5,8 +5,8 @@
       "kind" : "remoteSourceControl",
       "location" : "https://github.com/mattt/eventsource.git",
       "state" : {
-        "revision" : "ca2a9d90cbe49e09b92f4b6ebd922c03ebea51d0",
-        "version" : "1.3.0"
+        "revision" : "bd64824505da71a1a403adb221f6e25413c0bc7f",
+        "version" : "1.4.0"
       }
     },
     {

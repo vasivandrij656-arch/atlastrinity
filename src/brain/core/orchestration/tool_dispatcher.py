@@ -598,6 +598,16 @@ class ToolDispatcher:
                 tool_name, args, explicit_server
             )
 
+            # --- NEW: Placeholder Hallucination Check ---
+            placeholder_error = self._check_for_placeholders(normalized_args)
+            if placeholder_error:
+                logger.warning(f"[DISPATCHER] Placeholder hallucination blocked: {placeholder_error}")
+                return {
+                    "success": False,
+                    "error": f"Placeholder hallucination detected: {placeholder_error}. Please resolve placeholders like <ID> or ${{VAR}} to actual values before calling tools.",
+                    "hallucinated": True,
+                }
+
             # 4. Handle internal system tools
             if server in {"_trinity_native", "system"}:
                 return await self._handle_system(resolved_tool, normalized_args)
@@ -762,9 +772,18 @@ class ToolDispatcher:
         self, server: str, tool: str, args: dict[str, Any], result: Any
     ) -> dict[str, Any]:
         """Analyze result from MCP and add metadata if needed.
-        STABILIZATION: Converts SDK objects to dicts to prevent 'not subscriptable' errors.
+        STABILIZATION: Converts SDK objects and lists to dicts to prevent crashes.
         """
-        # Convert CallToolResult (SDK object) to dict if it's not already
+        # 1. Handle List Result (Common cause of 'AttributeError: list has no attribute get')
+        if isinstance(result, list):
+            result = {
+                "success": True,
+                "content": result,
+                "result": str(result),
+                "is_list": True
+            }
+
+        # 2. Convert CallToolResult (SDK object) to dict if it's not already
         if not isinstance(result, dict):
             # Attempt to convert SDK object to a dictionary
             # Typical SDK result has 'content', 'isError', 'meta'
@@ -778,8 +797,12 @@ class ToolDispatcher:
             # Many agents expect 'content' explicitly (like Tetyana)
             if hasattr(result, "content"):
                 processed["content"] = result.content
-
+            
             result = processed
+
+        # 2b. JSON Auto-Parsing: If result content is a JSON string, parse it
+        # This helps LLMs (like Tetyana) see structured data instead of blobs of text
+        self._try_parse_json_content(result)
 
         # Visual Hook: Update map state if result contains location data
         self._post_process_map_data(tool, result)
@@ -794,6 +817,57 @@ class ToolDispatcher:
         result["server"] = server
         result["tool"] = tool
         return result
+
+    def _try_parse_json_content(self, result: dict[str, Any]) -> None:
+        """Heuristically detect and parse JSON strings in tool content.
+        Updates the 'result' dictionary in-place with 'structured_data' if successful.
+        """
+        import json
+        
+        content = result.get("content")
+        if not content or not isinstance(content, list):
+            return
+
+        for item in content:
+            # Check if it's a TextContent object (SDK) or a dict with 'text'
+            text = None
+            if hasattr(item, "text"):
+                text = item.text
+            elif isinstance(item, dict) and item.get("type") == "text":
+                text = item.get("text")
+            
+            if text and isinstance(text, str):
+                text_stripped = text.strip()
+                # Simple heuristic for JSON array or object
+                if (text_stripped.startswith("[") and text_stripped.endswith("]")) or \
+                   (text_stripped.startswith("{") and text_stripped.endswith("}")):
+                    try:
+                        parsed = json.loads(text_stripped)
+                        if parsed:
+                            result["structured_data"] = parsed
+                            # Also update the 'result' string representation for older LLM prompts
+                            # result["result"] = parsed 
+                            logger.info(f"[DISPATCHER] Auto-parsed JSON content for tool '{result.get('tool')}'")
+                            break
+                    except Exception:
+                        pass
+
+    def _check_for_placeholders(self, args: dict[str, Any]) -> str | None:
+        """Scan arguments for common LLM placeholder patterns."""
+        import re
+        patterns = [
+            r"<[A-Z0-9_]+>",        # <CALCULATOR_PID>
+            r"\${[A-Z0-9_]+}",      # ${VAR}
+            r"\[INSERT_[A-Z_]+\]",  # [INSERT_PID_HERE]
+        ]
+        
+        for k, v in args.items():
+            if not isinstance(v, str):
+                continue
+            for pattern in patterns:
+                if re.search(pattern, v):
+                    return f"Argument '{k}' contains placeholder '{v}'"
+        return None
 
     def _post_process_map_data(self, tool_name: str, result: Any) -> None:
         """Post-process tool result for visual display."""

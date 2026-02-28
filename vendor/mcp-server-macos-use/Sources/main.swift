@@ -2007,7 +2007,14 @@ func setupAndStartServer() async throws -> Server {
 
     // *** NEW: List Running Applications ***
     let listAppsSchema: Value = .object([
-        "type": .string("object"), "properties": .object([:]),
+        "type": .string("object"),
+        "properties": .object([
+            "filter": .object([
+                "type": .string("string"),
+                "description": .string(
+                    "Optional: Filter by application name or bundle identifier."),
+            ])
+        ]),
     ])
     let listAppsTool = Tool(
         name: "macos-use_list_running_apps",
@@ -3056,14 +3063,27 @@ func setupAndStartServer() async throws -> Server {
 
             // --- List Running Applications Handler ---
             case listAppsTool.name:
+                let filter = try getOptionalString(from: params.arguments, key: "filter")?
+                    .lowercased()
                 let runningApps = NSWorkspace.shared.runningApplications
                 var appsList: [[String: String]] = []
 
                 for app in runningApps {
+                    let bundleID = app.bundleIdentifier ?? "unknown"
+                    let localizedName = app.localizedName ?? "unknown"
+
+                    if let f = filter {
+                        if !bundleID.lowercased().contains(f)
+                            && !localizedName.lowercased().contains(f)
+                        {
+                            continue
+                        }
+                    }
+
                     var appInfo: [String: String] = [:]
                     appInfo["pid"] = String(app.processIdentifier)
-                    appInfo["bundleIdentifier"] = app.bundleIdentifier ?? "unknown"
-                    appInfo["localizedName"] = app.localizedName ?? "unknown"
+                    appInfo["bundleIdentifier"] = bundleID
+                    appInfo["localizedName"] = localizedName
                     appInfo["bundleURL"] = app.bundleURL?.path ?? "unknown"
                     appInfo["activationPolicy"] = String(app.activationPolicy.rawValue)
                     appInfo["launchDate"] = app.launchDate?.description ?? "unknown"
