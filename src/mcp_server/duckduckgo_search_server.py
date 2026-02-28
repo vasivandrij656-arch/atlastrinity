@@ -61,113 +61,124 @@ def _execute_protocol_search(rule_name: str, query_val: str, provider_name: str)
     try:
         results = _search_ddg(query=expanded_query, max_results=10, timeout_s=15.0)
 
-        # 11. TEMPORAL INTUITION (THE SHADOW OF TIME)
+        # Apply Temporal Intuition & Deepening if needed
         min_results = 5
-        results_count = len(results)
+        if len(results) < min_results and rule_name in ["open_data", "structured_data", "court"]:
+            results = _enhance_with_temporal_logic(results, query_val, horizon)
 
-        if results_count < min_results and rule_name in ["open_data", "structured_data", "court"]:
-            primary_range = horizon.get("primary_range", [2024, 2026])
-            floor = horizon.get("deepening_floor", 2010)
-            is_unbound = horizon.get("unbound_mode", False)
-
-            logger.info(
-                f"[SHADOW OF TIME] Insufficient results ({results_count}). Engaging Temporal Intuition."
-            )
-
-            # --- INTUITION PHASE (Look for years in snippets) ---
-            guessed_years = set()
-            for r in results:
-                # Find any 4-digit numbers that look like years (1990-2026)
-                year_matches = re.findall(
-                    r"\b(20[0-2][0-9]|19[8-9][0-9])\b", f"{r['title']} {r.get('snippet', '')}"
-                )
-                for y in year_matches:
-                    y_int = int(y)
-                    if y_int < primary_range[0]:  # Only care about past 'shadows'
-                        guessed_years.add(y_int)
-
-            if guessed_years:
-                for year in sorted(list(guessed_years), reverse=True):
-                    if len(results) >= 12:
-                        break
-                    logger.info(f"[TEMPORAL INTUITION] Probing detected shadow year: {year}")
-                    results += _search_ddg(
-                        query=f"{query_val.strip()} {year}", max_results=5, timeout_s=10.0
-                    )
-
-            # --- SEQUENTIAL DEEPENING (Fallback) ---
-            if len(results) < min_results:
-                current_probe = primary_range[0] - 1
-                while current_probe >= floor or is_unbound:
-                    if len(results) >= 12:
-                        break
-                    if not is_unbound and current_probe < floor:
-                        break
-                    if current_probe in guessed_years:  # Skip if already probed
-                        current_probe -= 1
-                        continue
-
-                    logger.info(f"[TEMPORAL DEEPENING] Extending horizon back to: {current_probe}")
-                    new_results = _search_ddg(
-                        query=f"{query_val.strip()} {current_probe}", max_results=5, timeout_s=10.0
-                    )
-                    results += new_results
-                    if len(new_results) == 0 and current_probe < 2015:
-                        break
-                    current_probe -= 1
-
-        prioritized = []
-        others = []
-        seen_urls = set()
-
-        for r in results:
-            if r["url"] in seen_urls:
-                continue
-            seen_urls.add(r["url"])
-            if any(domain in r["url"] for domain in priority_domains):
-                prioritized.append(r)
-            else:
-                others.append(r)
+        # Prioritize results by domain
+        results = _prioritize_results(results, priority_domains)
 
         # Semantic Echo (The Living Note)
-        seeds = set()
         curiosity_config = config.get("organic_curiosity", {})
-        anchors = curiosity_config.get("semantic_anchors", [])
-
-        # Simple regex-based anchor detection in snippets
-        for r in prioritized + others:
-            text = f"{r['title']} {r.get('snippet', '')}"
-            # Let's detect some common Ukrainian patterns if not explicitly in anchors
-            # ЄДРПОУ (8 digits)
-            edrpou_match = re.search(r"\b\d{8}\b", text)
-            if edrpou_match:
-                seeds.add(f"ЄДРПОУ: {edrpou_match.group(0)}")
-
-            # Court Case No (e.g. 757/12345/21-ц)
-            case_match = re.search(r"\b\d{3}/\d+/\d+[-а-яієґ]*\b", text)
-            if case_match:
-                seeds.add(f"No справи: {case_match.group(0)}")
-
-            # Generic anchors from config
-            for anchor in anchors:
-                if anchor in text and anchor not in query_val:
-                    # Try to extract the value after the anchor
-                    pattern = re.escape(anchor) + r"[:\s]*([^\s,;)]+)"
-                    val_match = re.search(pattern, text)
-                    if val_match:
-                        seeds.add(f"{anchor}: {val_match.group(1)}")
+        seeds = _extract_semantic_echoes(results, query_val, curiosity_config)
 
         return {
             "success": True,
             "query": expanded_query,
-            "results": prioritized + others,
+            "results": results,
             "provider": provider_name,
             "temporal_horizon": horizon,
             "semantic_echoes": sorted(list(seeds)) if seeds else [],
             "curiosity_note": curiosity_config.get("behavior_note", ""),
         }
     except Exception as e:
+        logger.error(f"Search execution failed: {e}")
         return {"error": str(e)}
+
+
+def _enhance_with_temporal_logic(
+    results: list[dict[str, Any]], query_val: str, horizon: dict[str, Any]
+) -> list[dict[str, Any]]:
+    """Engage Temporal Intuition and Deepening to find more results."""
+    primary_range = horizon.get("primary_range", [2024, 2026])
+    floor = horizon.get("deepening_floor", 2010)
+    is_unbound = horizon.get("unbound_mode", False)
+
+    logger.info(
+        f"[SHADOW OF TIME] Insufficient results ({len(results)}). Engaging Temporal Intuition."
+    )
+
+    # --- INTUITION PHASE (Look for years in snippets) ---
+    guessed_years = set()
+    for r in results:
+        year_matches = re.findall(
+            r"\b(20[0-2][0-9]|19[8-9][0-9])\b", f"{r['title']} {r.get('snippet', '')}"
+        )
+        for y in year_matches:
+            y_int = int(y)
+            if y_int < primary_range[0]:
+                guessed_years.add(y_int)
+
+    if guessed_years:
+        for year in sorted(list(guessed_years), reverse=True):
+            if len(results) >= 12:
+                break
+            logger.info(f"[TEMPORAL INTUITION] Probing detected shadow year: {year}")
+            results += _search_ddg(query=f"{query_val.strip()} {year}", max_results=5, timeout_s=10.0)
+
+    # --- SEQUENTIAL DEEPENING (Fallback) ---
+    if len(results) < 5:
+        current_probe = primary_range[0] - 1
+        while current_probe >= floor or is_unbound:
+            if len(results) >= 12 or (not is_unbound and current_probe < floor):
+                break
+            if current_probe not in guessed_years:
+                logger.info(f"[TEMPORAL DEEPENING] Extending horizon back to: {current_probe}")
+                new_results = _search_ddg(
+                    query=f"{query_val.strip()} {current_probe}", max_results=5, timeout_s=10.0
+                )
+                results += new_results
+                if not new_results and current_probe < 2015:
+                    break
+            current_probe -= 1
+    return results
+
+
+def _prioritize_results(results: list[dict[str, Any]], priority_domains: list[str]) -> list[dict[str, Any]]:
+    """De-duplicate and prioritize results by domain."""
+    prioritized = []
+    others = []
+    seen_urls = set()
+
+    for r in results:
+        if r["url"] in seen_urls:
+            continue
+        seen_urls.add(r["url"])
+        if any(domain in r["url"] for domain in priority_domains):
+            prioritized.append(r)
+        else:
+            others.append(r)
+    return prioritized + others
+
+
+def _extract_semantic_echoes(
+    results: list[dict[str, Any]], query_val: str, curiosity_config: dict[str, Any]
+) -> set[str]:
+    """Extract semantic anchors and echoes from search results."""
+    seeds = set()
+    anchors = curiosity_config.get("semantic_anchors", [])
+
+    for r in results:
+        text = f"{r['title']} {r.get('snippet', '')}"
+        # ЄДРПОУ (8 digits)
+        edrpou_match = re.search(r"\b\d{8}\b", text)
+        if edrpou_match:
+            seeds.add(f"ЄДРПОУ: {edrpou_match.group(0)}")
+
+        # Court Case No
+        case_match = re.search(r"\b\d{3}/\d+/\d+[-а-яієґ]*\b", text)
+        if case_match:
+            seeds.add(f"No справи: {case_match.group(0)}")
+
+        # Generic anchors from config
+        for anchor in anchors:
+            if anchor in text and anchor not in query_val:
+                pattern = re.escape(anchor) + r"[:\s]*([^\s,;)]+)"
+                val_match = re.search(pattern, text)
+                if val_match:
+                    seeds.add(f"{anchor}: {val_match.group(1)}")
+    return seeds
 
 
 def _extract_from_match(

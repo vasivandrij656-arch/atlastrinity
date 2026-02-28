@@ -71,7 +71,13 @@ class ToolDispatcher:
         "tree",
     ]
 
-    SERACH_SYNONYMS: list[str] = []  # Deprecated
+    SEARCH_SYNONYMS: list[str] = [
+        "search",
+        "find",
+        "lookup",
+        "web_search",
+        "google_search",
+    ]
 
     VIBE_SYNONYMS = [
         "vibe",
@@ -537,6 +543,13 @@ class ToolDispatcher:
         self._current_pid: int | None = None
         self._total_calls = 0
         self._macos_use_calls = 0
+
+    def _get_arg(self, args: dict[str, Any], keys: list[str], pop: bool = False, default: Any = None) -> Any:
+        """Helper to extract an argument from a list of possible keys."""
+        for key in keys:
+            if key in args:
+                return args.pop(key) if pop else args[key]
+        return default
 
     def set_pid(self, pid: int | None):
         """Update the currently tracked PID for macOS automation."""
@@ -1334,36 +1347,37 @@ class ToolDispatcher:
             return "xcodebuild", tool_name, args
 
         # Basic Synonyms
-        if tool_name in self.TERMINAL_SYNONYMS:
-            return self._handle_terminal(tool_name, args)
-        if tool_name in self.FILESYSTEM_SYNONYMS:
-            return self._handle_filesystem(tool_name, args)
-        if (tool_name in self.BROWSER_SYNONYMS and tool_name != "search") or tool_name.startswith(
-            ("puppeteer_", "browser_")
-        ):
+        synonym_map = {
+            "terminal": self._handle_terminal,
+            "filesystem": self._handle_filesystem,
+            "browser": self._handle_browser,
+            "vibe": self._handle_vibe,
+            "duckduckgo-search": lambda t, a: ("duckduckgo-search", "duckduckgo_search", a),
+            "sequential-thinking": lambda t, a: ("sequential-thinking", "sequentialthinking", a),
+            "think": lambda t, a: ("sequential-thinking", "sequentialthinking", a),
+            "devtools": self._handle_devtools,
+            "context7": self._handle_context7,
+            "golden-fund": self._handle_golden_fund,
+            "data-analysis": self._handle_data_analysis,
+            "xcodebuild": self._handle_xcodebuild,
+            "git": self._handle_legacy_git,
+        }
+
+        # Check direct synonyms
+        for key, handler in synonym_map.items():
+            synonyms = getattr(self, f"{key.upper().replace('-', '_')}_SYNONYMS", [])
+            if tool_name == key or tool_name in synonyms:
+                return handler(tool_name, args)
+
+        # Pattern-based routing
+        if tool_name.startswith(("puppeteer_", "browser_")) and tool_name != "search":
             return self._handle_browser(tool_name, args)
-        if tool_name in self.VIBE_SYNONYMS:
-            return self._handle_vibe(tool_name, args)
-        if tool_name in self.DUCKDUCKGO_SYNONYMS:
-            return "duckduckgo-search", "duckduckgo_search", args
-
-        # Specialized Tools
-        if tool_name in ["sequential-thinking", "sequentialthinking", "think"]:
-            return "sequential-thinking", "sequentialthinking", args
-        if tool_name in self.DEVTOOLS_SYNONYMS:
-            return self._handle_devtools(tool_name, args)
-        if tool_name in self.CONTEXT7_SYNONYMS:
-            return self._handle_context7(tool_name, args)
-        if tool_name in self.GOLDEN_FUND_SYNONYMS:
-            return self._handle_golden_fund(tool_name, args)
-        if tool_name in self.DATA_ANALYSIS_SYNONYMS or explicit_server == "data-analysis":
-            return self._handle_data_analysis(tool_name, args)
-        if tool_name in self.XCODEBUILD_SYNONYMS or explicit_server == "xcodebuild":
-            return self._handle_xcodebuild(tool_name, args)
-        if tool_name.startswith("git_") or explicit_server == "git":
+        if tool_name.startswith("git_"):
             return self._handle_legacy_git(tool_name, args)
+        if tool_name.startswith("maps_"):
+            return "xcodebuild", tool_name, args
 
-        # Hallucination Fallbacks
+        # Specialized Tool Fallbacks
         if tool_name == "prerequisite_gap_analyzer":
             args["objective"] = "Analyze prerequisites and gaps for this feature"
             return "vibe", "vibe_smart_plan", args
@@ -1736,14 +1750,7 @@ class ToolDispatcher:
 
         # Argument normalization
         if "prompt" not in args:
-            if "objective" in args:
-                args["prompt"] = args["objective"]
-            elif "question" in args:
-                args["prompt"] = args["question"]
-            elif "error_message" in args:
-                args["prompt"] = args["error_message"]
-            elif "action" in args:
-                args["prompt"] = args["action"]
+            args["prompt"] = self._get_arg(args, ["objective", "question", "error_message", "action"])
 
         # Normalize 'goal' for vibe_implement_feature
         if resolved_tool == "vibe_implement_feature" and "goal" not in args:
@@ -1759,11 +1766,9 @@ class ToolDispatcher:
                 "artifacts_to_fix",
                 "previous_verification_results",
             ]
-            for syn in goal_synonyms:
-                if syn in args:
-                    args["goal"] = args.pop(syn)
-                    logger.info(f"[DISPATCHER] Normalized '{syn}' -> 'goal' for {resolved_tool}")
-                    break
+            args["goal"] = self._get_arg(args, goal_synonyms, pop=True)
+            if args["goal"]:
+                logger.info(f"[DISPATCHER] Normalized argument to 'goal' for {resolved_tool}")
 
         # Normalize 'file_path' for vibe_code_review
         if resolved_tool == "vibe_code_review" and "file_path" not in args:

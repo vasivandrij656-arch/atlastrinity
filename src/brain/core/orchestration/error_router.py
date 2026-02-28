@@ -159,6 +159,19 @@ class SmartErrorRouter:
         self._cache = {}
         self._category_history: list[ErrorCategory] = []
         self._max_history = 10
+        
+        # Pre-compile patterns for efficient matching
+        self._patterns = {
+            ErrorCategory.INFRASTRUCTURE: re.compile("|".join(self.INFRASTRUCTURE_PATTERNS), re.IGNORECASE),
+            ErrorCategory.VERIFICATION: re.compile("|".join(self.VERIFICATION_PATTERNS), re.IGNORECASE),
+            ErrorCategory.TRANSIENT: re.compile("|".join(self.TRANSIENT_PATTERNS), re.IGNORECASE),
+            ErrorCategory.LOGIC: re.compile("|".join(self.LOGIC_PATTERNS), re.IGNORECASE),
+            ErrorCategory.STATE: re.compile("|".join(self.STATE_PATTERNS), re.IGNORECASE),
+            ErrorCategory.CI_FAILURE: re.compile("|".join(self.CI_PATTERNS), re.IGNORECASE),
+            ErrorCategory.ENVIRONMENT: re.compile("|".join(self.ENVIRONMENT_PATTERNS), re.IGNORECASE),
+            ErrorCategory.PERMISSION: re.compile("|".join(self.PERMISSION_PATTERNS), re.IGNORECASE),
+            ErrorCategory.USER_INPUT: re.compile("|".join(self.USER_INPUT_PATTERNS), re.IGNORECASE),
+        }
 
     def classify(self, error: str) -> ErrorCategory:
         """Classifies an error string into a category"""
@@ -168,26 +181,12 @@ class SmartErrorRouter:
 
         if error_str in ["help_pending", "need_user_input", "user_input_received"]:
             category = ErrorCategory.USER_INPUT
-        elif any(re.search(p, error_str) for p in self.INFRASTRUCTURE_PATTERNS):
-            category = ErrorCategory.INFRASTRUCTURE
-        elif any(re.search(p, error_str) for p in self.VERIFICATION_PATTERNS):
-            category = ErrorCategory.VERIFICATION
-        elif any(re.search(p, error_str) for p in self.TRANSIENT_PATTERNS):
-            category = ErrorCategory.TRANSIENT
-        elif any(re.search(p, error_str) for p in self.LOGIC_PATTERNS):
-            category = ErrorCategory.LOGIC
-        elif any(re.search(p, error_str) for p in self.STATE_PATTERNS):
-            category = ErrorCategory.STATE
-        elif any(re.search(p, error_str) for p in self.CI_PATTERNS):
-            category = ErrorCategory.CI_FAILURE
-        elif any(re.search(p, error_str) for p in self.ENVIRONMENT_PATTERNS):
-            category = ErrorCategory.ENVIRONMENT
-        elif any(re.search(p, error_str) for p in self.PERMISSION_PATTERNS):
-            category = ErrorCategory.PERMISSION
-        elif any(re.search(p, error_str) for p in self.USER_INPUT_PATTERNS):
-            category = ErrorCategory.USER_INPUT
         else:
             category = ErrorCategory.UNKNOWN
+            for cat, pattern in self._patterns.items():
+                if pattern.search(error_str):
+                    category = cat
+                    break
 
         logger.debug(f"[ROUTER] Classified '{error_str[:50]}' as {category.value}")  # pyre-ignore
         self._cache[error_str] = category
