@@ -1747,18 +1747,23 @@ class ToolDispatcher:
 
         # Normalize 'goal' for vibe_implement_feature
         if resolved_tool == "vibe_implement_feature" and "goal" not in args:
-            if "feature_description" in args:
-                args["goal"] = args["feature_description"]
-            elif "features" in args:
-                args["goal"] = args["features"]
-            elif "errors" in args:
-                args["goal"] = args["errors"]
-            elif "artifacts_to_fix" in args:
-                args["goal"] = args["artifacts_to_fix"]
-            elif "previous_verification_results" in args:
-                args["goal"] = args["previous_verification_results"]
-            elif "prompt" in args:
-                args["goal"] = args["prompt"]
+            # Check for various synonyms used by different agents/protocols
+            goal_synonyms = [
+                "feature",
+                "features",
+                "feature_description",
+                "prompt",
+                "objective",
+                "intent",
+                "errors",
+                "artifacts_to_fix",
+                "previous_verification_results",
+            ]
+            for syn in goal_synonyms:
+                if syn in args:
+                    args["goal"] = args.pop(syn)
+                    logger.info(f"[DISPATCHER] Normalized '{syn}' -> 'goal' for {resolved_tool}")
+                    break
 
         # Normalize 'file_path' for vibe_code_review
         if resolved_tool == "vibe_code_review" and "file_path" not in args:

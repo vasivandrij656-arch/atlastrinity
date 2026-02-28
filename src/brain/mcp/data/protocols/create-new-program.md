@@ -35,7 +35,7 @@ step_1_initialize:
   tools:
     - filesystem_create_directory
     - filesystem_write_file
-  
+
   structure:
     - README.md
     - .gitignore
@@ -45,6 +45,7 @@ step_1_initialize:
 ```
 
 **Example:**
+
 ```python
 # Atlas creates project structure
 await manager.call_tool("filesystem", "create_directory", {
@@ -83,6 +84,7 @@ result = await manager.call_tool("devtools", "devtools_update_architecture_diagr
 ```
 
 **Git manager автоматично:**
+
 1. Перевіряє чи існує `.git/`
 2. Якщо ні - виконує `git init`
 3. Створює `.gitignore` з sensible defaults
@@ -111,6 +113,7 @@ result = await manager.call_tool("devtools", "devtools_update_architecture_diagr
 ```
 
 **Diagram generation:**
+
 - Аналізує project structure через `project_analyzer.py`
 - Визначає project type (Python, Node.js, Rust, Go, generic)
 - Генерує Mermaid diagram відповідно до типу
@@ -124,6 +127,7 @@ result = await manager.call_tool("devtools", "devtools_update_architecture_diagr
 **Tools:** Залежно від project type
 
 **Python project:**
+
 ```python
 # Create virtual environment
 await manager.call_tool("filesystem", "execute_command", {
@@ -139,6 +143,7 @@ await manager.call_tool("filesystem", "execute_command", {
 ```
 
 **Node.js project:**
+
 ```python
 # Install dependencies
 await manager.call_tool("filesystem", "execute_command", {
@@ -157,19 +162,18 @@ await manager.call_tool("filesystem", "execute_command", {
 ```python
 # Generate initial code based on user requirements
 result = await manager.call_tool("vibe", "vibe_implement_feature", {
-    "prompt": f"""
+    "goal": f"""
     Create initial code for {project_type} project.
     Requirements: {user_requirements}
     Structure: {project_structure}
+    Architecture Context: {diagram_content}
     """,
-    "context": {
-        "project_path": "/path/to/new-project",
-        "architecture_diagram": diagram_content  # З Phase 3
-    }
+    "cwd": "/path/to/new-project"
 })
 ```
 
 **Vibe генерує:**
+
 - Entry point (main.py, index.js, etc.)
 - Core modules
 - Basic tests
@@ -233,21 +237,21 @@ if review["approved"]:
 ```mermaid
 flowchart TD
     User[User Request] --> Atlas[Atlas: Project Init]
-    
+
     Atlas --> GitSetup[Git & GitHub Setup]
     GitSetup --> DiagramGen[Diagram Generation]
-    
+
     DiagramGen --> Vibe[Vibe: Code Generation]
     Vibe --> Tetyana[Tetyana: Documentation]
-    
+
     Tetyana --> Grisha[Grisha: Verification]
-    
+
     Grisha --> |Approved| Commit[Auto-commit to GitHub]
     Grisha --> |Issues| Vibe
-    
+
     Commit --> UpdateDiagram[Update Diagram Post-Creation]
     UpdateDiagram --> Complete[Project Ready ✅]
-    
+
     style Atlas fill:#e1f5ff
     style Vibe fill:#ffe1e1
     style Tetyana fill:#e1ffe1
@@ -256,12 +260,14 @@ flowchart TD
 ```
 
 **Agent Roles:**
+
 - **Atlas**: Orchestration, git setup, diagram generation
 - **Vibe**: Code implementation, architecture-aware generation
 - **Tetyana**: Documentation, README, comments
 - **Grisha**: Verification, quality control, approval for commits
 
 **Agent-based approval:**
+
 - Grisha verifies Atlas's work → auto-commit (NO user approval)
 - Atlas verifies Tetyana's docs → auto-merge
 - User involvement: ZERO після initial request
@@ -278,14 +284,14 @@ token_source:
   priority_2: Global ~/.config/atlastrinity/.env
   priority_3: System env GITHUB_TOKEN
 
-setup_workflow:
-  1. User creates .env in new project (optional)
+setup_workflow: 1. User creates .env in new project (optional)
   2. devtools reads from global if not found
   3. GitHub remote configured with token
   4. Future commits use same token
 ```
 
 **Token security:**
+
 - Never exposed in logs
 - Never committed to repo
 - Read-only access for setup
@@ -305,7 +311,7 @@ setup_workflow:
 # NEW SECTION NEEDED
 project_creation:
   enabled: true
-  
+
   default_structure:
     python:
       - README.md
@@ -319,7 +325,7 @@ project_creation:
       - src/
       - tests/
       - .gitignore
-  
+
   automatic_steps:
     - initialize_structure
     - setup_git
@@ -328,13 +334,13 @@ project_creation:
     - create_documentation
     - verify_quality
     - commit_to_github
-  
+
   agent_coordination:
     orchestrator: atlas
     implementer: vibe
     documenter: tetyana
     verifier: grisha
-  
+
   routing_rules:
     - pattern: 'create.*project'
       agent: atlas
@@ -368,6 +374,7 @@ project_creation:
 ## 🧪 Testing
 
 **Manual test:**
+
 ```bash
 # Request через Atlas
 atlas create new Python project at ~/test-project with Flask API
