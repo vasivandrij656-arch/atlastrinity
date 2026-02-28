@@ -819,14 +819,16 @@ class ToolDispatcher:
         elif "bad request" in error_msg.lower() or "400" in error_msg:
             result["bad_request"] = True
         elif "forbidden" in error_msg.lower() or "403" in error_msg:
-             result["auth_error"] = True
-             result["suggestion"] = "Access forbidden. Check API keys/tokens or run refresh script."
+            result["auth_error"] = True
+            result["suggestion"] = "Access forbidden. Check API keys/tokens or run refresh script."
         elif "unauthorized" in error_msg.lower() or "401" in error_msg:
-             result["auth_error"] = True
-             result["suggestion"] = "Unauthorized access. Token may be expired. Run refresh script."
+            result["auth_error"] = True
+            result["suggestion"] = "Unauthorized access. Token may be expired. Run refresh script."
         elif "timeout" in error_msg.lower():
-             result["timeout_error"] = True
-             result["suggestion"] = "The request timed out. Try a simpler query or check server status."
+            result["timeout_error"] = True
+            result["suggestion"] = (
+                "The request timed out. Try a simpler query or check server status."
+            )
 
         result["server"] = server
         result["tool"] = tool
