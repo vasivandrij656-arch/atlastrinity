@@ -1077,9 +1077,8 @@ async def _read_vibe_stream(
     try:
         while True:
             # Use read() instead of readline() to handle status lines without newlines
-            # Apply a per-chunk timeout (120s) to detect hangs faster than full task timeout
-            chunk_timeout = min(120.0, timeout_s)
-            data = await asyncio.wait_for(stream.read(1024), timeout=chunk_timeout)
+            # Wait up to the full timeout_s per chunk. The outer task also enforces total timeout.
+            data = await asyncio.wait_for(stream.read(1024), timeout=timeout_s)
             if not data:
                 break
 
