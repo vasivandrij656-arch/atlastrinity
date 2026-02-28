@@ -134,7 +134,11 @@ async def test_agent_profiles():
         fail(f"Agents dir not found: {agents_dir}")
         return
 
-    expected_profiles = ["auto-approve.toml.template", "plan.toml.template", "accept-edits.toml.template"]
+    expected_profiles = [
+        "auto-approve.toml.template",
+        "plan.toml.template",
+        "accept-edits.toml.template",
+    ]
     for profile in expected_profiles:
         path = agents_dir / profile
         if path.exists():
@@ -209,7 +213,9 @@ async def test_vibe_config_model():
 
     # MCP Servers
     if config.mcp_servers:
-        ok(f"MCP servers: {len(config.mcp_servers)} ({', '.join(s.name for s in config.mcp_servers)})")
+        ok(
+            f"MCP servers: {len(config.mcp_servers)} ({', '.join(s.name for s in config.mcp_servers)})"
+        )
     else:
         warn("No MCP servers configured for Vibe")
 
@@ -263,13 +269,25 @@ async def test_all_mcp_tools():
 
     # Expected tool list
     expected_tools = [
-        "vibe_which", "vibe_prompt", "vibe_analyze_error",
-        "vibe_implement_feature", "vibe_code_review", "vibe_smart_plan",
-        "vibe_get_config", "vibe_configure_model", "vibe_set_mode",
-        "vibe_configure_provider", "vibe_session_resume",
-        "vibe_ask", "vibe_execute_subcommand", "vibe_list_sessions",
-        "vibe_session_details", "vibe_reload_config",
-        "vibe_check_db", "vibe_get_system_context", "vibe_test_in_sandbox",
+        "vibe_which",
+        "vibe_prompt",
+        "vibe_analyze_error",
+        "vibe_implement_feature",
+        "vibe_code_review",
+        "vibe_smart_plan",
+        "vibe_get_config",
+        "vibe_configure_model",
+        "vibe_set_mode",
+        "vibe_configure_provider",
+        "vibe_session_resume",
+        "vibe_ask",
+        "vibe_execute_subcommand",
+        "vibe_list_sessions",
+        "vibe_session_details",
+        "vibe_reload_config",
+        "vibe_check_db",
+        "vibe_get_system_context",
+        "vibe_test_in_sandbox",
     ]
 
     for tool in expected_tools:
@@ -363,7 +381,11 @@ async def test_logging_pipeline():
     vibe_logger = logging.getLogger("vibe_mcp")
 
     # Check handlers
-    stream_handlers = [h for h in vibe_logger.handlers if isinstance(h, logging.StreamHandler) and not isinstance(h, logging.FileHandler)]
+    stream_handlers = [
+        h
+        for h in vibe_logger.handlers
+        if isinstance(h, logging.StreamHandler) and not isinstance(h, logging.FileHandler)
+    ]
     file_handlers = [h for h in vibe_logger.handlers if isinstance(h, logging.FileHandler)]
 
     if stream_handlers:
@@ -371,7 +393,9 @@ async def test_logging_pipeline():
         if sh.level <= logging.INFO:
             ok(f"StreamHandler level: {logging.getLevelName(sh.level)} (≤ INFO)")
         else:
-            fail(f"StreamHandler level: {logging.getLevelName(sh.level)} (> INFO — logs won't show!)")
+            fail(
+                f"StreamHandler level: {logging.getLevelName(sh.level)} (> INFO — logs won't show!)"
+            )
     else:
         fail("No StreamHandler on vibe_mcp logger!")
 
