@@ -12,7 +12,6 @@ Run:
 from __future__ import annotations
 
 import asyncio
-import json
 import logging
 import os
 import socket
@@ -162,7 +161,7 @@ async def test_vibe_config_model():
     """Test 3: VibeConfig Pydantic Model Integrity."""
     section("TEST 3: VibeConfig Model Integrity")
 
-    from src.mcp_server.vibe_config import AgentMode, VibeConfig
+    from src.mcp_server.vibe_config import VibeConfig
 
     # Load from active config
     config = VibeConfig.load()

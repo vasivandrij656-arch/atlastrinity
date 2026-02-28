@@ -50,9 +50,8 @@ class LogNoiseFilter(logging.Filter):
             "GET /api/monitoring/metrics",
             "GET /api/monitoring/processes",
         ]
-        if any(endpoint in msg for endpoint in noisy_endpoints) and " 200 OK" in msg:
-            return False
-        return True
+        return not (any(endpoint in msg for endpoint in noisy_endpoints) and " 200 OK" in msg)
+
 
 # Type hints for static type checking
 if TYPE_CHECKING:
