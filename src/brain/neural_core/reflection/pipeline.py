@@ -65,11 +65,18 @@ class ReflexPipe:
             response = await self.analyzer.llm.ainvoke(prompt)
             content = response.content if hasattr(response, "content") else str(response)
 
-            # Extract JSON more reliably by locating the first { and last }
+            # Extract JSON more reliably
             import re
 
+            # Check for obvious LLM errors first
+            if "[COPILOT ERROR]" in content or "RetryError" in content:
+                logger.error(
+                    f"[REFLEX] LLM Provider Error detected in reflection: {content[:200]}..."
+                )
+                return False
+
             # Try to extract from markdown block first
-            json_match = re.search(r"```(?:json)?\s*(.*?)\s*```", content, re.DOTALL)
+            json_match = re.search(r"```(?:json)?\s*(\{.*?\})\s*```", content, re.DOTALL)
             if json_match:
                 content_to_parse = json_match.group(1).strip()
             else:
@@ -83,8 +90,8 @@ class ReflexPipe:
 
             try:
                 analysis = json.loads(content_to_parse)
-            except json.JSONDecodeError as e:
-                logger.error(f"[REFLEX] JSON Parsing failed: {e}. Raw content: {content[:200]}...")
+            except (json.JSONDecodeError, ValueError) as e:
+                logger.error(f"[REFLEX] JSON Parsing failed: {e}. Content: {content[:100]}...")
                 return False
 
             # 2. Integrate into CognitiveGraph

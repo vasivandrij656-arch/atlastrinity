@@ -10,6 +10,7 @@
   "type": "module",
   "scripts": {
     "setup": ".venv/bin/python3 src/maintenance/setup_dev.py",
+    "lint": "npm run lint:all",
     "fresh-install": "./scripts/fresh_install.sh",
     "clean": "./scripts/clean-cache.sh",
     "clean:full": ".venv/bin/python3 src/maintenance/clear_experience_fixed.py",
