@@ -24,6 +24,7 @@ class ErrorCategory(Enum):
     VERIFICATION = "verification"  # Grisha's verification logic failed (Immediate escalation)
     LOOP = "loop"  # Detected repetitive cycles
     CI_FAILURE = "ci_failure"  # GitHub Actions or local CI failure
+    ENVIRONMENT = "environment"  # Missing external dependencies (VMs, IPs, devices)
     UNKNOWN = "unknown"  # Unclassified (Default fallback)
 
 
@@ -129,6 +130,20 @@ class SmartErrorRouter:
         r"check_run\s+failure",
         r"script\s+not\s+found\s+in\s+ci",
     ]
+
+    # Environment: Missing external dependencies/VMs
+    ENVIRONMENT_PATTERNS = [
+        r"quality_failure",
+        r"відсутній\s+фактичний\s+вивід",
+        r"не\s+наведено\s+жодної\s+ip-адреси",
+        r"не\s+вказано\s+результату\s+сканування",
+        r"kali\s+linux\s+vm",
+        r"virtualbox\s+shared\s+folder",
+        r"vm\s+.*not\s+found",
+        r"virtualbox",
+        r"device\s+not\s+connected",
+    ]
+
     LOOP_THRESHOLDS = {
         ErrorCategory.VERIFICATION: 6,
         ErrorCategory.INFRASTRUCTURE: 5,
@@ -136,6 +151,7 @@ class SmartErrorRouter:
         ErrorCategory.LOGIC: 3,
         ErrorCategory.STATE: 3,
         ErrorCategory.CI_FAILURE: 3,
+        ErrorCategory.ENVIRONMENT: 3,
     }
     DEFAULT_LOOP_THRESHOLD = 4
 
@@ -164,6 +180,8 @@ class SmartErrorRouter:
             category = ErrorCategory.STATE
         elif any(re.search(p, error_str) for p in self.CI_PATTERNS):
             category = ErrorCategory.CI_FAILURE
+        elif any(re.search(p, error_str) for p in self.ENVIRONMENT_PATTERNS):
+            category = ErrorCategory.ENVIRONMENT
         elif any(re.search(p, error_str) for p in self.PERMISSION_PATTERNS):
             category = ErrorCategory.PERMISSION
         elif any(re.search(p, error_str) for p in self.USER_INPUT_PATTERNS):
@@ -428,6 +446,14 @@ class SmartErrorRouter:
                 action="VIBE_HEAL",
                 context_needed=True,
                 reason="CI/CD failure detected. Automatically initiating repair cycle via Self-Healing Protocol.",
+            )
+
+        if category == ErrorCategory.ENVIRONMENT:
+            # Environment Failure: Escalate to user, do NOT restart system
+            # Usually means a VM is down or a physical cable is unplugged.
+            return RecoveryStrategy(
+                action="ASK_USER",
+                reason="Environment dependency failure (e.g., missing VM or tool output). System restart will not fix this. Manual verification of environment is required.",
             )
 
         # Unknown / Default Fallback

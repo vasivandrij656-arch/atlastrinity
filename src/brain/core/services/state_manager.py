@@ -51,12 +51,15 @@ class StateManager:
 
         # Priority: EnvVar > Config > Default Host/Port
         redis_url = os.getenv("REDIS_URL") or config.get("state.redis_url")
+        connect_timeout = config.get("database_management.redis.connection.socket_connect_timeout", 5)
+        socket_timeout = config.get("database_management.redis.connection.socket_timeout", 5)
 
         if redis_url:
             self.redis_client = aioredis.Redis.from_url(
                 redis_url,
                 decode_responses=True,
-                socket_connect_timeout=2,
+                socket_connect_timeout=connect_timeout,
+                socket_timeout=socket_timeout,
             )
             logger.info("[STATE] Redis connected via URL")
         else:
@@ -64,7 +67,8 @@ class StateManager:
                 host=host,
                 port=port,
                 decode_responses=True,
-                socket_connect_timeout=2,
+                socket_connect_timeout=connect_timeout,
+                socket_timeout=socket_timeout,
             )
             logger.info(f"[STATE] Redis connected at {host}:{port}")
 
