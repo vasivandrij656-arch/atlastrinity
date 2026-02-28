@@ -95,7 +95,6 @@ const App: React.FC = () => {
     }
   }, [isInputFocused]);
 
-
   useEffect(() => {
     return () => {
       if (showTimerRef.current) clearTimeout(showTimerRef.current);
