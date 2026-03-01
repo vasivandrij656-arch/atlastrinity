@@ -1111,7 +1111,7 @@ async def _read_vibe_stream(
                     if line.strip():
                         await _handle_vibe_line(line, stream_name, ctx, process=process)
             except TimeoutError:
-                # Pulse: Process is still alive but hasn't sent data. 
+                # Pulse: Process is still alive but hasn't sent data.
                 # This is normal, continue waiting.
                 if process and process.returncode is not None:
                     break

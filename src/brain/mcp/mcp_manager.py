@@ -420,7 +420,7 @@ class MCPManager:
 
                         # Format message
                         msg = data
-                        
+
                         # Route logs to the main console for visibility (e.g. Vibe progress)
                         if level_str in ["error", "critical"]:
                             logger.error(f"[{server_name.upper()}] {msg}")
