@@ -120,7 +120,7 @@ try:
     )
     logger.addHandler(fh)
 except Exception as e:
-    print(f"[VIBE] Warning: Could not setup file logging: {e}")
+    logger.warning(f"[VIBE] Warning: Could not setup file logging: {e}")
 
 sh = logging.StreamHandler(sys.stderr)
 sh.setLevel(logging.INFO)
