@@ -813,7 +813,9 @@ async def run_vibe_subprocess(
         VIBE_QUEUE_SIZE -= 1
         if prompt_preview:
             await _emit_vibe_log(
-                ctx, "info", f"🚀 [VIBE-LIVE] Запуск Vibe programmatic (Native): {prompt_preview[:80]}..."
+                ctx,
+                "info",
+                f"🚀 [VIBE-LIVE] Запуск Vibe programmatic (Native): {prompt_preview[:80]}...",
             )
 
         # Pass through to native programmatic execution
@@ -1129,10 +1131,12 @@ async def _execute_vibe_programmatic(
     import sys
 
     # Vibe is installed globally via `uv tool`, not in the project venv
-    vibe_site_packages = os.path.expanduser("~/.local/share/uv/tools/mistral-vibe/lib/python3.12/site-packages")
+    vibe_site_packages = os.path.expanduser(
+        "~/.local/share/uv/tools/mistral-vibe/lib/python3.12/site-packages"
+    )
     if vibe_site_packages not in sys.path and os.path.exists(vibe_site_packages):
         sys.path.insert(0, vibe_site_packages)
-        
+
     try:
         from vibe.cli.entrypoint import unlock_config_paths  # type: ignore
         from vibe.core.config import VibeConfig  # type: ignore
@@ -1140,12 +1144,15 @@ async def _execute_vibe_programmatic(
         from vibe.core.types import OutputFormat  # type: ignore
     except ImportError as e:
         import logging
-        logging.getLogger("vibe_server").error(f"[VIBE] Failed to import vibe native modules. Is mistral-vibe installed? Error: {e}")
+
+        logging.getLogger("vibe_server").error(
+            f"[VIBE] Failed to import vibe native modules. Is mistral-vibe installed? Error: {e}"
+        )
         return {
             "success": False,
             "error": f"Mistral Vibe Python module not found: {e}",
             "returncode": -1,
-            "command": ["native API"]
+            "command": ["native API"],
         }
 
     original_env = os.environ.copy()
@@ -1186,7 +1193,6 @@ async def _execute_vibe_programmatic(
                 from vibe.core.output_formatters import create_formatter  # type: ignore
                 from vibe.core.types import (  # type: ignore
                     AssistantEvent,
-                    ClientMetadata,
                     EntrypointMetadata,
                 )
                 from vibe.core.utils import ConversationLimitException  # type: ignore
@@ -1233,7 +1239,9 @@ async def _execute_vibe_programmatic(
 
             except TimeoutError:
                 logger.warning(f"[VIBE] Native execution timed out ({timeout_s}s)")
-                await _emit_vibe_log(ctx, "warning", f"⏱️ [VIBE-LIVE] Перевищено timeout ({timeout_s}s)")
+                await _emit_vibe_log(
+                    ctx, "warning", f"⏱️ [VIBE-LIVE] Перевищено timeout ({timeout_s}s)"
+                )
                 return {
                     "success": False,
                     "error": f"Vibe execution timed out after {timeout_s}s",
@@ -1608,7 +1616,9 @@ async def vibe_prompt(
 
         process_env = _prepare_vibe_env(None)
 
-        logger.info(f"[VIBE] Executing prompt via programmatic API: {prompt[:50]}... (timeout={eff_timeout}s)")
+        logger.info(
+            f"[VIBE] Executing prompt via programmatic API: {prompt[:50]}... (timeout={eff_timeout}s)"
+        )
 
         result = await _execute_vibe_programmatic(
             prompt=final_prompt,
@@ -1618,7 +1628,7 @@ async def vibe_prompt(
             ctx=ctx,
             agent_name=agent or "auto-approve",
             max_turns=max_turns or 45,
-            output_format_str=output_format
+            output_format_str=output_format,
         )
 
         # Try to parse JSON response
@@ -1634,8 +1644,6 @@ async def vibe_prompt(
                 result["parsed_response_data"] = resp_data
             except Exception as parse_e:
                 logger.warning(f"[VIBE] Failed to parse programmatic response as JSON: {parse_e}")
-
-            except json.JSONDecodeError:
                 # Try to extract JSON from streaming format
                 lines = result["stdout"].split("\n")
                 json_lines = [line for line in lines if line.strip().startswith("{")]
