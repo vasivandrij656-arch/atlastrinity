@@ -2,7 +2,7 @@ trusted = [
     "${PROJECT_ROOT}",
     "${CONFIG_ROOT}/vibe_workspace",
     "${CONFIG_ROOT}/workspace",
-    "/Users/dev",
+    "${HOME}",
     "/",
 ]
 untrusted = []
