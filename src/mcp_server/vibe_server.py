@@ -1125,8 +1125,8 @@ async def _execute_vibe_programmatic(
     output_format_str: str = "streaming",
 ) -> dict[str, Any]:
     """Execute loop with retries for Vibe natively."""
-    import sys
     import os
+    import sys
 
     # Vibe is installed globally via `uv tool`, not in the project venv
     vibe_site_packages = os.path.expanduser("~/.local/share/uv/tools/mistral-vibe/lib/python3.12/site-packages")
@@ -1134,10 +1134,10 @@ async def _execute_vibe_programmatic(
         sys.path.insert(0, vibe_site_packages)
         
     try:
-        from vibe.cli.entrypoint import unlock_config_paths
-        from vibe.core.config import VibeConfig
-        from vibe.core.programmatic import run_programmatic
-        from vibe.core.types import OutputFormat
+        from vibe.cli.entrypoint import unlock_config_paths  # type: ignore
+        from vibe.core.config import VibeConfig  # type: ignore
+        from vibe.core.programmatic import run_programmatic  # type: ignore
+        from vibe.core.types import OutputFormat  # type: ignore
     except ImportError as e:
         import logging
         logging.getLogger("vibe_server").error(f"[VIBE] Failed to import vibe native modules. Is mistral-vibe installed? Error: {e}")
@@ -1172,20 +1172,24 @@ async def _execute_vibe_programmatic(
             elif output_format_str == "text":
                 output_format = OutputFormat.TEXT
 
+            # Capture stderr for logs and internal print statements
+            from contextlib import redirect_stderr, redirect_stdout
+            from io import StringIO
+
+            out_buf = StringIO()
+            err_buf = StringIO()
+
             try:
-                # Capture stderr for logs and internal print statements
-                from contextlib import redirect_stderr, redirect_stdout
-                from io import StringIO
-
-                out_buf = StringIO()
-                err_buf = StringIO()
-
                 # Execute natively with timeout (Custom async wrapper to avoid asyncio.run() conflicts)
-                from vibe.core.agent_loop import AgentLoop
-                from vibe.core.output_formatters import create_formatter
-                from vibe.core.types import AssistantEvent, EntrypointMetadata, ClientMetadata
-                from vibe.core.utils import ConversationLimitException
-                from vibe import __version__ as vibe_version
+                from vibe import __version__ as vibe_version  # type: ignore
+                from vibe.core.agent_loop import AgentLoop  # type: ignore
+                from vibe.core.output_formatters import create_formatter  # type: ignore
+                from vibe.core.types import (  # type: ignore
+                    AssistantEvent,
+                    ClientMetadata,
+                    EntrypointMetadata,
+                )
+                from vibe.core.utils import ConversationLimitException  # type: ignore
 
                 formatter = create_formatter(output_format)
 
@@ -1234,14 +1238,14 @@ async def _execute_vibe_programmatic(
                     "success": False,
                     "error": f"Vibe execution timed out after {timeout_s}s",
                     "returncode": -1,
-                    "stdout": out_buf.getvalue() if "out_buf" in locals() else "",
-                    "stderr": err_buf.getvalue() if "err_buf" in locals() else "",
+                    "stdout": out_buf.getvalue(),
+                    "stderr": err_buf.getvalue(),
                     "command": ["native API"],
                 }
             except Exception as e:
                 err_str = str(e)
-                stdout = out_buf.getvalue() if "out_buf" in locals() else ""
-                stderr = err_buf.getvalue() if "err_buf" in locals() else ""
+                stdout = out_buf.getvalue()
+                stderr = err_buf.getvalue()
 
                 # Check for API rate limits and other fallback triggers
                 rate_limit_patterns = [
