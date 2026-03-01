@@ -414,9 +414,12 @@ class MCPManager:
                 async with cast("Any", stdio_client)(server_params) as (read, write):
                     # Define logging callback for this server
                     async def handle_log(params: Any):
+                        # The MCP Python SDK nests the actual parameters inside a .params attribute
+                        p = getattr(params, "params", params)
+
                         # Extract level and data
-                        level_str = getattr(params, "level", "info").lower()
-                        data = getattr(params, "data", "")
+                        level_str = str(getattr(p, "level", "info")).lower()
+                        data = getattr(p, "data", "")
 
                         # Format message
                         msg = data
