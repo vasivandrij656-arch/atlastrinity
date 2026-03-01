@@ -1,7 +1,8 @@
 import asyncio
+import logging
+
 from src.brain.mcp.mcp_manager import MCPManager
 from src.brain.monitoring.logger import setup_logging
-import logging
 
 setup_logging("test_vibe")
 logging.getLogger().setLevel(logging.INFO)
