@@ -18,12 +18,6 @@ minimal_tool_calls = true
 tool_call_efficiency = "high"
 redundancy_elimination = "aggressive"
 
-[models]
-# Fast models for rapid response
-strategy_model = "gpt-5-mini"
-execution_model = "gpt-4.1"
-verdict_model = "gpt-5-mini"
-
 [optimization]
 # Reduce cognitive friction
 precompute_common_patterns = true
