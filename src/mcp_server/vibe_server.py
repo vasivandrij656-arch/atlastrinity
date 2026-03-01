@@ -72,18 +72,6 @@ DEFAULT_CONFIG_ROOT = Path.home() / ".config" / "atlastrinity"
 # TUI artifacts to filter out from logs
 SPAM_TRIGGERS = [
     "Welcome to",
-    "│",
-    "╭",
-    "╮",
-    "╰",
-    "─",
-    "──",
-    "[2K",
-    "[1A",
-    "[12;25H",
-    "[16;1H",
-    "Press Enter",
-    "↵",
     "ListToolsRequest",
     "Processing request of type",
     "Secure MCP Filesystem Server",
@@ -990,6 +978,8 @@ async def _handle_vibe_line(
         "Do you want to",
         "Type 'y' to",
         "Press Enter to",
+        "Do you trust this folder?",
+        "Trust this folder?",
     ]
     if any(p in line for p in patterns):
         await _auto_confirm_vibe_action(line, ctx, process)
@@ -1016,7 +1006,7 @@ async def _try_parse_structured_vibe_log(line: str, ctx: Context | None) -> bool
             "tool": "🔧 [VIBE-ACTION]",
         }
         prefix = role_map.get(obj["role"], "💬 [VIBE-GEN]")
-        message = f"{prefix} {str(obj['content'])[:200]}"
+        message = f"{prefix} {str(obj['content'])[:1000]}"
 
         logger.info(message)
         await _emit_vibe_log(ctx, "info", message)

@@ -107,6 +107,11 @@ const CONFIG_MAPPINGS = [
     ),
     description: 'Mikrotik Logger LaunchAgent',
   },
+  {
+    template: path.join(PROJECT_ROOT, 'config', 'vibe', 'trusted_folders.toml.template'),
+    destination: path.join(VIBE_ROOT, 'trusted_folders.toml'),
+    description: 'Native Vibe Trusted Folders (Home)',
+  },
 ];
 
 function ensureDirectoryExists(dirPath) {

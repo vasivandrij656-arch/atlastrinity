@@ -1,0 +1,5 @@
+trusted = [
+    "${PROJECT_ROOT}",
+    "${CONFIG_ROOT}/vibe_workspace",
+]
+untrusted = []
