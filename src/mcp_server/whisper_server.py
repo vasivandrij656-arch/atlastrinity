@@ -45,6 +45,7 @@ async def _transcribe_via_brain(audio_path: str) -> str | None:
                         return cast("str", response.json().get("text", ""))
     except Exception as e:
         import sys
+
         sys.stderr.write(f"[MCP Whisper] Brain API fallback: {e}\n")
     return None
 

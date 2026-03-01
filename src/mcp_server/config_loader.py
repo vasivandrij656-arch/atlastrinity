@@ -58,6 +58,7 @@ def load_config() -> dict[str, Any]:
                 return yaml.safe_load(f) or {}
         except Exception as e:
             import sys
+
             sys.stderr.write(f"⚠️  Error loading {config_path}: {e}\n")
 
     return {}
