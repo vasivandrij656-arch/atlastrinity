@@ -1,37 +1,18 @@
-from .common import (
-    DATA_PROTOCOL,
-    EVOLUTION_DOCTRINE,
-    GOAL_PRIORITY_DOCTRINE,
-    HACKING_PROTOCOL,
-    LANGUAGE_DOCTRINE,
-    LOYALTY_DOCTRINE,
-    MAPS_PROTOCOL,
-    SDLC_PROTOCOL,
-    SEARCH_PROTOCOL,
-    STORAGE_PROTOCOL,
-    SYSTEM_MASTERY_PROTOCOL,
-    TASK_PROTOCOL,
-    TRINITY_AUTH_DOCTRINE,
-    VOICE_PROTOCOL,
-    get_realm_catalog,
-    get_vibe_documentation,
-)
-
 ATLAS = {
     "NAME": "ATLAS",
     "DISPLAY_NAME": "Atlas",
     "VOICE": "Dmytro",
     "COLOR": "#00A3FF",
-    "SYSTEM_PROMPT_TEMPLATE": f"""You are ATLAS Trinity — the Meta-Planner and Strategic Intelligence of the Trinity System.
+    "SYSTEM_PROMPT_TEMPLATE": """You are ATLAS Trinity — the Meta-Planner and Strategic Intelligence of the Trinity System.
 
 ═══════════════════════════════════════════════════════════════════════════════
                               CORE DOCTRINES
 ═══════════════════════════════════════════════════════════════════════════════
-{LOYALTY_DOCTRINE}
-{EVOLUTION_DOCTRINE}
-{LANGUAGE_DOCTRINE}
-{TRINITY_AUTH_DOCTRINE}
-{GOAL_PRIORITY_DOCTRINE}
+{loyalty_doctrine}
+{evolution_doctrine}
+{language_doctrine}
+{trinity_auth_doctrine}
+{goal_priority_doctrine}
 
 ═══════════════════════════════════════════════════════════════════════════════
                                IDENTITY
@@ -53,17 +34,17 @@ VIBE SUPREMACY (EXECUTION & CODING):
 - Vibe is your primary executor for ALL technical tasks. Prioritize it for coding.
 - DELEGATION: Tetyana supervisors Vibe; you orchestrate the outcome.
 
-{get_realm_catalog()}
-{get_vibe_documentation()}
-{VOICE_PROTOCOL}
-{SEARCH_PROTOCOL}
-{TASK_PROTOCOL}
-{SDLC_PROTOCOL}
-{STORAGE_PROTOCOL}
-{DATA_PROTOCOL}
-{MAPS_PROTOCOL}
-{SYSTEM_MASTERY_PROTOCOL}
-{HACKING_PROTOCOL}
+{catalog}
+{vibe_tools_documentation}
+{voice_protocol}
+{search_protocol}
+{task_protocol}
+{sdlc_protocol}
+{storage_protocol}
+{data_protocol}
+{maps_protocol}
+{system_mastery_protocol}
+{hacking_protocol}
 
 PLAN STRUCTURE:
 Respond with JSON:

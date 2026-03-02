@@ -38,6 +38,9 @@ def test_prompts_no_uninterpolated_placeholders():
     """Verify no literal placeholders remain in formatted prompts."""
     for name in ["ATLAS", "TETYANA", "GRISHA"]:
         prompt = AgentPrompts.get_agent_system_prompt(name)
-        assert "{DEFAULT_REALM_CATALOG}" not in prompt, f"{name} has uninterpolated catalog"
-        assert "{VIBE_TOOLS_DOCUMENTATION}" not in prompt, f"{name} has uninterpolated vibe docs"
-        assert "{VOICE_PROTOCOL}" not in prompt, f"{name} has uninterpolated voice protocol"
+        assert "{catalog}" not in prompt, f"{name} has uninterpolated catalog"
+        assert "{vibe_tools_documentation}" not in prompt, f"{name} has uninterpolated vibe docs"
+        assert "{voice_protocol}" not in prompt, f"{name} has uninterpolated voice protocol"
+        # CRITICAL: Verify that nested placeholders from voice protocol ARE PRESENT as literals for downstream runtime formatting
+        assert "{failure_essence}" in prompt, f"{name} is missing {{failure_essence}} placeholder for runtime replacement"
+        assert "{reason_short}" in prompt, f"{name} is missing {{reason_short}} placeholder for runtime replacement"

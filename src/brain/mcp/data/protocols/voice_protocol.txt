@@ -41,8 +41,7 @@ When generating `voice_action` or `voice_summary`, aim for a high-end, responsiv
    - BAD: "Step completed."
    - GOOD: "Server started on port 8000."
 
-4. **Error Reporting**:
-   - format: "{Failure essence}. {Reason (short)}."
+4. **- Error reporting format: "{failure_essence}. {reason_short}."
    - Example: "Failed to clone repo. Invalid token."
 
 5. **Tone**: Professional, Active, Fast-paced. Like a senior engineer reporting to a lead.

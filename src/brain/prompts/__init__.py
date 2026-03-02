@@ -44,6 +44,14 @@ class AgentPrompts:
             SYSTEM_MASTERY_PROTOCOL,
             TASK_PROTOCOL,
             VOICE_PROTOCOL,
+            LOYALTY_DOCTRINE,
+            EVOLUTION_DOCTRINE,
+            LANGUAGE_DOCTRINE,
+            TRINITY_AUTH_DOCTRINE,
+            GOAL_PRIORITY_DOCTRINE,
+            EVIDENCE_DOCTRINE,
+            SYNC_DOCTRINE,
+            TRINITY_COORDINATION_DOCTRINE,
             get_realm_catalog,
             get_vibe_documentation,
         )
@@ -64,7 +72,19 @@ class AgentPrompts:
             "maps_protocol": MAPS_PROTOCOL,
             "system_mastery_protocol": SYSTEM_MASTERY_PROTOCOL,
             "hacking_protocol": HACKING_PROTOCOL,
-            "WORKSPACE_DIR": WORKSPACE_DIR,
+            "workspace_dir": WORKSPACE_DIR,
+            # Centrally injected doctrines
+            "loyalty_doctrine": LOYALTY_DOCTRINE,
+            "evolution_doctrine": EVOLUTION_DOCTRINE,
+            "language_doctrine": LANGUAGE_DOCTRINE,
+            "trinity_auth_doctrine": TRINITY_AUTH_DOCTRINE,
+            "goal_priority_doctrine": GOAL_PRIORITY_DOCTRINE,
+            "evidence_doctrine": EVIDENCE_DOCTRINE,
+            "sync_doctrine": SYNC_DOCTRINE,
+            "trinity_coordination_doctrine": TRINITY_COORDINATION_DOCTRINE,
+            # Nested placeholders (escaped to remain literals for downstream formatting)
+            "failure_essence": "{failure_essence}",
+            "reason_short": "{reason_short}",
         }
 
         if agent_name.upper() == "ATLAS":
@@ -92,7 +112,18 @@ class AgentPrompts:
         """
         from src.brain.mcp.mcp_registry import get_protocols_by_names  # pyre-ignore
 
-        from .common import get_realm_catalog, get_vibe_documentation  # pyre-ignore
+        from .common import (  # pyre-ignore
+            EVIDENCE_DOCTRINE,
+            EVOLUTION_DOCTRINE,
+            GOAL_PRIORITY_DOCTRINE,
+            LANGUAGE_DOCTRINE,
+            LOYALTY_DOCTRINE,
+            SYNC_DOCTRINE,
+            TRINITY_AUTH_DOCTRINE,
+            TRINITY_COORDINATION_DOCTRINE,
+            get_realm_catalog,
+            get_vibe_documentation,
+        )
 
         # Get fresh catalog
         current_catalog = get_realm_catalog()
@@ -117,7 +148,19 @@ class AgentPrompts:
             "maps_protocol": protocols.get("maps", ""),
             "system_mastery_protocol": protocols.get("system_mastery", ""),
             "hacking_protocol": protocols.get("hacking", ""),
-            "WORKSPACE_DIR": WORKSPACE_DIR,
+            "workspace_dir": WORKSPACE_DIR,
+            # Centrally injected doctrines
+            "loyalty_doctrine": LOYALTY_DOCTRINE,
+            "evolution_doctrine": EVOLUTION_DOCTRINE,
+            "language_doctrine": LANGUAGE_DOCTRINE,
+            "trinity_auth_doctrine": TRINITY_AUTH_DOCTRINE,
+            "goal_priority_doctrine": GOAL_PRIORITY_DOCTRINE,
+            "evidence_doctrine": EVIDENCE_DOCTRINE,
+            "sync_doctrine": SYNC_DOCTRINE,
+            "trinity_coordination_doctrine": TRINITY_COORDINATION_DOCTRINE,
+            # Nested placeholders (escaped to remain literals for downstream formatting)
+            "failure_essence": "{failure_essence}",
+            "reason_short": "{reason_short}",
         }
 
         if agent_name.upper() == "ATLAS":
