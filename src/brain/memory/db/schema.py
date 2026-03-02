@@ -318,7 +318,6 @@ class Discovery(Base):
     created_at: Mapped[datetime] = mapped_column(DateTime, default=lambda: datetime.now(UTC))
 
 
-
 class FileIndex(Base):
     """Indexes files in the workspace for fast retrieval by Vibe/Agents."""
 

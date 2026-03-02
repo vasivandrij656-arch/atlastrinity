@@ -2947,15 +2947,17 @@ async def vibe_get_system_context(ctx: Context) -> dict[str, Any]:
 
 if __name__ == "__main__":
     logger.info("[VIBE] MCP Server starting (v3.0 Hyper-Refactored)...")
-    
+
     # Environment Diagnostics
     try:
         import dotenv
+
         logger.info(f"[DIAG] python-dotenv is available: {dotenv.__file__}")
     except ImportError:
         logger.error("[DIAG] python-dotenv is MISSING from current environment!")
         # Attempt to find it
         import shutil
+
         py_path = shutil.which("python3")
         logger.info(f"[DIAG] Current python: {py_path}")
         logger.info(f"[DIAG] sys.path: {sys.path[:3]}...")
