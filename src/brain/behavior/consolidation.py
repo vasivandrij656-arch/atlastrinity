@@ -29,6 +29,52 @@ class ConsolidationModule:
         self.idle_threshold = timedelta(hours=2)
         self.log_path = os.path.join(os.path.expanduser("~/.config/atlastrinity/logs"), "brain.log")
 
+    async def consolidate_immediate(self, task_state: dict[str, Any]) -> dict[str, Any] | None:
+        """Immediately distills a lesson from a critical failure (triggered by high cortisol)."""
+        logger.info("[CONSOLIDATION] Triggering immediate consolidation for critical failure...")
+        
+        try:
+            from src.brain.agents.atlas import Atlas
+            from src.brain.config.config_loader import config
+
+            consolidation_model = config.get("models", {}).get("consolidation") or config.get(
+                "models", {}
+            ).get("default", "")
+            
+            atlas = Atlas(model_name=consolidation_model)
+            llm = atlas.llm
+            
+            # Prepare recent task data from state for context
+            steps = task_state.get("step_results", [])
+            recent_steps = steps[-3:] if steps else []
+            
+            task_data = {
+                "goal": task_state.get("_theme", "Current Task"),
+                "status": "FAILED",
+                "steps": [
+                    {
+                        "action": s.get("action") or s.get("tool", "unknown"),
+                        "status": s.get("status", "FAILED"),
+                        "error": s.get("error", "Unknown error")
+                    } for s in recent_steps
+                ]
+            }
+            
+            lesson = await self._distill_lesson_via_llm(llm, task_data)
+            if lesson:
+                success = long_term_memory.remember_error(
+                    error=lesson["error"],
+                    solution=lesson["rule"],
+                    context=task_data,
+                    task_description=str(task_data["goal"]),
+                )
+                if success:
+                    logger.info(f"[CONSOLIDATION] Immediate lesson learned: {lesson['error']}")
+                    return lesson
+        except Exception as e:
+            logger.error(f"[CONSOLIDATION] Immediate consolidation failed: {e}")
+        return None
+
     async def run_consolidation(self, llm=None) -> dict[str, Any]:
         """Main consolidation process using DB data and LLM."""
         from src.brain.memory.db.manager import db_manager

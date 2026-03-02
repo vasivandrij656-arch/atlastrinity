@@ -554,13 +554,23 @@ class Trinity(TourMixin, VoiceOrchestrationMixin):
         if result.success:
             # Positive feedback
             neural_core.chemistry.reward(intensity=0.1)
+            # Accelerate recovery if we were highly stressed
+            if neural_core.chemistry.get_state()["cortisol"] > 0.3:
+                neural_core.chemistry.accelerate_recovery(multiplier=1.5)
+                
             # Strengthen synapse between task and tool
             task_id = self.state.get("db_task_id")
             if task_id:
                 await neural_core.graph.strengthen_synapse(f"task:{task_id}", f"tool:{action}")
         else:
-            # Negative feedback
-            neural_core.chemistry.stress(intensity=0.15)
+            # Negative feedback with tool-specific awareness
+            neural_core.chemistry.stress(intensity=0.15, tool_name=str(action))
+            
+            # Real-time consolidation for critical failures
+            if neural_core.chemistry.get_state()["cortisol"] > 0.8:
+                from src.brain.behavior.consolidation import consolidation_module
+                logger.warning("[ORCHESTRATOR] Critical stress detected. Triggering real-time consolidation.")
+                asyncio.create_task(consolidation_module.consolidate_immediate(self.state))
 
     def stop(self):
         """Immediately stop voice and cancel current orchestration task"""
@@ -1107,7 +1117,16 @@ class Trinity(TourMixin, VoiceOrchestrationMixin):
 
             if res.verified:
                 await self._speak("grisha", "План перевірено і затверджено. Починаємо.")
+                # Positive feedback for the planner's success
+                from src.brain.neural_core.core import neural_core
+
+                neural_core.chemistry.reward(intensity=0.05)
                 return plan
+
+            # Plan rejected - stress for the planner node
+            from src.brain.neural_core.core import neural_core
+
+            neural_core.chemistry.stress(intensity=0.1, tool_name="grisha_plan_verification")
 
             # NEGOTIATION PHASE
             assessment = await self.atlas.assess_plan_critique(plan, res.description, res.issues)
