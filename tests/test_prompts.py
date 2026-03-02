@@ -42,5 +42,9 @@ def test_prompts_no_uninterpolated_placeholders():
         assert "{vibe_tools_documentation}" not in prompt, f"{name} has uninterpolated vibe docs"
         assert "{voice_protocol}" not in prompt, f"{name} has uninterpolated voice protocol"
         # CRITICAL: Verify that nested placeholders from voice protocol ARE PRESENT as literals for downstream runtime formatting
-        assert "{failure_essence}" in prompt, f"{name} is missing {{failure_essence}} placeholder for runtime replacement"
-        assert "{reason_short}" in prompt, f"{name} is missing {{reason_short}} placeholder for runtime replacement"
+        assert "{failure_essence}" in prompt, (
+            f"{name} is missing {{failure_essence}} placeholder for runtime replacement"
+        )
+        assert "{reason_short}" in prompt, (
+            f"{name} is missing {{reason_short}} placeholder for runtime replacement"
+        )
