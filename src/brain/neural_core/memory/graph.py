@@ -109,9 +109,39 @@ class CognitiveGraph:
                 results.append(node)
             return results
 
-    async def get_recent_lessons(self, limit: int = 5) -> list[dict[str, Any]]:
+    async def get_recent_lessons(self, limit: int = 5) -> list[str]:
         """Fast retrieval of recent neural lessons for agent context."""
-        return await self.search_nodes(node_type="lesson", limit=limit)
+        nodes = await self.search_nodes(node_type="neural_lesson", limit=limit)
+        return [n["properties"].get("content", n["label"]) for n in nodes]
+
+    async def get_related_insights(self, task_context: str, limit: int = 5) -> list[str]:
+        """Finds highly weighted connections related to the current task context."""
+        keywords = [k.strip().lower() for k in task_context.split() if len(k) > 3]
+        if not keywords:
+            return []
+
+        insights = []
+        try:
+            async with aiosqlite.connect(self.db_path) as db:
+                # Search for nodes or targets matching the primary keyword with high weight edges
+                query = """
+                    SELECT n1.label, e.relation, n2.label, e.weight
+                    FROM edges e
+                    JOIN nodes n1 ON e.source_id = n1.id
+                    JOIN nodes n2 ON e.target_id = n2.id
+                    WHERE (n1.label LIKE ? OR n2.label LIKE ?)
+                    AND e.weight > 0.4
+                    ORDER BY e.weight DESC
+                    LIMIT ?
+                """
+                async with db.execute(query, (f"%{keywords[0]}%", f"%{keywords[0]}%", limit)) as cursor:
+                    async for row in cursor:
+                        # Row: (source, relation, target, weight)
+                        insights.append(f"{row[0]} -> {row[1]} -> {row[2]} (strength: {row[3]:.2f})")
+        except Exception as e:
+            logger.warning(f"[NEURAL GRAPH] Failed to get related insights: {e}")
+
+        return insights
 
     async def add_edge(
         self,
@@ -129,7 +159,33 @@ class CognitiveGraph:
             )
             await db.commit()
 
+    async def get_routing_bias(self, tool_name: str) -> str | None:
+        """Checks if a tool has a strong synaptic connection to a specific server."""
+        try:
+            async with aiosqlite.connect(self.db_path) as db:
+                # We look for a server node connected to the tool node with high weight
+                query = """
+                    SELECT n2.label, e.weight
+                    FROM nodes n1
+                    JOIN edges e ON n1.id = e.source_id
+                    JOIN nodes n2 ON e.target_id = n2.id
+                    WHERE n1.label = ? AND n2.type = 'server'
+                    ORDER BY e.weight DESC
+                    LIMIT 1
+                """
+                # Normalize tool name for graph lookup
+                tool_id = f"tool:{tool_name}" if not tool_name.startswith("tool:") else tool_name
+                async with db.execute(query, (tool_id,)) as cursor:
+                    row = await cursor.fetchone()
+                    if row and row[1] > 0.6:  # Reasonable threshold for neural bias
+                        # Extract server name from label "server:name"
+                        return row[0].split(":", 1)[1] if ":" in row[0] else row[0]
+        except Exception as e:
+            logger.debug(f"[NEURAL GRAPH] Routing bias lookup failed: {e}")
+        return None
+
     async def get_causality_chain(self, node_id: str, depth: int = 3) -> list[dict[str, Any]]:
+
         """
         Naive implementation of causality retrieval (tracing edges).
         Useful for the ReflexPipe to understand 'Why did I do this?'.
@@ -153,6 +209,17 @@ class CognitiveGraph:
         The strengthening is scaled by an external multiplier (e.g., from NeuroModulator).
         """
         effective_amount = amount * multiplier
+        
+        # Ensure nodes exist before adding/strengthening synapse
+        async def ensure_node(node_id: str):
+            if not await self.get_node(node_id):
+                node_type = node_id.split(":", 1)[0] if ":" in node_id else "unknown"
+                label = node_id
+                await self.add_node(node_id, node_type, label, {})
+        
+        await ensure_node(source_id)
+        await ensure_node(target_id)
+
         async with aiosqlite.connect(self.db_path) as db:
             cursor = await db.execute(
                 "SELECT id, weight FROM edges WHERE source_id = ? AND target_id = ?",

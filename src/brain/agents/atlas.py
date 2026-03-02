@@ -1650,6 +1650,17 @@ If plan is sound, state: "SELF_REVIEW_ISSUES: None" and set CONFIDENCE: 0.9+
                     f"[ATLAS] Recalled {len(behavioral_lessons)} behavioral lessons for planning.",
                 )
 
+        # --- NEURAL EXPERTISE RECALL (SYNAPTIC CONTEXT) ---
+        if cognitive_graph:
+            # Query graph for tools/strategies with strong synapses to this task context
+            neural_expertise = await cognitive_graph.get_related_insights(task_text, limit=3)
+            if neural_expertise:
+                memory_context += "\n\nNEURAL EXPERTISE SIGNALS (Strengthened Synapses):\n" + "\n".join(
+                    [f"- {insight}" for insight in neural_expertise]
+                )
+                logger.info(f"[ATLAS] Injected {len(neural_expertise)} neural insights into strategy.")
+
+
         # [NEW] Inject Pre-Recalled Golden Fund Context (from Orchestrator)
         if enriched_request.get("memory_context"):
             memory_context += f"\n\n[GOLDEN FUND RECALL]:\n{enriched_request['memory_context']}\n"

@@ -32,6 +32,11 @@ from src.brain.core.orchestration.context import shared_context
 from src.brain.mcp.mcp_manager import mcp_manager
 from src.brain.monitoring.logger import logger
 from src.brain.monitoring.utils.security import mask_sensitive_data
+
+try:
+    from src.brain.neural_core.memory.graph import cognitive_graph
+except ImportError:
+    cognitive_graph = None
 from src.brain.prompts import AgentPrompts
 from src.brain.prompts.grisha import (
     GRISHA_DEEP_VALIDATION_REASONING,
@@ -559,11 +564,20 @@ class Grisha(BaseAgent):
         expected_result = step.get("expected_result", "")
         step_id = step.get("id", "unknown")
 
+        # --- NEURAL INSIGHTS FOR VERIFICATION ---
+        neural_lessons = ""
+        if cognitive_graph:
+            insights = await cognitive_graph.get_related_insights(step_action, limit=2)
+            if insights:
+                neural_lessons = "\n\nLESSON HISTORY (From Neural Graph):\n" + "\n".join(
+                    [f"- {ins}" for ins in insights]
+                )
+
         query = GRISHA_VERIFICATION_GOAL_ANALYSIS.format(
             step_id=step_id,
             step_action=step_action,
             expected_result=expected_result,
-            goal_context=goal_context,
+            goal_context=goal_context + neural_lessons,
         )
 
         logger.info(f"[GRISHA] Phase 1: Analyzing verification goal for step {step_id}...")

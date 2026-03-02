@@ -47,6 +47,7 @@ class StepResult:
     thought: str | None = None
     is_deviation: bool = False
     deviation_info: dict[str, Any] | None = None
+    server: str | None = None
 
     def __post_init__(self):
         if self.timestamp is None:
@@ -63,6 +64,7 @@ class StepResult:
             "error": self.error,
             "tool_call": self.tool_call,
             "thought": self.thought,
+            "server": self.server,
             "timestamp": self.timestamp.isoformat() if self.timestamp else None,
         }
 
@@ -1290,6 +1292,7 @@ Respond in JSON ONLY:
             error=tool_result.get("error"),
             tool_call=tool_call,
             thought=monologue.get("thought") if isinstance(monologue, dict) else None,
+            server=tool_result.get("server"),
         )
 
         self.results.append(res)

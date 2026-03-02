@@ -558,13 +558,30 @@ class Trinity(TourMixin, VoiceOrchestrationMixin):
             if neural_core.chemistry.get_state()["cortisol"] > 0.3:
                 neural_core.chemistry.accelerate_recovery(multiplier=1.5)
 
-            # Strengthen synapse between task and tool
+            # 1. Path-based synaptic reward (Hebbian)
             task_id = self.state.get("db_task_id")
+            tool_id = step.get("tool") or step.get("action") or str(action)
+            
             if task_id:
-                await neural_core.graph.strengthen_synapse(f"task:{task_id}", f"tool:{action}")
+                # Task -> Tool connection
+                await neural_core.graph.strengthen_synapse(f"task:{task_id}", f"tool:{tool_id}")
+            
+            # Strengthen synaptic connection: Tool -> Server (Optimizes Dispatcher)
+            await neural_core.graph.strengthen_synapse(
+                f"tool:{tool_id}", f"server:{result.server}"
+            )
+            # 2. Metric-based persistence loop
+
+            # Track tool success in BehaviorEngine for future routing
+            behavior_engine.update_pattern_metrics("tool_performance", str(tool_id), True)
         else:
             # Negative feedback with tool-specific awareness
-            neural_core.chemistry.stress(intensity=0.15, tool_name=str(action))
+            tool_id = step.get("tool") or step.get("action") or str(action)
+            neural_core.chemistry.stress(intensity=0.15, tool_name=str(tool_id))
+
+            # Metric-based persistence loop
+            behavior_engine.update_pattern_metrics("tool_performance", str(tool_id), False)
+
 
             # Real-time consolidation for critical failures
             if neural_core.chemistry.get_state()["cortisol"] > 0.8:

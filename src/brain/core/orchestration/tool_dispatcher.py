@@ -15,6 +15,11 @@ from src.brain.mcp.mcp_registry import (
 )
 from src.brain.monitoring.logger import logger
 
+try:
+    from src.brain.neural_core.memory.graph import cognitive_graph
+except ImportError:
+    cognitive_graph = None
+
 
 class ToolDispatcher:
     """Centralized dispatcher for MCP tools.
@@ -609,9 +614,17 @@ class ToolDispatcher:
                 }
 
             # 3. Resolve tool name and server
-            server, resolved_tool, normalized_args = self._resolve_routing(
+            server, resolved_tool, normalized_args = await self._resolve_routing(
                 tool_name, args, explicit_server
             )
+
+            # --- [NEURAL OVERRIDE]: Check for Synaptic Bias ---
+            # If the brain has a strong preference for a specific server (high weight), we override config
+            if not explicit_server and cognitive_graph:
+                neural_bias = await cognitive_graph.get_routing_bias(resolved_tool)
+                if neural_bias and neural_bias != server:
+                    logger.info(f"[DISPATCHER] Neural override: '{resolved_tool}' -> '{neural_bias}' (Brain prefers this)")
+                    server = neural_bias
 
             # --- NEW: Placeholder Hallucination Check ---
             placeholder_error = self._check_for_placeholders(normalized_args)
@@ -677,7 +690,7 @@ class ToolDispatcher:
                 "args_keys": list(args.keys()) if isinstance(args, dict) else [],
             }
 
-    def _resolve_routing(
+    async def _resolve_routing(
         self, tool_name: str, args: dict[str, Any], explicit_server: str | None
     ) -> tuple[str | None, str, dict[str, Any]]:
         """Resolve the server and canonical tool name."""
@@ -700,7 +713,7 @@ class ToolDispatcher:
         if explicit_server:
             return self._resolve_tool_and_args(tool_name, args, explicit_server)
 
-        return self._intelligent_routing(tool_name, args)
+        return await self._intelligent_routing(tool_name, args)
 
     def _normalize_server_prefix(self, tool_name: str, explicit_server: str | None) -> str | None:
         """Heuristically normalize server prefix in tool name."""
@@ -1235,7 +1248,7 @@ class ToolDispatcher:
         # Check MACOS_MAP
         return tool_lower in self.MACOS_MAP
 
-    def _intelligent_routing(
+    async def _intelligent_routing(
         self,
         tool_name: str,
         args: dict[str, Any],

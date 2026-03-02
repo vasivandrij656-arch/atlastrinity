@@ -536,12 +536,25 @@ class BehaviorEngine:
         if not self.config:
             return
 
-        patterns = self.config.get("patterns", {}).get(pattern_type, {})
+        patterns = self.config.setdefault("patterns", {}).setdefault(pattern_type, {})
         if pattern_name not in patterns:
-            logger.warning(
-                f"[BEHAVIOR ENGINE] Cannot update metrics: pattern '{pattern_name}' not found in '{pattern_type}'",
-            )
-            return
+            if pattern_type == "tool_performance":
+                # Dynamically create metric entry for new tool
+                patterns[pattern_name] = {
+                    "description": f"Performance metrics for tool: {pattern_name}",
+                    "metadata": {
+                        "usage_count": 0,
+                        "success_rate": 0.5,
+                        "initial_confidence": 0.6,
+                        "volatility": 0.5
+                    }
+                }
+            else:
+                logger.warning(
+                    f"[BEHAVIOR ENGINE] Cannot update metrics: pattern '{pattern_name}' not found in '{pattern_type}'",
+                )
+                return
+
 
         pattern_cfg = patterns[pattern_name]
         metadata = pattern_cfg.setdefault("metadata", {})
