@@ -557,7 +557,7 @@ class Trinity(TourMixin, VoiceOrchestrationMixin):
             # Accelerate recovery if we were highly stressed
             if neural_core.chemistry.get_state()["cortisol"] > 0.3:
                 neural_core.chemistry.accelerate_recovery(multiplier=1.5)
-                
+
             # Strengthen synapse between task and tool
             task_id = self.state.get("db_task_id")
             if task_id:
@@ -565,11 +565,14 @@ class Trinity(TourMixin, VoiceOrchestrationMixin):
         else:
             # Negative feedback with tool-specific awareness
             neural_core.chemistry.stress(intensity=0.15, tool_name=str(action))
-            
+
             # Real-time consolidation for critical failures
             if neural_core.chemistry.get_state()["cortisol"] > 0.8:
                 from src.brain.behavior.consolidation import consolidation_module
-                logger.warning("[ORCHESTRATOR] Critical stress detected. Triggering real-time consolidation.")
+
+                logger.warning(
+                    "[ORCHESTRATOR] Critical stress detected. Triggering real-time consolidation."
+                )
                 asyncio.create_task(consolidation_module.consolidate_immediate(self.state))
 
     def stop(self):

@@ -552,21 +552,21 @@ class BehaviorEngine:
         # Update volatility (how often result changes)
         last_result = metadata.get("last_result")
         volatility = metadata.get("volatility", 0.5)
-        
+
         if last_result is not None and last_result != success:
             # Result changed, increase volatility
             volatility = min(1.0, volatility + 0.2)
         else:
             # Result same, decrease volatility
             volatility = max(0.1, volatility - 0.05)
-            
+
         metadata["last_result"] = success
         metadata["volatility"] = round(volatility, 3)
-        
+
         # Dynamic alpha based on volatility: High volatility = faster adaptation
         # alpha range: [0.1, 0.6]
         alpha = 0.1 + (volatility * 0.5)
-        
+
         current_rate = metadata.get("success_rate", 0.0)
         new_result = 1.0 if success else 0.0
         metadata["success_rate"] = round(alpha * new_result + (1 - alpha) * current_rate, 3)

@@ -32,7 +32,7 @@ class ConsolidationModule:
     async def consolidate_immediate(self, task_state: dict[str, Any]) -> dict[str, Any] | None:
         """Immediately distills a lesson from a critical failure (triggered by high cortisol)."""
         logger.info("[CONSOLIDATION] Triggering immediate consolidation for critical failure...")
-        
+
         try:
             from src.brain.agents.atlas import Atlas
             from src.brain.config.config_loader import config
@@ -40,14 +40,14 @@ class ConsolidationModule:
             consolidation_model = config.get("models", {}).get("consolidation") or config.get(
                 "models", {}
             ).get("default", "")
-            
+
             atlas = Atlas(model_name=consolidation_model)
             llm = atlas.llm
-            
+
             # Prepare recent task data from state for context
             steps = task_state.get("step_results", [])
             recent_steps = steps[-3:] if steps else []
-            
+
             task_data = {
                 "goal": task_state.get("_theme", "Current Task"),
                 "status": "FAILED",
@@ -55,11 +55,12 @@ class ConsolidationModule:
                     {
                         "action": s.get("action") or s.get("tool", "unknown"),
                         "status": s.get("status", "FAILED"),
-                        "error": s.get("error", "Unknown error")
-                    } for s in recent_steps
-                ]
+                        "error": s.get("error", "Unknown error"),
+                    }
+                    for s in recent_steps
+                ],
             }
-            
+
             lesson = await self._distill_lesson_via_llm(llm, task_data)
             if lesson:
                 success = long_term_memory.remember_error(

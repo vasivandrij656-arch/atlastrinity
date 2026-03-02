@@ -59,8 +59,10 @@ class NeuroModulator:
         self._chemistry.cortisol = min(1.0, self._chemistry.cortisol + actual_intensity)
         self._chemistry.dopamine = max(0.0, self._chemistry.dopamine - actual_intensity * 0.5)
         self._chemistry.serotonin = max(0.0, self._chemistry.serotonin - actual_intensity * 0.3)
-        
-        log_msg = f"[NEURO MODULATOR] System stress detected. Cortisol: {self._chemistry.cortisol:.2f}"
+
+        log_msg = (
+            f"[NEURO MODULATOR] System stress detected. Cortisol: {self._chemistry.cortisol:.2f}"
+        )
         if tool_name:
             log_msg += f" (Tool: {tool_name})"
         logger.warning(log_msg)
@@ -69,7 +71,9 @@ class NeuroModulator:
         """Accelerates cortisol decay after successful self-healing or validation."""
         decay_step = (self._chemistry.cortisol - 0.1) * 0.1 * multiplier
         self._chemistry.cortisol = max(0.1, self._chemistry.cortisol - decay_step)
-        logger.info(f"[NEURO MODULATOR] Recovery accelerated. Cortisol: {self._chemistry.cortisol:.2f}")
+        logger.info(
+            f"[NEURO MODULATOR] Recovery accelerated. Cortisol: {self._chemistry.cortisol:.2f}"
+        )
 
     def sync_with_creator(self, intensity: float = 0.2):
         """Increase oxytocin after successful interaction with Oleg Mykolayovych."""
@@ -112,7 +116,7 @@ class NeuroModulator:
         # Serotonin keeps it balanced.
         multiplier = 1.0 + (self._chemistry.dopamine * 0.5) + (self._chemistry.serotonin * 0.5)
         # Apply cortisol penalty (stress inhibits learning)
-        multiplier *= 1.0 - self._chemistry.cortisol * 0.5 # Increased penalty
+        multiplier *= 1.0 - self._chemistry.cortisol * 0.5  # Increased penalty
         return max(0.1, multiplier)
 
 
