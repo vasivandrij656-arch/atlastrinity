@@ -1,15 +1,4 @@
-from .common import (
-    EVIDENCE_DOCTRINE,
-    EVOLUTION_DOCTRINE,
-    GOAL_PRIORITY_DOCTRINE,
-    LANGUAGE_DOCTRINE,
-    LOYALTY_DOCTRINE,
-    SYNC_DOCTRINE,
-    TRINITY_AUTH_DOCTRINE,
-    TRINITY_COORDINATION_DOCTRINE,
-    get_realm_catalog,
-    get_vibe_documentation,
-)
+
 
 # New verification prompts for Grisha
 GRISHA_VERIFICATION_GOAL_ANALYSIS = """VERIFICATION GOAL ANALYSIS (ATOMIC LEVEL):

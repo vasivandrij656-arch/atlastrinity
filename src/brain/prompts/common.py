@@ -18,21 +18,6 @@ from src.brain.mcp.mcp_registry import (  # pyre-ignore
 )
 
 # Re-export VOICE_PROTOCOL directly
-__all__ = [
-    "DATA_PROTOCOL",
-    "DEFAULT_REALM_CATALOG",
-    "HACKING_PROTOCOL",
-    "MAPS_PROTOCOL",
-    "SDLC_PROTOCOL",
-    "SEARCH_PROTOCOL",
-    "STORAGE_PROTOCOL",
-    "SYSTEM_MASTERY_PROTOCOL",
-    "TASK_PROTOCOL",
-    "VIBE_TOOLS_DOCUMENTATION",
-    "VOICE_PROTOCOL",
-    "get_realm_catalog",
-    "get_vibe_documentation",
-]
 
 
 def get_realm_catalog() -> str:
@@ -112,6 +97,7 @@ VIBE_TOOLS_DOCUMENTATION = get_vibe_documentation()
 
 # Re-export everything
 __all__ = [
+    "DATA_PROTOCOL",
     "DEFAULT_REALM_CATALOG",
     "EVIDENCE_DOCTRINE",
     "EVOLUTION_DOCTRINE",
