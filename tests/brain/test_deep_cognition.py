@@ -51,7 +51,7 @@ async def test_validator_async_integration():
     patch = "Fix bug in time sync."
     result = await validator.validate_patch("print('fixed')", patch)
     assert "identity_resonance" in result
-    assert result["valid"] == True # Assuming sync is valid 
+    assert result["valid"]  # Assuming sync is valid
 
 # Helper to access db if needed - wait, cognitive_graph doesn't expose it.
 # Let's mock or just use the public API.

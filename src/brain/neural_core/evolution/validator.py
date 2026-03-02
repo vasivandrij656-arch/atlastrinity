@@ -1,15 +1,10 @@
-"""
-EvolutionValidator: Security and integrity checks for autonomous updates.
-"""
-
 import ast
 import logging
 from typing import Any
 
-logger = logging.getLogger("brain.neural_core.evolution.validator")
-
-
 from src.brain.neural_core.identity.postulate_manager import postulate_manager
+
+logger = logging.getLogger("brain.neural_core.evolution.validator")
 
 
 class EvolutionValidator:
