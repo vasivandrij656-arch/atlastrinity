@@ -108,7 +108,15 @@ class AdaptiveBehaviorEngine:
         success: bool,
         context: dict[str, Any],
     ) -> None:
-        """Records the outcome of a deviation for learning."""
+        """Records the outcome of a deviation for learning and persists to config."""
+        # 1. Update Persistent Metrics via BehaviorEngine
+        self._engine.update_pattern_metrics(
+            pattern_type="adaptive_behavior",
+            pattern_name=pattern_name,
+            success=success,
+        )
+
+        # 2. Update Legacy Metrics (Session-only)
         if pattern_name in self.patterns:
             pattern = self.patterns[pattern_name]
             pattern.usage_count += 1
@@ -122,6 +130,7 @@ class AdaptiveBehaviorEngine:
             elif pattern.success_rate < 0.4 and pattern.usage_count > 5:
                 pattern.confidence = max(pattern.confidence - 0.1, 0.0)
 
+        # 3. Save to Deviation History
         self.deviation_history.append(
             {
                 "pattern": pattern_name,

@@ -454,6 +454,8 @@ class BehaviorEngine:
                         trigger=trigger,
                         action=pattern_cfg.get("action", {}),
                         confidence=initial_confidence,
+                        usage_count=metadata.get("usage_count", 0),
+                        success_rate=metadata.get("success_rate", 0.0),
                     )
                     logger.info(
                         f"[BEHAVIOR ENGINE] Pattern matched: {pattern_name} (confidence: {initial_confidence})",
@@ -521,6 +523,74 @@ class BehaviorEngine:
         return cast(
             "dict[str, Any]", self.config.get("background_monitoring", {}).get(task_name, {})
         )
+
+    def update_pattern_metrics(
+        self, pattern_type: str, pattern_name: str, success: bool
+    ) -> None:
+        """Updates pattern metrics and persists to config.
+
+        Args:
+            pattern_type: Type of pattern (e.g., 'adaptive_behavior')
+            pattern_name: Name of the pattern
+            success: Whether the pattern execution was successful
+
+        """
+        if not self.config:
+            return
+
+        patterns = self.config.get("patterns", {}).get(pattern_type, {})
+        if pattern_name not in patterns:
+            logger.warning(
+                f"[BEHAVIOR ENGINE] Cannot update metrics: pattern '{pattern_name}' not found in '{pattern_type}'",
+            )
+            return
+
+        pattern_cfg = patterns[pattern_name]
+        metadata = pattern_cfg.setdefault("metadata", {})
+
+        # Update usage count
+        metadata["usage_count"] = metadata.get("usage_count", 0) + 1
+
+        # Update success rate (EMA)
+        alpha = 0.3
+        current_rate = metadata.get("success_rate", 0.0)
+        new_result = 1.0 if success else 0.0
+        metadata["success_rate"] = round(alpha * new_result + (1 - alpha) * current_rate, 3)
+
+        # Update confidence based on performance
+        usage_count = metadata["usage_count"]
+        success_rate = metadata["success_rate"]
+        initial_conf = metadata.get("initial_confidence", 0.6)
+
+        if success_rate > 0.8 and usage_count > 5:
+            metadata["initial_confidence"] = min(initial_conf + 0.05, 1.0)
+        elif success_rate < 0.4 and usage_count > 5:
+            metadata["initial_confidence"] = max(initial_conf - 0.1, 0.0)
+
+        logger.info(
+            f"[BEHAVIOR ENGINE] Updated metrics for {pattern_name}: success_rate={metadata['success_rate']}, usage_count={usage_count}",
+        )
+
+        # Clear cache as patterns have changed
+        self._pattern_cache.clear()
+
+        # Persist to disk
+        self._persist_config()
+
+    def _persist_config(self) -> bool:
+        """Safely persists current config to disk."""
+        try:
+            # Atomic write to avoid corruption
+            temp_path = self.config_path.with_suffix(".tmp")
+            with open(temp_path, "w", encoding="utf-8") as f:
+                yaml.dump(self.config, f, allow_unicode=True, sort_keys=False)
+
+            temp_path.replace(self.config_path)
+            logger.info(f"[BEHAVIOR ENGINE] Persisted updated metrics to {self.config_path}")
+            return True
+        except Exception as e:
+            logger.error(f"[BEHAVIOR ENGINE] Failed to persist config: {e}")
+            return False
 
     def get_stats(self) -> dict[str, Any]:
         """Returns usage statistics."""
