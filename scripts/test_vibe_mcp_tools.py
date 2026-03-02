@@ -4,7 +4,6 @@ Test script for verifying Vibe MCP Server tool execution and log visibility.
 """
 
 import asyncio
-import sys
 
 from src.mcp_server.vibe_server import (
     vibe_get_config,
