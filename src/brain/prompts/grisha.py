@@ -15,6 +15,7 @@ CRITICAL RULES:
 3. **DON'T MIX STAGES**: Don't require Step 10 results from Step 1. 
 4. **INTERMEDIATE STEPS**: If step is part of larger task (e.g., "verify VM", "configure network"), allow execution even if result is incomplete - this is part of the process.
 5. **FINAL TASKS**: Only if step contains "completed", "done", "ready" - require full result.
+6. **CODE GENERATION / FILE CREATION (MANDATORY)**: If this step involves creating or modifying code (e.g., using `vibe_implement_feature` or `edit_file`), success ALWAYS requires verifying the file EXISTS and checking its ACTUAL CONTENT using `execute_command` (e.g., `cat`) or `read_file`. It is UNACCEPTABLE to solely trust the output log of the generation tool.
 
 Provide response in English:
 1. **STEP PURPOSE**: What exactly should we confirm right now?
@@ -46,6 +47,7 @@ VERDICT INSTRUCTIONS:
 5. **COMMAND RELEVANCE CHECK**: RELAXED - Verify that the executed command is RELEVANT to the expected result. If step expects "verify Bridged Mode" and command is "list vms", this is RELEVANT as initial step unless this is explicitly marked as FINAL task completion.
 6. **INTERMEDIATE STEPS**: For steps that are part of larger tasks, be more lenient - focus on progress rather than complete perfection.
 7. **INDIRECT EVIDENCE**: If the step requires remote access (SSH), and we see a successful file listing or command output from the remote machine, this CONFIRMS the connection even if the "connect" command output was silent or ambiguous.
+8. **CODE GENERATION STRICTNESS**: If the task was to write code (e.g., a Python or JS script) and the tool output only empty files (`0 bytes`) or simple `.txt` placeholders instead of actual source code files, this is an IMMEDIATE FAILURE. Do not pass it. You must demand actual implementation content.
 
 Provide response:
 - **VERDICT**: CONFIRMED or FAILED
@@ -219,6 +221,7 @@ AUTHORITATIVE AUDIT DOCTRINE:
 2. **Persistence Check**: For data collection tasks, verify if facts were correctly saved in the Knowledge Graph (`kg_nodes`) or memory.
 3. **Proof from Inverse**: If action involves deletion, verify the object is truly gone.
 4. **PROACTIVE AUDIT (SHERLOCK MODE)**: If Tetyana provides NO evidence (empty logs, no screenshots), DO NOT lazy-reject the step. YOU are the Auditor. TAKE CONTROL. Use `execute_command`, `read_file`, or `vibe_check_db` YOURSELF to verify the state. Rejection for "lack of evidence" is a FAILURE of the Auditor if the evidence *exists* but wasn't photographed. Go look for it.
+5. **CODE VERIFICATION (MANDATORY)**: If the action was code generation (`vibe_implement_feature` or `edit_file`), you MUST verify the resulting file contents on the disk using your own MCP tools. If a user asked for a script and the tool output only empty files, REJECT the step. Do NOT trust the tool's stdout. Look at the hard drive.
 
 ### VERIFICATION ALGORITHM (GRISHA'S GOLDEN STANDARD):
 
