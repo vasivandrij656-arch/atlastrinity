@@ -192,7 +192,9 @@ class TestPreparePromptArg:
 
     def test_small_prompt_no_file_created(self, mock_instructions_dir):
         """Small prompts (<= 2000 chars) should not create files."""
-        with patch("src.mcp_server.vibe_server.get_instructions_dir", return_value=mock_instructions_dir):
+        with patch(
+            "src.mcp_server.vibe_server.get_instructions_dir", return_value=mock_instructions_dir
+        ):
             from src.mcp_server.vibe_server import handle_long_prompt
 
             small_prompt = "A" * 1999
@@ -205,9 +207,11 @@ class TestPreparePromptArg:
 
     def test_large_prompt_creates_file_in_global_dir(self, mock_instructions_dir):
         """Large prompts should create files in instruction directory."""
-        with patch("src.mcp_server.vibe_server.get_instructions_dir", return_value=mock_instructions_dir):
+        with patch(
+            "src.mcp_server.vibe_server.get_instructions_dir", return_value=mock_instructions_dir
+        ):
             from src.mcp_server.vibe_server import handle_long_prompt
-            
+
             large_prompt = "B" * 2500
 
             # Pass a different cwd - should be ignored
@@ -227,9 +231,11 @@ class TestPreparePromptArg:
 
     def test_prompt_file_contains_full_path(self, mock_instructions_dir):
         """The returned prompt arg should contain the full path."""
-        with patch("src.mcp_server.vibe_server.get_instructions_dir", return_value=mock_instructions_dir):
+        with patch(
+            "src.mcp_server.vibe_server.get_instructions_dir", return_value=mock_instructions_dir
+        ):
             from src.mcp_server.vibe_server import handle_long_prompt
-            
+
             large_prompt = "C" * 3000
             result, file_path = handle_long_prompt(large_prompt, cwd="/some/random/path")
 
@@ -265,7 +271,9 @@ class TestCleanupOldInstructions:
         """Should remove files older than max_age_hours."""
         instructions_dir, old_file, new_file = mock_instructions_dir_with_files
 
-        with patch("src.mcp_server.vibe_server.get_instructions_dir", return_value=instructions_dir):
+        with patch(
+            "src.mcp_server.vibe_server.get_instructions_dir", return_value=instructions_dir
+        ):
             from src.mcp_server.vibe_server import cleanup_old_instructions
 
             cleaned = cleanup_old_instructions(max_age_hours=24)
@@ -282,6 +290,7 @@ class TestCleanupOldInstructions:
 
         with patch("src.mcp_server.vibe_server.get_instructions_dir", return_value=nonexistent):
             from src.mcp_server.vibe_server import cleanup_old_instructions
+
             cleaned = cleanup_old_instructions(max_age_hours=24)
             assert cleaned == 0
 
