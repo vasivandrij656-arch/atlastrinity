@@ -136,11 +136,15 @@ class CognitiveGraph:
             rows = await cursor.fetchall()
             return [dict(row) for row in rows]
 
-    async def strengthen_synapse(self, source_id: str, target_id: str, amount: float = 0.1):
+    async def strengthen_synapse(
+        self, source_id: str, target_id: str, amount: float = 0.1, multiplier: float = 1.0
+    ):
         """
         Hebbian Learning: Strengthens the weight of an edge between two nodes.
         If the edge doesn't exist, it creates a new weak one.
+        The strengthening is scaled by an external multiplier (e.g., from NeuroModulator).
         """
+        effective_amount = amount * multiplier
         async with aiosqlite.connect(self.db_path) as db:
             cursor = await db.execute(
                 "SELECT id, weight FROM edges WHERE source_id = ? AND target_id = ?",
@@ -149,15 +153,20 @@ class CognitiveGraph:
             row = await cursor.fetchone()
             if row:
                 edge_id, current_weight = row
-                new_weight = min(2.0, current_weight + amount)
+                new_weight = min(2.0, current_weight + effective_amount)
                 await db.execute(
                     "UPDATE edges SET weight = ?, resonance = resonance + ? WHERE id = ?",
-                    (new_weight, amount * 2, edge_id),
+                    (new_weight, effective_amount * 2, edge_id),
                 )
             else:
                 # Create a new potential synapse
-                await self.add_edge(source_id, target_id, "hebbian_link", {"weight": 0.2})
+                await self.add_edge(
+                    source_id, target_id, "hebbian_link", {"weight": 0.1 * multiplier}
+                )
             await db.commit()
+            logger.debug(
+                f"[COGNITIVE GRAPH] Synapse strengthened: {source_id} -> {target_id} (Amount: {effective_amount:.3f})"
+            )
 
     async def decay_synapses(self, decay_factor: float = 0.05):
         """

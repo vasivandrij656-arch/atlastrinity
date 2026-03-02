@@ -76,6 +76,20 @@ class NeuroModulator:
         # Cortisol decays faster back to 0.1
         self._chemistry.cortisol += (0.1 - self._chemistry.cortisol) * rate * 2
 
+    def get_plasticity_multiplier(self) -> float:
+        """
+        Returns a multiplier for synaptic strengthening based on current chemistry.
+        Dopamine (reward) increases plasticity.
+        Serotonin (stability) modulates it to prevent over-optimization.
+        """
+        # Base plasticity is 1.0.
+        # Dopamine can boost it up to 2.0.
+        # Serotonin keeps it balanced.
+        multiplier = 1.0 + (self._chemistry.dopamine * 0.5) + (self._chemistry.serotonin * 0.5)
+        # Apply cortisol penalty (stress inhibits learning)
+        multiplier *= 1.0 - self._chemistry.cortisol * 0.3
+        return max(0.1, multiplier)
+
 
 # Global instance
 neuro_modulator = NeuroModulator()

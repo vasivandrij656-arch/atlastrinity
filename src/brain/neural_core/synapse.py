@@ -26,17 +26,48 @@ class SynapticBus:
     def __init__(self):
         self._active_signals: list[CognitiveSignal] = []
         self._node_activations: dict[str, float] = {}
+        self._refractory_nodes: dict[str, float] = {}  # node_id -> expiry_timestamp
+        self._accumulation_buffer: dict[str, float] = {}  # node_id -> accumulated_intensity
         self._lock = asyncio.Lock()
 
     async def emit_signal(self, signal: CognitiveSignal):
         """Emits a signal into the bus and handles its propagation and inhibition."""
         async with self._lock:
-            self._active_signals.append(signal)
-            self._node_activations[signal.source_id] = signal.intensity
+            now = asyncio.get_event_loop().time()
 
-            logger.debug(
-                f"[SYNAPSE] Signal emitted from {signal.source_id} (Intensity: {signal.intensity:.2f})"
+            # 1. Check Refractory Period
+            if signal.source_id in self._refractory_nodes:
+                if now < self._refractory_nodes[signal.source_id]:
+                    logger.debug(f"[SYNAPSE] Node {signal.source_id} is in refractory period.")
+                    return
+                else:
+                    del self._refractory_nodes[signal.source_id]
+
+            # 2. Temporal Summation (Buffer)
+            current_sum = self._accumulation_buffer.get(signal.source_id, 0.0)
+            new_sum = current_sum + signal.intensity
+
+            if new_sum < 0.5:  # Threshold for firing
+                self._accumulation_buffer[signal.source_id] = new_sum
+                logger.debug(
+                    f"[SYNAPSE] Signal accumulated for {signal.source_id} ({new_sum:.2f})"
+                )
+                return
+
+            # Reset buffer on fire
+            self._accumulation_buffer[signal.source_id] = 0.0
+            
+            # Fire signal
+            actual_intensity = min(1.0, new_sum)
+            self._active_signals.append(signal)
+            self._node_activations[signal.source_id] = actual_intensity
+
+            logger.info(
+                f"[SYNAPSE] Node {signal.source_id} FIRED (Intensity: {actual_intensity:.2f})"
             )
+
+            # Set refractory period (0.5s baseline)
+            self._refractory_nodes[signal.source_id] = now + 0.5
 
             # Apply lateral inhibition: strong signals suppress weak ones
             await self._apply_lateral_inhibition(signal)
@@ -65,11 +96,17 @@ class SynapticBus:
     async def propagate_to_neighbors(self, source_id: str, neighbors: list[dict[str, Any]]):
         """
         Propagates activation to neighbor nodes in the CognitiveGraph.
-        neighbors: list of dicts with {"target_id": str, "weight": float}
+        Includes Real-time Hebbian Learning integration.
         """
+        from src.brain.neural_core.memory.graph import cognitive_graph
+        from src.brain.neural_core.neuro_modulator import neuro_modulator
+
         source_activation = await self.get_node_activation(source_id)
         if source_activation < 0.3:
             return
+
+        # Get chemical plasticity multiplier
+        multiplier = neuro_modulator.get_plasticity_multiplier()
 
         for neighbor in neighbors:
             target_id = neighbor["target_id"]
@@ -79,6 +116,12 @@ class SynapticBus:
             new_intensity = source_activation * weight * 0.5
 
             if new_intensity > 0.1:
+                # 1. Trigger Hebbian Learning (Real-time weight strengthening)
+                await cognitive_graph.strengthen_synapse(
+                    source_id, target_id, amount=0.05, multiplier=multiplier
+                )
+
+                # 2. Emit signal to neighbor
                 new_signal = CognitiveSignal(
                     source_id=target_id, intensity=new_intensity, metadata={"via": source_id}
                 )
