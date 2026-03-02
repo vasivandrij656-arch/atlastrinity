@@ -29,7 +29,9 @@ class PromptTuner:
             logger.info("[PROMPT TUNER] No recent lessons found. Skipping.")
             return None
 
-        lesson_texts = "\n".join([f"- {l['properties'].get('text')}" for l in lessons])
+        lesson_texts = "\n".join(
+            [f"- {l.get('properties', {}).get('text')}" for l in lessons if isinstance(l, dict)]
+        )
 
         # 2. Construct analysis prompt
         prompt = f"""

@@ -33,7 +33,9 @@ async def test_routing():
     print("Running Routing Tests...")
     all_passed = True
     for tool_name, args, expected_server, expected_tool in test_cases:
-        server, resolved_tool, _normalized_args = dispatcher._resolve_routing(tool_name, args, None)
+        server, resolved_tool, _normalized_args = await dispatcher._resolve_routing(
+            tool_name, args, None
+        )
         passed = server == expected_server and resolved_tool == expected_tool
         print(
             f"[{'PASS' if passed else 'FAIL'}] {tool_name} -> {server}.{resolved_tool} (Expected: {expected_server}.{expected_tool})"
