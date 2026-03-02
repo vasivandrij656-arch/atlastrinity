@@ -321,9 +321,16 @@ class CopilotLLM(BaseChatModel):
             tools_desc_lines: list[str] = []
             for tool in self._tools:
                 if isinstance(tool, dict):
-                    name = tool.get("name", "tool")
-                    description = tool.get("description", "")
-                    schema = tool.get("input_schema") or tool.get("inputSchema", {})
+                    # Handle standard OpenAI tools format: {"type": "function", "function": {...}}
+                    if tool.get("type") == "function" and "function" in tool:
+                        f = tool["function"]
+                        name = f.get("name", "tool")
+                        description = f.get("description", "")
+                        schema = f.get("parameters") or f.get("input_schema") or {}
+                    else:
+                        name = tool.get("name", "tool")
+                        description = tool.get("description", "")
+                        schema = tool.get("input_schema") or tool.get("inputSchema") or {}
                 else:
                     name = getattr(tool, "name", getattr(tool, "__name__", "tool"))
                     description = getattr(tool, "description", "")
@@ -360,49 +367,64 @@ class CopilotLLM(BaseChatModel):
             tool_instructions = ""
 
         for m in messages:
+            # Handle both BaseMessage objects and raw dicts (from proxy)
             role = "user"
-            # Handle message based on type
             content: Any = ""
-            if isinstance(m, SystemMessage):
-                role = "system"
-                if isinstance(m.content, str):
-                    system_content = m.content + (
-                        "\n\n" + tool_instructions if tool_instructions else ""
-                    )
-                else:
-                    system_content = str(m.content) + (
-                        "\n\n" + tool_instructions if tool_instructions else ""
-                    )
-                continue
-
-            if isinstance(m, AIMessage):
-                role = "assistant"
-                content = m.content
-                # If there are tool calls, reconstruct the JSON for history context
-                if hasattr(m, "tool_calls") and m.tool_calls:
-                    calls = []
-                    for tc in m.tool_calls:
-                        calls.append({"name": tc["name"], "args": tc["args"]})
-
-                    content = json.dumps(
-                        {"tool_calls": calls, "final_answer": m.content or ""}, ensure_ascii=False
-                    )
-            elif isinstance(m, HumanMessage):
-                role = "user"
-                content = m.content
-            elif isinstance(m, ToolMessage):
-                role = "user"  # Copilot API doesn't have a 'tool' role, map to user
-                content = f"[TOOL RESULT for {m.tool_call_id}]: {m.content}"
+            msg_id = None
+            
+            if isinstance(m, dict):
+                role = m.get("role", "user")
+                content = m.get("content", "")
+                msg_id = m.get("tool_call_id") or m.get("id")
             else:
                 role = "user"
-                content = str(m.content)
+                if isinstance(m, SystemMessage):
+                    role = "system"
+                    if isinstance(m.content, str):
+                        system_content = m.content + (
+                            "\n\n" + tool_instructions if tool_instructions else ""
+                        )
+                    else:
+                        system_content = str(m.content) + (
+                            "\n\n" + tool_instructions if tool_instructions else ""
+                        )
+                    continue
+
+                if isinstance(m, AIMessage):
+                    role = "assistant"
+                    content = m.content
+                    if hasattr(m, "tool_calls") and m.tool_calls:
+                        calls = []
+                        for tc in m.tool_calls:
+                            calls.append({"name": tc["name"], "args": tc["args"]})
+                        content = json.dumps(
+                            {"tool_calls": calls, "final_answer": m.content or ""}, ensure_ascii=False
+                        )
+                elif isinstance(m, HumanMessage):
+                    role = "user"
+                    content = m.content
+                elif isinstance(m, ToolMessage):
+                    role = "user"
+                    msg_id = m.tool_call_id
+                    content = f"[TOOL RESULT for {msg_id}]: {m.content}"
+                else:
+                    role = "user"
+                    content = str(getattr(m, "content", m))
+
+            # Handle specific role mapping for Copilot API
+            if role == "system":
+                 system_content = str(content) + ("\n\n" + tool_instructions if tool_instructions else "")
+                 continue
+            
+            if role == "tool":
+                role = "user"
+                content = f"[TOOL RESULT for {msg_id}]: {content}"
 
             # Handle list content (Vision)
             if isinstance(content, list):
                 processed_content: list[ContentItem] = []
                 for item in content:
                     if isinstance(item, dict) and item.get("type") == "image_url":
-                        # Optimize image if needed
                         url = item.get("image_url", {}).get("url", "")
                         if url.startswith("data:image"):
                             try:
@@ -426,13 +448,43 @@ class CopilotLLM(BaseChatModel):
         # Choose model based on whether we have images
         chosen_model = self.vision_model_name if self._has_image(messages) else self.model_name
 
-        payload = {
+        payload: dict[str, Any] = {
             "model": chosen_model,
             "messages": final_messages,
             "temperature": 0.1,
             "max_tokens": self.max_tokens,
             "stream": stream if stream is not None else False,
         }
+
+        # Add native tools if supported by the model/API
+        # We keep the system prompt instructions too as a fallback reinforcement
+        if self._tools:
+            native_tools = []
+            for tool in self._tools:
+                if isinstance(tool, dict) and tool.get("type") == "function":
+                    native_tools.append(tool)
+                else:
+                    # Convert object/langchain tool to OpenAI format
+                    name = getattr(tool, "name", getattr(tool, "__name__", "tool"))
+                    description = getattr(tool, "description", "")
+                    schema_obj = getattr(tool, "args_schema", getattr(tool, "input_schema", {}))
+                    if hasattr(schema_obj, "schema"):
+                        schema = cast("Any", schema_obj).schema()
+                    else:
+                        schema = schema_obj
+
+                    native_tools.append({
+                        "type": "function",
+                        "function": {
+                            "name": name,
+                            "description": description,
+                            "parameters": schema
+                        }
+                    })
+            payload["tools"] = native_tools
+            # Some APIs might need tool_choice: "auto"
+            payload["tool_choice"] = "auto"
+            logger.debug(f"[COPILOT DEBUG] Tools passed: {len(native_tools)}")
 
         # DEBUG: Log the payload
         logger.debug(
@@ -624,41 +676,63 @@ class CopilotLLM(BaseChatModel):
                 ],
             )
 
-        content = data["choices"][0]["message"]["content"]
-
-        if not self._tools:
-            return ChatResult(generations=[ChatGeneration(message=AIMessage(content=content))])
-
+        response_message = data["choices"][0]["message"]
+        content = response_message.get("content") or ""
         tool_calls = []
         final_answer = ""
-        try:
-            json_start = content.find("{")
-            json_end = content.rfind("}")
-            if json_start >= 0 and json_end >= 0:
-                parse_candidate = content[json_start : json_end + 1]
-                parsed = json.loads(parse_candidate)
-            else:
-                parsed = json.loads(content)
 
-            if isinstance(parsed, dict):
-                calls = parsed.get("tool_calls") or []
-                for idx, call in enumerate(calls):
-                    tool_calls.append(
-                        {
-                            "id": f"call_{idx}",
-                            "type": "tool_call",
-                            "name": call.get("name"),
-                            "args": call.get("args") or {},
-                        },
-                    )
-                final_answer = str(parsed.get("final_answer", ""))
-        except Exception:
-            return ChatResult(generations=[ChatGeneration(message=AIMessage(content=content))])
+        # 1. Check for native tool_calls in the message object
+        native_calls = response_message.get("tool_calls")
+        if native_calls:
+            for idx, call in enumerate(native_calls):
+                # Standardize to our internal format
+                fn = call.get("function", {})
+                name = fn.get("name")
+                if not name:
+                    continue
+                args_str = fn.get("arguments", "{}")
+                try:
+                    args = json.loads(args_str) if isinstance(args_str, str) else args_str
+                except Exception:
+                    args = {}
+                
+                tool_calls.append({
+                    "id": call.get("id") or f"call_{idx}",
+                    "type": "tool_call",
+                    "name": name,
+                    "args": args
+                })
+
+        # 2. If no native calls, check for JSON-in-text (fallback/legacy)
+        if not tool_calls:
+            try:
+                json_start = content.find("{")
+                json_end = content.rfind("}")
+                if json_start >= 0 and json_end >= 0:
+                    parse_candidate = content[json_start : json_end + 1]
+                    parsed = json.loads(parse_candidate)
+                else:
+                    parsed = json.loads(content)
+
+                if isinstance(parsed, dict):
+                    calls = parsed.get("tool_calls") or []
+                    for idx, call in enumerate(calls):
+                        tool_calls.append(
+                            {
+                                "id": f"call_{idx}",
+                                "type": "tool_call",
+                                "name": call.get("name"),
+                                "args": call.get("args") or {},
+                            },
+                        )
+                    final_answer = str(parsed.get("final_answer", ""))
+            except Exception:
+                pass
 
         if tool_calls:
             return ChatResult(
                 generations=[
-                    ChatGeneration(message=AIMessage(content=final_answer, tool_calls=tool_calls)),
+                    ChatGeneration(message=AIMessage(content=final_answer or content, tool_calls=tool_calls)),
                 ],
             )
         return ChatResult(
@@ -928,8 +1002,14 @@ class CopilotLLM(BaseChatModel):
 
     def _build_final_ai_message(self, content: str) -> AIMessage:
         tool_calls = []
+        
+        # In streaming, native tool calls are trickier (delta.tool_calls), 
+        # but vibe-proxy currently doesn't use self.invoke_with_stream.
+        # However, for completeness, we keep parsing the final accumulated content.
+        
         if self._tools and content:
             try:
+                # 1. Look for tool_calls in JSON structure within content (reinforcement)
                 json_start = content.find("{")
                 json_end = content.rfind("}")
                 if json_start >= 0 and json_end >= 0:

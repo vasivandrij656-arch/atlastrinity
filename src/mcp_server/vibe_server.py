@@ -959,6 +959,17 @@ def _prepare_vibe_env(env: dict[str, str] | None) -> dict[str, str]:
     process_env["VIBE_AUTO_APPROVE"] = "1"
     process_env["VIBE_DEBUG_RAW"] = "false"
     process_env.update(config.get_environment())
+
+    # Ensure VIBE_CONFIG_PATH is set to our project-specific config
+    if "VIBE_CONFIG_PATH" not in process_env:
+        # Priority: AtlasTrinity config > project-local
+        atlas_config = DEFAULT_CONFIG_ROOT / "vibe_config.toml"
+        project_config = PROJECT_ROOT / ".vibe" / "config.toml"
+        if atlas_config.exists():
+            process_env["VIBE_CONFIG_PATH"] = str(atlas_config)
+        elif project_config.exists():
+            process_env["VIBE_CONFIG_PATH"] = str(project_config)
+
     if env:
         process_env.update({k: str(v) for k, v in env.items()})
 

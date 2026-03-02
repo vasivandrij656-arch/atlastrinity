@@ -62,6 +62,18 @@ except ImportError as e:
     print(f"FAILED to import providers.copilot: {e}", file=sys.stderr)
     sys.exit(1)
 
+# Initialize logging to capture DEBUG logs from providers.copilot
+import logging
+
+logging.basicConfig(
+    level=logging.DEBUG,
+    format='%(asctime)s [%(levelname)s] [%(name)s] %(message)s',
+    stream=sys.stderr
+)
+# Specifically set providers.copilot and src.brain to DEBUG
+logging.getLogger("providers.copilot").setLevel(logging.DEBUG)
+logging.getLogger("src.brain").setLevel(logging.DEBUG)
+
 # ─── Configuration ─────────────────────────────────────────────────────
 
 DEFAULT_PORT = 8086
@@ -185,34 +197,63 @@ class CopilotVibeProxyHandler(http.server.BaseHTTPRequestHandler):
             # Extract parameters
             model = request_data.get("model", "gpt-4.1")
             messages = request_data.get("messages", [])
+            tools = request_data.get("tools")
+            tool_choice = request_data.get("tool_choice")
+
+            log(f"Request model: {model}, messages: {len(messages)}, tools: {len(tools) if tools else 0}")
+            if tools:
+                log(f"Tools: {[t.get('function', {}).get('name') for t in tools]}")
 
             # Validate model
             if model not in SUPPORTED_MODELS:
                 self.send_error_response(f"Unsupported model: {model}", 400)
                 return
 
-            # Convert messages to Copilot format
-            copilot_messages = []
-            for msg in messages:
-                role = msg.get("role", "user")
-                content = msg.get("content", "")
-                copilot_messages.append({"role": role, "content": content})
+            # Propagate messages as-is to CopilotLLM (which now handles dicts)
+            copilot_messages = messages
 
             # Call Copilot directly
             llm = CopilotLLM(model_name=model)
+            if tools:
+                llm.bind_tools(tools)
+                log("Tools bound to CopilotLLM")
 
             # Make the API call
             start_time = time.time()
             response = llm.invoke(copilot_messages)
             elapsed = time.time() - start_time
+            
+            log(f"LLM Response type: {type(response)}")
+            if hasattr(response, "tool_calls") and response.tool_calls:
+                log(f"LLM Tool Calls: {response.tool_calls}")
+            else:
+                log(f"LLM Content: {str(response.content)[:200]}...")
 
-            # Extract content
+            # Extract content and tool calls
+            content = ""
+            tool_calls = None
+
             if hasattr(response, "content"):
                 content = str(response.content)
-            else:
-                content = str(response)
+            
+            if hasattr(response, "tool_calls") and response.tool_calls:
+                tool_calls = []
+                for tc in response.tool_calls:
+                    # Convert to OpenAI tool_call format
+                    tool_calls.append({
+                        "id": tc.get("id", f"call_{int(time.time())}_{len(tool_calls)}"),
+                        "type": "function",
+                        "function": {
+                            "name": tc.get("name"),
+                            "arguments": json.dumps(tc.get("args", {}))
+                        }
+                    })
 
             # Create OpenAI-compatible response
+            message = {"role": "assistant", "content": content, "tool_calls": None}
+            if tool_calls:
+                message["tool_calls"] = tool_calls
+
             openai_response = {
                 "id": f"copilot-vibe-{int(time.time())}",
                 "object": "chat.completion",
@@ -221,8 +262,8 @@ class CopilotVibeProxyHandler(http.server.BaseHTTPRequestHandler):
                 "choices": [
                     {
                         "index": 0,
-                        "message": {"role": "assistant", "content": content},
-                        "finish_reason": "stop",
+                        "message": message,
+                        "finish_reason": "tool_calls" if tool_calls else "stop",
                     }
                 ],
                 "usage": {
