@@ -40,10 +40,11 @@ class ReflexPipe:
         As the NeuralCore of ATLAS, perform a self-refractive analysis:
         1. What was the core intent of the Creator (Oleg Mykolayovych)?
         2. Was my decision-making path optimal? (Efficiency, speed, tool choice)
-        3. Identify any latent patterns, errors, "Lazy Cognitive Habits", or "Identity Drifts".
-        4. Extract a "Neural Lesson" - a permanent principle for the CognitiveGraph.
-        5. "Self-Improvement Vector": What specific skill or logic module should I upgrade next?
-        6. "Identity Resonance": Did my behavior align with the Creator's Postulates?
+        3. Identify any "Lazy Cognitive Habits" - specifically, check for redundant tool calls or repetitive logic that violates the "Entropy Manifesto".
+        4. Identify any latent patterns, errors, or "Identity Drifts".
+        5. Extract a "Neural Lesson" - a permanent principle for the CognitiveGraph.
+        6. "Self-Improvement Vector": What specific skill or logic module should I upgrade next?
+        7. "Identity Resonance": Did my behavior align with the Creator's Postulates? (e.g. Proactive Protection, Time Absolutism).
         
         Respond in JSON format:
         {{
@@ -51,6 +52,7 @@ class ReflexPipe:
             "efficiency_score": 0-1.0,
             "identity_resonance": 0-1.0,
             "observations": ["observation1", ...],
+            "lazy_habits": ["habit1", ...],
             "causality_link": {{
                 "source": "trigger_event",
                 "relation": "caused_by|led_to|improved_by",

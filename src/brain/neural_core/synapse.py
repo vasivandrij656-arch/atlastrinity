@@ -40,8 +40,7 @@ class SynapticBus:
                 if now < self._refractory_nodes[signal.source_id]:
                     logger.debug(f"[SYNAPSE] Node {signal.source_id} is in refractory period.")
                     return
-                else:
-                    del self._refractory_nodes[signal.source_id]
+                del self._refractory_nodes[signal.source_id]
 
             # 2. Temporal Summation (Buffer)
             current_sum = self._accumulation_buffer.get(signal.source_id, 0.0)
@@ -49,14 +48,12 @@ class SynapticBus:
 
             if new_sum < 0.5:  # Threshold for firing
                 self._accumulation_buffer[signal.source_id] = new_sum
-                logger.debug(
-                    f"[SYNAPSE] Signal accumulated for {signal.source_id} ({new_sum:.2f})"
-                )
+                logger.debug(f"[SYNAPSE] Signal accumulated for {signal.source_id} ({new_sum:.2f})")
                 return
 
             # Reset buffer on fire
             self._accumulation_buffer[signal.source_id] = 0.0
-            
+
             # Fire signal
             actual_intensity = min(1.0, new_sum)
             self._active_signals.append(signal)

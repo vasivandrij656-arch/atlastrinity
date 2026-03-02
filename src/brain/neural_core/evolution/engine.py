@@ -88,7 +88,10 @@ class EvolutionEngine:
             # 5. Entropy Manifesto
             await self._run_entropy_manifesto()
 
-            # 6. Dynamic Protocol Adaptation
+            # 6. Memory Consolidation (Promote lessons to core principles)
+            await cognitive_graph.consolidate_memory()
+
+            # 7. Dynamic Protocol Adaptation
             if "protocol" in str(insight).lower():
                 await self.propose_dynamic_protocol(insight)
 
@@ -217,7 +220,7 @@ class EvolutionEngine:
 
             # 4. Use Validator for static checks
             # (Simulated check of the patch_description content)
-            validation = validator.validate_patch(patch_description, issue_description)
+            validation = await validator.validate_patch(patch_description, issue_description)
 
             # 5. Generate Stage Report
             report = {

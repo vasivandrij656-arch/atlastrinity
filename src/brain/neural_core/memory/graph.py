@@ -53,6 +53,14 @@ class CognitiveGraph:
                 CREATE INDEX IF NOT EXISTS idx_nodes_type ON nodes(type);
                 CREATE INDEX IF NOT EXISTS idx_edges_relation ON edges(relation);
             """)
+            
+            # Migration: Ensure resonance column exists
+            try:
+                await db.execute("ALTER TABLE edges ADD COLUMN resonance REAL DEFAULT 0.0")
+            except Exception:
+                # Column likely already exists
+                pass
+                
             await db.commit()
             logger.info(f"[COGNITIVE GRAPH] Initialized at {self.db_path}")
 
@@ -181,6 +189,40 @@ class CognitiveGraph:
             # Prune weak links
             await db.execute("DELETE FROM edges WHERE weight < 0.1 AND relation = 'hebbian_link'")
             await db.commit()
+
+    async def consolidate_memory(self):
+        """
+        Memory Consolidation: Promotes highly resonant lessons/insights to 'core_principle'.
+        This simulates the brain's process of turning short-term memories into long-term ones.
+        """
+        async with aiosqlite.connect(self.db_path) as db:
+            db.row_factory = aiosqlite.Row
+            # Find nodes of type 'lesson' or 'insight' that have strong incoming edges or high weights
+            # For simplicity, we search for nodes linked with high-weight 'produced_lesson' relations
+            query = """
+                SELECT n.id, n.label, n.properties
+                FROM nodes n
+                JOIN edges e ON n.id = e.target_id
+                WHERE n.type IN ('lesson', 'insight')
+                AND e.weight > 1.5
+                GROUP BY n.id
+                HAVING COUNT(e.id) >= 1
+            """
+            cursor = await db.execute(query)
+            rows = await cursor.fetchall()
+            
+            consolidated_count = 0
+            for row in rows:
+                node_id = row["id"]
+                # Upgrade node type
+                await db.execute(
+                    "UPDATE nodes SET type = 'core_principle' WHERE id = ?", (node_id,)
+                )
+                consolidated_count += 1
+                logger.info(f"[COGNITIVE GRAPH] Memory Consolidated: '{row['label']}' is now a core principle.")
+
+            await db.commit()
+            return consolidated_count
 
 
 # Global instance
