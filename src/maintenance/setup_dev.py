@@ -185,8 +185,26 @@ def ensure_directories():
 
 
 def check_system_tools():
-    """Перевіряє наявність базових інструментів та встановлює відсутні"""
-    print_step("Перевірка базових інструментів (Brew, Python, Node, Bun)...")
+    """Перевіряє наявність базових інструментів, дозволів macOS та встановлює відсутні"""
+    print_step("Перевірка базових інструментів (Brew, Python, Node, Bun) та Дозволів macOS...")
+
+    # --- Звернення до дозволів macOS ---
+    try:
+        from src.brain.infrastructure.first_run_installer import FirstRunInstaller
+
+        installer = FirstRunInstaller(
+            progress_callback=lambda x: None
+        )  # Silent callback for setup_dev if needed, or default
+        permissions = installer.check_permissions()
+        missing_perms = [k for k, v in permissions.items() if v is not True]
+        if missing_perms:
+            print_warning(f"Відсутні або очікують дозволів macOS: {', '.join(missing_perms)}")
+            print_info(
+                "Перевірте системні вікна запиту дозволів або 'System Settings > Privacy & Security'."
+            )
+    except Exception as e:
+        print_warning(f"Помилка перевірки дозволів macOS: {e}")
+    # -----------------------------------
 
     # Ensure Homebrew is in PATH
     brew_paths = ["/opt/homebrew/bin", "/usr/local/bin"]

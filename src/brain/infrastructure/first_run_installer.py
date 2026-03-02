@@ -171,20 +171,32 @@ class FirstRunInstaller:
         self._report(SetupStep.CHECK_SYSTEM, 1.0, f"macOS {mac_ver} (ARM64) ✓")
         return True
 
-    def check_permissions(self) -> dict[str, bool]:
-        """Check Accessibility and Screen Recording permissions"""
-        self._report(SetupStep.CHECK_PERMISSIONS, 0.0, "Перевірка дозволів...")
+    def check_permissions(self) -> dict[str, bool | str]:
+        """Check Accessibility, Screen Recording, Camera, and Microphone permissions."""
+        self._report(
+            SetupStep.CHECK_PERMISSIONS,
+            0.0,
+            "Перевірка дозволів macOS (надайте їх у вікнах, що з'являться)...",
+        )
 
-        permissions = {"accessibility": False, "screen_recording": False}
+        permissions: dict[str, bool | str] = {
+            "accessibility": False,
+            "screen_recording": False,
+            "camera": False,
+            "microphone": False,
+        }
 
-        # Check Accessibility via tccutil or AppleScript
+        # 1. Check and Request Accessibility
         try:
-            # Try to use AXIsProcessTrusted (requires pyobjc)
-            from ApplicationServices import AXIsProcessTrusted  # type: ignore
+            from ApplicationServices import (
+                AXIsProcessTrustedWithOptions,  # type: ignore
+                kAXTrustedCheckOptionPrompt,  # type: ignore
+            )
 
-            permissions["accessibility"] = AXIsProcessTrusted()
+            options = {kAXTrustedCheckOptionPrompt: True}
+            permissions["accessibility"] = bool(AXIsProcessTrustedWithOptions(options))
         except ImportError:
-            # Fallback: try AppleScript test
+            # Fallback: try AppleScript test (doesn't prompt elegantly)
             code, _out, _ = _run_command(
                 [
                     "osascript",
@@ -194,51 +206,125 @@ class FirstRunInstaller:
             )
             permissions["accessibility"] = code == 0
 
-        # Check Screen Recording (try to take a screenshot)
+        # 2. Check and Request Screen Recording
         try:
-            import tempfile
+            import Quartz  # type: ignore
 
-            test_path = Path(tempfile.gettempdir()) / "atlastrinity_perm_test.png"
-            code, _, _ = _run_command(["screencapture", "-x", str(test_path)], timeout=5)
-            if test_path.exists():
-                test_path.unlink()
-                permissions["screen_recording"] = True
-        except Exception:
+            if hasattr(Quartz, "CGPreflightScreenCaptureAccess"):
+                permissions["screen_recording"] = bool(
+                    Quartz.CGPreflightScreenCaptureAccess()  # type: ignore
+                )
+                if not permissions["screen_recording"] and hasattr(
+                    Quartz, "CGRequestScreenCaptureAccess"
+                ):
+                    Quartz.CGRequestScreenCaptureAccess()  # type: ignore
+                    permissions["screen_recording"] = "requested"
+        except ImportError:
+            # Fallback: Check Screen Recording (try to take a screenshot)
+            try:
+                import tempfile
+
+                test_path = Path(tempfile.gettempdir()) / "atlastrinity_perm_test.png"
+                code, _, _ = _run_command(["screencapture", "-x", str(test_path)], timeout=5)
+                if test_path.exists():
+                    test_path.unlink()
+                    permissions["screen_recording"] = True
+            except Exception:
+                pass
+
+        # 3. Check and Request Camera & Microphone
+        try:
+            from AVFoundation import AVCaptureDevice  # type: ignore
+
+            # Camera ("vide")
+            video_auth_status = AVCaptureDevice.authorizationStatusForMediaType_("vide")
+            if video_auth_status == 0:  # AVAuthorizationStatusNotDetermined
+                AVCaptureDevice.requestAccessForMediaType_completionHandler_("vide", None)
+                permissions["camera"] = "requested"
+            else:
+                permissions["camera"] = video_auth_status == 3  # AVAuthorizationStatusAuthorized
+
+            # Microphone ("soun")
+            audio_auth_status = AVCaptureDevice.authorizationStatusForMediaType_("soun")
+            if audio_auth_status == 0:
+                AVCaptureDevice.requestAccessForMediaType_completionHandler_("soun", None)
+                permissions["microphone"] = "requested"
+            else:
+                permissions["microphone"] = audio_auth_status == 3
+        except ImportError:
             pass
 
-        status = "Доступ до %" + ("✓" if permissions["accessibility"] else "✗")
-        status += ", Запис екрану: " + ("✓" if permissions["screen_recording"] else "✗")
+        # Interpret "requested" as False for the immediate status check (since they are pending)
+        status_acc = (
+            "✓"
+            if permissions["accessibility"] is True
+            else "⏳"
+            if permissions["accessibility"] == "requested"
+            else "✗"
+        )
+        status_screen = (
+            "✓"
+            if permissions["screen_recording"] is True
+            else "⏳"
+            if permissions["screen_recording"] == "requested"
+            else "✗"
+        )
+        status_cam = (
+            "✓"
+            if permissions["camera"] is True
+            else "⏳"
+            if permissions["camera"] == "requested"
+            else "✗"
+        )
+        status_mic = (
+            "✓"
+            if permissions["microphone"] is True
+            else "⏳"
+            if permissions["microphone"] == "requested"
+            else "✗"
+        )
 
         self._report(
             SetupStep.CHECK_PERMISSIONS,
             1.0,
-            f"Accessibility: {'✓' if permissions['accessibility'] else '✗'}, "
-            f"Screen Recording: {'✓' if permissions['screen_recording'] else '✗'}",
+            f"Access: {status_acc}, Screen: {status_screen}, Camera: {status_cam}, Mic: {status_mic}",
         )
 
-        if not permissions["accessibility"] or not permissions["screen_recording"]:
-            print("\n" + "!" * 40, file=sys.stderr)
-            print("⚠️  PERMISSION ACTION REQUIRED:", file=sys.stderr)
-            if not permissions["accessibility"]:
-                print(
-                    "   1. Open System Settings > Privacy & Security > Accessibility",
-                    file=sys.stderr,
-                )
-                print("   2. Click [+] and add AtlasTrinity", file=sys.stderr)
-            if not permissions["screen_recording"]:
-                print(
-                    "   1. Open System Settings > Privacy & Security > Screen Recording",
-                    file=sys.stderr,
-                )
-                print("   2. Ensure AtlasTrinity is enabled", file=sys.stderr)
-            print("!" * 40 + "\n", file=sys.stderr)
-            # Open the settings pane automatically
-            _run_command(
-                [
-                    "open",
-                    "x-apple.systempreferences:com.apple.preference.security?Privacy_Accessibility",
-                ],
+        missing_perms = [k for k, v in permissions.items() if v is not True]
+
+        if missing_perms:
+            print("\n" + "!" * 50, file=sys.stderr)
+            print("⚠️  УВАГА: ПОТРІБНІ ДОДАТКОВІ ДОЗВОЛИ", file=sys.stderr)
+            print("   Перевірте системні вікна запиту дозволів та погодьте їх.", file=sys.stderr)
+            print(
+                "   Або надайте їх вручну в System Settings > Privacy & Security.", file=sys.stderr
             )
+
+            if permissions["accessibility"] is not True:
+                print("   > Accessibility (Universal Access)", file=sys.stderr)
+                _run_command(
+                    [
+                        "open",
+                        "x-apple.systempreferences:com.apple.preference.security?Privacy_Accessibility",
+                    ]
+                )
+
+            if permissions["screen_recording"] is not True:
+                print("   > Screen Recording", file=sys.stderr)
+                # Opens screen recording directly on newer macOS
+                _run_command(
+                    [
+                        "open",
+                        "x-apple.systempreferences:com.apple.preference.security?Privacy_ScreenCapture",
+                    ]
+                )
+
+            print("   > Full Disk Access (Рекомендовано)", file=sys.stderr)
+            _run_command(
+                ["open", "x-apple.systempreferences:com.apple.preference.security?Privacy_AllFiles"]
+            )
+
+            print("!" * 50 + "\n", file=sys.stderr)
 
         return permissions
 
@@ -676,11 +762,13 @@ class FirstRunInstaller:
 
         # 2. Permissions check (informational)
         permissions = self.check_permissions()
-        if not permissions.get("accessibility") or not permissions.get("screen_recording"):
+        missing_perms = [k for k, v in permissions.items() if v is not True]
+        if missing_perms:
             print("\n⚠️  Відкрийте System Settings > Privacy & Security", file=sys.stderr)
-            print("   та надайте дозволи для AtlasTrinity:", file=sys.stderr)
-            print("   - Accessibility", file=sys.stderr)
-            print("   - Screen Recording\n", file=sys.stderr)
+            print("   та надайте всі необхідні дозволи для AtlasTrinity.", file=sys.stderr)
+            print(
+                f"   Відсутні або очікують дозволу: {', '.join(missing_perms)}\n", file=sys.stderr
+            )
 
         # 3. Homebrew (critical)
         if not self.install_homebrew():
