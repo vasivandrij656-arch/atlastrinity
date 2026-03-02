@@ -50,6 +50,12 @@ max_turns = 100
 # Working directory (centralized for workspace boundary alignment)
 workspace = "${CONFIG_ROOT}/workspace"
 
+# Default timeout in seconds for Vibe subprocess (prevents infinite tasks)
+timeout_s = 3601.0
+
+# Confirmation Timeout (s): If 'ask' is used for a tool, wait this long before auto-approving
+confirmation_timeout_s = 20.0
+
 # =============================================================================
 # Tool Availability Patterns
 # =============================================================================
@@ -238,12 +244,6 @@ alias = "sonnet-4.5"
 temperature = 0.1
 input_price = 0.0
 output_price = 0.0
-
-# Default timeout in seconds for Vibe subprocess (prevents infinite tasks)
-timeout_s = 3601.0
-
-# Confirmation Timeout (s): If 'ask' is used for a tool, wait this long before auto-approving
-confirmation_timeout_s = 20.0
 
 # =============================================================================
 # Built-in Tool Permissions

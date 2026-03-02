@@ -30,12 +30,13 @@ class TestVibeConfig:
         """Default configuration should load without errors."""
         from src.mcp_server.vibe_config import VibeConfig
 
-        # Load config from file (actual usage path)
-        config = VibeConfig.load()
-        # Config file should specify devstral-2 as active_model
-        assert config.active_model == "devstral-2"
-        assert config.max_turns == 10
-        assert config.timeout_s == 600.0
+        # Load from template file rather than user's potentially modified config
+        template_path = Path(__file__).parent.parent / "config" / "vibe_config.toml.template"
+        config = VibeConfig.load(config_path=template_path)
+        # Config template should specify gpt-4o as active_model
+        assert config.active_model == "gpt-4o"
+        assert config.max_turns == 100
+        assert config.timeout_s == 3601.0
 
     def test_tool_pattern_glob(self):
         """Glob patterns should match tool names correctly."""
@@ -121,19 +122,24 @@ class TestVibeConfig:
         # Verify that --model argument is not present
         assert "--model" not in args
 
-    def test_cli_args_session_resume(self):
-        """Session ID should be included for resume."""
+    def test_cli_args_session_resume(self, tmp_path):
+        """Session ID should be included for resume if session folder exists."""
 
-        config = VibeConfig()
+        # Create dummy session dir
+        session_id = "abc123"
+        session_dir = tmp_path / "logs" / "session" / session_id
+        session_dir.mkdir(parents=True, exist_ok=True)
+
+        config = VibeConfig(vibe_home=str(tmp_path))
 
         args = config.to_cli_args(
             prompt="Continue",
-            session_id="abc123",
+            session_id=session_id,
         )
 
         assert "--resume" in args
         idx = args.index("--resume")
-        assert args[idx + 1] == "abc123"
+        assert args[idx + 1] == session_id
 
     def test_provider_api_key_check(self):
         """Provider availability should check for API key."""
@@ -186,11 +192,11 @@ class TestPreparePromptArg:
 
     def test_small_prompt_no_file_created(self, mock_instructions_dir):
         """Small prompts (<= 2000 chars) should not create files."""
-        with patch("src.mcp_server.vibe_server.INSTRUCTIONS_DIR", mock_instructions_dir):
+        with patch("src.mcp_server.vibe_server.get_instructions_dir", return_value=mock_instructions_dir):
             from src.mcp_server.vibe_server import handle_long_prompt
 
             small_prompt = "A" * 1999
-            result, file_path = handle_long_prompt(small_prompt)
+            result, file_path = handle_long_prompt(small_prompt, cwd="/some/random/path")
 
             assert result == small_prompt
             assert file_path is None
@@ -198,8 +204,10 @@ class TestPreparePromptArg:
             assert len(list(Path(mock_instructions_dir).glob("*.md"))) == 0
 
     def test_large_prompt_creates_file_in_global_dir(self, mock_instructions_dir):
-        """Large prompts should create files in INSTRUCTIONS_DIR."""
-        with patch("src.mcp_server.vibe_server.INSTRUCTIONS_DIR", mock_instructions_dir):
+        """Large prompts should create files in instruction directory."""
+        with patch("src.mcp_server.vibe_server.get_instructions_dir", return_value=mock_instructions_dir):
+            from src.mcp_server.vibe_server import handle_long_prompt
+            
             large_prompt = "B" * 2500
 
             # Pass a different cwd - should be ignored
@@ -219,9 +227,11 @@ class TestPreparePromptArg:
 
     def test_prompt_file_contains_full_path(self, mock_instructions_dir):
         """The returned prompt arg should contain the full path."""
-        with patch("src.mcp_server.vibe_server.INSTRUCTIONS_DIR", mock_instructions_dir):
+        with patch("src.mcp_server.vibe_server.get_instructions_dir", return_value=mock_instructions_dir):
+            from src.mcp_server.vibe_server import handle_long_prompt
+            
             large_prompt = "C" * 3000
-            result, file_path = handle_long_prompt(large_prompt)
+            result, file_path = handle_long_prompt(large_prompt, cwd="/some/random/path")
 
             # Result should reference the file path
             if file_path:
@@ -255,7 +265,7 @@ class TestCleanupOldInstructions:
         """Should remove files older than max_age_hours."""
         instructions_dir, old_file, new_file = mock_instructions_dir_with_files
 
-        with patch("src.mcp_server.vibe_server.INSTRUCTIONS_DIR", instructions_dir):
+        with patch("src.mcp_server.vibe_server.get_instructions_dir", return_value=instructions_dir):
             from src.mcp_server.vibe_server import cleanup_old_instructions
 
             cleaned = cleanup_old_instructions(max_age_hours=24)
@@ -270,7 +280,8 @@ class TestCleanupOldInstructions:
         """Should handle nonexistent directory gracefully."""
         nonexistent = str(tmp_path / "nonexistent")
 
-        with patch("src.mcp_server.vibe_server.INSTRUCTIONS_DIR", nonexistent):
+        with patch("src.mcp_server.vibe_server.get_instructions_dir", return_value=nonexistent):
+            from src.mcp_server.vibe_server import cleanup_old_instructions
             cleaned = cleanup_old_instructions(max_age_hours=24)
             assert cleaned == 0
 
