@@ -65,6 +65,7 @@ def fix_problematic_sql(query: str) -> str:
                 return f"SELECT * FROM ({base}) {order}"
     return query
 
+
 from .vibe_config import (
     AgentMode,
     ProviderConfig,
