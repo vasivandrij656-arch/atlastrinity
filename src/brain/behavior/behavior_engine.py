@@ -546,15 +546,14 @@ class BehaviorEngine:
                         "usage_count": 0,
                         "success_rate": 0.5,
                         "initial_confidence": 0.6,
-                        "volatility": 0.5
-                    }
+                        "volatility": 0.5,
+                    },
                 }
             else:
                 logger.warning(
                     f"[BEHAVIOR ENGINE] Cannot update metrics: pattern '{pattern_name}' not found in '{pattern_type}'",
                 )
                 return
-
 
         pattern_cfg = patterns[pattern_name]
         metadata = pattern_cfg.setdefault("metadata", {})

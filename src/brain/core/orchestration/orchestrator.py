@@ -561,15 +561,13 @@ class Trinity(TourMixin, VoiceOrchestrationMixin):
             # 1. Path-based synaptic reward (Hebbian)
             task_id = self.state.get("db_task_id")
             tool_id = step.get("tool") or step.get("action") or str(action)
-            
+
             if task_id:
                 # Task -> Tool connection
                 await neural_core.graph.strengthen_synapse(f"task:{task_id}", f"tool:{tool_id}")
-            
+
             # Strengthen synaptic connection: Tool -> Server (Optimizes Dispatcher)
-            await neural_core.graph.strengthen_synapse(
-                f"tool:{tool_id}", f"server:{result.server}"
-            )
+            await neural_core.graph.strengthen_synapse(f"tool:{tool_id}", f"server:{result.server}")
             # 2. Metric-based persistence loop
 
             # Track tool success in BehaviorEngine for future routing
@@ -581,7 +579,6 @@ class Trinity(TourMixin, VoiceOrchestrationMixin):
 
             # Metric-based persistence loop
             behavior_engine.update_pattern_metrics("tool_performance", str(tool_id), False)
-
 
             # Real-time consolidation for critical failures
             if neural_core.chemistry.get_state()["cortisol"] > 0.8:

@@ -623,7 +623,9 @@ class ToolDispatcher:
             if not explicit_server and cognitive_graph:
                 neural_bias = await cognitive_graph.get_routing_bias(resolved_tool)
                 if neural_bias and neural_bias != server:
-                    logger.info(f"[DISPATCHER] Neural override: '{resolved_tool}' -> '{neural_bias}' (Brain prefers this)")
+                    logger.info(
+                        f"[DISPATCHER] Neural override: '{resolved_tool}' -> '{neural_bias}' (Brain prefers this)"
+                    )
                     server = neural_bias
 
             # --- NEW: Placeholder Hallucination Check ---

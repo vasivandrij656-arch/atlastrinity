@@ -134,10 +134,14 @@ class CognitiveGraph:
                     ORDER BY e.weight DESC
                     LIMIT ?
                 """
-                async with db.execute(query, (f"%{keywords[0]}%", f"%{keywords[0]}%", limit)) as cursor:
+                async with db.execute(
+                    query, (f"%{keywords[0]}%", f"%{keywords[0]}%", limit)
+                ) as cursor:
                     async for row in cursor:
                         # Row: (source, relation, target, weight)
-                        insights.append(f"{row[0]} -> {row[1]} -> {row[2]} (strength: {row[3]:.2f})")
+                        insights.append(
+                            f"{row[0]} -> {row[1]} -> {row[2]} (strength: {row[3]:.2f})"
+                        )
         except Exception as e:
             logger.warning(f"[NEURAL GRAPH] Failed to get related insights: {e}")
 
@@ -185,7 +189,6 @@ class CognitiveGraph:
         return None
 
     async def get_causality_chain(self, node_id: str, depth: int = 3) -> list[dict[str, Any]]:
-
         """
         Naive implementation of causality retrieval (tracing edges).
         Useful for the ReflexPipe to understand 'Why did I do this?'.
@@ -209,14 +212,14 @@ class CognitiveGraph:
         The strengthening is scaled by an external multiplier (e.g., from NeuroModulator).
         """
         effective_amount = amount * multiplier
-        
+
         # Ensure nodes exist before adding/strengthening synapse
         async def ensure_node(node_id: str):
             if not await self.get_node(node_id):
                 node_type = node_id.split(":", 1)[0] if ":" in node_id else "unknown"
                 label = node_id
                 await self.add_node(node_id, node_type, label, {})
-        
+
         await ensure_node(source_id)
         await ensure_node(target_id)
 
