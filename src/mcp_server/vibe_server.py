@@ -1304,6 +1304,14 @@ async def _execute_vibe_programmatic(
                     return cast("dict[str, Any]", res)
 
                 logger.error(f"[VIBE] Native execution failed: {err_str}")
+
+                # If it's a loop conflict or import issue, we return success=False
+                # to let vibe_prompt() fall back to subprocess mode.
+                if "asyncio.run()" in err_str or "ImportError" in err_str:
+                    logger.warning(
+                        "[VIBE] Loop conflict or missing library detected. Vibe will use subprocess fallback."
+                    )
+
                 return {
                     "success": False,
                     "error": f"Vibe native execution error: {err_str}",
@@ -2939,6 +2947,19 @@ async def vibe_get_system_context(ctx: Context) -> dict[str, Any]:
 
 if __name__ == "__main__":
     logger.info("[VIBE] MCP Server starting (v3.0 Hyper-Refactored)...")
+    
+    # Environment Diagnostics
+    try:
+        import dotenv
+        logger.info(f"[DIAG] python-dotenv is available: {dotenv.__file__}")
+    except ImportError:
+        logger.error("[DIAG] python-dotenv is MISSING from current environment!")
+        # Attempt to find it
+        import shutil
+        py_path = shutil.which("python3")
+        logger.info(f"[DIAG] Current python: {py_path}")
+        logger.info(f"[DIAG] sys.path: {sys.path[:3]}...")
+
     prepare_workspace_and_instructions(None)
     cleanup_old_instructions()
 

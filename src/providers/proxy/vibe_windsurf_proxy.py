@@ -97,12 +97,12 @@ class C:
 
 def log(msg: str) -> None:
     timestamp = time.strftime("%H:%M:%S")
-    print(f"{C.DIM}[{timestamp}]{C.RESET} {msg}")
+    print(f"{C.DIM}[{timestamp}]{C.RESET} {msg}", file=sys.stderr)
 
 
 def info(msg: str) -> None:
     timestamp = time.strftime("%H:%M:%S")
-    print(f"{C.DIM}[{timestamp}]{C.RESET} {C.CYAN}INFO{C.RESET}  {msg}")
+    print(f"{C.DIM}[{timestamp}]{C.RESET} {C.CYAN}INFO{C.RESET}  {msg}", file=sys.stderr)
 
 
 def warn(msg: str) -> None:

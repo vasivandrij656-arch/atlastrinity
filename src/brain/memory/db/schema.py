@@ -318,6 +318,7 @@ class Discovery(Base):
     created_at: Mapped[datetime] = mapped_column(DateTime, default=lambda: datetime.now(UTC))
 
 
+
 class FileIndex(Base):
     """Indexes files in the workspace for fast retrieval by Vibe/Agents."""
 
@@ -332,3 +333,18 @@ class FileIndex(Base):
     content_hash: Mapped[str | None] = mapped_column(String(64), nullable=True)
 
     last_scanned: Mapped[datetime] = mapped_column(DateTime, default=lambda: datetime.now(UTC))
+
+
+class User(Base):
+    """User model for authentication and role-based access.
+    Satisfies generic queries to the 'users' table.
+    """
+
+    __tablename__ = "users"
+
+    id: Mapped[int] = mapped_column(Integer, primary_key=True, autoincrement=True)
+    email: Mapped[str] = mapped_column(String(255), unique=True, index=True)
+    status: Mapped[str] = mapped_column(String(50), default="active")  # active, inactive, suspended
+    full_name: Mapped[str | None] = mapped_column(String(255), nullable=True)
+
+    created_at: Mapped[datetime] = mapped_column(DateTime, default=lambda: datetime.now(UTC))
