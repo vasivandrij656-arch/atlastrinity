@@ -53,14 +53,14 @@ class CognitiveGraph:
                 CREATE INDEX IF NOT EXISTS idx_nodes_type ON nodes(type);
                 CREATE INDEX IF NOT EXISTS idx_edges_relation ON edges(relation);
             """)
-            
+
             # Migration: Ensure resonance column exists
             try:
                 await db.execute("ALTER TABLE edges ADD COLUMN resonance REAL DEFAULT 0.0")
             except Exception:
                 # Column likely already exists
                 pass
-                
+
             await db.commit()
             logger.info(f"[COGNITIVE GRAPH] Initialized at {self.db_path}")
 
@@ -210,7 +210,7 @@ class CognitiveGraph:
             """
             cursor = await db.execute(query)
             rows = await cursor.fetchall()
-            
+
             consolidated_count = 0
             for row in rows:
                 node_id = row["id"]
@@ -219,7 +219,9 @@ class CognitiveGraph:
                     "UPDATE nodes SET type = 'core_principle' WHERE id = ?", (node_id,)
                 )
                 consolidated_count += 1
-                logger.info(f"[COGNITIVE GRAPH] Memory Consolidated: '{row['label']}' is now a core principle.")
+                logger.info(
+                    f"[COGNITIVE GRAPH] Memory Consolidated: '{row['label']}' is now a core principle."
+                )
 
             await db.commit()
             return consolidated_count
