@@ -416,10 +416,17 @@ def _ensure_provider_proxy(p_conf: ProviderConfig) -> None:
 
         # HTTP health check: verify proxy is actually serving, not just holding port
         import urllib.request
+        import urllib.parse
 
         proxy_healthy = False
         try:
-            req = urllib.request.Request(f"http://127.0.0.1:{port}/health", method="GET")
+            url = f"http://127.0.0.1:{port}/health"
+            # Validate URL scheme to prevent B310 security issue
+            parsed_url = urllib.parse.urlparse(url)
+            if parsed_url.scheme not in ('http', 'https'):
+                raise ValueError("Invalid URL scheme")
+            
+            req = urllib.request.Request(url, method="GET")
             with urllib.request.urlopen(req, timeout=1.0) as resp:
                 if resp.status == 200:
                     proxy_healthy = True
