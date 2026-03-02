@@ -1,11 +1,11 @@
-# System Map Protocol (Карта Системи)
+# System Map Protocol
 
 **Version:** 1.0.0
 **Date:** 2026-02-06
 **Owner:** All Agents (Atlas, Tetyana, Grisha)
 **Purpose:** Single source of truth for ALL system paths, tools, databases, logs, and testing methods.
 
-> **КРИТИЧНО**: Цей документ є повною картою системи. Коли потрібно знайти файл, лог, базу даних, інструмент або скрипт — спочатку звернись сюди.
+> **CRITICAL**: This document is the complete system map. When you need to find a file, log, database, tool, or script — refer here first.
 
 ---
 
@@ -171,7 +171,8 @@ atlastrinity/
 ├── .env.example                  # Environment template
 ├── .cursorrules                  # Cursor IDE rules
 ├── start_brain.sh                # Brain startup script
-└── README.md                     # Project README
+├── README.md                     # Project README
+└── ...
 ```
 
 ---
@@ -180,33 +181,34 @@ atlastrinity/
 
 All runtime data lives OUTSIDE the repository in `~/.config/atlastrinity/`:
 
-| Path | Description | Type |
-|------|-------------|------|
-| `~/.config/atlastrinity/.env` | API keys, tokens, secrets | Secrets |
-| `~/.config/atlastrinity/config.yaml` | Main system config (agents, models, MCP) | Config |
-| `~/.config/atlastrinity/behavior_config.yaml` | Agent behavior rules (68KB) | Config |
-| `~/.config/atlastrinity/vibe_config.toml` | Vibe provider & model config | Config |
-| `~/.config/atlastrinity/prometheus.yml` | Prometheus metrics config | Config |
-| `~/.config/atlastrinity/atlastrinity.db` | **Main SQLite database** | Database |
-| `~/.config/atlastrinity/data/trinity.db` | Trinity data DB | Database |
-| `~/.config/atlastrinity/data/monitoring.db` | Monitoring metrics DB | Database |
-| `~/.config/atlastrinity/data/golden_fund/` | Golden Fund knowledge data | Database |
-| `~/.config/atlastrinity/data/search/` | Search index data | Database |
-| `~/.config/atlastrinity/logs/brain.log` | **Main Brain log** (rotated, 10MB max, 5 backups) | Logs |
-| `~/.config/atlastrinity/mcp/config.json` | **Active MCP server configuration** (runtime copy) | Config |
-| `~/.config/atlastrinity/memory/` | Long-term memory storage (ChromaDB) | Storage |
-| `~/.config/atlastrinity/screenshots/` | Screenshots from Vision/OCR | Storage |
-| `~/.config/atlastrinity/workspace/` | Agent workspace (777 permissions) | Workspace |
-| `~/.config/atlastrinity/vibe_workspace/` | Vibe coding workspace (777 permissions) | Workspace |
-| `~/.config/atlastrinity/vibe/` | Vibe session data | Storage |
-| `~/.config/atlastrinity/cache/` | General cache (XDG_CACHE_HOME) | Cache |
-| `~/.config/atlastrinity/models/tts/` | TTS voice models | Models |
-| `~/.config/atlastrinity/models/faster-whisper/` | Whisper STT models | Models |
-| `~/.config/atlastrinity/models/stanza/` | NLP Stanza models | Models |
-| `~/.config/atlastrinity/models/nltk/` | NLTK data | Models |
-| `~/.config/atlastrinity/models/huggingface/` | HuggingFace models (HF_HOME) | Models |
+| Path                                            | Description                                        | Type      |
+| ----------------------------------------------- | -------------------------------------------------- | --------- |
+| `~/.config/atlastrinity/.env`                   | API keys, tokens, secrets                          | Secrets   |
+| `~/.config/atlastrinity/config.yaml`            | Main system config (agents, models, MCP)           | Config    |
+| `~/.config/atlastrinity/behavior_config.yaml`   | Agent behavior rules (68KB)                        | Config    |
+| `~/.config/atlastrinity/vibe_config.toml`       | Vibe provider & model config                       | Config    |
+| `~/.config/atlastrinity/prometheus.yml`         | Prometheus metrics config                          | Config    |
+| `~/.config/atlastrinity/atlastrinity.db`        | **Main SQLite database**                           | Database  |
+| `~/.config/atlastrinity/data/trinity.db`        | Trinity data DB                                    | Database  |
+| `~/.config/atlastrinity/data/monitoring.db`     | Monitoring metrics DB                              | Database  |
+| `~/.config/atlastrinity/data/golden_fund/`      | Golden Fund knowledge data                         | Database  |
+| `~/.config/atlastrinity/data/search/`           | Search index data                                  | Database  |
+| `~/.config/atlastrinity/logs/brain.log`         | **Main Brain log** (rotated, 10MB max, 5 backups)  | Logs      |
+| `~/.config/atlastrinity/mcp/config.json`        | **Active MCP server configuration** (runtime copy) | Config    |
+| `~/.config/atlastrinity/memory/`                | Long-term memory storage (ChromaDB)                | Storage   |
+| `~/.config/atlastrinity/screenshots/`           | Screenshots from Vision/OCR                        | Storage   |
+| `~/.config/atlastrinity/workspace/`             | Agent workspace (777 permissions)                  | Workspace |
+| `~/.config/atlastrinity/vibe_workspace/`        | Vibe coding workspace (777 permissions)            | Workspace |
+| `~/.config/atlastrinity/vibe/`                  | Vibe session data                                  | Storage   |
+| `~/.config/atlastrinity/cache/`                 | General cache (XDG_CACHE_HOME)                     | Cache     |
+| `~/.config/atlastrinity/models/tts/`            | TTS voice models                                   | Models    |
+| `~/.config/atlastrinity/models/faster-whisper/` | Whisper STT models                                 | Models    |
+| `~/.config/atlastrinity/models/stanza/`         | NLP Stanza models                                  | Models    |
+| `~/.config/atlastrinity/models/nltk/`           | NLTK data                                          | Models    |
+| `~/.config/atlastrinity/models/huggingface/`    | HuggingFace models (HF_HOME)                       | Models    |
 
 ### Python Constants (from `src/brain/config.py`):
+
 ```python
 CONFIG_ROOT  = Path.home() / ".config" / "atlastrinity"
 LOG_DIR      = CONFIG_ROOT / "logs"
@@ -222,41 +224,28 @@ VIBE_WORKSPACE = CONFIG_ROOT / "vibe_workspace"
 ## 3. MCP SERVERS — COMPLETE REGISTRY
 
 ### Tier 1 — Core (Always loaded)
-| Server | Transport | Command | Source | Tools |
-|--------|-----------|---------|--------|-------|
-| `xcodebuild` | stdio | `node vendor/XcodeBuildMCP/dist/index.js mcp` | Local Node.js | 144+ (70 native + 63 macOS bridge + 11 Maps bridge) |
-| `filesystem` | stdio | `npx @modelcontextprotocol/server-filesystem` | npm | ~10 |
-| `sequential-thinking` | stdio | `bunx @modelcontextprotocol/server-sequential-thinking` | npm | 1 |
+
+| Server                | Transport | Command                                                 | Source        | Tools                                               |
+| --------------------- | --------- | ------------------------------------------------------- | ------------- | --------------------------------------------------- |
+| `xcodebuild`          | stdio     | `node vendor/XcodeBuildMCP/dist/index.js mcp`           | Local Node.js | 144+ (70 native + 63 macOS bridge + 11 Maps bridge) |
+| `filesystem`          | stdio     | `npx @modelcontextprotocol/server-filesystem`           | npm           | ~10                                                 |
+| `sequential-thinking` | stdio     | `bunx @modelcontextprotocol/server-sequential-thinking` | npm           | 1                                                   |
 
 ### Tier 2 — High Priority (Loaded at startup)
-| Server | Transport | Command | Source | Tools |
-|--------|-----------|---------|--------|-------|
-| `vibe` | stdio | `python3 -m src.mcp_server.vibe_server` | Local Python | 18 |
-| `memory` | stdio | `python3 -m src.mcp_server.memory_server` | Local Python | 9 |
-| `graph` | stdio | `python3 -m src.mcp_server.graph_server` | Local Python | 4 |
-| ~~`googlemaps`~~ | — | Bridged through xcodebuild | — | — |
-| `devtools` | stdio | `python3 -m src.mcp_server.devtools_server` | Local Python | 25+ |
-| `duckduckgo-search` | stdio | `python3 -m src.mcp_server.duckduckgo_search_server` | Local Python | ~5 |
-| `golden-fund` | stdio | `python3 -m src.mcp_server.golden_fund.server` | Local Python | 8 |
-| `whisper-stt` | stdio | `python3 -m src.mcp_server.whisper_server` | Local Python | ~3 |
-| `github` | stdio | `npx @modelcontextprotocol/server-github` | npm | ~20 |
-| `redis` | stdio | `python3 -m src.mcp_server.redis_server` | Local Python | 5 |
-| `data-analysis` | stdio | `python3 -m src.mcp_server.data_analysis_server` | Local Python | 10 |
-| ~~`macos-use`~~ | — | Bridged through xcodebuild | — | — |
-| `tour-guide` | internal | Native Python (ToolDispatcher) | Internal | 6 |
 
-### Tier 3 — Optional (On-demand)
-| Server | Transport | Command | Source | Tools |
-|--------|-----------|---------|--------|-------|
-| `puppeteer` | stdio | `npx @modelcontextprotocol/server-puppeteer` | npm | ~10 |
-| `context7` | stdio | `npx c7-mcp-server` | npm | ~3 |
-| `react-devtools` | stdio | `node src/mcp_server/react_devtools_mcp.js` | Local JS | ~5 |
-
-### Tier 4 — Specialized
-| Server | Transport | Command | Source | Tools |
-|--------|-----------|---------|--------|-------|
-| `chrome-devtools` | stdio | `bunx chrome-devtools-mcp` | npm | ~10 |
-| `postgres` | stdio | `python3 -m src.mcp_server.postgres_server` | Local Python | Disabled |
+| Server              | Transport | Command                                              | Source       | Tools |
+| ------------------- | --------- | ---------------------------------------------------- | ------------ | ----- |
+| `vibe`              | stdio     | `python3 -m src.mcp_server.vibe_server`              | Local Python | 18    |
+| `memory`            | stdio     | `python3 -m src.mcp_server.memory_server`            | Local Python | 9     |
+| `graph`             | stdio     | `python3 -m src.mcp_server.graph_server`             | Local Python | 4     |
+| `devtools`          | stdio     | `python3 -m src.mcp_server.devtools_server`          | Local Python | 25+   |
+| `duckduckgo-search` | stdio     | `python3 -m src.mcp_server.duckduckgo_search_server` | Local Python | ~5    |
+| `golden-fund`       | stdio     | `python3 -m src.mcp_server.golden_fund.server`       | Local Python | 8     |
+| `whisper-stt`       | stdio     | `python3 -m src.mcp_server.whisper_server`           | Local Python | ~3    |
+| `github`            | stdio     | `npx @modelcontextprotocol/server-github`            | npm          | ~20   |
+| `redis`             | stdio     | `python3 -m src.mcp_server.redis_server`             | Local Python | 5     |
+| `data-analysis`     | stdio     | `python3 -m src.mcp_server.data_analysis_server`     | Local Python | 10    |
+| `tour-guide`        | internal  | Native Python (ToolDispatcher)                       | Internal     | 6     |
 
 ---
 
@@ -264,38 +253,30 @@ VIBE_WORKSPACE = CONFIG_ROOT / "vibe_workspace"
 
 All available via `devtools` MCP server or `npm run lint:all`:
 
-| Tool | Language | Config File | DevTools Function |
-|------|----------|-------------|-------------------|
-| **Ruff** | Python | `pyproject.toml` (25 rule sets) | `devtools_lint_python` |
-| **Pyright** | Python | `pyrightconfig.json` | `devtools_check_types_python` |
-| **Pyrefly** | Python | `pyrefly.toml` | `devtools_check_integrity` |
-| **Bandit** | Python | `pyproject.toml` | `devtools_check_security` |
-| **Vulture** | Python | `vulture_whitelist.py` | `devtools_find_dead_code` |
-| **Xenon** | Python | (inline args) | `devtools_check_complexity` |
-| **Biome** | JS/TS | `biome.json` | via `npm run lint:all` |
-| **OxLint** | JS/TS | (inline) | `devtools_lint_js` |
-| **ESLint** | JS/TS | `eslint.config.mjs` | `devtools_lint_js` |
-| **TypeScript** | TS | `tsconfig.json`, `tsconfig.main.json` | `devtools_check_types_ts` |
-| **Knip** | JS/TS | `knip.json` | `devtools_find_dead_code` |
-| **Safety** | Python deps | `.safety-policy.yml` | `devtools_check_security` |
-| **detect-secrets** | All | `.secrets.baseline` | `devtools_check_security` |
-| **npm audit** | JS deps | `package.json` | `devtools_check_security` |
-| **Lefthook** | Git hooks | `lefthook.yml` | Runs 13 checks in parallel |
-
-### Running Full Lint Suite:
-```bash
-# Via npm (runs lefthook with 13 parallel checks)
-npm run lint:all
-
-# Via devtools MCP tool
-devtools_run_global_lint()
-```
+| Tool               | Language    | Config File                           | DevTools Function             |
+| ------------------ | ----------- | ------------------------------------- | ----------------------------- |
+| **Ruff**           | Python      | `pyproject.toml` (25 rule sets)       | `devtools_lint_python`        |
+| **Pyright**        | Python      | `pyrightconfig.json`                  | `devtools_check_types_python` |
+| **Pyrefly**        | Python      | `pyrefly.toml`                        | `devtools_check_integrity`    |
+| **Bandit**         | Python      | `pyproject.toml`                      | `devtools_check_security`     |
+| **Vulture**        | Python      | `vulture_whitelist.py`                | `devtools_find_dead_code`     |
+| **Xenon**          | Python      | (inline args)                         | `devtools_check_complexity`   |
+| **Biome**          | JS/TS       | `biome.json`                          | via `npm run lint:all`        |
+| **OxLint**         | JS/TS       | (inline)                              | `devtools_lint_js`            |
+| **ESLint**         | JS/TS       | `eslint.config.mjs`                   | `devtools_lint_js`            |
+| **TypeScript**     | TS          | `tsconfig.json`, `tsconfig.main.json` | `devtools_check_types_ts`     |
+| **Knip**           | JS/TS       | `knip.json`                           | `devtools_find_dead_code`     |
+| **Safety**         | Python deps | `.safety-policy.yml`                  | `devtools_check_security`     |
+| **detect-secrets** | All         | `.secrets.baseline`                   | `devtools_check_security`     |
+| **npm audit**      | JS deps     | `package.json`                        | `devtools_check_security`     |
+| **Lefthook**       | Git hooks   | `lefthook.yml`                        | Runs 13 checks in parallel    |
 
 ---
 
 ## 5. TESTING MCP SERVERS NATIVELY
 
 ### Method 1: Health Check (Quick — connection test)
+
 ```bash
 # CLI
 python scripts/check_mcp_health.py --json --tools
@@ -305,6 +286,7 @@ devtools_check_mcp_health()
 ```
 
 ### Method 2: MCP Inspector CLI (Deep — per-tool test)
+
 ```bash
 # List tools
 npx @modelcontextprotocol/inspector --cli <server_command> --method tools/list
@@ -312,13 +294,9 @@ npx @modelcontextprotocol/inspector --cli <server_command> --method tools/list
 # Call specific tool
 npx @modelcontextprotocol/inspector --cli <server_command> --method tools/call --tool-name <name> --tool-arg key=value
 ```
-Via devtools MCP tools:
-- `mcp_inspector_list_tools(server_name)` — List all tools
-- `mcp_inspector_call_tool(server_name, tool_name, args)` — Call a specific tool
-- `mcp_inspector_list_resources(server_name)` — List resources
-- `mcp_inspector_get_schema(server_name, tool_name)` — Get tool schema
 
 ### Method 3: Sandbox Testing (Full — with LLM scenarios)
+
 ```bash
 # Test single server
 python scripts/mcp_sandbox.py --server filesystem --full
@@ -329,37 +307,18 @@ python scripts/mcp_sandbox.py --all --json
 # With auto-fix
 python scripts/mcp_sandbox.py --all --autofix
 ```
-Via devtools MCP tool:
-- `devtools_run_mcp_sandbox(server_name=..., all_servers=True, chain_length=3)`
-
-### Method 4: Integration Tests (Automated — pytest)
-```bash
-# Run MCP integration tests
-python -m pytest tests/ -k "mcp" -v
-
-# Run specific server tests
-python scripts/test_mcp_integration.py
-python scripts/test_all_macos_tools.py
-python scripts/test_vibe_mcp_tools.py
-```
-
-### Method 5: Native Tool Testing via Brain
-The system can test any MCP tool natively through the `devtools` server:
-1. `devtools_get_system_map()` — Get full system map (paths, servers, tools)
-2. `devtools_check_mcp_health()` — Quick health check all servers
-3. `mcp_inspector_call_tool(server, tool, args)` — Test any specific tool
-4. `devtools_run_mcp_sandbox(all_servers=True)` — Full sandbox test
-5. `devtools_analyze_trace()` — Analyze brain.log for issues (default: `~/.config/atlastrinity/logs/brain.log`)
 
 ---
 
 ## 6. LOG ANALYSIS
 
 ### Log Locations:
+
 - **Brain log**: `~/.config/atlastrinity/logs/brain.log` (main, rotated)
 - **Turbo daemon**: `${PROJECT_ROOT}/.turbo/daemon/` (build logs)
 
 ### Log Analysis Tools:
+
 - `devtools_analyze_trace(log_path)` — Detect loops, inefficiencies, hallucinations
 - `scripts/db_report.py` — Database state report
 - `scripts/debug_db.py` — Database debugging
@@ -368,40 +327,34 @@ The system can test any MCP tool natively through the `devtools` server:
 
 ## 7. DATABASE LOCATIONS
 
-| Database | Path | Engine | Purpose |
-|----------|------|--------|---------|
-| Main DB | `~/.config/atlastrinity/atlastrinity.db` | SQLite (aiosqlite) | Core application data |
-| Trinity DB | `~/.config/atlastrinity/data/trinity.db` | SQLite | Trinity-specific data |
-| Monitoring DB | `~/.config/atlastrinity/data/monitoring.db` | SQLite | Metrics & monitoring |
-| Golden Fund | `~/.config/atlastrinity/data/golden_fund/` | SQLite + files | Knowledge base |
-| Memory | `~/.config/atlastrinity/memory/` | ChromaDB | Vector embeddings |
-| Redis | `redis://localhost:6379/0` | Redis | State management |
-
-### Database Tools:
-- `vibe_check_db()` — Check Vibe database state
-- `redis_info()`, `redis_get()`, `redis_keys()` — Redis inspection
-- `scripts/db_report.py` — Full DB report
-- `scripts/verify_db_tables.py` — Verify table structure
+| Database      | Path                                        | Engine             | Purpose               |
+| ------------- | ------------------------------------------- | ------------------ | --------------------- |
+| Main DB       | `~/.config/atlastrinity/atlastrinity.db`    | SQLite (aiosqlite) | Core application data |
+| Trinity DB    | `~/.config/atlastrinity/data/trinity.db`    | SQLite             | Trinity-specific data |
+| Monitoring DB | `~/.config/atlastrinity/data/monitoring.db` | SQLite             | Metrics & monitoring  |
+| Golden Fund   | `~/.config/atlastrinity/data/golden_fund/`  | SQLite + files     | Knowledge base        |
+| Memory        | `~/.config/atlastrinity/memory/`            | ChromaDB           | Vector embeddings     |
+| Redis         | `redis://localhost:6379/0`                  | Redis              | State management      |
 
 ---
 
 ## 8. QUICK REFERENCE — COMMON TASKS
 
-| Task | How |
-|------|-----|
-| Check all MCP servers | `devtools_check_mcp_health()` |
-| Test specific MCP tool | `mcp_inspector_call_tool(server, tool, args)` |
-| Find brain logs | `~/.config/atlastrinity/logs/brain.log` |
+| Task                   | How                                                               |
+| ---------------------- | ----------------------------------------------------------------- |
+| Check all MCP servers  | `devtools_check_mcp_health()`                                     |
+| Test specific MCP tool | `mcp_inspector_call_tool(server, tool, args)`                     |
+| Find brain logs        | `~/.config/atlastrinity/logs/brain.log`                           |
 | Analyze log for issues | `devtools_analyze_trace("~/.config/atlastrinity/logs/brain.log")` |
-| Run all linters | `devtools_run_global_lint()` |
-| Lint Python file | `devtools_lint_python("path/to/file.py")` |
-| Lint JS/TS file | `devtools_lint_js("path/to/file.ts")` |
-| Check Python types | `devtools_check_types_python("src/")` |
-| Find dead code | `devtools_find_dead_code()` |
-| Security audit | `devtools_check_security()` |
-| Check DB state | `vibe_check_db()` or `scripts/db_report.py` |
-| Test all MCP tools | `devtools_run_mcp_sandbox(all_servers=True)` |
-| Get full system map | `devtools_get_system_map()` |
-| Restart MCP server | `devtools_restart_mcp_server(server_name)` |
-| View running processes | `devtools_list_processes()` |
-| Validate MCP config | `devtools_validate_config()` |
+| Run all linters        | `devtools_run_global_lint()`                                      |
+| Lint Python file       | `devtools_lint_python("path/to/file.py")`                         |
+| Lint JS/TS file        | `devtools_lint_js("path/to/file.ts")`                             |
+| Check Python types     | `devtools_check_types_python("src/")`                             |
+| Find dead code         | `devtools_find_dead_code()`                                       |
+| Security audit         | `devtools_check_security()`                                       |
+| Check DB state         | `vibe_check_db()` or `scripts/db_report.py`                       |
+| Test all MCP tools     | `devtools_run_mcp_sandbox(all_servers=True)`                      |
+| Get full system map    | `devtools_get_system_map()`                                       |
+| Restart MCP server     | `devtools_restart_mcp_server(server_name)`                        |
+| View running processes | `devtools_list_processes()`                                       |
+| Validate MCP config    | `devtools_validate_config()`                                      |
