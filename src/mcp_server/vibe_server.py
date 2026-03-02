@@ -414,6 +414,25 @@ def _ensure_provider_proxy(p_conf: ProviderConfig) -> None:
             except Exception:
                 pass
 
+        # HTTP health check: verify proxy is actually serving, not just holding port
+        import urllib.request
+
+        proxy_healthy = False
+        try:
+            req = urllib.request.Request(f"http://127.0.0.1:{port}/health", method="GET")
+            with urllib.request.urlopen(req, timeout=1.0) as resp:
+                if resp.status == 200:
+                    proxy_healthy = True
+        except Exception:
+            pass  # Connection refused / timeout = proxy not running
+
+        if proxy_healthy:
+            logger.info(
+                f"[VIBE] Proxy for {p_conf.name} already healthy on port {port}, skipping launch."
+            )
+            return
+
+        # Fallback: raw socket check for non-HTTP services holding the port
         import socket
 
         with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as s:
@@ -421,10 +440,26 @@ def _ensure_provider_proxy(p_conf: ProviderConfig) -> None:
             is_used = s.connect_ex(("127.0.0.1", port)) == 0
 
         if is_used:
-            logger.info(
-                f"[VIBE] Proxy port {port} for {p_conf.name} already in use, assuming active."
+            logger.warning(
+                f"[VIBE] Port {port} occupied but proxy unhealthy for {p_conf.name}. "
+                f"Killing stale process before relaunch."
             )
-            return
+            import subprocess as _sp
+
+            try:
+                result = _sp.run(
+                    ["lsof", "-ti", f":{port}"],
+                    capture_output=True, text=True, check=False,
+                )
+                for pid in result.stdout.strip().split("\n"):
+                    if pid.strip():
+                        _sp.run(["kill", "-9", pid.strip()], check=False)
+                        logger.warning(f"[VIBE] Killed stale PID {pid.strip()} on port {port}")
+                import time
+                time.sleep(0.5)
+            except Exception as kill_err:
+                logger.error(f"[VIBE] Failed to kill stale process on port {port}: {kill_err}")
+                return
 
         # Expand variables in command (PROJECT_ROOT, etc.)
         cmd_str = VibeConfig.expand_vars(p_conf.proxy_command)

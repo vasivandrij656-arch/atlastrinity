@@ -1477,6 +1477,24 @@ class Trinity(TourMixin, VoiceOrchestrationMixin):
                 )
             return plan
 
+        except KeyError as ke:
+            # Curly braces in LLM/user text cause str.format() KeyError
+            # (e.g., '{Failure essence}' in prompt templates)
+            logger.warning(
+                f"[ORCHESTRATOR] Planning KeyError (template placeholder): {ke}. "
+                f"Retrying with sanitized input."
+            )
+            try:
+                # Escape braces in user_request and retry once
+                safe_request = user_request.replace("{", "{{").replace("}", "}}")
+                analysis = await self.atlas.analyze_request(safe_request, history=[])
+                plan = await self._planning_loop(analysis, safe_request, is_subtask, [])
+                if plan:
+                    return plan
+            except Exception as retry_err:
+                logger.error(f"[ORCHESTRATOR] Planning retry also failed: {retry_err}")
+            self.state["system_state"] = SystemState.ERROR.value
+            return {"status": "error", "error": f"Template formatting error: {ke}"}
         except Exception as e:
             logger.error(f"[ORCHESTRATOR] Planning error: {e}")
             self.state["system_state"] = SystemState.ERROR.value

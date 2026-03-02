@@ -19,6 +19,11 @@ async def test_routing():
         ("macos-use_take_screenshot", {}, "xcodebuild", "macos-use_take_screenshot"),
         ("execute_command", {"command": "pwd"}, "xcodebuild", "execute_command"),
         ("macos-use.macos-use_get_time", {}, "xcodebuild", "macos-use_get_time"),
+        # Shell builtins routing
+        ("which", {"command": "python3"}, "xcodebuild", "execute_command"),
+        ("head", {"command": "head -5 foo.txt"}, "xcodebuild", "execute_command"),
+        ("tail", {"command": "tail -f log.txt"}, "xcodebuild", "execute_command"),
+        ("wc", {"command": "wc -l foo.txt"}, "xcodebuild", "execute_command"),
         # Google Maps routing cases
         ("geocode", {"address": "Kyiv"}, "xcodebuild", "maps_geocode"),
         ("maps_search_places", {"query": "restaurants"}, "xcodebuild", "maps_search_places"),
