@@ -8,13 +8,13 @@ This prompt integrates the Full Arsenal of memory:
 - User Profile & History
 """
 
+from .atlas_deep import get_atlas_deep_persona  # pyre-ignore
 from .common import (
-    LOYALTY_DOCTRINE,
     EVOLUTION_DOCTRINE,
     LANGUAGE_DOCTRINE,
+    LOYALTY_DOCTRINE,
     TRINITY_AUTH_DOCTRINE,
 )
-from .atlas_deep import get_atlas_deep_persona  # pyre-ignore
 
 
 def generate_atlas_chat_prompt(
