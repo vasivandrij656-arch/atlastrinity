@@ -184,6 +184,7 @@ class FirstRunInstaller:
             "screen_recording": False,
             "camera": False,
             "microphone": False,
+            "automation": False,
         }
 
         # 1. Check and Request Accessibility
@@ -254,6 +255,20 @@ class FirstRunInstaller:
         except ImportError:
             pass
 
+        # 4. Check and Request Automation (Apple Events) for System Events
+        try:
+            code, _out, _ = _run_command(
+                [
+                    "osascript",
+                    "-e",
+                    'tell application "System Events" to return name of current user',
+                ],
+                timeout=5,
+            )
+            permissions["automation"] = code == 0
+        except Exception:
+            permissions["automation"] = False
+
         # Interpret "requested" as False for the immediate status check (since they are pending)
         status_acc = (
             "✓"
@@ -283,11 +298,18 @@ class FirstRunInstaller:
             if permissions["microphone"] == "requested"
             else "✗"
         )
+        status_auto = (
+            "✓"
+            if permissions["automation"] is True
+            else "⏳"
+            if permissions["automation"] == "requested"
+            else "✗"
+        )
 
         self._report(
             SetupStep.CHECK_PERMISSIONS,
             1.0,
-            f"Access: {status_acc}, Screen: {status_screen}, Camera: {status_cam}, Mic: {status_mic}",
+            f"Access: {status_acc}, Screen: {status_screen}, Camera: {status_cam}, Mic: {status_mic}, Auto: {status_auto}",
         )
 
         missing_perms = [k for k, v in permissions.items() if v is not True]
@@ -316,6 +338,15 @@ class FirstRunInstaller:
                     [
                         "open",
                         "x-apple.systempreferences:com.apple.preference.security?Privacy_ScreenCapture",
+                    ]
+                )
+
+            if permissions["automation"] is not True:
+                print("   > Automation (Apple Events)", file=sys.stderr)
+                _run_command(
+                    [
+                        "open",
+                        "x-apple.systempreferences:com.apple.preference.security?Privacy_Automation",
                     ]
                 )
 
