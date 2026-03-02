@@ -371,7 +371,7 @@ class CopilotLLM(BaseChatModel):
             role = "user"
             content: Any = ""
             msg_id = None
-            
+
             if isinstance(m, dict):
                 role = m.get("role", "user")
                 content = m.get("content", "")
@@ -398,7 +398,8 @@ class CopilotLLM(BaseChatModel):
                         for tc in m.tool_calls:
                             calls.append({"name": tc["name"], "args": tc["args"]})
                         content = json.dumps(
-                            {"tool_calls": calls, "final_answer": m.content or ""}, ensure_ascii=False
+                            {"tool_calls": calls, "final_answer": m.content or ""},
+                            ensure_ascii=False,
                         )
                 elif isinstance(m, HumanMessage):
                     role = "user"
@@ -413,9 +414,11 @@ class CopilotLLM(BaseChatModel):
 
             # Handle specific role mapping for Copilot API
             if role == "system":
-                 system_content = str(content) + ("\n\n" + tool_instructions if tool_instructions else "")
-                 continue
-            
+                system_content = str(content) + (
+                    "\n\n" + tool_instructions if tool_instructions else ""
+                )
+                continue
+
             if role == "tool":
                 role = "user"
                 content = f"[TOOL RESULT for {msg_id}]: {content}"
@@ -473,14 +476,16 @@ class CopilotLLM(BaseChatModel):
                     else:
                         schema = schema_obj
 
-                    native_tools.append({
-                        "type": "function",
-                        "function": {
-                            "name": name,
-                            "description": description,
-                            "parameters": schema
+                    native_tools.append(
+                        {
+                            "type": "function",
+                            "function": {
+                                "name": name,
+                                "description": description,
+                                "parameters": schema,
+                            },
                         }
-                    })
+                    )
             payload["tools"] = native_tools
             # Some APIs might need tool_choice: "auto"
             payload["tool_choice"] = "auto"
@@ -695,13 +700,15 @@ class CopilotLLM(BaseChatModel):
                     args = json.loads(args_str) if isinstance(args_str, str) else args_str
                 except Exception:
                     args = {}
-                
-                tool_calls.append({
-                    "id": call.get("id") or f"call_{idx}",
-                    "type": "tool_call",
-                    "name": name,
-                    "args": args
-                })
+
+                tool_calls.append(
+                    {
+                        "id": call.get("id") or f"call_{idx}",
+                        "type": "tool_call",
+                        "name": name,
+                        "args": args,
+                    }
+                )
 
         # 2. If no native calls, check for JSON-in-text (fallback/legacy)
         if not tool_calls:
@@ -732,7 +739,9 @@ class CopilotLLM(BaseChatModel):
         if tool_calls:
             return ChatResult(
                 generations=[
-                    ChatGeneration(message=AIMessage(content=final_answer or content, tool_calls=tool_calls)),
+                    ChatGeneration(
+                        message=AIMessage(content=final_answer or content, tool_calls=tool_calls)
+                    ),
                 ],
             )
         return ChatResult(
@@ -1002,11 +1011,11 @@ class CopilotLLM(BaseChatModel):
 
     def _build_final_ai_message(self, content: str) -> AIMessage:
         tool_calls = []
-        
-        # In streaming, native tool calls are trickier (delta.tool_calls), 
+
+        # In streaming, native tool calls are trickier (delta.tool_calls),
         # but vibe-proxy currently doesn't use self.invoke_with_stream.
         # However, for completeness, we keep parsing the final accumulated content.
-        
+
         if self._tools and content:
             try:
                 # 1. Look for tool_calls in JSON structure within content (reinforcement)

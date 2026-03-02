@@ -26,6 +26,7 @@ import argparse
 import concurrent.futures
 import http.server
 import json
+import logging
 import os
 import signal
 import socketserver
@@ -63,12 +64,11 @@ except ImportError as e:
     sys.exit(1)
 
 # Initialize logging to capture DEBUG logs from providers.copilot
-import logging
 
 logging.basicConfig(
     level=logging.DEBUG,
-    format='%(asctime)s [%(levelname)s] [%(name)s] %(message)s',
-    stream=sys.stderr
+    format="%(asctime)s [%(levelname)s] [%(name)s] %(message)s",
+    stream=sys.stderr,
 )
 # Specifically set providers.copilot and src.brain to DEBUG
 logging.getLogger("providers.copilot").setLevel(logging.DEBUG)
@@ -198,9 +198,10 @@ class CopilotVibeProxyHandler(http.server.BaseHTTPRequestHandler):
             model = request_data.get("model", "gpt-4.1")
             messages = request_data.get("messages", [])
             tools = request_data.get("tools")
-            tool_choice = request_data.get("tool_choice")
 
-            log(f"Request model: {model}, messages: {len(messages)}, tools: {len(tools) if tools else 0}")
+            log(
+                f"Request model: {model}, messages: {len(messages)}, tools: {len(tools) if tools else 0}"
+            )
             if tools:
                 log(f"Tools: {[t.get('function', {}).get('name') for t in tools]}")
 
@@ -222,7 +223,7 @@ class CopilotVibeProxyHandler(http.server.BaseHTTPRequestHandler):
             start_time = time.time()
             response = llm.invoke(copilot_messages)
             elapsed = time.time() - start_time
-            
+
             log(f"LLM Response type: {type(response)}")
             if hasattr(response, "tool_calls") and response.tool_calls:
                 log(f"LLM Tool Calls: {response.tool_calls}")
@@ -235,19 +236,21 @@ class CopilotVibeProxyHandler(http.server.BaseHTTPRequestHandler):
 
             if hasattr(response, "content"):
                 content = str(response.content)
-            
+
             if hasattr(response, "tool_calls") and response.tool_calls:
                 tool_calls = []
                 for tc in response.tool_calls:
                     # Convert to OpenAI tool_call format
-                    tool_calls.append({
-                        "id": tc.get("id", f"call_{int(time.time())}_{len(tool_calls)}"),
-                        "type": "function",
-                        "function": {
-                            "name": tc.get("name"),
-                            "arguments": json.dumps(tc.get("args", {}))
+                    tool_calls.append(
+                        {
+                            "id": tc.get("id", f"call_{int(time.time())}_{len(tool_calls)}"),
+                            "type": "function",
+                            "function": {
+                                "name": tc.get("name"),
+                                "arguments": json.dumps(tc.get("args", {})),
+                            },
                         }
-                    })
+                    )
 
             # Create OpenAI-compatible response
             message = {"role": "assistant", "content": content, "tool_calls": None}
