@@ -427,7 +427,7 @@ def _ensure_provider_proxy(p_conf: ProviderConfig) -> None:
                 raise ValueError("Invalid URL scheme")
 
             req = urllib.request.Request(url, method="GET")
-            with urllib.request.urlopen(req, timeout=1.0) as resp:
+            with urllib.request.urlopen(req, timeout=1.0) as resp:  # nosec B310
                 if resp.status == 200:
                     proxy_healthy = True
         except Exception:
