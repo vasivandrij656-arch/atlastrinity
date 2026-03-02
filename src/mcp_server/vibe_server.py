@@ -449,13 +449,16 @@ def _ensure_provider_proxy(p_conf: ProviderConfig) -> None:
             try:
                 result = _sp.run(
                     ["lsof", "-ti", f":{port}"],
-                    capture_output=True, text=True, check=False,
+                    capture_output=True,
+                    text=True,
+                    check=False,
                 )
                 for pid in result.stdout.strip().split("\n"):
                     if pid.strip():
                         _sp.run(["kill", "-9", pid.strip()], check=False)
                         logger.warning(f"[VIBE] Killed stale PID {pid.strip()} on port {port}")
                 import time
+
                 time.sleep(0.5)
             except Exception as kill_err:
                 logger.error(f"[VIBE] Failed to kill stale process on port {port}: {kill_err}")
