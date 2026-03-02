@@ -1,5 +1,3 @@
-
-
 TETYANA = {
     "NAME": "TETYANA",
     "DISPLAY_NAME": "Tetyana",

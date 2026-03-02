@@ -1,5 +1,3 @@
-
-
 # New verification prompts for Grisha
 GRISHA_VERIFICATION_GOAL_ANALYSIS = """VERIFICATION GOAL ANALYSIS (ATOMIC LEVEL):
 
