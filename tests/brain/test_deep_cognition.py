@@ -1,7 +1,10 @@
 import asyncio
+
 import pytest
-from src.brain.neural_core.memory.graph import cognitive_graph
+
 from src.brain.neural_core.evolution.validator import validator
+from src.brain.neural_core.memory.graph import cognitive_graph
+
 
 @pytest.mark.asyncio
 async def test_memory_consolidation():
