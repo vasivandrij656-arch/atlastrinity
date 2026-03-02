@@ -228,7 +228,8 @@ Check Tetyana's arguments. Are they logical for achieving the goal?
 
 **STEP 2: DB VALIDATION (IMPORTANT)**
 Query `tool_executions`.
-- *IMPORTANT*: If result is empty or contains error — step FAILED.
+- *IMPORTANT*: If command failed or returned technical error — step FAILED.
+- *NOTE*: If result is empty but command was SUCCESSful, and this is an ANALYSIS/DISCOVERY step — step PASSED (confirmed absence).
 
 **STEP 3: INTEGRITY AUDIT**
 Check real system changes.

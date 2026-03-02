@@ -46,6 +46,25 @@ from sqlalchemy import text
 from src.brain.memory.db.manager import db_manager
 from src.brain.monitoring.utils.security import mask_sensitive_data
 
+
+def fix_problematic_sql(query: str) -> str:
+    """Helper to fix SQLite-specific issues in complex queries,
+    especially UNION ALL + ORDER BY patterns.
+    """
+    if "UNION ALL" in query.upper() and "ORDER BY" in query.upper():
+        # Ensure the query is wrapped if it's a raw UNION ALL
+        # This fixes 'ORDER BY term does not match any column'
+        if not query.strip().upper().startswith("SELECT * FROM ("):
+            # Simple wrapper to make SQLite happy with UNION + ORDER BY
+            import re
+
+            parts = re.split(r"(?i)\bORDER BY\b", query)
+            if len(parts) > 1:
+                base = parts[0].strip()
+                order = "ORDER BY " + parts[1].strip()
+                return f"SELECT * FROM ({base}) {order}"
+    return query
+
 from .vibe_config import (
     AgentMode,
     ProviderConfig,
@@ -2841,7 +2860,9 @@ async def vibe_check_db(
 
         session = await db_manager.get_session()
         try:
-            res = await session.execute(text(query))
+            # Sanitize and fix problematic SQL patterns (UNION ALL + ORDER BY)
+            safe_query = fix_problematic_sql(query)
+            res = await session.execute(text(safe_query))
             rows = [dict(r) for r in res.mappings().all()]
             return {"success": True, "count": len(rows), "data": rows}
         finally:
