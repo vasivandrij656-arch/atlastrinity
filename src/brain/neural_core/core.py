@@ -10,7 +10,7 @@ from src.brain.neural_core.evolution.engine import evolution_engine
 from src.brain.neural_core.evolution.observer import environment_observer
 from src.brain.neural_core.identity.postulate_manager import postulate_manager
 from src.brain.neural_core.memory.graph import cognitive_graph
-from src.brain.neural_core.neuro_modulator import neuro_modulator
+from src.brain.neural_core.neuro_modulator import neuro_modulator, NeuroModulator
 from src.brain.neural_core.reflection.pipeline import reflex_pipe
 from src.brain.neural_core.synapse import synaptic_bus
 
@@ -25,7 +25,7 @@ class NeuralCore:
         self.evolution = evolution_engine
         self.identity = postulate_manager
         self.synapse = synaptic_bus
-        self.chemistry = neuro_modulator
+        self.chemistry: NeuroModulator = neuro_modulator
         self._initialized = False
 
     async def initialize(self):
