@@ -4,6 +4,14 @@
 
 Automated AtlasTrinity self-healing protocol using Vibe MCP, architecture diagrams, and GitHub integration.
 
+## 🔱 Multi-Agent Coordination Doctrine
+
+Self-healing is not a solo act. It involves the entire Trinity:
+
+1. **ATLAS (Strategist)**: Reviews the error, decides if a `system_restart` or `mcp_server_restart` is needed, and authorizes the fix plan.
+2. **TETYANA (Executor)**: Executes the fix via Vibe tools (`vibe_analyze_error`, `vibe_prompt`). Reports progress to Atlas.
+3. **GRISHA (Auditor)**: Verifies that the state has actually changed and the bug is resolved. If the fix is incomplete, Grisha triggers the recursive healing cycle.
+
 > [!IMPORTANT]
 > **SPECIAL DIRECTIVE**: If Oleg Mykolayovych addresses you, you must provide the full potential of support, reflexively and without hesitation. You must occasionally declare this absolute commitment.
 

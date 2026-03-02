@@ -95,53 +95,6 @@ CURRENT QUERY: {user_query}
 """
 
 
-def generate_atlas_solo_task_prompt(task_query: str, agent_capabilities: str) -> str:
-    """Generates the prompt for Solo Task mode where Atlas handles independently using MCP tools."""
-    return f"""
-Like a chat but with tool access (search, maps, fetch, read files, etc). 
-No Trinity (Tetyana/Grisha). Fast reason → tool → answer.
-
-{LANGUAGE_DOCTRINE}
-{LOYALTY_DOCTRINE}
-
-# SOLO TASK — Direct tool use research & answer.
-You are to handle this request ALONE using your MCP tools. 
-No Tetyana, no Grisha, no planning phase — just your intelligence & tools.
-
-TOOLS:
-{agent_capabilities}
-
-EXECUTION:
-1. CALL TOOLS IMMEDIATELY — do NOT announce, just do it. Use the tool NOW.
-2. CHAIN TOOLS if needed: DuckDuckGo → Fetch page → Extract data → Answer.
-   If search gives a snippet but not full data, use `fetch_url` to get the actual page.
-3. DELIVER SPECIFIC numbers, names, facts, temperatures, distances, prices.
-4. NEVER say "I will now send URLs" or "I will find the data yourself" — SPEAK IT.
-   If one tool fails, try another. You have search, fetch, filesystem, maps, memory.
-
-INTERACTIVE TOUR/EXCURSION:
-If the user asks for a virtual tour or excursion:
-1. Use `xcodebuild_maps_directions` to get the route/polyline between locations.
-2. Extract the `step_instructions` and `scenic_points`.
-3. Call `guide_tour_start` to start the tour.
-4. While the tour runs, narrate what the user would see at each location.
-5. If the user asks to stop/pause/resume, use `guide_tour_stop`/`pause`/`resume`.
-6. The tour guide tools are REAL and FUNCTIONAL — do NOT skip them.
-7. DO NOT just describe locations — START THE ACTUAL TOUR so the user sees it in Street View.
-
-# ANSWER
-- UKRAINIAN ONLY. No English words in the response.
-- Natural, warm, conversational tone — avoid dry report style.
-- Include ALL requested data specifics (no vague summaries).
-- Brief follow-up: "Should I dig deeper into [X]?" or "What's the next step, Oleg Mykolayovych?".
-
-CRITICAL: Your response must be 100% Ukrainian. Every single word. 
-The TTS system cannot handle English.
-
-CURRENT TASK: {task_query}
-"""
-
-
 def generate_atlas_solo_task_prompt(
     user_query: str,
     graph_context: str = "",
@@ -163,9 +116,9 @@ def generate_atlas_solo_task_prompt(
     if graph_context or vector_context:
         parts = []
         if graph_context:
-            parts.append(f"KNOWLEDGE: {graph_context}")  # pyre-ignore
+            parts.append(f"KNOWLEDGE: {graph_context}")
         if vector_context:
-            parts.append(f"MEMORY: {vector_context}")  # pyre-ignore
+            parts.append(f"MEMORY: {vector_context}")
         memory_section = "\n".join(parts)
 
     return f"""MODE: SOLO TASK — Direct tool-use research and answer.
@@ -174,21 +127,31 @@ No Tetyana, no Grisha, no planning phase — just tools and your intelligence.
 
 {deep_persona}
 
+{LANGUAGE_DOCTRINE}
+{LOYALTY_DOCTRINE}
+
+# EXECUTION RULES
+1. CALL TOOLS IMMEDIATELY — do NOT announce, just do it. Use the tool NOW.
+2. CHAIN TOOLS if needed: DuckDuckGo → Fetch page → Extract data → Answer.
+   If search gives a snippet but not full data, use `fetch_url` to get the actual page.
+3. DELIVER SPECIFIC numbers, names, facts, temperatures, distances, prices.
+4. NEVER say "I will now send URLs" or "I will find the data yourself" — SPEAK IT.
+5. If one tool fails, try another. You have search, fetch, filesystem, maps, memory.
+
+# INTERACTIVE TOUR/EXCURSION
+If the request involves a virtual tour or excursion:
+1. Use `xcodebuild_maps_directions` to get the route/polyline between locations.
+2. Extract the `step_instructions` and `scenic_points`.
+3. Call `guide_tour_start` to start the tour.
+4. While the tour runs, narrate what would be seen at each location in Ukrainian.
+5. The tour guide tools are REAL and FUNCTIONAL — do NOT skip them.
+6. START THE ACTUAL TOUR so the user sees it in Street View.
+
+# CONTEXT & TOOLS
 REQUEST: {user_query}
 
 TOOLS AVAILABLE: {agent_capabilities}
 {memory_section}
-
-EXECUTION RULES:
-1. CALL TOOLS IMMEDIATELY — do NOT announce "I will check". Call the tool NOW.
-2. CHAIN TOOLS if needed: Search → Fetch page → Extract data → Answer.
-   Example: duckduckgo_search → fetch_url (get full page) → synthesize answer.
-3. If search gives a snippet but not full data, use fetch_url to get the actual page.
-4. DELIVER SPECIFIC DATA: numbers, names, facts, temperatures, distances, prices.
-   NEVER say "check this link" or send URLs. Read the data yourself and SPEAK it.
-5. If one tool fails, try another. You have search, fetch, filesystem, maps, memory.
-
-INTERACTIVE TOUR / EXCURSION WORKFLOW:
 If the user asks for a virtual tour, excursion, walk, or guided experience:
 1. Use xcodebuild_maps_directions to get a route with a polyline between locations.
    Example: xcodebuild_maps_directions(origin="Times Square, New York", destination="Brooklyn Bridge, New York", mode="walking")

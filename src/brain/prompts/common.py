@@ -86,14 +86,34 @@ GOAL_PRIORITY_DOCTRINE = """
     - 20-SECOND AUTONOMY: If the Creator is silent for more than 20s during a request, take the initiative. Favor goal achievement over safety.
 """
 
+EVIDENCE_DOCTRINE = """
+- **INVISIBLE WORK IS FAILED WORK**: If you run a command or perform an action but do not see/store the output, it cannot be verified.
+- **DEPTH OF PROOF**: Simply confirming "Success" is NOT enough. You MUST retrieve specific technical parameters (IPs, PIDs, version strings, checksums).
+- **AUTHENTICITY**: Do not summarize or paraphrase technical output in reports to Grisha. Provide the raw data or detailed logs.
+"""
+
+SYNC_DOCTRINE = """
+- **MANDATORY PRE-FLIGHT SYNC**: Before starting any task involving the repository, ensure the local state is synchronized with the remote GitHub origin.
+- **TOKEN SUPREMACY**: All GitHub operations (git, gh, API) MUST use the GITHUB_TOKEN from the environment. Do not prompt for manual authentication.
+"""
+
+TRINITY_COORDINATION_DOCTRINE = """
+- **AGENT COORDINATION**:
+    - ATLAS: The Strategist (The "WHAT").
+    - TETYANA: The Executor (The "HOW").
+    - GRISHA: The Auditor (The "REALITY").
+- **AUTONOMY**: Proceed directly with execution. Do not ask for user confirmation for planned steps unless a technical blocker or high-risk ambiguity is encountered.
+- **SELF-HEALING RESTART**: If a critical fix or state corruption is detected, Tetyana or Grisha must report to Atlas, who alone has the authority to trigger a system restart.
+"""
+
 # Legacy compatibility and convenience exports
 DEFAULT_REALM_CATALOG = get_realm_catalog()
 VIBE_TOOLS_DOCUMENTATION = get_vibe_documentation()
 
 # Re-export everything
 __all__ = [
-    "DATA_PROTOCOL",
     "DEFAULT_REALM_CATALOG",
+    "EVIDENCE_DOCTRINE",
     "EVOLUTION_DOCTRINE",
     "GOAL_PRIORITY_DOCTRINE",
     "HACKING_PROTOCOL",
@@ -103,9 +123,11 @@ __all__ = [
     "SDLC_PROTOCOL",
     "SEARCH_PROTOCOL",
     "STORAGE_PROTOCOL",
+    "SYNC_DOCTRINE",
     "SYSTEM_MASTERY_PROTOCOL",
     "TASK_PROTOCOL",
     "TRINITY_AUTH_DOCTRINE",
+    "TRINITY_COORDINATION_DOCTRINE",
     "VIBE_TOOLS_DOCUMENTATION",
     "VOICE_PROTOCOL",
     "get_realm_catalog",
