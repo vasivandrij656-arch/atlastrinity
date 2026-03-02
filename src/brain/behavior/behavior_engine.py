@@ -524,9 +524,7 @@ class BehaviorEngine:
             "dict[str, Any]", self.config.get("background_monitoring", {}).get(task_name, {})
         )
 
-    def update_pattern_metrics(
-        self, pattern_type: str, pattern_name: str, success: bool
-    ) -> None:
+    def update_pattern_metrics(self, pattern_type: str, pattern_name: str, success: bool) -> None:
         """Updates pattern metrics and persists to config.
 
         Args:
