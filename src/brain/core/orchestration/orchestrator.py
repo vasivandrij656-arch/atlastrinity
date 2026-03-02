@@ -521,6 +521,47 @@ class Trinity(TourMixin, VoiceOrchestrationMixin):
 
         return t
 
+    async def _neural_pulse(self, step: dict[str, Any], step_id: str):
+        """Consults the NeuralCore before executing a step."""
+        from src.brain.neural_core.core import neural_core
+        from src.brain.neural_core.synapse import CognitiveSignal
+
+        # 1. Emit pulse for the current tool/action
+        action = step.get("action") or step.get("tool")
+        if action:
+            signal = CognitiveSignal(
+                source_id=f"tool:{action}", intensity=0.8, metadata={"step_id": step_id}
+            )
+            await neural_core.synapse.emit_signal(signal)
+
+        # 2. Check chemical modifiers
+        modifiers = neural_core.chemistry.get_behavior_modifers()
+        if modifiers["safety_mode"]:
+            logger.warning("[ORCHESTRATOR] NeuralCore safety mode ACTIVE. Restricting execution.")
+            # Inject safety hint into step context if needed
+            if "context" not in step:
+                step["context"] = {}
+            step["context"]["neural_safety_constraint"] = True
+
+    async def _neural_feedback(self, result: StepResult, step: dict[str, Any]):
+        """Feeds execution results back into the NeuralCore."""
+        from src.brain.neural_core.core import neural_core
+
+        action = step.get("action") or step.get("tool")
+        if not action:
+            return
+
+        if result.success:
+            # Positive feedback
+            neural_core.chemistry.reward(intensity=0.1)
+            # Strengthen synapse between task and tool
+            task_id = self.state.get("db_task_id")
+            if task_id:
+                await neural_core.graph.strengthen_synapse(f"task:{task_id}", f"tool:{action}")
+        else:
+            # Negative feedback
+            neural_core.chemistry.stress(intensity=0.15)
+
     def stop(self):
         """Immediately stop voice and cancel current orchestration task"""
         logger.info("[TRINITY] 🛑 STOP SIGNAL RECEIVED.")
@@ -3563,6 +3604,12 @@ class Trinity(TourMixin, VoiceOrchestrationMixin):
         # Starting message logic
         await self._announce_step_start(step, step_id, attempt)
 
+        # [NEURAL CORE] Consulting the brain before execution
+        try:
+            await self._neural_pulse(step, step_id)
+        except Exception as pulse_e:
+            logger.debug(f"[ORCHESTRATOR] Neural pulse failed: {pulse_e}")
+
         # DB Step logging
         db_step_id = await self._log_db_step_start(step, step_id)
 
@@ -3590,6 +3637,12 @@ class Trinity(TourMixin, VoiceOrchestrationMixin):
 
         # Finalize and notify
         await self._finalize_node_execution(step, step_id, result)
+
+        # [NEURAL CORE] Providing feedback after execution
+        try:
+            await self._neural_feedback(result, step)
+        except Exception as fb_e:
+            logger.debug(f"[ORCHESTRATOR] Neural feedback failed: {fb_e}")
 
         return result
 

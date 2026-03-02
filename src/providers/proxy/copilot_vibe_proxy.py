@@ -29,6 +29,7 @@ import json
 import os
 import signal
 import socketserver
+import subprocess
 import sys
 import time
 
@@ -317,7 +318,30 @@ def run(port: int = DEFAULT_PORT) -> None:
         def process_request(self, request, client_address):
             self._thread_pool.submit(self.process_request_thread, request, client_address)
 
-    httpd = ThreadedPoolTCPServer(server_address, CopilotVibeProxyHandler)
+    try:
+        httpd = ThreadedPoolTCPServer(server_address, CopilotVibeProxyHandler)
+    except OSError as e:
+        if e.errno == 48:  # Address already in use
+            warn(f"Port {port} already in use. Killing stale process and retrying...")
+            try:
+                result = subprocess.run(
+                    ["lsof", "-ti", f":{port}"],
+                    capture_output=True,
+                    text=True,
+                    check=False,
+                )
+                pids = result.stdout.strip().split("\n")
+                for pid in pids:
+                    if pid.strip():
+                        subprocess.run(["kill", "-9", pid.strip()], check=False)
+                        warn(f"Killed stale process PID {pid.strip()} on port {port}")
+                time.sleep(0.5)
+                httpd = ThreadedPoolTCPServer(server_address, CopilotVibeProxyHandler)
+            except Exception as retry_err:
+                error(f"Failed to recover port {port}: {retry_err}")
+                sys.exit(1)
+        else:
+            raise
 
     info(f"Serving at http://127.0.0.1:{port}")
     info(f"OpenAI-compatible endpoint: http://127.0.0.1:{port}/v1/chat/completions")

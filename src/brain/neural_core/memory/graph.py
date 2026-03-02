@@ -43,6 +43,7 @@ class CognitiveGraph:
                     target_id TEXT NOT NULL,
                     relation TEXT NOT NULL,
                     weight REAL DEFAULT 1.0,
+                    resonance REAL DEFAULT 0.0, -- Short-term activation
                     properties TEXT, -- JSON
                     kyiv_timestamp TEXT NOT NULL,
                     FOREIGN KEY(source_id) REFERENCES nodes(id),
@@ -134,6 +135,43 @@ class CognitiveGraph:
             )
             rows = await cursor.fetchall()
             return [dict(row) for row in rows]
+
+    async def strengthen_synapse(self, source_id: str, target_id: str, amount: float = 0.1):
+        """
+        Hebbian Learning: Strengthens the weight of an edge between two nodes.
+        If the edge doesn't exist, it creates a new weak one.
+        """
+        async with aiosqlite.connect(self.db_path) as db:
+            cursor = await db.execute(
+                "SELECT id, weight FROM edges WHERE source_id = ? AND target_id = ?",
+                (source_id, target_id),
+            )
+            row = await cursor.fetchone()
+            if row:
+                edge_id, current_weight = row
+                new_weight = min(2.0, current_weight + amount)
+                await db.execute(
+                    "UPDATE edges SET weight = ?, resonance = resonance + ? WHERE id = ?",
+                    (new_weight, amount * 2, edge_id),
+                )
+            else:
+                # Create a new potential synapse
+                await self.add_edge(source_id, target_id, "hebbian_link", {"weight": 0.2})
+            await db.commit()
+
+    async def decay_synapses(self, decay_factor: float = 0.05):
+        """
+        Synaptic Pruning: Gradually reduces weight and resonance of all edges.
+        Edges with weight < 0.1 are eventually pruned.
+        """
+        async with aiosqlite.connect(self.db_path) as db:
+            await db.execute(
+                "UPDATE edges SET weight = weight * (1.0 - ?), resonance = resonance * 0.5",
+                (decay_factor,),
+            )
+            # Prune weak links
+            await db.execute("DELETE FROM edges WHERE weight < 0.1 AND relation = 'hebbian_link'")
+            await db.commit()
 
 
 # Global instance

@@ -1058,7 +1058,7 @@ class ToolDispatcher:
     # Universal argument synonym map: schema_name -> [known LLM aliases]
     _ARG_SYNONYMS: dict[str, list[str]] = {
         "term": ["query", "search", "keyword", "libraryName"],
-        "command": ["cmd", "action", "script", "code"],
+        "command": ["cmd", "commands", "action", "script", "code"],
         "goal": [
             "feature_description",
             "features",
@@ -1066,14 +1066,17 @@ class ToolDispatcher:
             "prompt",
             "errors",
             "artifacts_to_fix",
+            "task",
         ],
         "data_source": ["source", "file", "path", "dataset"],
         "log_path": ["logs", "path", "file"],
         "prompt": ["query", "question", "objective", "action"],
         "company_name": ["query", "name", "company"],
-        "query": ["question", "search", "term", "action", "path"],
+        "query": ["question", "queries", "search", "term", "action", "path"],
         "file_path": ["review_scope", "path", "file", "source_file"],
         "libraryName": ["query", "term", "search"],
+        "x": ["coordinate_x", "pos_x", "click_x"],
+        "y": ["coordinate_y", "pos_y", "click_y"],
     }
 
     def _autofill_missing_args(
@@ -1095,6 +1098,17 @@ class ToolDispatcher:
                     validated[req] = validated[syn]
                     logger.info(f"[DISPATCHER] Auto-filled '{req}' from '{syn}' for {tool_name}")
                     break
+
+            # 2. Plural-to-singular fallback (e.g., "commands" → "command")
+            if req not in validated or validated[req] is None:
+                plural_candidates = [f"{req}s", f"{req}es"]
+                for plural in plural_candidates:
+                    if plural in validated and validated[plural] is not None:
+                        validated[req] = validated[plural]
+                        logger.info(
+                            f"[DISPATCHER] Auto-filled '{req}' from plural '{plural}' for {tool_name}"
+                        )
+                        break
 
         # Re-check after auto-fill
         return [r for r in missing if r not in validated or validated[r] is None]
