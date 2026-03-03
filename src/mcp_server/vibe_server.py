@@ -1326,10 +1326,11 @@ async def _execute_vibe_programmatic(
                         await _emit_vibe_log(
                             ctx, "info", "✅ [VIBE-LIVE] Vibe завершив роботу успішно"
                         )
+                        # We return result in both parsed_response and stdout for reliability
                         return {
                             "success": True,
                             "parsed_response": result,
-                            "stdout": "",  # All stdout moved to stderr/protocol
+                            "stdout": str(result) if result else "",
                             "stderr": err_buf.getvalue(),
                             "returncode": 0,
                         }
@@ -1387,10 +1388,20 @@ async def _execute_vibe_programmatic(
 
                         logger.error(f"[VIBE] Native execution failed: {err_str}")
 
-                        if "asyncio.run()" in err_str or "ImportError" in err_str:
+                        if "asyncio.run()" in err_str or "ImportError" in err_str or "RuntimeError" in err_str:
                             logger.warning(
-                                "[VIBE] Loop conflict or missing library detected. Subprocess fallback."
+                                f"[VIBE] Loop conflict or error detected ({err_str[:50]}). Falling back to CLI subprocess."
                             )
+                            # Fallback to subprocess execution (CLI)
+                            vibe_path = resolve_vibe_binary()
+                            if vibe_path:
+                                return await run_vibe_cli(
+                                    prompt=prompt,
+                                    cwd=cwd,
+                                    timeout_s=timeout_s,
+                                    process_env=process_env,
+                                    ctx=ctx,
+                                )
 
                         return {
                             "success": False,
@@ -1412,6 +1423,27 @@ async def _execute_vibe_programmatic(
     finally:
         os.environ.clear()
         os.environ.update(original_env)
+
+
+async def run_vibe_cli(
+    prompt: str,
+    cwd: str | None,
+    timeout_s: float,
+    process_env: dict[str, str],
+    ctx: Context | None,
+) -> dict[str, Any]:
+    """Execute Vibe via CLI subprocess."""
+    argv = [VIBE_BINARY, "-p", prompt, "--output", "streaming"]
+    # Agent/Mode is usually handled via VIBE_HOME config, but we can be explicit
+    # if the environment setup allows.
+    return await run_vibe_subprocess(
+        argv=argv,
+        cwd=cwd,
+        timeout_s=timeout_s,
+        env=process_env,
+        ctx=ctx,
+        prompt_preview=prompt[:100],
+    )
 
 
 async def _handle_vibe_timeout(
