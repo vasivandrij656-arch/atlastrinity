@@ -63,16 +63,18 @@ except ImportError as e:
     print(f"FAILED to import providers.copilot: {e}", file=sys.stderr)
     sys.exit(1)
 
-# Initialize logging to capture DEBUG logs from providers.copilot
+# Initialize logging
+D = os.getenv("DEBUG", "false").lower() == "true"
+LOG_LEVEL = logging.DEBUG if D else logging.INFO
 
 logging.basicConfig(
-    level=logging.DEBUG,
+    level=LOG_LEVEL,
     format="%(asctime)s [%(levelname)s] [%(name)s] %(message)s",
     stream=sys.stderr,
 )
-# Specifically set providers.copilot and src.brain to DEBUG
-logging.getLogger("providers.copilot").setLevel(logging.DEBUG)
-logging.getLogger("src.brain").setLevel(logging.DEBUG)
+# Specifically set providers.copilot and src.brain
+logging.getLogger("providers.copilot").setLevel(LOG_LEVEL)
+logging.getLogger("src.brain").setLevel(LOG_LEVEL)
 
 # ─── Configuration ─────────────────────────────────────────────────────
 
@@ -109,6 +111,8 @@ class C:
 
 
 def log(msg: str) -> None:
+    if not D:
+        return
     timestamp = time.strftime("%H:%M:%S")
     print(f"{C.DIM}[{timestamp}]{C.RESET} {msg}", file=sys.stderr)
 
@@ -427,6 +431,13 @@ Examples:
         """,
     )
     parser.add_argument("--port", type=int, default=DEFAULT_PORT, help="Port to listen on")
+    parser.add_argument("--debug", action="store_true", help="Enable debug logging")
     args = parser.parse_args()
+
+    if args.debug:
+        D = True
+        LOG_LEVEL = logging.DEBUG
+        logging.getLogger().setLevel(LOG_LEVEL)
+        logging.getLogger("providers.copilot").setLevel(LOG_LEVEL)
 
     run(port=args.port)
