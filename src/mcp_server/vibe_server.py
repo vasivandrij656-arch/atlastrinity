@@ -1241,20 +1241,6 @@ async def _execute_vibe_programmatic(
         for attempt in range(MAX_RETRIES):
             logger.info(f"[VIBE] Starting attempt {attempt + 1}/{MAX_RETRIES} (Native API)...")
 
-            # Must unlock paths before creating config
-            try:
-                unlock_config_paths()
-            except BaseException:
-                pass
-
-            config = VibeConfig.load()
-
-            output_format = OutputFormat.STREAMING
-            if output_format_str == "json":
-                output_format = OutputFormat.JSON
-            elif output_format_str == "text":
-                output_format = OutputFormat.TEXT
-
             # Capture stderr for logs and internal print statements
             from contextlib import redirect_stderr, redirect_stdout
             from io import StringIO
@@ -1263,44 +1249,59 @@ async def _execute_vibe_programmatic(
             err_buf = StringIO()
 
             try:
-                # Execute natively with timeout (Custom async wrapper to avoid asyncio.run() conflicts)
-                from vibe import __version__ as vibe_version  # type: ignore
-                from vibe.core.agent_loop import AgentLoop  # type: ignore
-                from vibe.core.output_formatters import create_formatter  # type: ignore
-                from vibe.core.types import (  # type: ignore
-                    AssistantEvent,
-                    EntrypointMetadata,
-                )
-                from vibe.core.utils import ConversationLimitException  # type: ignore
-
-                formatter = create_formatter(output_format)
-
-                agent_loop = AgentLoop(
-                    config,
-                    agent_name=agent_name,
-                    message_observer=formatter.on_message_added,
-                    max_turns=max_turns,
-                    enable_streaming=False,
-                    entrypoint_metadata=EntrypointMetadata(
-                        agent_entrypoint="programmatic",
-                        agent_version=vibe_version,
-                        client_name="vibe_programmatic",
-                        client_version=vibe_version,
-                    ),
-                )
-
-                async def _async_vibe_run() -> str | None:
-                    try:
-                        agent_loop.emit_new_session_telemetry()
-                        async for event in agent_loop.act(prompt):
-                            formatter.on_event(event)
-                            if isinstance(event, AssistantEvent) and event.stopped_by_middleware:
-                                raise ConversationLimitException(event.content)
-                        return formatter.finalize()
-                    finally:
-                        await agent_loop.telemetry_client.aclose()
-
+                # Execute natively with redirection covering initialization
                 with redirect_stdout(out_buf), redirect_stderr(err_buf):
+                    # Must unlock paths before creating config
+                    try:
+                        unlock_config_paths()
+                    except BaseException:
+                        pass
+
+                    config = VibeConfig.load()
+
+                    output_format = OutputFormat.STREAMING
+                    if output_format_str == "json":
+                        output_format = OutputFormat.JSON
+                    elif output_format_str == "text":
+                        output_format = OutputFormat.TEXT
+
+                    # Execute natively with timeout (Custom async wrapper to avoid asyncio.run() conflicts)
+                    from vibe import __version__ as vibe_version  # type: ignore
+                    from vibe.core.agent_loop import AgentLoop  # type: ignore
+                    from vibe.core.output_formatters import create_formatter  # type: ignore
+                    from vibe.core.types import (  # type: ignore
+                        AssistantEvent,
+                        EntrypointMetadata,
+                    )
+                    from vibe.core.utils import ConversationLimitException  # type: ignore
+
+                    formatter = create_formatter(output_format)
+
+                    agent_loop = AgentLoop(
+                        config,
+                        agent_name=agent_name,
+                        message_observer=formatter.on_message_added,
+                        max_turns=max_turns,
+                        enable_streaming=False,
+                        entrypoint_metadata=EntrypointMetadata(
+                            agent_entrypoint="programmatic",
+                            agent_version=vibe_version,
+                            client_name="vibe_programmatic",
+                            client_version=vibe_version,
+                        ),
+                    )
+
+                    async def _async_vibe_run() -> str | None:
+                        try:
+                            agent_loop.emit_new_session_telemetry()
+                            async for event in agent_loop.act(prompt):
+                                formatter.on_event(event)
+                                if isinstance(event, AssistantEvent) and event.stopped_by_middleware:
+                                    raise ConversationLimitException(event.content)
+                            return formatter.finalize()
+                        finally:
+                            await agent_loop.telemetry_client.aclose()
+
                     task = asyncio.create_task(_async_vibe_run())
                     result = await asyncio.wait_for(task, timeout=timeout_s)
 

@@ -424,6 +424,31 @@ class MCPManager:
                         # Format message
                         msg = data
 
+                        # Reduced Verbosity: Filter out ASCII box-drawing characters from noisy servers
+                        # (Especially Sequential Thinking which uses large decorative boxes)
+                        box_chars = "┌─┐└┘│├┤┬┴┼━"
+                        if any(c in msg for c in box_chars):
+                            # Skip horizontal lines completely
+                            import re
+
+                            if re.match(r"^[─━]{10,}$", msg.strip()):
+                                return
+
+                            # Strip vertical bars and trim
+                            if msg.strip().startswith("│") and msg.strip().endswith("│"):
+                                inner = msg.strip()[1:-1].strip()
+                                if not inner:
+                                    return
+                                msg = inner
+                            else:
+                                # For mixed lines, remove the box characters specifically
+                                for c in box_chars:
+                                    msg = msg.replace(c, "")
+                                msg = msg.strip()
+
+                            if not msg:
+                                return
+
                         # Route logs to the main console for visibility (e.g. Vibe progress)
                         if level_str in ["error", "critical"]:
                             logger.error(f"[{server_name.upper()}] {msg}")
