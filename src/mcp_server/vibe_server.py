@@ -1291,7 +1291,32 @@ async def _execute_vibe_programmatic(
                         except BaseException:
                             pass
 
+                        # Load config and override workspace with cwd
                         config = VibeConfig.load()
+                        if cwd:
+                            config.workspace = os.path.abspath(cwd)
+                            logger.info(f"[VIBE] Using workspace: {config.workspace}")
+
+                        # Handle @file prompts (offloaded long prompts)
+                        eff_prompt = prompt
+                        if prompt.startswith("@"):
+                            prompt_file = prompt[1:].strip()
+                            # Search in multiple locations: absolute, relative to cwd, or in .vibe/instructions
+                            possible_paths = [
+                                Path(prompt_file),
+                                Path(cwd or ".") / prompt_file,
+                                Path(get_instructions_dir(cwd)) / Path(prompt_file).name,
+                            ]
+                            for p in possible_paths:
+                                if p.exists():
+                                    try:
+                                        eff_prompt = p.read_text(encoding="utf-8")
+                                        logger.debug(f"[VIBE] Loaded prompt from disk: {p}")
+                                        break
+                                    except Exception as read_e:
+                                        logger.warning(f"[VIBE] Error reading prompt file {p}: {read_e}")
+                            else:
+                                logger.warning(f"[VIBE] Could not find prompt file: {prompt_file}")
 
                         output_format = OutputFormat.STREAMING
                         if output_format_str == "json":
@@ -1328,7 +1353,7 @@ async def _execute_vibe_programmatic(
                         async def _async_vibe_run() -> str | None:
                             try:
                                 agent_loop.emit_new_session_telemetry()
-                                async for event in agent_loop.act(prompt):
+                                async for event in agent_loop.act(eff_prompt):
                                     formatter.on_event(event)
                                     if (
                                         isinstance(event, AssistantEvent)
