@@ -689,43 +689,59 @@ class Grisha(BaseAgent):
             )
             if file_path:
                 # Verify ACTUAL content — logs are only for knowing WHAT to verify
-                tools.append({
-                    "tool": "macos-use.execute_command",
-                    "args": {"command": f"head -50 '{file_path}' 2>/dev/null || echo 'FILE_NOT_FOUND'"},
-                    "reason": f"CONTENT VERIFICATION: Read actual file content from disk: {file_path}",
-                })
+                tools.append(
+                    {
+                        "tool": "macos-use.execute_command",
+                        "args": {
+                            "command": f"head -50 '{file_path}' 2>/dev/null || echo 'FILE_NOT_FOUND'"
+                        },
+                        "reason": f"CONTENT VERIFICATION: Read actual file content from disk: {file_path}",
+                    }
+                )
                 # For code generation, also check file size
                 if any(ext in file_path for ext in [".py", ".js", ".ts", ".html", ".css", ".sh"]):
-                    tools.append({
-                        "tool": "macos-use.execute_command",
-                        "args": {"command": f"wc -l '{file_path}' 2>/dev/null && stat -f '%z' '{file_path}' 2>/dev/null || echo '0'"},
-                        "reason": f"SIZE VERIFICATION: Ensure file is non-empty and has real code: {file_path}",
-                    })
+                    tools.append(
+                        {
+                            "tool": "macos-use.execute_command",
+                            "args": {
+                                "command": f"wc -l '{file_path}' 2>/dev/null && stat -f '%z' '{file_path}' 2>/dev/null || echo '0'"
+                            },
+                            "reason": f"SIZE VERIFICATION: Ensure file is non-empty and has real code: {file_path}",
+                        }
+                    )
             else:
                 # Fallback: list recent changes in project
                 project_root = os.path.expanduser("~/Documents/GitHub/atlastrinity")
-                tools.append({
-                    "tool": "macos-use.execute_command",
-                    "args": {"command": f"find '{project_root}' -type f -mmin -5 2>/dev/null | head -5"},
-                    "reason": "Find recently modified files to verify creation",
-                })
+                tools.append(
+                    {
+                        "tool": "macos-use.execute_command",
+                        "args": {
+                            "command": f"find '{project_root}' -type f -mmin -5 2>/dev/null | head -5"
+                        },
+                        "reason": "Find recently modified files to verify creation",
+                    }
+                )
 
         if "search" in step_action_lower or "find" in step_action_lower:
-            tools.append({
-                "tool": "macos-use_get_clipboard",
-                "args": {},
-                "reason": "Check if search results were copied",
-            })
+            tools.append(
+                {
+                    "tool": "macos-use_get_clipboard",
+                    "args": {},
+                    "reason": "Check if search results were copied",
+                }
+            )
 
         # General system verification fallback
         if len(tools) <= 1 and any(
             kw in step_action_lower for kw in ["verify", "check", "status", "ensure", "validate"]
         ):
-            tools.append({
-                "tool": "macos-use.execute_command",
-                "args": {"command": "ls -la"},
-                "reason": "General system state verification (Active Check)",
-            })
+            tools.append(
+                {
+                    "tool": "macos-use.execute_command",
+                    "args": {"command": "ls -la"},
+                    "reason": "General system state verification (Active Check)",
+                }
+            )
 
         return tools[:4]  # Limit to 4 tools max
 
@@ -2043,13 +2059,15 @@ class Grisha(BaseAgent):
                     )
                 )
                 # Add as synthetic verification result for verdict formation
-                verification_results.append({
-                    "tool": "grisha.multi_layer_verification",
-                    "args": {},
-                    "result": multi_layer_insights,
-                    "error": len(failed_layers) > 2,  # Error if more than half failed
-                    "reason": "4-layer integrity check (Tool, Output, State, Goal)",
-                })
+                verification_results.append(
+                    {
+                        "tool": "grisha.multi_layer_verification",
+                        "args": {},
+                        "result": multi_layer_insights,
+                        "error": len(failed_layers) > 2,  # Error if more than half failed
+                        "reason": "4-layer integrity check (Tool, Output, State, Goal)",
+                    }
+                )
             except Exception as ml_err:
                 logger.warning(f"[GRISHA] Multi-layer verification failed: {ml_err}")
 
@@ -2455,8 +2473,12 @@ class Grisha(BaseAgent):
                 if remediation_plan:
                     kg_attributes["error_type"] = remediation_plan.get("error_type", "unknown")
                     kg_attributes["root_cause"] = remediation_plan.get("root_cause", "")[:500]
-                    kg_attributes["suggested_action"] = remediation_plan.get("suggested_action", "")[:500]
-                    kg_attributes["recursion_safe"] = str(remediation_plan.get("recursion_safe", False))
+                    kg_attributes["suggested_action"] = remediation_plan.get(
+                        "suggested_action", ""
+                    )[:500]
+                    kg_attributes["recursion_safe"] = str(
+                        remediation_plan.get("recursion_safe", False)
+                    )
 
                 await knowledge_graph.add_node(
                     node_type="CONCEPT",
@@ -2828,70 +2850,103 @@ class Grisha(BaseAgent):
         # --- Smart tool selection based on action keywords ---
 
         # 1. File/Code creation or modification
-        if any(kw in step_action_lower for kw in [
-            "create", "write", "implement", "generate", "save", "edit", "modify"
-        ]):
+        if any(
+            kw in step_action_lower
+            for kw in ["create", "write", "implement", "generate", "save", "edit", "modify"]
+        ):
             # Try to extract file path from action or expected_result
             file_path = self._extract_file_path_from_text(step_action + " " + expected_result)
             if file_path:
-                audit_tools.append({
-                    "tool": "macos-use.execute_command",
-                    "args": {"command": f"head -50 '{file_path}' 2>/dev/null || echo 'FILE_NOT_FOUND'"},
-                    "reason": f"Verify actual content of created/modified file: {file_path}",
-                })
-                audit_tools.append({
-                    "tool": "macos-use.execute_command",
-                    "args": {"command": f"wc -l '{file_path}' 2>/dev/null || echo '0 lines'"},
-                    "reason": f"Verify file is non-empty: {file_path}",
-                })
+                audit_tools.append(
+                    {
+                        "tool": "macos-use.execute_command",
+                        "args": {
+                            "command": f"head -50 '{file_path}' 2>/dev/null || echo 'FILE_NOT_FOUND'"
+                        },
+                        "reason": f"Verify actual content of created/modified file: {file_path}",
+                    }
+                )
+                audit_tools.append(
+                    {
+                        "tool": "macos-use.execute_command",
+                        "args": {"command": f"wc -l '{file_path}' 2>/dev/null || echo '0 lines'"},
+                        "reason": f"Verify file is non-empty: {file_path}",
+                    }
+                )
             else:
                 # Fallback: find recently modified files
-                audit_tools.append({
-                    "tool": "macos-use.execute_command",
-                    "args": {"command": "find ~/Documents/GitHub/atlastrinity -name '*.py' -mmin -5 -type f 2>/dev/null | head -5"},
-                    "reason": "Find recently modified files to verify creation",
-                })
+                audit_tools.append(
+                    {
+                        "tool": "macos-use.execute_command",
+                        "args": {
+                            "command": "find ~/Documents/GitHub/atlastrinity -name '*.py' -mmin -5 -type f 2>/dev/null | head -5"
+                        },
+                        "reason": "Find recently modified files to verify creation",
+                    }
+                )
 
         # 2. Git operations
         elif any(kw in step_action_lower for kw in ["git", "commit", "push", "branch", "merge"]):
-            audit_tools.append({
-                "tool": "macos-use.execute_command",
-                "args": {"command": "cd ~/Documents/GitHub/atlastrinity && git status --short && git log --oneline -3"},
-                "reason": "Verify git state after operation",
-            })
+            audit_tools.append(
+                {
+                    "tool": "macos-use.execute_command",
+                    "args": {
+                        "command": "cd ~/Documents/GitHub/atlastrinity && git status --short && git log --oneline -3"
+                    },
+                    "reason": "Verify git state after operation",
+                }
+            )
 
         # 3. Process/service operations
-        elif any(kw in step_action_lower for kw in ["process", "run", "start", "stop", "restart", "launch"]):
-            audit_tools.append({
-                "tool": "macos-use.execute_command",
-                "args": {"command": "ps aux | grep -v grep | head -15"},
-                "reason": "Verify process state",
-            })
+        elif any(
+            kw in step_action_lower
+            for kw in ["process", "run", "start", "stop", "restart", "launch"]
+        ):
+            audit_tools.append(
+                {
+                    "tool": "macos-use.execute_command",
+                    "args": {"command": "ps aux | grep -v grep | head -15"},
+                    "reason": "Verify process state",
+                }
+            )
 
         # 4. Network/API operations
-        elif any(kw in step_action_lower for kw in ["network", "api", "request", "connect", "ssh", "curl"]):
-            audit_tools.append({
-                "tool": "macos-use.execute_command",
-                "args": {"command": "curl -s -o /dev/null -w '%{http_code}' http://localhost:8080 2>/dev/null || echo 'NO_RESPONSE'"},
-                "reason": "Verify network/service availability",
-            })
+        elif any(
+            kw in step_action_lower
+            for kw in ["network", "api", "request", "connect", "ssh", "curl"]
+        ):
+            audit_tools.append(
+                {
+                    "tool": "macos-use.execute_command",
+                    "args": {
+                        "command": "curl -s -o /dev/null -w '%{http_code}' http://localhost:8080 2>/dev/null || echo 'NO_RESPONSE'"
+                    },
+                    "reason": "Verify network/service availability",
+                }
+            )
 
         # 5. Database operations
         elif any(kw in step_action_lower for kw in ["database", "db", "sql", "query", "table"]):
-            audit_tools.append({
-                "tool": "vibe.vibe_check_db",
-                "args": {"query": "SELECT name FROM sqlite_master WHERE type='table' ORDER BY name LIMIT 10"},
-                "reason": "Verify database state",
-            })
+            audit_tools.append(
+                {
+                    "tool": "vibe.vibe_check_db",
+                    "args": {
+                        "query": "SELECT name FROM sqlite_master WHERE type='table' ORDER BY name LIMIT 10"
+                    },
+                    "reason": "Verify database state",
+                }
+            )
 
         # Always include DB execution trace as baseline evidence
-        audit_tools.append({
-            "tool": "vibe.vibe_check_db",
-            "args": {
-                "query": "SELECT tool_name, result, created_at FROM tool_executions ORDER BY created_at DESC LIMIT 3"
-            },
-            "reason": "Baseline: recent tool execution trace from DB",
-        })
+        audit_tools.append(
+            {
+                "tool": "vibe.vibe_check_db",
+                "args": {
+                    "query": "SELECT tool_name, result, created_at FROM tool_executions ORDER BY created_at DESC LIMIT 3"
+                },
+                "reason": "Baseline: recent tool execution trace from DB",
+            }
+        )
 
         # Execute the tools (max 3 to avoid token waste)
         results = []
@@ -2906,22 +2961,26 @@ class Grisha(BaseAgent):
                     allow_fallback=True,
                 )
 
-                results.append({
-                    "tool": tool_full_name,
-                    "args": t.get("args", {}),
-                    "result": res,
-                    "error": False,
-                    "reason": t.get("reason", ""),
-                })
+                results.append(
+                    {
+                        "tool": tool_full_name,
+                        "args": t.get("args", {}),
+                        "result": res,
+                        "error": False,
+                        "reason": t.get("reason", ""),
+                    }
+                )
             except Exception as e:
                 logger.warning(f"[GRISHA] Audit tool {t.get('tool')} failed: {e}")
-                results.append({
-                    "tool": t.get("tool", "unknown"),
-                    "args": t.get("args", {}),
-                    "result": f"Error: {e}",
-                    "error": True,
-                    "reason": t.get("reason", ""),
-                })
+                results.append(
+                    {
+                        "tool": t.get("tool", "unknown"),
+                        "args": t.get("args", {}),
+                        "result": f"Error: {e}",
+                        "error": True,
+                        "reason": t.get("reason", ""),
+                    }
+                )
 
         return results
 
@@ -3032,12 +3091,14 @@ class Grisha(BaseAgent):
         import re as _re
 
         # Pattern 1: Explicit paths (Unix-style)
-        path_match = _re.search(r'(/[\w./-]+\.[\w]+)', text)
+        path_match = _re.search(r"(/[\w./-]+\.[\w]+)", text)
         if path_match:
             return path_match.group(1)
 
         # Pattern 2: Relative paths or filenames with extensions
-        file_match = _re.search(r'["\']?([\w./-]+\.(?:py|js|ts|json|yaml|yml|toml|md|html|css|sh|sql))["\']?', text)
+        file_match = _re.search(
+            r'["\']?([\w./-]+\.(?:py|js|ts|json|yaml|yml|toml|md|html|css|sh|sql))["\']?', text
+        )
         if file_match:
             candidate = file_match.group(1)
             # Try to resolve relative to project root
