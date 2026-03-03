@@ -635,6 +635,8 @@ tool_routing:
       - vibe_configure_provider
       - vibe_session_resume
       - vibe_reload_config
+      - vibe_test_in_sandbox
+      - vibe_get_system_context
       - debug
       - fix
       - implement

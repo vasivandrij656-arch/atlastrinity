@@ -87,7 +87,7 @@ api_key_env_var = "COPILOT_SESSION_TOKEN"
 api_style = "openai"
 backend = "generic"
 requires_proxy = true
-proxy_command = "env PYTHONPATH=${PROJECT_ROOT} ${PROJECT_ROOT}/.venv/bin/python ${PROJECT_ROOT}/src/providers/proxy/copilot_vibe_proxy.py"
+proxy_command = "env PYTHONPATH=${PROJECT_ROOT} ${PROJECT_ROOT}/.venv/bin/python3 ${PROJECT_ROOT}/src/providers/proxy/copilot_vibe_proxy.py"
 requires_token_exchange = true
 
 [[providers]]
@@ -97,7 +97,7 @@ api_key_env_var = "WINDSURF_API_KEY"
 api_style = "openai"
 backend = "generic"
 requires_proxy = true
-proxy_command = "env PYTHONPATH=${PROJECT_ROOT} ${PROJECT_ROOT}/.venv/bin/python ${PROJECT_ROOT}/src/providers/proxy/vibe_windsurf_proxy.py"
+proxy_command = "env PYTHONPATH=${PROJECT_ROOT} ${PROJECT_ROOT}/.venv/bin/python3 ${PROJECT_ROOT}/src/providers/proxy/vibe_windsurf_proxy.py"
 requires_token_exchange = false
 
 # =============================================================================
