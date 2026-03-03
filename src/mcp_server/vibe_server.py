@@ -42,8 +42,10 @@ from dotenv import load_dotenv
 from mcp.server import FastMCP
 from mcp.server.fastmcp import Context
 from sqlalchemy import text
+
 try:
     import nest_asyncio  # type: ignore
+
     nest_asyncio.apply()  # type: ignore
 except ImportError:
     pass
@@ -1218,13 +1220,12 @@ async def _execute_vibe_programmatic(
 ) -> dict[str, Any]:
     """Execute loop with retries for Vibe natively."""
     import asyncio
-    import logging
     import os
     import re
     import sys
     from contextlib import redirect_stderr, redirect_stdout
     from io import StringIO
-    from typing import Any, cast
+    from typing import cast
 
     # Vibe is installed globally via `uv tool`, not in the project venv
     vibe_site_packages = os.path.expanduser(
@@ -1268,7 +1269,7 @@ async def _execute_vibe_programmatic(
             logger.info(f"[VIBE] Starting attempt {attempt + 1}/{MAX_RETRIES} (Native API)...")
 
             err_buf = StringIO()
-            
+
             try:
                 # Use a single redirection block for entire attempt
                 with redirect_stderr(err_buf), redirect_stdout(sys.stderr):
@@ -1278,6 +1279,7 @@ async def _execute_vibe_programmatic(
                     # Silence all loggers except our own during this block
                     try:
                         from vibe.utils.logging import silence_foreign_loggers  # type: ignore
+
                         silence_foreign_loggers()
                     except (ImportError, Exception):
                         pass
@@ -1351,7 +1353,7 @@ async def _execute_vibe_programmatic(
                             "stderr": err_buf.getvalue(),
                             "returncode": 0,
                         }
-                    except asyncio.TimeoutError:
+                    except TimeoutError:
                         logger.warning(f"[VIBE] Native execution timed out ({timeout_s}s)")
                         await _emit_vibe_log(
                             ctx, "warning", f"⏱️ [VIBE-LIVE] Перевищено timeout ({timeout_s}s)"
@@ -1379,8 +1381,7 @@ async def _execute_vibe_programmatic(
 
                         overall_output = err_str + stderr_content
                         is_rate_limit = any(
-                            re.search(p, overall_output, re.IGNORECASE)
-                            for p in rate_limit_patterns
+                            re.search(p, overall_output, re.IGNORECASE) for p in rate_limit_patterns
                         )
 
                         if is_rate_limit:
@@ -1396,7 +1397,9 @@ async def _execute_vibe_programmatic(
                             if isinstance(res, tuple) and res[0] is True:
                                 new_home = res[1]
                                 if new_home:
-                                    old_v_home = modified_keys.get("VIBE_HOME", os.environ.get("VIBE_HOME"))
+                                    old_v_home = modified_keys.get(
+                                        "VIBE_HOME", os.environ.get("VIBE_HOME")
+                                    )
                                     modified_keys["VIBE_HOME"] = old_v_home
                                     process_env["VIBE_HOME"] = new_home
                                     os.environ["VIBE_HOME"] = new_home
@@ -1442,7 +1445,7 @@ async def _execute_vibe_programmatic(
                 os.environ.pop(k, None)
             else:
                 os.environ[k] = old_v
-        
+
         # Restore streams
         sys.stdout = original_stdout
         sys.stderr = original_stderr
