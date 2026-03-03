@@ -1388,7 +1388,11 @@ async def _execute_vibe_programmatic(
 
                         logger.error(f"[VIBE] Native execution failed: {err_str}")
 
-                        if "asyncio.run()" in err_str or "ImportError" in err_str or "RuntimeError" in err_str:
+                        if (
+                            "asyncio.run()" in err_str
+                            or "ImportError" in err_str
+                            or "RuntimeError" in err_str
+                        ):
                             logger.warning(
                                 f"[VIBE] Loop conflict or error detected ({err_str[:50]}). Falling back to CLI subprocess."
                             )
