@@ -1314,7 +1314,9 @@ async def _execute_vibe_programmatic(
                                         logger.debug(f"[VIBE] Loaded prompt from disk: {p}")
                                         break
                                     except Exception as read_e:
-                                        logger.warning(f"[VIBE] Error reading prompt file {p}: {read_e}")
+                                        logger.warning(
+                                            f"[VIBE] Error reading prompt file {p}: {read_e}"
+                                        )
                             else:
                                 logger.warning(f"[VIBE] Could not find prompt file: {prompt_file}")
 
