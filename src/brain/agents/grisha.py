@@ -40,6 +40,7 @@ except ImportError:
 from src.brain.prompts import AgentPrompts
 from src.brain.prompts.grisha import (
     GRISHA_DEEP_VALIDATION_REASONING,
+    GRISHA_FAILURE_CONTEXT_PROMPT,
     GRISHA_FIX_PLAN_PROMPT,
     GRISHA_FORENSIC_ANALYSIS,
     GRISHA_LOGICAL_VERDICT,
@@ -675,42 +676,56 @@ class Grisha(BaseAgent):
         # For ACTION tasks (that are not primarily analysis), add context-aware verification tools
         is_search_only = any(kw in step_action_lower for kw in ["search", "find", "locate"])
 
-        if not is_search_only and (
-            "file" in step_action_lower
-            or "save" in step_action_lower
-            or "create" in step_action_lower
-        ):
-            # Use dynamic path based on actual home directory
-            project_root = os.path.expanduser("~/Documents/GitHub/atlastrinity")
-            tools.append(
-                {
-                    "tool": "filesystem.list_directory",
-                    "args": {"path": project_root},
-                    "reason": "Verify file system state changes",
-                }
+        # CRITICAL: For file/code creation tasks, verify ACTUAL CONTENT on disk
+        is_creation_task = any(
+            kw in step_action_lower
+            for kw in ["create", "write", "implement", "generate", "save", "edit", "modify"]
+        )
+
+        if not is_search_only and (is_creation_task or "file" in step_action_lower):
+            # Try to extract actual file path from step description
+            file_path = self._extract_file_path_from_text(
+                step_action_lower + " " + step.get("expected_result", "")
             )
+            if file_path:
+                # Verify ACTUAL content — logs are only for knowing WHAT to verify
+                tools.append({
+                    "tool": "macos-use.execute_command",
+                    "args": {"command": f"head -50 '{file_path}' 2>/dev/null || echo 'FILE_NOT_FOUND'"},
+                    "reason": f"CONTENT VERIFICATION: Read actual file content from disk: {file_path}",
+                })
+                # For code generation, also check file size
+                if any(ext in file_path for ext in [".py", ".js", ".ts", ".html", ".css", ".sh"]):
+                    tools.append({
+                        "tool": "macos-use.execute_command",
+                        "args": {"command": f"wc -l '{file_path}' 2>/dev/null && stat -f '%z' '{file_path}' 2>/dev/null || echo '0'"},
+                        "reason": f"SIZE VERIFICATION: Ensure file is non-empty and has real code: {file_path}",
+                    })
+            else:
+                # Fallback: list recent changes in project
+                project_root = os.path.expanduser("~/Documents/GitHub/atlastrinity")
+                tools.append({
+                    "tool": "macos-use.execute_command",
+                    "args": {"command": f"find '{project_root}' -type f -mmin -5 2>/dev/null | head -5"},
+                    "reason": "Find recently modified files to verify creation",
+                })
 
         if "search" in step_action_lower or "find" in step_action_lower:
-            tools.append(
-                {
-                    "tool": "macos-use_get_clipboard",
-                    "args": {},
-                    "reason": "Check if search results were copied",
-                }
-            )
+            tools.append({
+                "tool": "macos-use_get_clipboard",
+                "args": {},
+                "reason": "Check if search results were copied",
+            })
 
-        # General system verification fallback (if no specific file/search tool added but it's a verify task)
-        # This ensures Grisha is ACTIVE rather than passive
+        # General system verification fallback
         if len(tools) <= 1 and any(
             kw in step_action_lower for kw in ["verify", "check", "status", "ensure", "validate"]
         ):
-            tools.append(
-                {
-                    "tool": "macos-use.execute_command",
-                    "args": {"command": "ls -la"},  # Placeholder, reasoning will refine this
-                    "reason": "General system state verification (Active Check)",
-                }
-            )
+            tools.append({
+                "tool": "macos-use.execute_command",
+                "args": {"command": "ls -la"},
+                "reason": "General system state verification (Active Check)",
+            })
 
         return tools[:4]  # Limit to 4 tools max
 
@@ -2011,6 +2026,33 @@ class Grisha(BaseAgent):
             if independent_evidence:
                 verification_results.extend(independent_evidence)
 
+        # Phase 1.7: Multi-Layer Verification (for FINAL steps only)
+        # Provides 4-layer check: Tool, Output, State, Goal
+        multi_layer_insights = ""
+        if self._is_final_task_completion(step):
+            logger.info(f"[GRISHA] 🔬 Running multi-layer verification for final step {step_id}...")
+            try:
+                layers = await self._multi_layer_verification(step, result, {})
+                passed_layers = [l for l in layers if l.get("passed")]
+                failed_layers = [l for l in layers if not l.get("passed")]
+                multi_layer_insights = (
+                    f"\n\nMULTI-LAYER ANALYSIS ({len(passed_layers)}/4 passed):\n"
+                    + "\n".join(
+                        f"  {'✅' if l['passed'] else '❌'} {l['layer']}: {l.get('evidence', 'N/A')}"
+                        for l in layers
+                    )
+                )
+                # Add as synthetic verification result for verdict formation
+                verification_results.append({
+                    "tool": "grisha.multi_layer_verification",
+                    "args": {},
+                    "result": multi_layer_insights,
+                    "error": len(failed_layers) > 2,  # Error if more than half failed
+                    "reason": "4-layer integrity check (Tool, Output, State, Goal)",
+                })
+            except Exception as ml_err:
+                logger.warning(f"[GRISHA] Multi-layer verification failed: {ml_err}")
+
         # Phase 2: Verdict
         logger.info("[GRISHA] 🧠 Phase 2: Forming logical verdict...")
         verdict = await self._form_logical_verdict(
@@ -2193,7 +2235,11 @@ class Grisha(BaseAgent):
         suggested_fix: str | None = None,
         verification_evidence: list[str] | None = None,
     ) -> None:
-        """Save detailed rejection report to memory and notes servers for Atlas and Tetyana to access"""
+        """Save detailed rejection report to memory and notes servers for Atlas and Tetyana to access.
+
+        Enhanced: Includes structured Tetyana execution context and remediation plan
+        for the Self-Healing Hypermodule to form precise fix tasks.
+        """
 
         from src.brain.core.server.message_bus import AgentMsg, MessageType, message_bus
         from src.brain.memory.knowledge_graph import knowledge_graph
@@ -2245,6 +2291,23 @@ class Grisha(BaseAgent):
 
             timestamp = datetime.now().isoformat()
 
+            # =========================================================
+            # STEP 3.5: Extract Tetyana Execution Context (NEW)
+            # =========================================================
+            # Extract structured data about what Tetyana actually did,
+            # so the self-healing hypermodule can form a precise fix task.
+            tetyana_context = self._extract_tetyana_execution_context(step)
+
+            # =========================================================
+            # STEP 3.6: Generate Structured Remediation Plan (NEW)
+            # =========================================================
+            remediation_plan = await self._generate_remediation_plan(
+                step=step,
+                error_message="; ".join(issues_list),
+                tetyana_context=tetyana_context,
+                recursion_depth=rejection_count,
+            )
+
             # Build structured sections
             issues_formatted = (
                 chr(10).join(f"  - {issue}" for issue in issues_list)
@@ -2273,6 +2336,34 @@ class Grisha(BaseAgent):
 {suggested_fix}
 """
 
+            # NEW: Tetyana execution context section
+            tetyana_section = ""
+            if tetyana_context.get("tool_used"):
+                tetyana_section = f"""
+## Контекст виконання Тетяни
+| Поле | Значення |
+|------|---------|
+| Інструмент | {tetyana_context.get("tool_used", "N/A")} |
+| Аргументи | {str(tetyana_context.get("tool_args", "N/A"))[:200]} |
+| Результат | {str(tetyana_context.get("raw_output", "N/A"))[:300]} |
+| Помилка | {tetyana_context.get("error_message", "N/A")} |
+"""
+
+            # NEW: Remediation plan section
+            remediation_section = ""
+            if remediation_plan:
+                remediation_section = f"""
+## План ремедіації (для Self-Healing)
+| Поле | Значення |
+|------|---------|
+| Тип помилки | {remediation_plan.get("error_type", "unknown")} |
+| Коренева причина | {remediation_plan.get("root_cause", "N/A")} |
+| Уражений компонент | {remediation_plan.get("affected_component", "N/A")} |
+| Рекомендована дія | {remediation_plan.get("suggested_action", "N/A")} |
+| Безпечно для рекурсії | {"Так" if remediation_plan.get("recursion_safe") else "Ні"} |
+| Превентивна порада | {remediation_plan.get("prevention_hint", "N/A")} |
+"""
+
             # Prepare detailed report text with enhanced structure
             report_text = f"""========================================
 ЗВІТ ПРО ВЕРИФІКАЦІЮ ГРІШІ - ВІДХИЛЕНО
@@ -2299,16 +2390,15 @@ class Grisha(BaseAgent):
 
 ## Виявлені проблеми
 {issues_formatted}
-{root_cause_section}{fix_section}{evidence_section}
-
+{tetyana_section}{remediation_section}{root_cause_section}{fix_section}{evidence_section}
 ## Голосове повідомлення
 {verification.voice_message or "Верифікація не пройдена."}
 
 ## Для відновлення
 Використовуйте цей звіт щоб:
 1. Зрозуміти, ЩО саме не вдалося (див. Виявлені проблеми)
-2. Зрозуміти, ЧОМУ це сталося (див. Аналіз кореневої причини)
-3. Дізнатися, ЯК це виправити (див. Рекомендоване виправлення)
+2. Зрозуміти, ЧОМУ це сталося (див. Контекст виконання Тетяни)
+3. Дізнатися, ЯК це виправити (див. План ремедіації)
 
 ========================================
 """
@@ -2349,21 +2439,29 @@ class Grisha(BaseAgent):
             except Exception as e:
                 logger.warning(f"[GRISHA] Failed to save report to filesystem: {e}")
 
-            # Save to knowledge graph (Structured Semantic Memory)
+            # Save to knowledge graph (Structured Semantic Memory) — ENHANCED
             try:
                 node_id = f"rejection:step_{step_id}_{int(datetime.now().timestamp())}"
+                kg_attributes: dict[str, Any] = {
+                    "type": "verification_rejection",
+                    "step_id": str(step_id),
+                    "issues": "; ".join(verification.issues)
+                    if isinstance(verification.issues, list)
+                    else str(verification.issues),
+                    "description": str(verification.description),
+                    "timestamp": timestamp,
+                }
+                # Enrich KG node with remediation data for future learning
+                if remediation_plan:
+                    kg_attributes["error_type"] = remediation_plan.get("error_type", "unknown")
+                    kg_attributes["root_cause"] = remediation_plan.get("root_cause", "")[:500]
+                    kg_attributes["suggested_action"] = remediation_plan.get("suggested_action", "")[:500]
+                    kg_attributes["recursion_safe"] = str(remediation_plan.get("recursion_safe", False))
+
                 await knowledge_graph.add_node(
                     node_type="CONCEPT",
                     node_id=node_id,
-                    attributes={
-                        "type": "verification_rejection",
-                        "step_id": str(step_id),
-                        "issues": "; ".join(verification.issues)
-                        if isinstance(verification.issues, list)
-                        else str(verification.issues),
-                        "description": str(verification.description),
-                        "timestamp": timestamp,
-                    },
+                    attributes=kg_attributes,
                 )
                 # Link to the task (use task_id if provided)
                 source_id = f"task:{task_id}" if task_id else f"task:rejection_{step_id}"
@@ -2376,18 +2474,25 @@ class Grisha(BaseAgent):
             except Exception as e:
                 logger.warning(f"[GRISHA] Failed to update Knowledge Graph: {e}")
 
-            # Send to Message Bus (Real-time typed communication)
+            # Send to Message Bus (Real-time typed communication) — ENHANCED
             try:
+                bus_payload: dict[str, Any] = {
+                    "step_id": str(step_id),
+                    "issues": verification.issues,
+                    "description": verification.description,
+                    "remediation": getattr(verification, "remediation_suggestions", []),
+                }
+                # Include structured remediation plan for self-healing
+                if remediation_plan:
+                    bus_payload["remediation_plan"] = remediation_plan
+                if tetyana_context.get("tool_used"):
+                    bus_payload["tetyana_context"] = tetyana_context
+
                 msg = AgentMsg(
                     from_agent="grisha",
                     to_agent="tetyana",
                     message_type=MessageType.REJECTION,
-                    payload={
-                        "step_id": str(step_id),
-                        "issues": verification.issues,
-                        "description": verification.description,
-                        "remediation": getattr(verification, "remediation_suggestions", []),
-                    },
+                    payload=bus_payload,
                     step_id=str(step_id),
                 )
                 await message_bus.send(msg)
@@ -2678,74 +2783,266 @@ class Grisha(BaseAgent):
             return None
 
     def _has_sufficient_evidence(self, results: list[dict[str, Any]]) -> bool:
-        """Heuristic check: Do we have enough evidence to judge?"""
+        """Heuristic check: Do we have enough evidence to judge?
+
+        Fixed: Verification tool results come as dicts with 'error' boolean,
+        not 'success' or 'exit_code'. Check the actual structure.
+        """
         if not results:
             return False
 
         for res in results:
-            # Check for successful tool execution with content
-            if res.get("success", False) or res.get("exit_code") == 0:
+            # Primary check: tool result dict has 'error' = False (successful execution)
+            has_error = res.get("error", True)  # Default to True = no evidence
+            if not has_error:
                 output = str(res.get("result", "")).strip()
                 # Ignore trivial outputs
-                if output and "error" not in output.lower() and len(output) > 5:
+                if output and len(output) > 5:
+                    return True
+            # Secondary check: legacy format with 'success' key
+            elif res.get("success", False):
+                output = str(res.get("result", "")).strip()
+                if output and len(output) > 5:
                     return True
         return False
 
     async def _collect_independent_evidence(
         self, step: dict[str, Any], goal_analysis: dict[str, Any]
     ) -> list[dict[str, Any]]:
-        """Proactive Audit: Grisha triggers 'Sherlock Mode' availability."""
+        """Proactive Audit: Grisha triggers 'Sherlock Mode'.
+
+        Smart tool selection based on step action context instead of
+        generic ps-aux/db-query fallback.
+        """
 
         step_action = step.get("action", "")
-        # logger.info(f"[GRISHA] 🕵️ PROACTIVE AUDIT: Insufficient evidence for '{step_action}'. Taking control.")
+        step_action_lower = step_action.lower()
+        expected_result = step.get("expected_result", "").lower()
 
-        # Quick heuristic for common tools to avoid LLM overhead if possible
-        audit_tools = []
-
-        # 1. Auto-select tools based on action keywords (Safety Net)
-        if "process" in step_action or "run" in step_action:
-            audit_tools.append(
-                {
-                    "tool": "macos-use.execute_command",
-                    "args": {"command": "ps aux | grep -v grep | head -n 10"},
-                }
-            )
-
-        # Always verify DB state - safe and informative
-        audit_tools.append(
-            {
-                "tool": "vibe.vibe_check_db",
-                "args": {
-                    "query": "SELECT * FROM tool_executions WHERE status='success' ORDER BY created_at DESC LIMIT 5"
-                },
-            }
+        logger.info(
+            f"[GRISHA] 🕵️ SHERLOCK MODE: Insufficient evidence for '{step_action[:60]}'. Taking control."
         )
 
-        # Execute the tools
-        results = []
-        for t in audit_tools:
-            try:
-                # Use dispatch_tool which handles server resolution automatically
-                tool_full_name = str(t.get("tool", ""))
-                logger.info(f"[GRISHA] 🕵️ Auditing with: {tool_full_name}")
+        audit_tools: list[dict[str, Any]] = []
 
-                # dispatch_tool returns result directly
+        # --- Smart tool selection based on action keywords ---
+
+        # 1. File/Code creation or modification
+        if any(kw in step_action_lower for kw in [
+            "create", "write", "implement", "generate", "save", "edit", "modify"
+        ]):
+            # Try to extract file path from action or expected_result
+            file_path = self._extract_file_path_from_text(step_action + " " + expected_result)
+            if file_path:
+                audit_tools.append({
+                    "tool": "macos-use.execute_command",
+                    "args": {"command": f"head -50 '{file_path}' 2>/dev/null || echo 'FILE_NOT_FOUND'"},
+                    "reason": f"Verify actual content of created/modified file: {file_path}",
+                })
+                audit_tools.append({
+                    "tool": "macos-use.execute_command",
+                    "args": {"command": f"wc -l '{file_path}' 2>/dev/null || echo '0 lines'"},
+                    "reason": f"Verify file is non-empty: {file_path}",
+                })
+            else:
+                # Fallback: find recently modified files
+                audit_tools.append({
+                    "tool": "macos-use.execute_command",
+                    "args": {"command": "find ~/Documents/GitHub/atlastrinity -name '*.py' -mmin -5 -type f 2>/dev/null | head -5"},
+                    "reason": "Find recently modified files to verify creation",
+                })
+
+        # 2. Git operations
+        elif any(kw in step_action_lower for kw in ["git", "commit", "push", "branch", "merge"]):
+            audit_tools.append({
+                "tool": "macos-use.execute_command",
+                "args": {"command": "cd ~/Documents/GitHub/atlastrinity && git status --short && git log --oneline -3"},
+                "reason": "Verify git state after operation",
+            })
+
+        # 3. Process/service operations
+        elif any(kw in step_action_lower for kw in ["process", "run", "start", "stop", "restart", "launch"]):
+            audit_tools.append({
+                "tool": "macos-use.execute_command",
+                "args": {"command": "ps aux | grep -v grep | head -15"},
+                "reason": "Verify process state",
+            })
+
+        # 4. Network/API operations
+        elif any(kw in step_action_lower for kw in ["network", "api", "request", "connect", "ssh", "curl"]):
+            audit_tools.append({
+                "tool": "macos-use.execute_command",
+                "args": {"command": "curl -s -o /dev/null -w '%{http_code}' http://localhost:8080 2>/dev/null || echo 'NO_RESPONSE'"},
+                "reason": "Verify network/service availability",
+            })
+
+        # 5. Database operations
+        elif any(kw in step_action_lower for kw in ["database", "db", "sql", "query", "table"]):
+            audit_tools.append({
+                "tool": "vibe.vibe_check_db",
+                "args": {"query": "SELECT name FROM sqlite_master WHERE type='table' ORDER BY name LIMIT 10"},
+                "reason": "Verify database state",
+            })
+
+        # Always include DB execution trace as baseline evidence
+        audit_tools.append({
+            "tool": "vibe.vibe_check_db",
+            "args": {
+                "query": "SELECT tool_name, result, created_at FROM tool_executions ORDER BY created_at DESC LIMIT 3"
+            },
+            "reason": "Baseline: recent tool execution trace from DB",
+        })
+
+        # Execute the tools (max 3 to avoid token waste)
+        results = []
+        for t in audit_tools[:3]:
+            try:
+                tool_full_name = str(t.get("tool", ""))
+                logger.info(f"[GRISHA] 🕵️ Auditing with: {tool_full_name} — {t.get('reason', '')}")
+
                 res = await mcp_manager.dispatch_tool(
                     tool_name=tool_full_name,
                     arguments=cast("dict[str, Any]", t.get("args", {})),
                     allow_fallback=True,
                 )
 
-                # Format as structured result
-                results.append(
-                    {
-                        "tool": tool_full_name,
-                        "args": t.get("args", {}),
-                        "result": res,
-                        "success": True,  # Assume execution success if no exception
-                    }
-                )
+                results.append({
+                    "tool": tool_full_name,
+                    "args": t.get("args", {}),
+                    "result": res,
+                    "error": False,
+                    "reason": t.get("reason", ""),
+                })
             except Exception as e:
                 logger.warning(f"[GRISHA] Audit tool {t.get('tool')} failed: {e}")
+                results.append({
+                    "tool": t.get("tool", "unknown"),
+                    "args": t.get("args", {}),
+                    "result": f"Error: {e}",
+                    "error": True,
+                    "reason": t.get("reason", ""),
+                })
 
         return results
+
+    def _extract_tetyana_execution_context(self, step: dict[str, Any]) -> dict[str, Any]:
+        """Extract structured Tetyana execution context from step data.
+
+        This provides the self-healing hypermodule with precise data
+        about what Tetyana actually did, enabling correct fix task formation.
+        """
+        context: dict[str, Any] = {
+            "tool_used": None,
+            "tool_args": None,
+            "raw_output": None,
+            "error_message": None,
+            "server_name": None,
+        }
+
+        # Extract from step metadata
+        context["tool_used"] = step.get("tool") or step.get("tool_name")
+        context["tool_args"] = step.get("tool_args") or step.get("args") or step.get("parameters")
+
+        # Extract from previous_results if available (injected by Orchestrator)
+        prev_results = step.get("previous_results", [])
+        if prev_results and isinstance(prev_results, list):
+            # Get the most recent result matching this step
+            for res in reversed(prev_results):
+                if isinstance(res, dict):
+                    step_id = str(step.get("id", ""))
+                    if str(res.get("step_id", "")) == step_id or not context["tool_used"]:
+                        context["raw_output"] = str(res.get("result", ""))[:2000]
+                        context["error_message"] = res.get("error")
+                        if not context["tool_used"]:
+                            context["tool_used"] = res.get("tool")
+                        break
+
+        # Extract from step result if directly attached
+        if step.get("result"):
+            result = step["result"]
+            if isinstance(result, dict):
+                context["raw_output"] = str(result.get("result", ""))[:2000]
+                context["error_message"] = result.get("error")
+            elif hasattr(result, "result"):
+                context["raw_output"] = str(getattr(result, "result", ""))[:2000]
+                context["error_message"] = getattr(result, "error", None)
+
+        context["server_name"] = step.get("server") or step.get("mcp_server")
+
+        return context
+
+    async def _generate_remediation_plan(
+        self,
+        step: dict[str, Any],
+        error_message: str,
+        tetyana_context: dict[str, Any],
+        recursion_depth: int = 0,
+    ) -> dict[str, Any] | None:
+        """Generate a structured remediation plan using LLM analysis.
+
+        Returns a JSON dict with: error_type, root_cause, affected_component,
+        suggested_action, recursion_safe, retry_with_changes, prevention_hint.
+        """
+        try:
+            prompt = GRISHA_FAILURE_CONTEXT_PROMPT.format(
+                step_action=step.get("action", "N/A"),
+                expected_result=step.get("expected_result", "N/A"),
+                error_message=error_message[:1000],
+                tool_used=tetyana_context.get("tool_used", "N/A"),
+                tool_args=str(tetyana_context.get("tool_args", "N/A"))[:500],
+                raw_output=str(tetyana_context.get("raw_output", "N/A"))[:500],
+                recursion_depth=recursion_depth,
+                retry_attempt=recursion_depth,
+            )
+
+            result = await self.use_sequential_thinking(prompt, total_thoughts=1)
+
+            if not result.get("success"):
+                logger.warning("[GRISHA] Remediation plan generation failed via reasoning")
+                return None
+
+            analysis = result.get("analysis", "")
+
+            # Extract JSON from the response
+            plan = self._extract_json_from_potential_blocks(analysis)
+            if plan and isinstance(plan, dict):
+                # Validate required keys
+                required_keys = ["error_type", "root_cause", "suggested_action", "recursion_safe"]
+                if all(k in plan for k in required_keys):
+                    logger.info(
+                        f"[GRISHA] Remediation plan generated: "
+                        f"type={plan.get('error_type')}, safe={plan.get('recursion_safe')}"
+                    )
+                    return plan
+
+            # Fallback: try to parse manually
+            fallback_plan = self._fallback_json_extraction(analysis)
+            if fallback_plan and isinstance(fallback_plan, dict):
+                return fallback_plan
+
+            logger.warning("[GRISHA] Could not extract remediation plan from LLM output")
+            return None
+
+        except Exception as e:
+            logger.warning(f"[GRISHA] Remediation plan generation error: {e}")
+            return None
+
+    def _extract_file_path_from_text(self, text: str) -> str | None:
+        """Extract a likely file path from step action/expected_result text."""
+        import re as _re
+
+        # Pattern 1: Explicit paths (Unix-style)
+        path_match = _re.search(r'(/[\w./-]+\.[\w]+)', text)
+        if path_match:
+            return path_match.group(1)
+
+        # Pattern 2: Relative paths or filenames with extensions
+        file_match = _re.search(r'["\']?([\w./-]+\.(?:py|js|ts|json|yaml|yml|toml|md|html|css|sh|sql))["\']?', text)
+        if file_match:
+            candidate = file_match.group(1)
+            # Try to resolve relative to project root
+            project_root = os.path.expanduser("~/Documents/GitHub/atlastrinity")
+            full_path = os.path.join(project_root, candidate)
+            return full_path
+
+        return None

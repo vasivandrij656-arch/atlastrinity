@@ -177,6 +177,36 @@ CRITICAL RULES:
 6. **NO EXTRA FIELDS**: Only include the fields specified in the schema above.
 """
 
+GRISHA_FAILURE_CONTEXT_PROMPT = """STRUCTURED FAILURE ANALYSIS FOR SELF-HEALING RECURSION:
+
+STEP ACTION: {step_action}
+EXPECTED RESULT: {expected_result}
+ERROR MESSAGE: {error_message}
+TETYANA TOOL USED: {tool_used}
+TETYANA TOOL ARGS: {tool_args}
+TETYANA RAW OUTPUT: {raw_output}
+RECURSION DEPTH: {recursion_depth}
+RETRY ATTEMPT: {retry_attempt}
+
+TASK: Generate a structured remediation plan as JSON. This will be consumed by the Self-Healing Hypermodule to form a precise fix task.
+
+ANALYSIS RULES:
+1. **ERROR CLASSIFICATION**: Is this a TRANSIENT error (network, timeout, rate-limit) or PERSISTENT error (wrong path, missing dependency, logic flaw)?
+2. **ROOT CAUSE ISOLATION**: Identify the EXACT technical cause. Don't say "something failed" — say WHAT failed and WHY.
+3. **RECURSION SAFETY**: Is it safe to retry this step? If the same error will recur, retrying wastes resources.
+4. **ACTIONABLE FIX**: Provide a specific, executable remediation — not vague advice.
+
+RESPONSE FORMAT (JSON ONLY, no markdown):
+{{
+    "error_type": "transient|persistent|configuration|permission|dependency|logic",
+    "root_cause": "Precise technical explanation of why this failed",
+    "affected_component": "file path, tool name, or system component that failed",
+    "suggested_action": "Specific executable fix (e.g., 'install package X', 'change path to Y', 'add permission Z')",
+    "recursion_safe": true/false,
+    "retry_with_changes": "Modified arguments or approach if retry is viable, else null",
+    "prevention_hint": "How to prevent this in future plans"
+}}"""
+
 GRISHA = {
     "NAME": "GRISHA",
     "DISPLAY_NAME": "Grisha",
