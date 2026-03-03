@@ -1212,14 +1212,14 @@ async def _execute_vibe_programmatic(
     output_format_str: str = "streaming",
 ) -> dict[str, Any]:
     """Execute loop with retries for Vibe natively."""
-    import os
-    import sys
-    import logging
     import asyncio
+    import logging
+    import os
     import re
+    import sys
     from contextlib import redirect_stderr, redirect_stdout
     from io import StringIO
-    from typing import cast, Any
+    from typing import Any, cast
 
     # Vibe is installed globally via `uv tool`, not in the project venv
     vibe_site_packages = os.path.expanduser(
@@ -1268,7 +1268,9 @@ async def _execute_vibe_programmatic(
                     _old_levels = {}
                     try:
                         for name in logging.root.manager.loggerDict:
-                            if not name.startswith("vibe_server") and not name.startswith("vibe_mcp"):
+                            if not name.startswith("vibe_server") and not name.startswith(
+                                "vibe_mcp"
+                            ):
                                 l = logging.getLogger(name)
                                 _old_levels[name] = l.level
                                 l.setLevel(logging.ERROR)
@@ -1346,7 +1348,7 @@ async def _execute_vibe_programmatic(
                                 "stderr": err_buf.getvalue(),
                                 "returncode": 0,
                             }
-                        except asyncio.TimeoutError:
+                        except TimeoutError:
                             logger.warning(f"[VIBE] Native execution timed out ({timeout_s}s)")
                             await _emit_vibe_log(
                                 ctx, "warning", f"⏱️ [VIBE-LIVE] Перевищено timeout ({timeout_s}s)"
@@ -1374,7 +1376,8 @@ async def _execute_vibe_programmatic(
 
                             overall_output = err_str + stderr_content
                             is_rate_limit = any(
-                                re.search(p, overall_output, re.IGNORECASE) for p in rate_limit_patterns
+                                re.search(p, overall_output, re.IGNORECASE)
+                                for p in rate_limit_patterns
                             )
 
                             if is_rate_limit:
@@ -1444,7 +1447,6 @@ async def _execute_vibe_programmatic(
     finally:
         os.environ.clear()
         os.environ.update(original_env)
-
 
 
 async def run_vibe_cli(
