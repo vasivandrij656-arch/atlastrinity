@@ -29,7 +29,7 @@
     "redis:check": "./scripts/check_redis.sh",
     "redis:stop": "./scripts/stop_redis.sh",
     "dev": "npm run clean && .venv/bin/python3 src/maintenance/clean_start.py && .venv/bin/python src/maintenance/watch_config.py --sync-only && concurrently \"npm run dev:proxy:copilot\" \"npm run dev:brain\" \"npm run dev:electron\" \"npm run dev:renderer\" \"npm run watch:config\" --kill-others",
-    "dev:electron": "sleep 5 && tsc -p tsconfig.main.json && NODE_ENV=development electron . --disable-gpu --disable-hardware-acceleration",
+    "dev:electron": "sleep 5 && tsc -p tsconfig.main.json && NODE_ENV=development electron . --disable-gpu --disable-hardware-acceleration 2>&1 | grep --line-buffered -v 'SharedImageManager::ProduceMemory'",
     "dev:renderer": "vite",
     "dev:brain": "export PYTHONPATH=$PYTHONPATH:.:./src && .venv/bin/python -W ignore -m brain.server",
     "dev:proxy:copilot": "COPILOT_API_KEY=$COPILOT_API_KEY .venv/bin/python src/providers/proxy/copilot_vibe_proxy.py --port 8086",
