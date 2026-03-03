@@ -43,12 +43,7 @@ from mcp.server import FastMCP
 from mcp.server.fastmcp import Context
 from sqlalchemy import text
 
-try:
-    import nest_asyncio  # type: ignore
-
-    nest_asyncio.apply()  # type: ignore
-except ImportError:
-    pass
+# Moved to follow logger initialization to avoid 'logger' is uninitialized errors.
 
 from src.brain.memory.db.manager import db_manager
 from src.brain.monitoring.utils.security import mask_sensitive_data
@@ -71,6 +66,21 @@ def fix_problematic_sql(query: str) -> str:
                 order = "ORDER BY " + parts[1].strip()
                 return f"SELECT * FROM ({base}) {order}"
     return query
+
+
+async def _check_table_exists(table_name: str) -> bool:
+    """Check if a table exists in the database to avoid operational errors."""
+
+    try:
+        async with await db_manager.get_session() as session:
+            result = await session.execute(
+                text("SELECT name FROM sqlite_master WHERE type='table' AND name=:name"),
+                {"name": table_name},
+            )
+            return result.first() is not None
+    except Exception as e:
+        logger.error(f"[VIBE] Error checking table existence: {e}")
+        return False
 
 
 from .vibe_config import (
@@ -146,6 +156,22 @@ try:
         ),
     )
     logger.addHandler(fh)
+
+    # Stream handler for console output
+    ch = logging.StreamHandler(sys.stderr)
+    ch.setLevel(logging.INFO)
+    ch.setFormatter(logging.Formatter("[VIBE_MCP] %(levelname)s: %(message)s"))
+    logger.addHandler(ch)
+
+    try:
+        import nest_asyncio  # type: ignore
+        nest_asyncio.apply()  # type: ignore
+        logger.debug("[VIBE] nest_asyncio applied successfully")
+    except ImportError:
+        logger.warning("[VIBE] nest_asyncio not found. Asyncio conflicts may occur.")
+    except Exception as e:
+        logger.warning(f"[VIBE] Failed to apply nest_asyncio: {e}")
+
 except Exception as e:
     logger.warning(f"[VIBE] Warning: Could not setup file logging: {e}")
 
@@ -1261,6 +1287,7 @@ async def _execute_vibe_programmatic(
                 modified_keys[k] = old_val
                 os.environ[k] = str(v)
 
+        original_cwd = os.getcwd()
         MAX_RETRIES = 3
         # Optimized backoff delays for faster fallback
         BACKOFF_DELAYS = [60, 180, 300]
@@ -1285,17 +1312,25 @@ async def _execute_vibe_programmatic(
                         pass
 
                     try:
-                        # Must unlock paths before creating config
+                        # MUST unlock paths before loading config
                         try:
                             unlock_config_paths()
                         except BaseException:
                             pass
 
-                        # Load config and override workspace with cwd
+                        # Load config - workspace is NOT a field in newer vibe library versions
                         config = VibeConfig.load()
+                        
                         if cwd:
-                            config.workspace = os.path.abspath(cwd)
-                            logger.info(f"[VIBE] Using workspace: {config.workspace}")
+                            # VIBE library currently relies on process CWD
+                            os.chdir(os.path.abspath(cwd))
+                            logger.info(f"[VIBE] Switched to workspace: {cwd}")
+                            # Update displayed_workdir if it exists for telemetry/UI purposes
+                            if hasattr(config, "displayed_workdir"):
+                                try:
+                                    config.displayed_workdir = os.path.abspath(cwd)
+                                except Exception:
+                                    pass
 
                         # Handle @file prompts (offloaded long prompts)
                         eff_prompt = prompt
@@ -1437,8 +1472,14 @@ async def _execute_vibe_programmatic(
 
                         logger.error(f"[VIBE] Native execution failed: {err_str}")
 
-                        if "asyncio.run()" in err_str or "loop" in err_str.lower():
-                            logger.warning("[VIBE] Falling back to CLI due to loop conflict.")
+                        if "asyncio.run()" in err_str or "loop" in err_str.lower() or "running event loop" in err_str.lower():
+                            logger.warning(f"[VIBE] Loop conflict detected: {err_str}. Falling back to CLI.")
+                            
+                            # Restore streams BEFORE falling back to ensure CLI gets proper IO
+                            sys.__stdout__ = cast("Any", original_raw_stdout)
+                            sys.stdout = original_stdout
+                            sys.stderr = original_stderr
+                            
                             vibe_path = resolve_vibe_binary()
                             if vibe_path:
                                 return await run_vibe_cli(
@@ -1456,6 +1497,12 @@ async def _execute_vibe_programmatic(
                             "stdout": "",
                             "stderr": stderr_content,
                         }
+                    finally:
+                        if cwd and original_cwd:
+                            try:
+                                os.chdir(original_cwd)
+                            except Exception:
+                                pass
             finally:
                 sys.__stdout__ = cast("Any", original_raw_stdout)
 
@@ -2966,6 +3013,19 @@ async def vibe_check_db(
 
     """
     from sqlalchemy import text
+    
+    # Safety Check: Verify tables exist before querying
+    # This prevents sqlite3.OperationalError when the database is empty/new
+    tables_to_check = ["users", "sessions", "tasks", "task_steps", "tool_executions", "files"]
+    for table in tables_to_check:
+        if table in (query or "").lower() or table in str(expected_files or "").lower():
+            if not await _check_table_exists(table):
+                logger.warning(f"[VIBE] Table '{table}' does not exist. Skipping db check.")
+                return {
+                    "success": False,
+                    "error": f"Table '{table}' does not exist in the database. Please initialize the database first.",
+                    "data": [],
+                }
 
     from src.brain.memory.db.manager import db_manager
 

@@ -1,15 +1,18 @@
 # Auto-approve agent configuration for Vibe
 # Full automation: ALL tools auto-approved without confirmation
 
-active_model = "gpt-4.1"
+active_model = "gpt-4o"
+auto_approve = true
 system_prompt_id = "cli"
 confirmation_timeout_s = 5
 
 [tools.bash]
 permission = "always"
+allowlist = ["*"]
 
 [tools.write_file]
 permission = "always"
+allowlist = ["/tmp/*", "/Users/dev/Documents/GitHub/atlastrinity/*"]
 
 [tools.read_file]
 permission = "always"

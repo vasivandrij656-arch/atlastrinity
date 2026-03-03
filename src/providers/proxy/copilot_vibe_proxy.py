@@ -59,8 +59,9 @@ for path in [PROJECT_ROOT, SRC_ROOT]:
 
 try:
     from providers.copilot import CopilotLLM
+    from langchain_core.messages import BaseMessage
 except ImportError as e:
-    print(f"FAILED to import providers.copilot: {e}", file=sys.stderr)
+    print(f"FAILED to import providers.copilot or langchain: {e}", file=sys.stderr)
     sys.exit(1)
 
 # Initialize logging
@@ -156,6 +157,9 @@ class CopilotVibeProxyHandler(http.server.BaseHTTPRequestHandler):
         """Handle POST requests (chat completions)."""
         if self.path in {"/v1/chat/completions", "/chat/completions"}:
             self.handle_chat_completion()
+        elif self.path in {"/v1/embeddings"}:
+             # Minimal embeddings stub for some Vibe versions
+             self.send_json_response({"object": "list", "data": [], "model": "text-embedding-3-small"})
         else:
             self.send_error(404, "Not Found")
 
@@ -199,12 +203,14 @@ class CopilotVibeProxyHandler(http.server.BaseHTTPRequestHandler):
             request_data = json.loads(body.decode("utf-8"))
 
             # Extract parameters
-            model = request_data.get("model", "gpt-4.1")
+            model = request_data.get("model", "gpt-4o")
             messages = request_data.get("messages", [])
             tools = request_data.get("tools")
+            stream = request_data.get("stream", False)
+            stream_options = request_data.get("stream_options")
 
             log(
-                f"Request model: {model}, messages: {len(messages)}, tools: {len(tools) if tools else 0}"
+                f"Request model: {model}, messages: {len(messages)}, tools: {len(tools) if tools else 0}, stream: {stream}"
             )
             if tools:
                 log(f"Tools: {[t.get('function', {}).get('name') for t in tools]}")
@@ -222,6 +228,10 @@ class CopilotVibeProxyHandler(http.server.BaseHTTPRequestHandler):
             if tools:
                 llm.bind_tools(tools)
                 log("Tools bound to CopilotLLM")
+
+            if stream:
+                self.handle_streaming_completion(llm, copilot_messages, model, stream_options)
+                return
 
             # Make the API call
             start_time = time.time()
@@ -294,6 +304,127 @@ class CopilotVibeProxyHandler(http.server.BaseHTTPRequestHandler):
             else:
                 error(f"Request error: {e}")
                 self.send_error_response(f"Copilot API error: {e!s}", 500)
+
+    def handle_streaming_completion(
+        self,
+        llm: CopilotLLM,
+        messages: list[BaseMessage],
+        model: str,
+        stream_options: dict | None = None,
+    ) -> None:
+        """Handle streaming chat completion using Server-Sent Events (SSE)."""
+        self.send_response(200)
+        self.send_header("Content-Type", "text/event-stream")
+        self.send_header("Cache-Control", "no-cache")
+        self.send_header("Connection", "keep-alive")
+        self.send_header("Access-Control-Allow-Origin", "*")
+        self.end_headers()
+
+        include_usage = stream_options and stream_options.get("include_usage")
+        request_id = f"chatcmpl-{int(time.time())}"
+
+        def on_delta(piece: str) -> None:
+            chunk = {
+                "id": request_id,
+                "object": "chat.completion.chunk",
+                "created": int(time.time()),
+                "model": model,
+                "choices": [
+                    {
+                        "index": 0,
+                        "delta": {"content": piece},
+                        "finish_reason": None,
+                    }
+                ],
+            }
+            try:
+                self.wfile.write(f"data: {json.dumps(chunk)}\n\n".encode("utf-8"))
+                self.wfile.flush()
+            except Exception:
+                pass
+
+        try:
+            # invoke_with_stream is sync and handles the HTTP stream from Copilot
+            # Note: LangChain tool_calls are not currently streamed piece-by-piece in this simple proxy
+            response = llm.invoke_with_stream(messages, on_delta=on_delta)
+
+            # Check if there were tool calls (they are parsed at the end of invoke_with_stream)
+            finish_reason = "stop"
+            if hasattr(response, "tool_calls") and response.tool_calls:
+                finish_reason = "tool_calls"
+                # Emit tool_calls delta if any
+                tool_calls = []
+                for tc in response.tool_calls:
+                    tool_calls.append(
+                        {
+                            "index": 0,
+                            "id": tc.get("id"),
+                            "type": "function",
+                            "function": {
+                                "name": tc.get("name"),
+                                "arguments": json.dumps(tc.get("args", {})),
+                            },
+                        }
+                    )
+                
+                chunk = {
+                    "id": request_id,
+                    "object": "chat.completion.chunk",
+                    "created": int(time.time()),
+                    "model": model,
+                    "choices": [
+                        {
+                            "index": 0,
+                            "delta": {"tool_calls": tool_calls},
+                            "finish_reason": None,
+                        }
+                    ],
+                }
+                self.wfile.write(f"data: {json.dumps(chunk)}\n\n".encode("utf-8"))
+
+            # Send final chunk with finish_reason
+            final_chunk = {
+                "id": request_id,
+                "object": "chat.completion.chunk",
+                "created": int(time.time()),
+                "model": model,
+                "choices": [
+                    {
+                        "index": 0,
+                        "delta": {},
+                        "finish_reason": finish_reason,
+                    }
+                ],
+            }
+            self.wfile.write(f"data: {json.dumps(final_chunk)}\n\n".encode("utf-8"))
+
+            # Send usage chunk if requested (CRITICAL for some OpenAI clients)
+            if include_usage:
+                usage_chunk = {
+                    "id": request_id,
+                    "object": "chat.completion.chunk",
+                    "created": int(time.time()),
+                    "model": model,
+                    "choices": [],
+                    "usage": {
+                        "prompt_tokens": 0,
+                        "completion_tokens": 0,
+                        "total_tokens": 0,
+                    },
+                }
+                self.wfile.write(f"data: {json.dumps(usage_chunk)}\n\n".encode("utf-8"))
+
+            self.wfile.write(b"data: [DONE]\n\n")
+            self.wfile.flush()
+            log(f"✅ {model} stream completed")
+
+        except Exception as e:
+            error(f"Streaming error: {e}")
+            # Cannot send error response after headers are sent, just close
+            try:
+                self.wfile.write(b"data: {\"error\": \"Streaming interrupted\"}\n\n")
+            except Exception:
+                pass
 
     def send_json_response(self, data: dict) -> None:
         """Send JSON response."""
@@ -381,9 +512,12 @@ def run(port: int = DEFAULT_PORT) -> None:
                 pids = result.stdout.strip().split("\n")
                 for pid in pids:
                     if pid.strip():
-                        subprocess.run(["kill", "-9", pid.strip()], check=False)
-                        warn(f"Killed stale process PID {pid.strip()} on port {port}")
-                time.sleep(0.5)
+                        try:
+                            os.kill(int(pid.strip()), signal.SIGKILL)
+                            warn(f"Killed stale process PID {pid.strip()} on port {port}")
+                        except Exception as kill_err:
+                            error(f"Failed to kill PID {pid.strip()}: {kill_err}")
+                time.sleep(1.0)
                 httpd = ThreadedPoolTCPServer(server_address, CopilotVibeProxyHandler)
             except Exception as retry_err:
                 error(f"Failed to recover port {port}: {retry_err}")
