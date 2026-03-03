@@ -148,6 +148,11 @@
         "-m",
         "src.mcp_server.vibe_server"
       ],
+      "env": {
+        "PYTHONPATH": "${PROJECT_ROOT}",
+        "VIBE_CONFIG_PATH": "${CONFIG_ROOT}/vibe_config.toml",
+        "VIBE_WORKSPACE": "${CONFIG_ROOT}/vibe_workspace"
+      },
       "description": "Mistral AI-powered CLI for self-healing, debugging, code review, and deep coding. Tools: vibe_prompt, vibe_analyze_error, vibe_implement_feature, vibe_code_review, vibe_smart_plan, vibe_ask, vibe_check_db, vibe_get_system_context, vibe_get_config, vibe_configure_model, vibe_set_mode, vibe_configure_provider, vibe_session_resume, vibe_execute_subcommand, vibe_list_sessions, vibe_session_details, vibe_reload_config, vibe_which, vibe_test_in_sandbox (19 tools).",
       "disabled": false,
       "tier": 2,

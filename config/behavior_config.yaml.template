@@ -621,6 +621,7 @@ tool_routing:
       - vibe
       - vibe_prompt
       - vibe_ask
+      - vibe_check_db
       - vibe_analyze_error
       - vibe_smart_plan
       - vibe_code_review
