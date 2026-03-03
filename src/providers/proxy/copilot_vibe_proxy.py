@@ -58,8 +58,9 @@ for path in [PROJECT_ROOT, SRC_ROOT]:
         sys.path.insert(0, path)
 
 try:
-    from providers.copilot import CopilotLLM
     from langchain_core.messages import BaseMessage
+
+    from providers.copilot import CopilotLLM
 except ImportError as e:
     print(f"FAILED to import providers.copilot or langchain: {e}", file=sys.stderr)
     sys.exit(1)
@@ -158,8 +159,10 @@ class CopilotVibeProxyHandler(http.server.BaseHTTPRequestHandler):
         if self.path in {"/v1/chat/completions", "/chat/completions"}:
             self.handle_chat_completion()
         elif self.path in {"/v1/embeddings"}:
-             # Minimal embeddings stub for some Vibe versions
-             self.send_json_response({"object": "list", "data": [], "model": "text-embedding-3-small"})
+            # Minimal embeddings stub for some Vibe versions
+            self.send_json_response(
+                {"object": "list", "data": [], "model": "text-embedding-3-small"}
+            )
         else:
             self.send_error(404, "Not Found")
 
@@ -338,7 +341,7 @@ class CopilotVibeProxyHandler(http.server.BaseHTTPRequestHandler):
                 ],
             }
             try:
-                self.wfile.write(f"data: {json.dumps(chunk)}\n\n".encode("utf-8"))
+                self.wfile.write(f"data: {json.dumps(chunk)}\n\n".encode())
                 self.wfile.flush()
             except Exception:
                 pass
@@ -366,7 +369,7 @@ class CopilotVibeProxyHandler(http.server.BaseHTTPRequestHandler):
                             },
                         }
                     )
-                
+
                 chunk = {
                     "id": request_id,
                     "object": "chat.completion.chunk",
@@ -380,7 +383,7 @@ class CopilotVibeProxyHandler(http.server.BaseHTTPRequestHandler):
                         }
                     ],
                 }
-                self.wfile.write(f"data: {json.dumps(chunk)}\n\n".encode("utf-8"))
+                self.wfile.write(f"data: {json.dumps(chunk)}\n\n".encode())
 
             # Send final chunk with finish_reason
             final_chunk = {
@@ -396,7 +399,7 @@ class CopilotVibeProxyHandler(http.server.BaseHTTPRequestHandler):
                     }
                 ],
             }
-            self.wfile.write(f"data: {json.dumps(final_chunk)}\n\n".encode("utf-8"))
+            self.wfile.write(f"data: {json.dumps(final_chunk)}\n\n".encode())
 
             # Send usage chunk if requested (CRITICAL for some OpenAI clients)
             if include_usage:
@@ -412,7 +415,7 @@ class CopilotVibeProxyHandler(http.server.BaseHTTPRequestHandler):
                         "total_tokens": 0,
                     },
                 }
-                self.wfile.write(f"data: {json.dumps(usage_chunk)}\n\n".encode("utf-8"))
+                self.wfile.write(f"data: {json.dumps(usage_chunk)}\n\n".encode())
 
             self.wfile.write(b"data: [DONE]\n\n")
             self.wfile.flush()
@@ -422,7 +425,7 @@ class CopilotVibeProxyHandler(http.server.BaseHTTPRequestHandler):
             error(f"Streaming error: {e}")
             # Cannot send error response after headers are sent, just close
             try:
-                self.wfile.write(b"data: {\"error\": \"Streaming interrupted\"}\n\n")
+                self.wfile.write(b'data: {"error": "Streaming interrupted"}\n\n')
             except Exception:
                 pass
 

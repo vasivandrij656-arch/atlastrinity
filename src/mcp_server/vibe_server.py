@@ -44,7 +44,6 @@ from mcp.server.fastmcp import Context
 from sqlalchemy import text
 
 # Moved to follow logger initialization to avoid 'logger' is uninitialized errors.
-
 from src.brain.memory.db.manager import db_manager
 from src.brain.monitoring.utils.security import mask_sensitive_data
 
@@ -165,6 +164,7 @@ try:
 
     try:
         import nest_asyncio  # type: ignore
+
         nest_asyncio.apply()  # type: ignore
         logger.debug("[VIBE] nest_asyncio applied successfully")
     except ImportError:
@@ -1320,7 +1320,7 @@ async def _execute_vibe_programmatic(
 
                         # Load config - workspace is NOT a field in newer vibe library versions
                         config = VibeConfig.load()
-                        
+
                         if cwd:
                             # VIBE library currently relies on process CWD
                             os.chdir(os.path.abspath(cwd))
@@ -1472,14 +1472,20 @@ async def _execute_vibe_programmatic(
 
                         logger.error(f"[VIBE] Native execution failed: {err_str}")
 
-                        if "asyncio.run()" in err_str or "loop" in err_str.lower() or "running event loop" in err_str.lower():
-                            logger.warning(f"[VIBE] Loop conflict detected: {err_str}. Falling back to CLI.")
-                            
+                        if (
+                            "asyncio.run()" in err_str
+                            or "loop" in err_str.lower()
+                            or "running event loop" in err_str.lower()
+                        ):
+                            logger.warning(
+                                f"[VIBE] Loop conflict detected: {err_str}. Falling back to CLI."
+                            )
+
                             # Restore streams BEFORE falling back to ensure CLI gets proper IO
                             sys.__stdout__ = cast("Any", original_raw_stdout)
                             sys.stdout = original_stdout
                             sys.stderr = original_stderr
-                            
+
                             vibe_path = resolve_vibe_binary()
                             if vibe_path:
                                 return await run_vibe_cli(
@@ -3013,7 +3019,7 @@ async def vibe_check_db(
 
     """
     from sqlalchemy import text
-    
+
     # Safety Check: Verify tables exist before querying
     # This prevents sqlite3.OperationalError when the database is empty/new
     tables_to_check = ["users", "sessions", "tasks", "task_steps", "tool_executions", "files"]
