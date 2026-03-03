@@ -1251,9 +1251,9 @@ async def _execute_vibe_programmatic(
             logger.info(f"[VIBE] Starting attempt {attempt + 1}/{MAX_RETRIES} (Native API)...")
 
             # Hard Silencer: Redirect stdout and __stdout__ to sys.stderr to avoid protocol corruption
-            from contextlib import redirect_stdout, redirect_stderr
-            from io import StringIO
             import sys
+            from contextlib import redirect_stderr, redirect_stdout
+            from io import StringIO
 
             err_buf = StringIO()
             original_raw_stdout = getattr(sys, "__stdout__", sys.stdout)
@@ -1263,7 +1263,7 @@ async def _execute_vibe_programmatic(
                 # 2. Redirect ALL stdout to stderr globally to protect MCP protocol
                 with redirect_stderr(err_buf), redirect_stdout(sys.stderr):
                     # Robustly hijack __stdout__ as well
-                    sys.__stdout__ = cast(Any, sys.stderr)
+                    sys.__stdout__ = cast("Any", sys.stderr)
 
                     try:
                         # Must unlock paths before creating config
@@ -1323,7 +1323,9 @@ async def _execute_vibe_programmatic(
                         task = asyncio.create_task(_async_vibe_run())
                         result = await asyncio.wait_for(task, timeout=timeout_s)
 
-                        await _emit_vibe_log(ctx, "info", "✅ [VIBE-LIVE] Vibe завершив роботу успішно")
+                        await _emit_vibe_log(
+                            ctx, "info", "✅ [VIBE-LIVE] Vibe завершив роботу успішно"
+                        )
                         return {
                             "success": True,
                             "parsed_response": result,
@@ -1399,7 +1401,7 @@ async def _execute_vibe_programmatic(
                         }
             finally:
                 # Restore raw stdout
-                sys.__stdout__ = cast(Any, original_raw_stdout)
+                sys.__stdout__ = cast("Any", original_raw_stdout)
 
         return {
             "success": False,
