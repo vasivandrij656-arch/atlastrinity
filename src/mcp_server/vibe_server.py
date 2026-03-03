@@ -42,6 +42,11 @@ from dotenv import load_dotenv
 from mcp.server import FastMCP
 from mcp.server.fastmcp import Context
 from sqlalchemy import text
+try:
+    import nest_asyncio  # type: ignore
+    nest_asyncio.apply()  # type: ignore
+except ImportError:
+    pass
 
 from src.brain.memory.db.manager import db_manager
 from src.brain.monitoring.utils.security import mask_sensitive_data
@@ -1231,12 +1236,9 @@ async def _execute_vibe_programmatic(
     try:
         from vibe.cli.entrypoint import unlock_config_paths  # type: ignore
         from vibe.core.config import VibeConfig  # type: ignore
-        from vibe.core.programmatic import run_programmatic  # type: ignore
         from vibe.core.types import OutputFormat  # type: ignore
     except ImportError as e:
-        logging.getLogger("vibe_server").error(
-            f"[VIBE] Failed to import vibe native modules. Is mistral-vibe installed? Error: {e}"
-        )
+        logger.error(f"[VIBE] Failed to import vibe native modules: {e}")
         return {
             "success": False,
             "error": f"Mistral Vibe Python module not found: {e}",
@@ -1244,9 +1246,20 @@ async def _execute_vibe_programmatic(
             "command": ["native API"],
         }
 
-    original_env = os.environ.copy()
+    # Surgical environment management
+    modified_keys = {}
+    original_stdout = sys.stdout
+    original_stderr = sys.stderr
+    original_raw_stdout = getattr(sys, "__stdout__", sys.stdout)
+
     try:
-        os.environ.update(process_env)
+        # Apply subprocess environment surgically
+        for k, v in process_env.items():
+            old_val = os.environ.get(k)
+            if old_val != str(v):
+                modified_keys[k] = old_val
+                os.environ[k] = str(v)
+
         MAX_RETRIES = 3
         # Optimized backoff delays for faster fallback
         BACKOFF_DELAYS = [60, 180, 300]
@@ -1255,187 +1268,165 @@ async def _execute_vibe_programmatic(
             logger.info(f"[VIBE] Starting attempt {attempt + 1}/{MAX_RETRIES} (Native API)...")
 
             err_buf = StringIO()
-            original_raw_stdout = getattr(sys, "__stdout__", sys.stdout)
-
+            
             try:
-                # 1. Capture stderr in a buffer for the result object
-                # 2. Redirect ALL stdout to stderr globally to protect MCP protocol
-                # 3. Robustly hijack __stdout__ as well
+                # Use a single redirection block for entire attempt
                 with redirect_stderr(err_buf), redirect_stdout(sys.stderr):
+                    # Hijack __stdout__ as well for deep-seated prints
                     sys.__stdout__ = cast("Any", sys.stderr)
 
                     # Silence all loggers except our own during this block
-                    _old_levels = {}
                     try:
-                        for name in logging.root.manager.loggerDict:
-                            if not name.startswith("vibe_server") and not name.startswith(
-                                "vibe_mcp"
-                            ):
-                                l = logging.getLogger(name)
-                                _old_levels[name] = l.level
-                                l.setLevel(logging.ERROR)
-                    except Exception:
+                        from vibe.utils.logging import silence_foreign_loggers  # type: ignore
+                        silence_foreign_loggers()
+                    except (ImportError, Exception):
                         pass
 
                     try:
+                        # Must unlock paths before creating config
                         try:
-                            # Must unlock paths before creating config
+                            unlock_config_paths()
+                        except BaseException:
+                            pass
+
+                        config = VibeConfig.load()
+
+                        output_format = OutputFormat.STREAMING
+                        if output_format_str == "json":
+                            output_format = OutputFormat.JSON
+                        elif output_format_str == "text":
+                            output_format = OutputFormat.TEXT
+
+                        # Execute natively with timeout
+                        from vibe import __version__ as vibe_version  # type: ignore
+                        from vibe.core.agent_loop import AgentLoop  # type: ignore
+                        from vibe.core.output_formatters import create_formatter  # type: ignore
+                        from vibe.core.types import (  # type: ignore
+                            AssistantEvent,
+                            EntrypointMetadata,
+                        )
+                        from vibe.core.utils import ConversationLimitException  # type: ignore
+
+                        formatter = create_formatter(output_format)
+
+                        agent_loop = AgentLoop(
+                            config,
+                            agent_name=agent_name,
+                            message_observer=formatter.on_message_added,
+                            max_turns=max_turns,
+                            enable_streaming=False,
+                            entrypoint_metadata=EntrypointMetadata(
+                                agent_entrypoint="programmatic",
+                                agent_version=vibe_version,
+                                client_name="vibe_programmatic",
+                                client_version=vibe_version,
+                            ),
+                        )
+
+                        async def _async_vibe_run() -> str | None:
                             try:
-                                unlock_config_paths()
-                            except BaseException:
-                                pass
+                                agent_loop.emit_new_session_telemetry()
+                                async for event in agent_loop.act(prompt):
+                                    formatter.on_event(event)
+                                    if (
+                                        isinstance(event, AssistantEvent)
+                                        and event.stopped_by_middleware
+                                    ):
+                                        raise ConversationLimitException(event.content)
+                                return formatter.finalize()
+                            finally:
+                                if hasattr(agent_loop, "telemetry_client"):
+                                    await agent_loop.telemetry_client.aclose()
 
-                            config = VibeConfig.load()
+                        task = asyncio.create_task(_async_vibe_run())
+                        result = await asyncio.wait_for(task, timeout=timeout_s)
 
-                            output_format = OutputFormat.STREAMING
-                            if output_format_str == "json":
-                                output_format = OutputFormat.JSON
-                            elif output_format_str == "text":
-                                output_format = OutputFormat.TEXT
+                        await _emit_vibe_log(
+                            ctx, "info", "✅ [VIBE-LIVE] Vibe завершив роботу успішно"
+                        )
+                        return {
+                            "success": True,
+                            "parsed_response": result,
+                            "stdout": str(result) if result else "",
+                            "stderr": err_buf.getvalue(),
+                            "returncode": 0,
+                        }
+                    except asyncio.TimeoutError:
+                        logger.warning(f"[VIBE] Native execution timed out ({timeout_s}s)")
+                        await _emit_vibe_log(
+                            ctx, "warning", f"⏱️ [VIBE-LIVE] Перевищено timeout ({timeout_s}s)"
+                        )
+                        return {
+                            "success": False,
+                            "error": f"Vibe execution timed out after {timeout_s}s",
+                            "returncode": -1,
+                            "stdout": "",
+                            "stderr": err_buf.getvalue(),
+                            "command": ["native API"],
+                        }
+                    except Exception as e:
+                        err_str = str(e)
+                        stderr_content = err_buf.getvalue()
 
-                            # Execute natively with timeout
-                            from vibe import __version__ as vibe_version  # type: ignore
-                            from vibe.core.agent_loop import AgentLoop  # type: ignore
-                            from vibe.core.output_formatters import create_formatter  # type: ignore
-                            from vibe.core.types import (  # type: ignore
-                                AssistantEvent,
-                                EntrypointMetadata,
+                        # Check for API rate limits
+                        rate_limit_patterns = [
+                            r"Rate limit[s]? exceeded",
+                            r"Upgrade to Pro",
+                            r"429 Too Many Requests",
+                            r"Insufficient quota",
+                            r"RateLimitError",
+                        ]
+
+                        overall_output = err_str + stderr_content
+                        is_rate_limit = any(
+                            re.search(p, overall_output, re.IGNORECASE)
+                            for p in rate_limit_patterns
+                        )
+
+                        if is_rate_limit:
+                            res = await _handle_vibe_rate_limit(
+                                attempt,
+                                MAX_RETRIES,
+                                BACKOFF_DELAYS,
+                                "",
+                                stderr_content,
+                                ["native"],
+                                ctx,
                             )
-                            from vibe.core.utils import ConversationLimitException  # type: ignore
+                            if isinstance(res, tuple) and res[0] is True:
+                                new_home = res[1]
+                                if new_home:
+                                    old_v_home = modified_keys.get("VIBE_HOME", os.environ.get("VIBE_HOME"))
+                                    modified_keys["VIBE_HOME"] = old_v_home
+                                    process_env["VIBE_HOME"] = new_home
+                                    os.environ["VIBE_HOME"] = new_home
+                                continue
+                            if isinstance(res, bool) and res is True:
+                                continue
+                            return cast("dict[str, Any]", res)
 
-                            formatter = create_formatter(output_format)
+                        logger.error(f"[VIBE] Native execution failed: {err_str}")
 
-                            agent_loop = AgentLoop(
-                                config,
-                                agent_name=agent_name,
-                                message_observer=formatter.on_message_added,
-                                max_turns=max_turns,
-                                enable_streaming=False,
-                                entrypoint_metadata=EntrypointMetadata(
-                                    agent_entrypoint="programmatic",
-                                    agent_version=vibe_version,
-                                    client_name="vibe_programmatic",
-                                    client_version=vibe_version,
-                                ),
-                            )
-
-                            async def _async_vibe_run() -> str | None:
-                                try:
-                                    agent_loop.emit_new_session_telemetry()
-                                    async for event in agent_loop.act(prompt):
-                                        formatter.on_event(event)
-                                        if (
-                                            isinstance(event, AssistantEvent)
-                                            and event.stopped_by_middleware
-                                        ):
-                                            raise ConversationLimitException(event.content)
-                                    return formatter.finalize()
-                                finally:
-                                    if hasattr(agent_loop, "telemetry_client"):
-                                        await agent_loop.telemetry_client.aclose()
-
-                            task = asyncio.create_task(_async_vibe_run())
-                            result = await asyncio.wait_for(task, timeout=timeout_s)
-
-                            await _emit_vibe_log(
-                                ctx, "info", "✅ [VIBE-LIVE] Vibe завершив роботу успішно"
-                            )
-                            # We return result in both parsed_response and stdout for reliability
-                            return {
-                                "success": True,
-                                "parsed_response": result,
-                                "stdout": str(result) if result else "",
-                                "stderr": err_buf.getvalue(),
-                                "returncode": 0,
-                            }
-                        except TimeoutError:
-                            logger.warning(f"[VIBE] Native execution timed out ({timeout_s}s)")
-                            await _emit_vibe_log(
-                                ctx, "warning", f"⏱️ [VIBE-LIVE] Перевищено timeout ({timeout_s}s)"
-                            )
-                            return {
-                                "success": False,
-                                "error": f"Vibe execution timed out after {timeout_s}s",
-                                "returncode": -1,
-                                "stdout": "",
-                                "stderr": err_buf.getvalue(),
-                                "command": ["native API"],
-                            }
-                        except Exception as e:
-                            err_str = str(e)
-                            stderr_content = err_buf.getvalue()
-
-                            # Check for API rate limits
-                            rate_limit_patterns = [
-                                r"Rate limit[s]? exceeded",
-                                r"Upgrade to Pro",
-                                r"429 Too Many Requests",
-                                r"Insufficient quota",
-                                r"RateLimitError",
-                            ]
-
-                            overall_output = err_str + stderr_content
-                            is_rate_limit = any(
-                                re.search(p, overall_output, re.IGNORECASE)
-                                for p in rate_limit_patterns
-                            )
-
-                            if is_rate_limit:
-                                res = await _handle_vibe_rate_limit(
-                                    attempt,
-                                    MAX_RETRIES,
-                                    BACKOFF_DELAYS,
-                                    "",
-                                    stderr_content,
-                                    ["native"],
-                                    ctx,
+                        if "asyncio.run()" in err_str or "loop" in err_str.lower():
+                            logger.warning("[VIBE] Falling back to CLI due to loop conflict.")
+                            vibe_path = resolve_vibe_binary()
+                            if vibe_path:
+                                return await run_vibe_cli(
+                                    prompt=prompt,
+                                    cwd=cwd,
+                                    timeout_s=timeout_s,
+                                    process_env=process_env,
+                                    ctx=ctx,
                                 )
-                                if isinstance(res, tuple) and res[0] is True:
-                                    new_home = res[1]
-                                    if new_home:
-                                        process_env["VIBE_HOME"] = new_home
-                                        os.environ["VIBE_HOME"] = new_home
-                                    continue
-                                if isinstance(res, bool) and res is True:
-                                    continue
-                                return cast("dict[str, Any]", res)
 
-                            logger.error(f"[VIBE] Native execution failed: {err_str}")
-
-                            if (
-                                "asyncio.run()" in err_str
-                                or "ImportError" in err_str
-                                or "RuntimeError" in err_str
-                            ):
-                                logger.warning(
-                                    f"[VIBE] Loop conflict or error detected ({err_str[:50]}). Falling back to CLI subprocess."
-                                )
-                                vibe_path = resolve_vibe_binary()
-                                if vibe_path:
-                                    return await run_vibe_cli(
-                                        prompt=prompt,
-                                        cwd=cwd,
-                                        timeout_s=timeout_s,
-                                        process_env=process_env,
-                                        ctx=ctx,
-                                    )
-
-                            return {
-                                "success": False,
-                                "error": f"Vibe native execution error: {err_str}",
-                                "returncode": 1,
-                                "stdout": "",
-                                "stderr": stderr_content,
-                            }
-                    finally:
-                        # Restore log levels
-                        for name, level in _old_levels.items():
-                            try:
-                                logging.getLogger(name).setLevel(level)
-                            except Exception:
-                                pass
+                        return {
+                            "success": False,
+                            "error": f"Vibe native execution error: {err_str}",
+                            "returncode": 1,
+                            "stdout": "",
+                            "stderr": stderr_content,
+                        }
             finally:
-                # Restore raw stdout
                 sys.__stdout__ = cast("Any", original_raw_stdout)
 
         return {
@@ -1445,8 +1436,17 @@ async def _execute_vibe_programmatic(
             "command": ["native API"],
         }
     finally:
-        os.environ.clear()
-        os.environ.update(original_env)
+        # Revert environment surgically
+        for k, old_v in modified_keys.items():
+            if old_v is None:
+                os.environ.pop(k, None)
+            else:
+                os.environ[k] = old_v
+        
+        # Restore streams
+        sys.stdout = original_stdout
+        sys.stderr = original_stderr
+        sys.__stdout__ = cast("Any", original_raw_stdout)
 
 
 async def run_vibe_cli(
