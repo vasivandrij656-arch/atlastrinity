@@ -4,7 +4,6 @@ Comprehensive test script for verifying all 19 Vibe MCP Server tools.
 """
 
 import asyncio
-import json
 import os
 import sys
 import tempfile
