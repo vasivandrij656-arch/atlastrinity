@@ -57,7 +57,7 @@ sounddevice>=0.4.6
 soundfile>=0.12.1
 
 # === Memory ===
-posthog>=3.0.0,<4.0.0  # pinned: posthog 7.x breaks chromadb telemetry capture() API
+posthog>=3.0.0,<8.0.0  # pinned: posthog 7.x breaks chromadb telemetry capture() API
 chromadb==0.6.3
 redis>=5.0.0
 googleapis-common-protos==1.72.0
