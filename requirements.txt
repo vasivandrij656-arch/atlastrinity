@@ -30,7 +30,7 @@ sentencepiece==0.2.1
 librosa>=0.10.1
 kaldiio>=2.18.0
 jamo==0.4.1
-pypinyin<=0.44.0
+pypinyin<=0.55.0
 pyworld>=0.3.4
 torch-complex
 typeguard<5.0.0
